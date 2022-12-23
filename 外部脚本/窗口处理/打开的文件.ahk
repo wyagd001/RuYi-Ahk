@@ -1,39 +1,40 @@
 ComObjError(0)
 DetectHiddenWindows, On
 WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI
-h_hwnd := StrReplace(h_hwnd, "获取当前窗口信息_")
-if h_hwnd
+Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")
+if Windy_CurWin_id
 {
-	WinGetClass, h_class, ahk_id %h_hwnd%
-	WinGet pid, PID, ahk_id %h_hwnd%
-	WinGetTitle, _Title, ahk_id %h_hwnd%
-	WinGet, ProcessPath, ProcessPath, ahk_id %h_hwnd%
+	WinGetClass, Windy_CurWin_Class, ahk_id %Windy_CurWin_id%
+	WinGet Windy_CurWin_Pid, PID, ahk_id %Windy_CurWin_id%
+	WinGetTitle, Windy_CurWin_Title, ahk_id %Windy_CurWin_id%
+	WinGet, Windy_CurWin_Fullpath, ProcessPath, ahk_id %Windy_CurWin_id%
 }
 else
 {
-	WinGetClass, h_class, A
-	WinGet pid, PID, A
-	WinGetTitle, _Title, A
-	WinGet, ProcessPath, ProcessPath, A
+	WinGetClass, Windy_CurWin_Class, A
+	WinGet Windy_CurWin_Pid, PID, A
+	WinGetTitle, Windy_CurWin_Title, A
+	WinGet, Windy_CurWin_Fullpath, ProcessPath, A
 }
 
 ; 窗口标题有路径的窗口直接获取窗口标题文字
-IfInString, _Title, :\ 
+IfInString, Windy_CurWin_Title, :\ 
 {
 	; 匹配目录不能匹配文件
 	;FullNamell:=RegExReplace(_Title,"^.*(.:(\\)?.*)\\.*$","$1")
 	; 编辑器文件修改后标题开头带“*”
-	RegExMatch(_Title, "i)^\*?\K.*\..*(?= [-*] )", FileFullPath)
+	RegExMatch(Windy_CurWin_Title, "i)^\*?\K.*\..*(?= [-*] )", FileFullPath)
+	FileFullPath := Trim(FileFullPath, " *[]")
 	If FileFullPath
 		goto OpenFileFullPath
 }
 
 ; Word、Excel、WPS、et、Scite程序
-FileFullPath := getDocumentPath(ProcessPath)
+FileFullPath := getDocumentPath(Windy_CurWin_Fullpath)
 if FileFullPath
 	goto OpenFileFullPath
 
-CMDLine:= WMI_Query(pid)
+CMDLine:= WMI_Query(Windy_CurWin_Pid)
 RegExMatch(CMDLine, "i).*exe.*?\s+(.*)", ff_)
 StringReplace, FileFullPath, ff_1, `",, All
 startzimu := RegExMatch(FileFullPath, "i)^[a-z]")
@@ -46,15 +47,15 @@ if FileFullPath
 	goto OpenFileFullPath
 
 ; RealPlayer
-IfInString, _Title, RealPlayer
+IfInString, Windy_CurWin_Title, RealPlayer
 {
 	SetTitleMatchMode, Slow
-	WinGetText, _Title, %_Title%
-	IfInString, _Title, :/
+	WinGetText, Windy_CurWin_Title, %Windy_CurWin_Title%
+	IfInString, Windy_CurWin_Title, :/
 	{
 		; RealPlayer式例：file://N:/电影/小视频/【藤缠楼】必看！正确的电线绕圈收集方法 标清.flv
-		StringReplace, _Title, _Title, /, \, 1
-		Loop, parse, _Title, `n, `r
+		StringReplace, Windy_CurWin_Title, Windy_CurWin_Title, /, \, 1
+		Loop, parse, Windy_CurWin_Title, `n, `r
 		{
 			StringTrimLeft, FileFullPath, A_LoopField, 7
 			If FileFullPath && FileExist(FileFullPath)
@@ -66,11 +67,12 @@ IfInString, _Title, RealPlayer
 }
 
 ; 直接打开记事本程序，然后打开文本文件，命令行没有文件路径，使用读取内存的方法得到路径
-IfInString, _Title, 记事本
+IfInString, Windy_CurWin_Title, 记事本
 {
-	If(_Title = "无标题 - 记事本")
+	Windy_CurWin_Title := StrReplace(Windy_CurWin_Title, "*")
+	If(Windy_CurWin_Title = "无标题 - 记事本")
 	Return
-	OSRecentTextFile := A_AppData "\Microsoft\Windows\Recent\" StrReplace(_Title, " - 记事本") ".lnk"
+	OSRecentTextFile := A_AppData "\Microsoft\Windows\Recent\" StrReplace(Windy_CurWin_Title, " - 记事本") ".lnk"
 	FileGetShortcut, % OSRecentTextFile, FileFullPath
 	if FileExist(FileFullPath)
 		gosub OpenFileFullPath
