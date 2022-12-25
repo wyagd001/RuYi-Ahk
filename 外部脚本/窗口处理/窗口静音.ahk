@@ -1,10 +1,11 @@
 ﻿DetectHiddenWindows, On
 WinGetTitle, h_hwnd, 获取当前窗口信息
-h_hwnd := StrReplace(h_hwnd, "获取当前窗口信息_")
-WinGet, ProcessName, ProcessName, ahk_id %h_hwnd%
-if !ProcessName
-WinGet, ProcessName, ProcessName, A
-AppVolume(ProcessName).ToggleMute()
+Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")
+if Windy_CurWin_id
+	WinGet, Windy_CurWin_ProcName, ProcessName, ahk_id %Windy_CurWin_id%
+else
+	WinGet, Windy_CurWin_ProcName, ProcessName, A
+AppVolume(Windy_CurWin_ProcName).ToggleMute()
 return
 
 ; VA v2.3

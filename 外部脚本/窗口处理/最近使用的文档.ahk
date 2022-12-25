@@ -1,17 +1,17 @@
 ﻿RecentFolderPath := upDir(A_StartMenu) "\Recent"
 DetectHiddenWindows, On
 WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI
-h_hwnd := StrReplace(h_hwnd, "获取当前窗口信息_")
-if h_hwnd
-	WinGetClass, h_class, ahk_id %h_hwnd%
+Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")
+if Windy_CurWin_id
+	WinGetClass, Windy_CurWin_Class, ahk_id %Windy_CurWin_id%
 else
-	WinGetClass, h_class, A
+	WinGetClass, Windy_CurWin_Class, A
 
-if (h_class = "Notepad") or (h_class = "Notepad2U")
+if (Windy_CurWin_Class = "Notepad") or (Windy_CurWin_Class = "Notepad2U")
 menu, % LnkFolderMenu(RecentFolderPath, "txt,ahk,htm","收藏夹",0,2,1,1), show
-else if (h_class = "CabinetWClass") or (h_class = "Progman")
+else if (Windy_CurWin_Class = "CabinetWClass") or (Windy_CurWin_Class = "Progman")
 menu, % LnkFolderMenu(RecentFolderPath, "","收藏夹",0,2,1,0), show
-else if (h_class = "WinRarWindow")
+else if (Windy_CurWin_Class = "WinRarWindow")
 menu, % LnkFolderMenu(RecentFolderPath, "rar,zip","收藏夹",0,2,1,1), show
 return
 
@@ -164,43 +164,41 @@ LnkFolderMenu(FolderPath, SpecifyExt:="*", MenuName:="", ShowIcon:=1, ShowOpenFo
 			{
 				break
 			}
-			FileList .= A_LoopFileLongPath "`n"
+			FileList .= A_LoopFileTimeModified "`t" A_LoopFileLongPath "`n"
 		}
-		Sort, FileList, \
+		Sort, FileList, R
 		menunum := 0
 		Loop, parse, FileList, `n
 		{
-			if A_LoopField =
-			continue
+			if (A_LoopField = "")  ; 忽略列表末尾的最后一个换行符(空项).
+				continue
+			StringSplit, FileItem, A_LoopField, %A_Tab%  ; 用 tab 
 			if !Showhide
 			{
-				FileGetAttrib, FileAttrib, A_LoopField
+				FileGetAttrib, FileAttrib, FileItem2
 				if FileAttrib contains H,R,S  ; 跳过具有 H(隐藏), R(只读) 或 S(系统) 属性的任何文件. 注意: 在 "H,R,S" 中不含空格.
 				continue  ; 跳过这个文件并前进到下一个.
 			}
-			SplitPath, A_LoopField, FileName, ParentFolderDirectory, fileExt, FileNameNoExt
+			SplitPath, FileItem2, FileName, ParentFolderDirectory, fileExt, FileNameNoExt
 			ParentFolderDirectory := (ParentFolderDirectory=FolderPath) ? MenuName : ParentFolderDirectory
 			;msgbox %  pos "`n" A_LoopFileLongPath "`n" ParentFolderDirectory "`n" A_LoopFileName
-			BoundRun := Func("Run").Bind(A_LoopField)
 			FileMenuName := FileNameNoExt
 
 			if (Array[1]="*"?1:Array[1]=""?!instr(FileMenuName, "."):instr(FileMenuName, "." Array[1])) or (Array[2]=""?0:instr(FileMenuName, "." Array[2])) or (Array[3]=""?0:instr(FileMenuName, "." Array[3]))
 			{
-				FileGetShortcut, %A_LoopField%, OutTarget
+				FileGetShortcut, %FileItem2%, OutTarget
 				if fileexist(OutTarget)
 				{
 					menunum ++
 					if menunum >30
 						break
-					BoundRun := Func("Run").Bind(A_LoopField)
+					BoundRun := Func("Run").Bind(FileItem2)
 					Menu, %ParentFolderDirectory%, add, %FileMenuName%, %BoundRun%
 					if ShowIcon
 						FolderMenu_AddIcon(ParentFolderDirectory, FileMenuName)
 				}
 			}
-			;Menu, %ParentFolderDirectory%, add, %FileMenuName%, %BoundRun%
-			;if ShowIcon
-			;	FolderMenu_AddIcon(ParentFolderDirectory, FileMenuName)
+			
 		}
 	}
 

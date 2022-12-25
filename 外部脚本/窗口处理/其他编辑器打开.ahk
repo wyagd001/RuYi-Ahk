@@ -16,12 +16,7 @@ else
 
 Windo_其他编辑器打开:
 sTextDocumentPath := GetTextDocumentPath(Windy_CurWin_Pid, Windy_CurWin_id, Windy_CurWin_Title)
-if Instr(CandySel, "smartchooserbrowser")
-{
-	run, %CandySel% "%sTextDocumentPath%" 
-}
-else
-	run, %CandySel% "%sTextDocumentPath%",, UseErrorLevel
+run, %CandySel% "%sTextDocumentPath%",, UseErrorLevel
 If (ErrorLevel = "Error")
 	msgbox 请检查编辑器路径: %CandySel% `n和文档路径: %sTextDocumentPath%
 return
