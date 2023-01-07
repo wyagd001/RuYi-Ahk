@@ -1,1 +1,4 @@
-﻿
+﻿#Include *i %A_AhkPath%\..\插件脚本\Excel.ahk
+#Include *i %A_ScriptDir%\插件脚本\Excel.ahk
+#Include *i %A_AhkPath%\..\插件脚本\最简单的UIA获取文本.ahk
+#Include *i %A_ScriptDir%\插件脚本\最简单的UIA获取文本.ahk
