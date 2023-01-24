@@ -1,4 +1,5 @@
-﻿CandySel := A_Args[1]
+﻿; 1110
+CandySel := A_Args[1]
 ;WinGet, hGui, ID, 如意百宝箱 ahk_class AutoHotkeyGUI
 /*
 说明：如果是有独立的页面，则直接指向独立页面

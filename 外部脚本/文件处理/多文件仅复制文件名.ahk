@@ -1,3 +1,4 @@
+; 1119
 CandySel := A_Args[1]
 ;msgbox % CandySel
 cando_多文件复制文件名:

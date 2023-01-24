@@ -115,7 +115,7 @@ Else
 }
 Return
 
-2GuiDropFiles:
+66GuiDropFiles:
 	Loop, parse, A_GuiEvent, `n
 	{
 		FileGetAttrib, Attributes, %A_LoopField%

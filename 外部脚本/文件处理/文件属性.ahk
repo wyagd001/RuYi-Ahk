@@ -1,5 +1,5 @@
 ﻿CandySel := A_Args[1]
-
+; 1046
 修改文件属性:
 StringSplit, ary, CandySel, `n, `r
 curpath = %ary1%

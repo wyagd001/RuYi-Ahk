@@ -1,7 +1,7 @@
 ﻿CandySel := A_Args[1]
 msgbox,, % CandySel, % MD5_File(CandySel)
 Return
-
+; 1080
 MD5_File( sFile="", cSz=4 ) { ; www.autohotkey.com/forum/viewtopic.php?p=275910#275910
 	global Nomd5func
  cSz  := (cSz<0||cSz>8) ? 2**22 : 2**(18+cSz), VarSetCapacity( Buffer,cSz,0 )

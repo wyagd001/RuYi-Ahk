@@ -2,6 +2,7 @@
 Menu, Tray, UseErrorLevel
 CandySel := A_Args[1]
 OnMessage(0x4a, "Receive_WM_COPYDATA")
+; 1098
 Cando_文本比较:
 IfWinExist, ahk_id %GuiID%
 {

@@ -1,6 +1,6 @@
 ﻿#SingleInstance force
 CandySel := A_Args[1]
-
+; 1092
 Cando_字符编码查看:
 	Gui, 66:Default
 	Gui, Destroy

@@ -1,13 +1,21 @@
 CandySel :=  A_Args[1]
+; 1042 参数可变, 多条目
 DetectHiddenWindows, On
 WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI
-h_hwnd := StrReplace(h_hwnd, "获取当前窗口信息_")
-if h_hwnd
-	SetDirectory(CandySel, h_hwnd)
-else
+Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")
+if !Windy_CurWin_id
+	WinGet, Windy_CurWin_id, ID, A
+WinActivate, ahk_id %Windy_CurWin_id%
+WinGetClass, Windy_CurWin_Class, ahk_id %Windy_CurWin_id%
+if (Windy_CurWin_Class = "CabinetWClass") or (Windy_CurWin_Class = "#32770")
+	SetDirectory(CandySel, Windy_CurWin_id)
+if (Windy_CurWin_Class = "ConsoleWindowClass")
 {
-	WinGet, h_hwnd, ID, A
-	SetDirectory(CandySel, h_hwnd)
+	WinActivate, ahk_id %Windy_CurWin_id%
+	Clipboard :="cd /d """ . CandySel . """"
+	ClipWait
+	send {click right}{enter}
+	sleep, 100
 }
 return
 

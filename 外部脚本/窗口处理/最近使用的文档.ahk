@@ -1,4 +1,5 @@
-﻿RecentFolderPath := upDir(A_StartMenu) "\Recent"
+﻿; 1121
+RecentFolderPath := upDir(A_StartMenu) "\Recent"
 DetectHiddenWindows, On
 WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI
 Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")

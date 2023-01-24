@@ -5,9 +5,9 @@ Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")
 if !Windy_CurWin_id
 	Windy_CurWin_id := WinExist("A")
 
-;资源管理器F2重命名时，原生功能按Tab跳转到下一个文件
-;#IfWinActive,ahk_group ccc
-;!F2::
+; 资源管理器F2重命名时，原生功能按Tab跳转到下一个文件
+;
+; 1036
 filerename:
 StringSplit, ary, CandySel, `n, `r
 curpath = %ary1%
@@ -97,7 +97,6 @@ IfExist,%newpath%
 else
   FileMove,%curpath%,%newpath%,0
 Gui,Destroy
-exitapp
 Return
 
 GuiClose:

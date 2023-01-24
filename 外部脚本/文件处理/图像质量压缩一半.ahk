@@ -1,8 +1,7 @@
 ﻿#SingleInstance force
-Menu, Tray, UseErrorLevel
 CandySel := A_Args[1]
 SplitPath, CandySel,, CandySel_ParentPath, CandySel_Ext, CandySel_FileNameNoExt
-
+; 1107
 Cando_图像转为JPG:
 Output := CandySel_ParentPath . "\" . CandySel_FileNamenoExt . "-0.5.jpg"
 ConvertImage_Quality(CandySel, Output, 50)

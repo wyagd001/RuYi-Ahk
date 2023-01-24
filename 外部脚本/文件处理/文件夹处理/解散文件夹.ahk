@@ -1,6 +1,6 @@
 CandySel :=  A_Args[1]
 SplitPath, CandySel,, CandySel_ParentPath
-
+; 1040
 ErrorCount := MoveFilesAndFolders(CandySel "\*.*", CandySel_ParentPath)
 if (ErrorCount != 0)
     MsgBox %ErrorCount% 个文件/文件夹移动失败.

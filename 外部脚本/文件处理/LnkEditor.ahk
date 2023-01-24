@@ -11,7 +11,7 @@ else
 	LnkPath := ""
 }
 ComObjError(0)
-
+; 1038
 LnkEditorGui:
 Gui, Destroy
 Gui, Default

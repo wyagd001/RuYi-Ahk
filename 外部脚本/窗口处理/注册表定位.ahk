@@ -6,7 +6,7 @@ If WinExist("ahk_class RegEdit_RegEdit")
 	TVPath_Set(hTreeView, "计算机\" CandySel, matchPath)
 }
 return
-
+; 1161,1162
 注册表复制路径:
 ControlGet, hTreeView, hwnd, , SysTreeView321, ahk_class RegEdit_RegEdit
 CopyTvPath:

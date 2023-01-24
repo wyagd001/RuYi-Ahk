@@ -1,8 +1,9 @@
-﻿;cando_ListHardLinks:
+﻿; 1045
+;cando_ListHardLinks:
 ;msgbox % ListHardLinks(CandySel)
 ;return 
 CandySel := A_Args[1]
-SplitPath, CandySel, CandySel_FileNameWithExt, CandySel_ParentPath, CandySel_Ext, CandySel_FileNameNoExt, CandySel_Drive
+SplitPath, CandySel, CandySel_FileName, CandySel_ParentPath, CandySel_Ext, CandySel_FileNameNoExt, CandySel_Drive
 CandySel_Ext := CF_IsFolder(CandySel) ? "Folder" : CandySel_Ext
 
 Cando_CreateLink:
@@ -29,7 +30,7 @@ if (CandySel_Ext = "Folder")
 	GuiControl, Disable, SHHL_Type_Hardlink
 	GuiControl, , SHHL_Type_SymbolicLink, 1
 }
-Gui, show, , 为文件[%CandySel_FileNameWithExt%]创建链接
+Gui, show, , 为文件[%CandySel_FileName%]创建链接
 return
 
 SHHL_OK:

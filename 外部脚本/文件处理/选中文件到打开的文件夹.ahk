@@ -1,6 +1,9 @@
 CandySel := A_Args[1]
-SplitPath, CandySel, CandySel_FileNameWithExt
-
+CandySel2 := A_Args[2]
+if CandySel2
+	goto SendToFolder
+;msgbox % CandySel
+; 1109
 Cando_CopyToOpenedFolder:
 AllOpenFolder := GetAllWindowOpenFolder()
 Menu SendToOpenedFolder, Add, 发送到打开的文件夹, nul
@@ -17,11 +20,51 @@ nul:
 return
 
 Cando_SendToFolder:
-TargetFile := PathU(A_ThisMenuItem "\" CandySel_FileNameWithExt)
-if GetKeyState("Shift")
-	FileMove %CandySel%, %TargetFile%
+if !instr(CandySel, "`n")
+{
+	SplitPath, CandySel, CandySel_FileName
+	TargetFile := PathU(A_ThisMenuItem "\" CandySel_FileName)
+	if GetKeyState("Shift")
+		FileMove %CandySel%, %TargetFile%
+	else
+		FileCopy %CandySel%, %TargetFile%
+}
 else
-	FileCopy %CandySel%, %TargetFile%
+{
+	Loop, Parse, CandySel, `n,`r
+	{
+		SplitPath, A_LoopField, Tmp_FileName
+		TargetFile := PathU(A_ThisMenuItem "\" Tmp_FileName)
+		if GetKeyState("Shift")
+			FileMove %A_LoopField%, %TargetFile%
+		else
+			FileCopy %A_LoopField%, %TargetFile%
+	}
+}
+Return
+
+SendToFolder:
+if !instr(CandySel, "`n")
+{
+	SplitPath, CandySel, CandySel_FileName
+	TargetFile := PathU(CandySel2 "\" CandySel_FileName)
+	if GetKeyState("Shift")
+		FileMove %CandySel%, %TargetFile%
+	else
+		FileCopy %CandySel%, %TargetFile%
+}
+else
+{
+	Loop, Parse, CandySel, `n,`r
+	{
+		SplitPath, A_LoopField, Tmp_FileName
+		TargetFile := PathU(CandySel2 "\" Tmp_FileName)
+		if GetKeyState("Shift")
+			FileMove %A_LoopField%, %TargetFile%
+		else
+			FileCopy %A_LoopField%, %TargetFile%
+	}
+}
 Return
 
 GetAllWindowOpenFolder()

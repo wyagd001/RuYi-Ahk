@@ -1,4 +1,5 @@
-﻿DetectHiddenWindows, On
+﻿; 1125
+DetectHiddenWindows, On
 WinGetTitle, h_hwnd, 获取当前窗口信息
 Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")
 if Windy_CurWin_id

@@ -1,5 +1,5 @@
 CandySel := A_Args[1]
-
+; 1033,1034
 DetectHiddenWindows, On
 WinGetTitle, h_hwnd, 获取当前窗口信息
 Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")
@@ -13,7 +13,6 @@ if (CandySel = "垂直最大化")
 CF_WinMove(Windy_CurWin_id,, 0,, OutputVarBottom)
 if (CandySel = "水平最大化")
 CF_WinMove(Windy_CurWin_id, 0,, OutputVarRight)
-
 
 CF_WinMove(Win, x:="", y:="", w:="", h:="")
 {

@@ -1,6 +1,6 @@
 ﻿#SingleInstance force
 CandySel := A_Args[1]
-
+; 1112
 有道网络翻译:
 	Youdao_keyword := Trim(CandySel, " `t`r`n")
 	If !Youdao_keyword                          ;如果粘贴板里面没有内容，则判断是否有窗口定义

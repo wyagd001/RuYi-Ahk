@@ -1,5 +1,5 @@
 CandySel := A_Args[1]
-
+; 1039
 Loop, Parse, CandySel, `n, `r
 {
 	FileFullPath := A_LoopField

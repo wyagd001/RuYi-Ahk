@@ -1,4 +1,5 @@
-﻿CandySel := A_Args[1]
+﻿; 1044
+CandySel := A_Args[1]
 aInCp := File_GetEncoding(CandySel)
 SplitPath, CandySel, OutFileName, , , , OutDrive
 vvaluetocp := {"ANSI": "CP936", "UTF-8 BOM": "UTF-8", "UTF-8": "UTF-8-Raw", "Unicode": "UTF-16","Unicode 高位在前": "cp1201"}
@@ -17,7 +18,6 @@ change:
 Gui, submit, nohide
 File_CpTransform(CandySel, vvaluetocp[vaInCp], vvaluetocp[vOutCp])
 return
-
 
 GuiClose:
 GuiEscape:
@@ -47,7 +47,7 @@ File_CpTransform(aInFile, aInCp := "", aOutCp := "")
 		aOutCp := aSysCp
 
 		SplitPath, % aInFile, , aOutDir, OutExtension, OutNameNoExt
-		aOutFile := aOutDir "\" OutNameNoExt "转码(后)." OutExtension
+		aOutFile := aOutDir "\" OutNameNoExt "转码(" aOutCp ")." OutExtension
 		aOutFile := PathU(aOutFile)
 
 	if (aOutCp = aSysCp)

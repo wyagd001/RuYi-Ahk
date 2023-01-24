@@ -1,4 +1,5 @@
-﻿CandySel := A_Args[1]
+﻿; 1081
+CandySel := A_Args[1]
 Files_TwoFilesSwapName(CandySel)
 Return
 

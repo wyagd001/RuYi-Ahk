@@ -1,7 +1,7 @@
 ﻿#SingleInstance force
 CandySel := A_Args[1]
 SplitPath, CandySel,, CandySel_ParentPath, CandySel_Ext, CandySel_FileNameNoExt
-
+; 1104
 Cando_图像尺寸缩小:
 Output := CandySel_ParentPath . "\" . CandySel_FileNamenoExt . "_0.5." . CandySel_Ext
 ConvertImage(CandySel, Output, "50", "50", "Percent")
