@@ -1,17 +1,41 @@
-CandySel :=  A_Args[1]
-; 1040
-
-Gui, 66: Default
-Gui, Add, text, x10 y10, 源文件夹:
-Gui, Add, edit, xp+70 w480 vfolder1, C:\Users\Administrator\Desktop\Ahk\如意百宝箱  ;% CandySel
-Gui, Add, text, xp+500, 目标文件夹:
-Gui, Add, edit, xp+80 y10 w460 vfolder2, C:\Users\Administrator\Desktop\Ahk\如意百宝箱 - 发布版本\RuYi-Ahk
-Gui, Add, ListView, x10 y40 w550 h500 vfilelist1 hwndHLV1 Checked AltSubmit gsync, 序号|文件名|修改日期|大小|md5
-Gui, Add, ListView, x570 y40 w550 h500 vfilelist2 hwndHLV2 Checked AltSubmit gsync, 序号|文件名|修改日期|大小|相等|md5
-Gui, Add, Button, x10 yp+510 h30 gloderfolder, 加载列表
-Gui, Add, Button, xp+70 h30 grpview, 预览结果
-Gui, Add, Button, xp+70 h30 gsave, 执行同步
-gui, show
+folder1 :=  A_Args[1]
+folder2 :=  A_Args[2]
+; 1088
+OnMessage(0x4a, "Receive_WM_COPYDATA")
+SyncFolder:
+IfWinExist, 文件夹同步 ahk_class AutoHotkeyGUI
+{
+	folder2 := CandySel2
+	GuiControl,, folder2, %folder2%
+}
+Else
+{
+	Gui,66:Destroy
+	Gui,66: Default
+	SplitPath, folder1, OutFileName
+	AllOpenFolder := GetAllWindowOpenFolder()
+	for k,v in AllOpenFolder
+	{
+		if (v = folder1)
+			Continue
+		SplitPath, v, Tmp_OutFileName
+		if (OutFileName = Tmp_OutFileName)
+		{
+			folder2 := v
+			break
+		}
+	}
+	Gui, Add, text, x10 y10, 源文件夹:
+	Gui, Add, edit, xp+70 w480 vfolder1, % folder1
+	Gui, Add, text, xp+500, 目标文件夹:
+	Gui, Add, edit, xp+80 y10 w460 vfolder2, % folder2
+	Gui, Add, ListView, x10 y40 w550 h500 vfilelist1 hwndHLV1 Checked AltSubmit gsync, 序号|文件名|修改日期|大小|md5
+	Gui, Add, ListView, x570 y40 w550 h500 vfilelist2 hwndHLV2 Checked AltSubmit gsync, 序号|文件名|修改日期|大小|相等|md5
+	Gui, Add, Button, x10 yp+510 h30 gloderfolder, 加载列表
+	Gui, Add, Button, xp+70 h30 grpview, 预览结果
+	Gui, Add, Button, xp+70 h30 gsave, 执行同步
+	gui, show,, 文件夹同步
+}
 return
 
 MD5_File( sFile="", cSz=4 ) { ; www.autohotkey.com/forum/viewtopic.php?p=275910#275910
@@ -37,6 +61,15 @@ MD5_File( sFile="", cSz=4 ) { ; www.autohotkey.com/forum/viewtopic.php?p=275910#
  Loop % StrLen( Hex:="123456789ABCDEF0" )
   N := NumGet( MD5_CTX,87+A_Index,"Char"), MD5 .= SubStr(Hex,N>>4,1) . SubStr(Hex,N&15,1)
 Return MD5
+}
+
+Receive_WM_COPYDATA(wParam, lParam)
+{
+	Global CandySel2
+	StringAddress := NumGet(lParam + 2*A_PtrSize)  ; 获取 CopyDataStruct 的 lpData 成员.
+	CandySel2 := StrGet(StringAddress)  ; 从结构中复制字符串.
+	gosub SyncFolder
+return true
 }
 
 On_WM_NOTIFY(W, L, M, H) {
@@ -292,4 +325,109 @@ GuiTextGuiClose:
 GuiTextGuiescape:
 Gui, GuiText: Destroy
 Return
+}
+
+GetAllWindowOpenFolder()
+{
+	if WinActive("ahk_class TTOTAL_CMD")
+	return TC_getTwoPath()
+
+	QtTabBarObj := QtTabBar()
+	if QtTabBarObj
+	{
+		OPenedFolder := QtTabBar_GetAllTabs()
+	}
+	else
+	{
+		OPenedFolder := []
+		ShellWindows := ComObjCreate("Shell.Application").Windows
+		for w in ShellWindows
+		{
+			Tmp_Fp := w.Document.Folder.Self.path
+			if (Tmp_Fp)
+				if FileExist(Tmp_Fp)
+				{
+					OPenedFolder.push(Tmp_Fp)
+				}
+		}
+	}
+return OPenedFolder
+}
+
+TC_getTwoPath()
+{
+	DetectHiddenText, On
+	WinGetText, TCWindowText, Ahk_class TTOTAL_CMD
+	m := RegExMatchAll(TCWindowText, "m)(.*)\\\*\.\*", 1)
+	return m
+}
+
+QtTabBar()
+{
+	try QtTabBarObj := ComObjCreate("QTTabBarLib.Scripting")
+	if IsObject(QtTabBarObj)
+	return 1
+	else
+	return 0
+}
+
+QtTabBar_GetAllTabs()
+{
+	ScriptCode = 
+	(
+		OPenedFolder_Str := GetAllWindowOpenFolder()
+		FileAppend `% OPenedFolder_Str, *
+
+		GetAllWindowOpenFolder()
+		{
+			OPenedFolder_Str := ""
+			QtTabBarObj := ComObjCreate("QTTabBarLib.Scripting")
+			if QtTabBarObj
+			{
+				for k in QtTabBarObj.Windows
+					for w in k.Tabs
+					{
+						Tmp_Fp := w.path
+						if (Tmp_Fp)
+							if FileExist(Tmp_Fp)
+							{
+								OPenedFolder_Str .= Tmp_Fp "``n"
+							}
+					}
+			}
+		return OPenedFolder_Str
+		}
+	)
+
+	OPenedFolder_Str := RunScript(ScriptCode, 1)
+	OPenedFolder_Str := Trim(OPenedFolder_Str, " `t`n")
+	OPenedFolder := StrSplit(OPenedFolder_Str, "`n")
+return OPenedFolder
+}
+
+RegExMatchAll(ByRef Haystack, NeedleRegEx, SubPat="")
+{
+	arr := [], startPos := 1
+	while ( pos := RegExMatch(Haystack, NeedleRegEx, match, startPos) )
+	{
+		arr.push(match%SubPat%)
+		startPos := pos + StrLen(match)
+	}
+	return arr.MaxIndex() ? arr : ""
+}
+
+RunScript(script, WaitResult:="false")
+{
+	static test_ahk := A_AhkPath,
+	shell := ComObjCreate("WScript.Shell")
+	BackUp_WorkingDir:= A_WorkingDir
+	SetWorkingDir %A_ScriptDir%
+	exec := shell.Exec(chr(34) test_ahk chr(34) " /ErrorStdOut *")
+	exec.StdIn.Write(script)
+	exec.StdIn.Close()
+	SetWorkingDir %BackUp_WorkingDir%
+	if WaitResult
+		return exec.StdOut.ReadAll()
+	else 
+return
 }
