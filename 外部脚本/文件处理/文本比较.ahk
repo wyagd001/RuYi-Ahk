@@ -1,6 +1,7 @@
 ﻿#SingleInstance force
 Menu, Tray, UseErrorLevel
 CandySel := A_Args[1]
+textfile2 := A_Args[2]
 OnMessage(0x4a, "Receive_WM_COPYDATA")
 ; 1098
 Cando_文本比较:
@@ -37,45 +38,47 @@ else
 		textfile1 := CandySel
 
 		SplitPath, textfile1, OutFileName, OutDir, OutExtension, OutNameNoExt
-		;textfile2 := ""
-		AllOpenFolder := GetAllWindowOpenFolder()
-		for k,v in AllOpenFolder
+		if !Fileexist(textfile2)
 		{
-			if (v = OutDir)
-			Continue
-			Tmp_Fp := v "\" OutNameNoExt
-			Tmp_Fp := StrReplace(Tmp_Fp, "\\", "\")
-			if FileExist(Tmp_Fp "*.*")
+			AllOpenFolder := GetAllWindowOpenFolder()
+			for k,v in AllOpenFolder
 			{
-				if FileExist(Tmp_Fp "." OutExtension)
+				if (v = OutDir)
+				Continue
+				Tmp_Fp := v "\" OutNameNoExt
+				Tmp_Fp := StrReplace(Tmp_Fp, "\\", "\")
+				if FileExist(Tmp_Fp "*.*")
 				{
-					textfile2 := Tmp_Fp "." OutExtension
-					;MSGBox 1 - %A_LoopFilePath%
-					break
+					if FileExist(Tmp_Fp "." OutExtension)
+					{
+						textfile2 := Tmp_Fp "." OutExtension
+						;MSGBox 1 - %A_LoopFilePath%
+						break
+					}
+					Loop, Files, % Tmp_Fp "*.*", F
+					{
+						if InStr(A_LoopFileName, OutNameNoExt) && (A_LoopFileName != OutFileName)
+						{
+							textfile2 := v "\" A_LoopFileName
+							textfile2 := StrReplace(textfile2, "\\", "\")
+							;MSGBox 2 - %A_LoopFilePath%
+							break 2
+						}
+					}
 				}
+			}
+			if !textfile2
+			{
+				Tmp_Fp := OutDir "\" OutNameNoExt
 				Loop, Files, % Tmp_Fp "*.*", F
 				{
 					if InStr(A_LoopFileName, OutNameNoExt) && (A_LoopFileName != OutFileName)
 					{
-						textfile2 := v "\" A_LoopFileName
+						textfile2 := OutDir "\" A_LoopFileName
 						textfile2 := StrReplace(textfile2, "\\", "\")
-						;MSGBox 2 - %A_LoopFilePath%
-						break 2
+						;MSGBox 3 - %A_LoopFilePath%
+						break
 					}
-				}
-			}
-		}
-		if !textfile2
-		{
-			Tmp_Fp := OutDir "\" OutNameNoExt
-			Loop, Files, % Tmp_Fp "*.*", F
-			{
-				if InStr(A_LoopFileName, OutNameNoExt) && (A_LoopFileName != OutFileName)
-				{
-					textfile2 := OutDir "\" A_LoopFileName
-					textfile2 := StrReplace(textfile2, "\\", "\")
-					;MSGBox 3 - %A_LoopFilePath%
-					break
 				}
 			}
 		}

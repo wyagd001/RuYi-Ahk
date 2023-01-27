@@ -1,4 +1,5 @@
 #SingleInstance force
+#include <ImagePut>
 ATA_settingFile := A_ScriptDir "\..\..\配置文件\如一.ini"
 ATA_filepath := A_Args[1]
 PrewFile:
@@ -17,14 +18,6 @@ return
 
 PreWWinGuiEscape:
 PreWWinGuiClose:
-if gif_prew
-{
-	hgif1.Pause()
-	sleep, 500
-	hgif1 := ""
-	gif_prew:=0
-exitapp
-}
 if Tmp_Val
 	Tmp_Val := ""
 Gui, PreWWin:Destroy
@@ -80,20 +73,16 @@ Gui, PreWWin:Show, w500 h300 Center,% ATA_filepath " - 文件预览"
 return
 
 Cando_pic_prew:
-if !prewpToken
-prewpToken := Gdip_Startup()
-GUI, +AlwaysOnTop +Owner
-Gui, Margin, 0, 0
-pBitmap:=Gdip_CreateBitmapFromFile(ATA_filepath)
-WidthO  :=Gdip_GetImageWidth(pBitmap)
-HeightO := Gdip_GetImageHeight(pBitmap)
-Gdip_DisposeImage(pBitmap)
-Propor  := (A_ScreenHeight/HeightO < A_ScreenWidth/WidthO ? A_ScreenHeight/HeightO : A_ScreenWidth/WidthO)
-Propor:=Propor > 1?1:Propor
-	hW  := Floor(WidthO * Propor)
-	hH := Floor(HeightO * Propor)
-Gui, Add, Picture,w%hw% h%hh%, %ATA_filepath%
-Gui,PreWWin: Show,  Center, % ATA_filepath " - 文件预览"
+hwnd := ImagePutWindow(ATA_filepath, ATA_filepath " - 文件预览")
+loop 
+{
+if WinExist("ahk_id" hwnd)
+{
+	sleep 200
+}
+else
+exitapp
+}
 return
 
 Cando_html_prew:
@@ -157,100 +146,6 @@ Static Vars := "hWnd | nMsg | wParam | lParam | A_EventInfo | A_GuiX | A_GuiY"
   }
 }
 
-Cando_gif_prew:
-if !prewpToken
-	prewpToken := Gdip_Startup()
-GUI, -Caption +AlwaysOnTop +Owner
-Gui, Margin, 0, 0
-pBitmap:=Gdip_CreateBitmapFromFile(ATA_filepath)
-Gdip_GetImageDimensions(pBitmap, width, height)
-Gui, Add, Picture,w%width% h%height% 0xE hwndhwndGif1
-Gdip_DisposeImage(pBitmap)
-hgif1 := new Gif(ATA_filepath, hwndGif1)
-Gui,PreWWin: Show, AutoSize Center, % ATA_filepath " - 文件预览"
-hgif1.Play()
-gif_prew:=true
-return
-
-; https://www.autohotkey.com/boards/viewtopic.php?p=112572
-class Gif
-{	
-	__New(file, hwnd)
-	{
-		this.file := file
-		this.hwnd := hwnd
-		this.pBitmap := Gdip_CreateBitmapFromFile(this.file)
-		Gdip_GetImageDimensions(this.pBitmap, width, height)
-		this.width := width, this.height := height
-		this.isPlaying := false
-		
-		DllCall("Gdiplus\GdipImageGetFrameDimensionsCount", "ptr", this.pBitmap, "uptr*", frameDimensions)
-		this.SetCapacity("dimensionIDs", 32)
-		DllCall("Gdiplus\GdipImageGetFrameDimensionsList", "ptr", this.pBitmap, "uptr", this.GetAddress("dimensionIDs"), "int", frameDimensions)
-		DllCall("Gdiplus\GdipImageGetFrameCount", "ptr", this.pBitmap, "uptr", this.GetAddress("dimensionIDs"), "int*", count)
-		this.frameCount := count
-		this.frameCurrent := -1
-		this.frameDelay := this.GetFrameDelay(this.pBitmap)
-	}
-
-	; Return a zero-based array, containing the frames delay (in milliseconds)
-	GetFrameDelay(pImage) {
-		static PropertyTagFrameDelay := 0x5100
-
-		DllCall("Gdiplus\GdipGetPropertyItemSize", "Ptr", pImage, "UInt", PropertyTagFrameDelay, "UInt*", ItemSize)
-		VarSetCapacity(Item, ItemSize, 0)
-		DllCall("Gdiplus\GdipGetPropertyItem"    , "Ptr", pImage, "UInt", PropertyTagFrameDelay, "UInt", ItemSize, "Ptr", &Item)
-
-		PropLen := NumGet(Item, 4, "UInt")
-		PropVal := NumGet(Item, 8 + A_PtrSize, "UPtr")
-
-		outArray := []
-		Loop, % PropLen//4 {
-			if !n := NumGet(PropVal+0, (A_Index-1)*4, "UInt")
-				n := 10
-			outArray[A_Index-1] := n * 10
-		}
-		return outArray
-	}
-	
-	Play()
-	{
-		this.isPlaying := true
-		fn := this._Play.Bind(this)
-		this._fn := fn
-		SetTimer, % fn, -1
-	}
-	
-	Pause()
-	{
-		this.isPlaying := false
-		fn := this._fn
-		SetTimer, % fn, Delete
-		sleep,200
-		fn:=this._fn:=""
-	}
-	
-	_Play()
-	{
-		this.frameCurrent := (this.frameCurrent = this.frameCount-1) ? 0 : this.frameCurrent + 1
-		DllCall("Gdiplus\GdipImageSelectActiveFrame", "ptr", this.pBitmap, "uptr", this.GetAddress("dimensionIDs"), "int", this.frameCurrent)
-		hBitmap := Gdip_CreateHBITMAPFromBitmap(this.pBitmap)
-		SetImage(this.hwnd, hBitmap)
-		DeleteObject(hBitmap)
-
-		fn := this._fn
-		if fn
-		SetTimer, % fn, % -1 * this.frameDelay[this.frameCurrent]
-	}
-	
-	__Delete()
-	{
-		Gdip_DisposeImage(this.pBitmap)
-		Object.Delete("dimensionIDs")
-		CF_ToolTip("成功释放对象!",3000)
-	}
-}
-
 Cando_pdf_prew:
 	gosub, IE_Open
 	WB.Navigate("https://wyagd001.github.io/pdfjs/es5/web/viewer.html?file=blank.pdf")  ; IE浏览器
@@ -296,7 +191,8 @@ return
 Cando_wps_prew:
 Tmp_Str := xd2txlib.ExtractText(ATA_filepath)
 Gui, +ReSize +MinSize800x540
-Gui, Add, Edit, w800 h520 Multi ReadOnly vdisplayArea, %Tmp_Str%
+Gui, Add, Edit, w800 h520 Multi ReadOnly vdisplayArea
+GuiControl,, displayArea, %Tmp_Str%
 Gui,PreWWin:Show, w800 h540 Center, % ATA_filepath " - 文件预览"
 sendmessage, 0xB1, -1, -1, Edit1, 文件预览
 Tmp_Str := ""

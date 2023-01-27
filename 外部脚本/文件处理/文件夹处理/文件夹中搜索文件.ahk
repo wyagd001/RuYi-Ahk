@@ -17,7 +17,7 @@ CandySel :=  A_Args[1]
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 SetBatchLines, -1   ; Never sleep
-IniRead, notepad2, %A_ScriptDir%\..\settings\setting.ini, otherProgram, notepad2, F:\Program Files\Editor\Notepad2\Notepad2.exe
+IniRead, notepad2, %A_ScriptDir%\..\..\..\配置文件\如一.ini, 其他程序, notepad2, F:\Program Files\Editor\Notepad2\Notepad2.exe
 
   WM_NOTIFY               := 0x004E
   LVN_FIRST               := -100
@@ -58,7 +58,7 @@ IniRead, notepad2, %A_ScriptDir%\..\settings\setting.ini, otherProgram, notepad2
   Gui +Resize
 
   ; Create some buttons:
-  Gui, Add, Button, Default vBtnLoadFolder gButtonLoadFolder, &Load a folder
+  Gui, Add, Button, Default vBtnLoadFolder gButtonLoadFolder, &选择文件夹
   Gui, Add, Button, x+15 gopenfolder, 打开目录(&D)
   Gui, Add, Button, x+15 gopenfile, 打开文件(&F)
   Gui, Add, Button, x+15 geditfile, 编辑文件(记事本)(&E)
@@ -128,7 +128,7 @@ dLoadFolder:
 
   ButtonLoadFolder:
       Gui +OwnDialogs  ; Forces user to dismiss the following dialog before using main window.
-      FileSelectFolder, Folder,, 3, Select a folder to read:
+      FileSelectFolder, Folder,, 3, 选择要搜索的文件夹:
       if not Folder  ; The user canceled the dialog.
           return
 
@@ -476,14 +476,14 @@ IfInString, varvalue, `%USERPROFILE`%
 }
 Return
 
-  openfolder:
+openfolder:
 gosub,slectrowfolder
 Run, %varvalue% ;,,UseErrorLevel
 Return
 
 openfile:
 gosub,slectrowfolder
-varvalue:=varvalue . "\" . varvalue1
+varvalue := varvalue . "\" . varvalue1
 Run, %varvalue% ;,,UseErrorLevel
 Return
 

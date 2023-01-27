@@ -1,5 +1,6 @@
 folder1 :=  A_Args[1]
 folder2 :=  A_Args[2]
+B_Autohotkey := A_ScriptDir "\..\..\引用程序\" (A_PtrSize = 8 ? "AutoHotkeyU64.exe" : "AutoHotkeyU32.exe")
 ; 1088
 OnMessage(0x4a, "Receive_WM_COPYDATA")
 SyncFolder:
@@ -7,22 +8,26 @@ IfWinExist, 文件夹同步 ahk_class AutoHotkeyGUI
 {
 	folder2 := CandySel2
 	GuiControl,, folder2, %folder2%
+	gosub loderfolder
 }
 Else
 {
 	Gui,66:Destroy
 	Gui,66: Default
 	SplitPath, folder1, OutFileName
-	AllOpenFolder := GetAllWindowOpenFolder()
-	for k,v in AllOpenFolder
+	if !Fileexist(folder2)
 	{
-		if (v = folder1)
-			Continue
-		SplitPath, v, Tmp_OutFileName
-		if (OutFileName = Tmp_OutFileName)
+		AllOpenFolder := GetAllWindowOpenFolder()
+		for k,v in AllOpenFolder
 		{
-			folder2 := v
-			break
+			if (v = folder1)
+				Continue
+			SplitPath, v, Tmp_OutFileName
+			if (OutFileName = Tmp_OutFileName)
+			{
+				folder2 := v
+				break
+			}
 		}
 	}
 	Gui, Add, text, x10 y10, 源文件夹:
@@ -35,6 +40,16 @@ Else
 	Gui, Add, Button, xp+70 h30 grpview, 预览结果
 	Gui, Add, Button, xp+70 h30 gsave, 执行同步
 	gui, show,, 文件夹同步
+	Menu, Tray, UseErrorLevel
+	Menu, filelistMenu, deleteall
+	Menu, filelistMenu, Add, 下一个选中, jumpcheckedfile
+	Menu, filelistMenu, Add, 打开, openfilefromlist
+	Menu, filelistMenu, Add, 打开路径, openfilepfromlist
+	Menu, filelistMenu, Add, 编辑选中文件, editfilefromlist
+	Menu, filelistMenu, Add, 文本文件对比, compfilefromlist
+	Menu, filelistMenu, Add, 删除选中文件, delfillefromlist
+	if folder2
+		gosub loderfolder
 }
 return
 
@@ -128,7 +143,7 @@ Loop, Files, %folder1%\*.*, DFR
 		folderobj1[relativePS] := 1
 	flastwriteobj1[relativePS] := A_LoopFileTimeModified
 	fsizeobj1[relativePS] := A_LoopFileSizeKB
-	fMD5obj1[relativePS] := MD5_File(A_LoopFilePath)
+	;fMD5obj1[relativePS] := MD5_File(A_LoopFilePath)
 	Tmp_Str .= relativePS "`n"
 }
 
@@ -149,7 +164,7 @@ Loop, Files, %folder2%\*.*, DFR
 		folderobj2[relativePS] := 1
 	flastwriteobj2[relativePS] := A_LoopFileTimeModified
 	fsizeobj2[relativePS] := A_LoopFileSizeKB
-	fMD5obj2[relativePS] := MD5_File(A_LoopFilePath)
+	;fMD5obj2[relativePS] := MD5_File(A_LoopFilePath)
 	Tmp_Str .= relativePS "`n"
 }
 
@@ -161,24 +176,34 @@ Loop, parse, Tmp_Str, `n, `r
 	Gui, ListView, filelist1
 	if folderobj1.HasKey(A_LoopField)
 	{
-		LV_Add("", A_Index, A_LoopField, flastwriteobj1[A_LoopField], fsizeobj1[A_LoopField], fMD5obj1[A_LoopField])
+		LV_Add("", A_Index, A_LoopField, flastwriteobj1[A_LoopField], fsizeobj1[A_LoopField])
 	}
 	else
 	{
-		;msgbox % A_LoopField
 		LV_Add("", A_Index, "空")
 	}
 
 	Gui, ListView, filelist2
 	if folderobj2.HasKey(A_LoopField)
 	{
-		if (fMD5obj2[A_LoopField]=fMD5obj1[A_LoopField])
+		if (fsizeobj1[A_LoopField]=fsizeobj2[A_LoopField])
 		{
-			LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeobj2[A_LoopField], "是", fMD5obj2[A_LoopField])
+			fMD5obj2[A_LoopField] := MD5_File(folder2 "\" A_LoopField)
+			fMD5obj1[A_LoopField] := MD5_File(folder1 "\" A_LoopField)
+			if (fMD5obj1[A_LoopField]=fMD5obj2[A_LoopField])
+			{
+				LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeobj2[A_LoopField], "是", fMD5obj2[A_LoopField])
+			}
+			else
+			{
+				LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeobj2[A_LoopField], "否", fMD5obj2[A_LoopField])
+				Gui, ListView, filelist1
+				LV_Modify(A_Index, "check",,,,, fMD5obj1[A_LoopField])
+			}
 		}
 		else
 		{
-			LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeobj2[A_LoopField], "否", fMD5obj2[A_LoopField])
+			LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeobj2[A_LoopField], "否")
 			if folderobj1.HasKey(A_LoopField)
 			{
 				Gui, ListView, filelist1
@@ -217,7 +242,6 @@ if (A_GuiControl = "filelist2") && (A_GuiEvent = "Normal")
 {
 	Gui, ListView, filelist2
 	RF := LV_GetNext("F")
-	tooltip % RF
 	Gui, ListView, filelist1
 	LV_Modify(0, "-Select")
 	LV_Modify(RF, "Select Focus Vis")
@@ -313,18 +337,157 @@ Loop
 GuiText(Tmp_Str, 500, 20)
 return
 
-GuiText(Gtext, w:=300, l:=20)
+66GuiContextMenu:
+if (A_GuiControl = "filelist1")
 {
-Gui,GuiText: Destroy
-Gui,GuiText: Default
-Gui, Add, Edit, Multi readonly w%w% r%l%, %Gtext%
-gui, Show, AutoSize
+	Gui, ListView, filelist1
+	lvfolder := 1
+	Menu, filelistMenu, Show
+}
+if (A_GuiControl = "filelist2")
+{
+	Gui, ListView, filelist2
+	lvfolder := 2
+	Menu, filelistMenu, Show
+}
 return
 
-GuiTextGuiClose:
-GuiTextGuiescape:
-Gui, GuiText: Destroy
-Return
+nul:
+return
+
+delfillefromlist:
+Gui,66: Default
+RF := LV_GetNext("F")
+Tmp_Str := ""
+if RF
+{
+	LV_GetText(Tmp_Str, RF, 2)
+}
+if Tmp_Str
+{
+	if (lvfolder=1)
+	{
+		FileDelete %folder1%\%Tmp_Str%
+		LV_Modify(RF, "-check",, "空", "", "", "")
+	}
+	if (lvfolder=2)
+	{
+		FileDelete %folder2%\%Tmp_Str%
+		LV_Modify(RF, "-check",, "空", "", "", "", "")
+	}
+}
+return
+
+editfilefromlist:
+Gui,66: Default
+RF := LV_GetNext("F")
+Tmp_Str := ""
+if RF
+{
+	LV_GetText(Tmp_Str, RF, 2)
+}
+if Tmp_Str
+{
+	IniRead, notepad2, %A_ScriptDir%\..\..\配置文件\如一.ini, 其他程序, notepad2
+	notepad2 := notepad2 ? notepad2 : "notepad.exe"
+	if (lvfolder=1)
+	{
+		if (folderobj1[Tmp_Str] != "folder")
+			run %notepad2% "%folder1%\%Tmp_Str%"
+	}
+	if (lvfolder=2)
+	{
+		if (folderobj2[Tmp_Str] != "folder")
+			run %notepad2% "%folder2%\%Tmp_Str%"
+	}
+}
+return
+
+compfilefromlist:
+Gui,66: Default
+RF := LV_GetNext("F")
+Tmp_Str := ""
+if RF
+{
+	LV_GetText(Tmp_Str, RF, 2)
+}
+if Tmp_Str
+{
+	if (folderobj1[Tmp_Str] != "folder") && folderobj2[Tmp_Str]
+	{
+		run %B_Autohotkey% "%A_ScriptDir%\..\文件处理\文本比较.ahk" "%folder1%\%Tmp_Str%" "%folder2%\%Tmp_Str%"
+	}
+}
+return
+
+openfilefromlist:
+Gui,66: Default
+RF := LV_GetNext("F")
+Tmp_Str := ""
+if RF
+{
+	LV_GetText(Tmp_Str, RF, 2)
+}
+if Tmp_Str
+{
+	if (lvfolder=1)
+	{
+		run %folder1%\%Tmp_Str%
+	}
+	if (lvfolder=2)
+	{
+		run %folder2%\%Tmp_Str%
+	}
+}
+return
+
+openfilepfromlist:
+Gui,66: Default
+RF := LV_GetNext("F")
+Tmp_Str := ""
+if RF
+{
+	LV_GetText(Tmp_Str, RF, 2)
+}
+if Tmp_Str
+{
+	if (lvfolder=1)
+	{
+		Run, explorer.exe /select`, %folder1%\%Tmp_Str%
+	}
+	if (lvfolder=2)
+	{
+		Run, explorer.exe /select`, %folder2%\%Tmp_Str%
+	}
+}
+return
+
+jumpcheckedfile:
+Gui,66: Default
+RF := LV_GetNext("F")
+if RF
+{
+	RFF := LV_GetNext(RF, "C")
+	if !RFF
+		RFF := LV_GetNext(RF+1, "C")
+	LV_Modify(RFF, "Focus Vis")
+}
+return
+
+GuiText(Gtext, w:=300, l:=20)
+{
+	global myedit
+	Gui,GuiText: Destroy
+	Gui,GuiText: Default
+	Gui, Add, Edit, Multi readonly w%w% r%l% vmyedit
+	GuiControl,, myedit, %Gtext%
+	gui, Show, AutoSize
+	return
+
+	GuiTextGuiClose:
+	GuiTextGuiescape:
+	Gui, GuiText: Destroy
+	Return
 }
 
 GetAllWindowOpenFolder()

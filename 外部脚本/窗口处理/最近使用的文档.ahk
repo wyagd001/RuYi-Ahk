@@ -4,9 +4,15 @@ DetectHiddenWindows, On
 WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI
 Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")
 if Windy_CurWin_id
+{
 	WinGetClass, Windy_CurWin_Class, ahk_id %Windy_CurWin_id%
+	WinGet, Windy_CurWin_Fullpath, ProcessPath, Ahk_ID %Windy_CurWin_id% 
+}
 else
+{
 	WinGetClass, Windy_CurWin_Class, A
+	WinGet, Windy_CurWin_Fullpath, ProcessPath, A
+}
 
 if (Windy_CurWin_Class = "Notepad") or (Windy_CurWin_Class = "Notepad2U")
 menu, % LnkFolderMenu(RecentFolderPath, "txt,ahk,htm","收藏夹",0,2,1,1), show
@@ -215,7 +221,11 @@ LnkFolderMenu(FolderPath, SpecifyExt:="*", MenuName:="", ShowIcon:=1, ShowOpenFo
 }
 
 Run(a) {
-	run, %a%
+	global Windy_CurWin_Fullpath
+	if getkeystate("Shift") && Windy_CurWin_Fullpath
+		run "%Windy_CurWin_Fullpath%" "%a%"
+	else
+		run, %a%
 }
 
 FolderMenu_AddIcon(menuitem,submenu)
