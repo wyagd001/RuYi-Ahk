@@ -2,28 +2,29 @@
 
 If WinExist("ahk_class RegEdit_RegEdit")
 {
-	ControlGet, hTreeView, Hwnd,, SysTreeView321, ahk_class RegEdit_RegEdit
-	TVPath_Set(hTreeView, "计算机\" CandySel, matchPath)
-}
-return
-; 1161,1162
-注册表复制路径:
-ControlGet, hTreeView, hwnd, , SysTreeView321, ahk_class RegEdit_RegEdit
-CopyTvPath:
-ret := TVPath_Get(hTreeView, outPath)
-if(ret = "") ; 为空表示成功
-{
-	If WinActive("ahk_class RegEdit_RegEdit") or WinExist("ahk_class RegEdit_RegEdit")
+	if CandySel
 	{
-		StringGetPos, hpos, outPath, HKEY
-		StringTrimLeft, OutputVar, outPath, hpos
-		clipboard := OutputVar
+		if !instr(CandySel, "计算机\")
+			CandySel := "计算机\" CandySel
+		ControlGet, hTreeView, Hwnd,, SysTreeView321, ahk_class RegEdit_RegEdit
+		TVPath_Set(hTreeView, CandySel, matchPath)
 	}
 	else
-		msgbox % outPath
+	{
+		ControlGet, hTreeView, hwnd, , SysTreeView321, ahk_class RegEdit_RegEdit
+		CopyTvPath:
+		ret := TVPath_Get(hTreeView, outPath)
+		if(ret = "") ; 为空表示成功
+		{
+			StringGetPos, hpos, outPath, HKEY
+			StringTrimLeft, OutputVar, outPath, hpos
+			clipboard := OutputVar
+			msgbox % "已复制路径: " outPath
+		}
+		else
+			msgbox % "获取失败 " ret " @@@ " outPath
+	}
 }
-else
-	msgbox % "获取失败 " ret " @@@ " outPath
 Return
 
 ; 注册表打开时跳转到相应条目 主窗口\OpenButton.ahk

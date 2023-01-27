@@ -8,8 +8,17 @@ if (RegExMatch(CandySel, "i)^(HKCU|HKCR|HKCC|HKU|HKLM|HKEY|计算机\\HK|\[HK)")
 
 if RegExMatch(CandySel, "i)^(https://|http://)+(.*\.)+.*")
 {
-	run, %A_ScriptDir%\..\引用程序\AnyToAhk.exe %CandySel%
+	run, %CandySel%
 	return
+}
+
+if RegExMatch(CandySel, "[a-zA-Z0-9\+\-\*/]+")
+{
+	if Tmp_Value := Eval(CandySel)
+	{
+		msgbox % Tmp_Value
+		return
+	}
 }
 
 CandySel := Deref(CandySel)
@@ -17,14 +26,14 @@ run %CandySel%,, UseErrorLevel
 ;msgbox  %CandySel%
 if ErrorLevel
 {
-	run, %A_ScriptDir%\..\引用程序\AnyToAhk.exe https://www.baidu.com/s?wd=%CandySel%
+	run, https://www.baidu.com/s?wd=%CandySel%
 }
 return
 
 f_OpenReg(RegPath)
 {
-	RegPath:=LTrim(RegPath, "[")
-	RegPath:=RTrim(RegPath, "]")
+	RegPath := LTrim(RegPath, "[")
+	RegPath := RTrim(RegPath, "]")
 	StringLeft, RegPathFirst4, RegPath, 4
 	if RegPathFirst4 = HKCR
 		StringReplace, RegPath, RegPath, HKCR, HKEY_CLASSES_ROOT
@@ -57,28 +66,20 @@ f_OpenReg(RegPath)
 
 	RegRead, MyComputer, HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Applets\Regedit, LastKey
 	f_Split2(MyComputer, "\", MyComputer, aaa)
-	MyComputer:=MyComputer?MyComputer:(A_OSVersion="WIN_XP")?"我的电脑":"计算机"
+	MyComputer := MyComputer ? MyComputer : (A_OSVersion="WIN_XP")?"我的电脑":"计算机"
+	IfNotInString, RegPath, %MyComputer%\
+		RegPath := MyComputer "\" RegPath
+	;tooltip % RegPath
 
 	IfWinExist, ahk_class RegEdit_RegEdit
 	{
-		Global s_DontKillReg
-		if !s_DontKillReg
-		{
-			RunWait, % "cmd.exe /c taskkill /IM regedit.exe", , Hide
-			RegWrite, REG_SZ, HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Applets\Regedit, LastKey, %MyComputer%\%RegPath%
-			Run, regedit.exe
-		Return
-		}
-		IfNotInString, RegPath, %MyComputer%\
-			RegPath := MyComputer "\" RegPath
-;tooltip % RegPath
-		WinActivate, ahk_class RegEdit_RegEdit
-		ControlGet, hwnd, hwnd, , edit, ahk_class RegEdit_RegEdit
-		
+		RunWait, % "cmd.exe /c taskkill /IM regedit.exe", , Hide
+		RegWrite, REG_SZ, HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Applets\Regedit, LastKey, %RegPath%
+		Run, regedit.exe
 	}
 	Else
 	{
-		RegWrite, REG_SZ, HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Applets\Regedit, LastKey, %MyComputer%\%RegPath%
+		RegWrite, REG_SZ, HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Applets\Regedit, LastKey, %RegPath%
 		Run, regedit.exe ;-m
 	}
 return
