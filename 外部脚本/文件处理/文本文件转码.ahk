@@ -2,11 +2,11 @@
 CandySel := A_Args[1]
 aInCp := File_GetEncoding(CandySel)
 SplitPath, CandySel, OutFileName, , , , OutDrive
-vvaluetocp := {"ANSI": "CP936", "UTF-8 BOM": "UTF-8", "UTF-8": "UTF-8-Raw", "Unicode": "UTF-16","Unicode 高位在前": "cp1201"}
+vvaluetocp := {"ANSI": "CP936", "UTF-8 BOM": "UTF-8", "UTF-8": "UTF-8-Raw", "Unicode": "UTF-16","Unicode 高位在前": "cp1201", "ANSI(日文)": "CP932", "ANSI(韩文)": "CP949"}
 cptovvalue := {"CP936": "ANSI", "UTF-8": "UTF-8 BOM", "UTF-8-Raw": "UTF-8", "UTF-16": "Unicode", "cp1201": "Unicode 高位在前"}
 
 gui add, text, x5 y5, 原编码:
-gui add, ComboBox, xp+50 yp-3 w110 vvaInCp, ANSI|UTF-8|UTF-8 BOM|Unicode|Unicode 高位在前
+gui add, ComboBox, xp+50 yp-3 w110 vvaInCp, ANSI|UTF-8|UTF-8 BOM|Unicode|Unicode 高位在前|ANSI(日文)|ANSI(韩文)
 gui add, text, xp+120 y5, 新编码:
 gui add, ComboBox, xp+50 yp-3 w100 vvOutCp, ANSI|UTF-8|UTF-8 BOM|Unicode|Unicode 高位在前
 gui add, Button, xp+120 h25 gchange, 转换

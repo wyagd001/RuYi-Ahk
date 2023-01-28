@@ -222,7 +222,10 @@ Loop, parse, Tmp_Str, `n, `r
 }
 
 Gui, ListView, filelist1
-LV_ModifyCol()
+{
+	LV_ModifyCol()
+	LV_ModifyCol(5, 220)
+}
 Gui, ListView, filelist2
 LV_ModifyCol()
 IH := LV_GetItemHeight(HLV1)

@@ -12,12 +12,15 @@ if RegExMatch(CandySel, "i)^(https://|http://)+(.*\.)+.*")
 	return
 }
 
-if RegExMatch(CandySel, "[a-zA-Z0-9\+\-\*/]+")
+if RegExMatch(CandySel, "^[a-zA-Z0-9\+\-\*/\.\^%]+", Tmp_Out)
 {
-	if Tmp_Value := Eval(CandySel)
+	if (strlen(Tmp_Out) >= 2)
 	{
-		msgbox % Tmp_Value
-		return
+		if Tmp_Value := Eval(Tmp_Out)
+		{
+			msgbox % Tmp_Value
+			return
+		}
 	}
 }
 
