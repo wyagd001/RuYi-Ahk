@@ -16,9 +16,19 @@ else
 
 Windo_其他编辑器打开:
 sTextDocumentPath := GetTextDocumentPath(Windy_CurWin_Pid, Windy_CurWin_id, Windy_CurWin_Title)
-run, %CandySel% "%sTextDocumentPath%",, UseErrorLevel
-If (ErrorLevel = "Error")
-	msgbox 请检查编辑器路径: %CandySel% `n和文档路径: %sTextDocumentPath%
+if (CandySel = "当前浏览器")
+{
+	B_Autohotkey := A_ScriptDir "\..\..\引用程序\" (A_PtrSize = 8 ? "AutoHotkeyU64.exe" : "AutoHotkeyU32.exe")
+	run, "%B_Autohotkey%" "%A_ScriptDir%\当前浏览器打开.ahk" "%sTextDocumentPath%"
+	If (ErrorLevel = "Error")
+		msgbox 请检查编辑器路径: %B_Autohotkey% `n和文档路径: %sTextDocumentPath%
+}
+else
+{
+	run, %CandySel% "%sTextDocumentPath%",, UseErrorLevel
+	If (ErrorLevel = "Error")
+		msgbox 请检查编辑器路径: %CandySel% `n和文档路径: %sTextDocumentPath%
+}
 return
 
 GetTextDocumentPath(_pid, _id, _Title)

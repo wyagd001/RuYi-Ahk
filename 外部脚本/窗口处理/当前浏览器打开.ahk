@@ -22,7 +22,7 @@ If Default_Browser
 {
 	Loop, parse, url, |
 	{
-		IfInString, ATA_filepath, %A_LoopField%
+		IfInString, ATA_filepath, %A_LoopField%    ;ATA_filepath有特定字符时使用默认浏览器打开
 		{
 			Loop, parse, Default_Browser, `,
 			{
@@ -37,7 +37,7 @@ If Default_Browser
 	}
 }
 br := 0
-if InStr(InUse_Browser, Windy_CurWin_ProcName)
+if InStr(InUse_Browser, Windy_CurWin_ProcName)   ;当前窗口在使用的浏览器列表当中
 {
 	If(Windy_CurWin_ProcName = "chrome.exe" or Windy_CurWin_ProcName = "firefox.exe")
 	{
@@ -53,7 +53,7 @@ if InStr(InUse_Browser, Windy_CurWin_ProcName)
 			br := 1
 	}
 }
-StringSplit, BApp, InUse_Browser, `,
+StringSplit, BApp, InUse_Browser, `,     ;当前窗口进程名不在使用的浏览器列表当中
 LoopN := 1
 if !br
 {
@@ -62,7 +62,7 @@ if !br
 		BCtrApp := BApp%LoopN%
 		LoopN++
 		Process, Exist, %BCtrApp%
-		If (errorlevel<>0)
+		If (errorlevel<>0)    ;  使用的浏览器列表当中的浏览器进程是否存在
 		{
 			NewPID = %ErrorLevel%
 			If(BCtrApp = "chrome.exe" or BCtrApp = "firefox.exe")
@@ -85,7 +85,7 @@ if !br
 		}
 	}
 }
-if !br
+if !br   ; 没有打开的浏览器时使用默认的浏览器
 {
 	If Default_Browser
 	{

@@ -8,7 +8,8 @@ IfWinExist, 文件夹同步 ahk_class AutoHotkeyGUI
 {
 	folder2 := CandySel2
 	GuiControl,, folder2, %folder2%
-	gosub loderfolder
+	if (folder2 != folder1)
+		gosub loderfolder
 }
 Else
 {
@@ -48,7 +49,7 @@ Else
 	Menu, filelistMenu, Add, 编辑选中文件, editfilefromlist
 	Menu, filelistMenu, Add, 文本文件对比, compfilefromlist
 	Menu, filelistMenu, Add, 删除选中文件, delfillefromlist
-	if folder2
+	if folder2 && (folder2 != folder1)
 		gosub loderfolder
 }
 return
@@ -171,6 +172,8 @@ Loop, Files, %folder2%\*.*, DFR
 Tmp_Str := Trim(Tmp_Str, "`n")
 Sort, Tmp_Str, U
 
+GuiControl, -redraw, filelist1
+GuiControl, -redraw, filelist2
 Loop, parse, Tmp_Str, `n, `r
 {
 	Gui, ListView, filelist1
@@ -228,6 +231,9 @@ Gui, ListView, filelist1
 }
 Gui, ListView, filelist2
 LV_ModifyCol()
+GuiControl, +redraw, filelist1
+GuiControl, +redraw, filelist2
+
 IH := LV_GetItemHeight(HLV1)
 OnMessage(0x004E, "On_WM_NOTIFY")
 return
@@ -254,6 +260,7 @@ return
 66GuiClose:
 66Guiescape:
 Gui,66: Destroy
+Gui,GuiText: Destroy
 exitapp
 Return
 
@@ -301,6 +308,7 @@ Loop
 	if (folderobj2[Tmp_Str] = "folder" )
 		FileRemoveDir, %folder2%\%Tmp_Str%
 }
+CF_ToolTip("同步完成", 3000)
 return
 
 rpview:
@@ -311,16 +319,17 @@ RowNumber := 0  ; 这样使得首次循环从列表的顶部开始搜索.
 Tmp_Str := ""
 Loop
 {
-    RowNumber := LV_GetNext(RowNumber, "C")  ; 在前一次找到的位置后继续搜索.
-		;msgbox % RowNumber
-    if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
-        break
+	RowNumber := LV_GetNext(RowNumber, "C")  ; 在前一次找到的位置后继续搜索.
+	;msgbox % RowNumber
+	if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
+		break
 
 	LV_GetText(Tmp_Value, RowNumber, 2)
-if (folderobj1[Tmp_Value] = "folder" )
-	Tmp_Str .= "新建文件夹: " Tmp_Value "`n"
-else
-	Tmp_Str .= "同步的文件: "  Tmp_Value "`n"
+	Tmp_index := Format("{:04}", A_Index)
+	if (folderobj1[Tmp_Value] = "folder" )
+		Tmp_Str .= Tmp_index ". 新建文件夹: " Tmp_Value "`n"
+	else
+		Tmp_Str .= Tmp_index ". 同步的文件: "  Tmp_Value "`n"
 }
 
 Gui, ListView, filelist2
@@ -331,10 +340,11 @@ Loop
 	if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
 		break
 	LV_GetText(Tmp_Value, RowNumber, 2)
+	Tmp_index := Format("{:04}", A_Index)
 	if (folderobj2[Tmp_Value] = "folder" )
-		Tmp_Str .= "删除的文件夹: " Tmp_Value "`n"
+		Tmp_Str .= Tmp_index ". 删除的文件夹: " Tmp_Value "`n"
 	else
-		Tmp_Str .= "删除的文件: " Tmp_Value "`n"
+		Tmp_Str .= Tmp_index ". 删除的文件: " Tmp_Value "`n"
 }
 ;msgbox % Tmp_Str
 GuiText(Tmp_Str, 500, 20)
@@ -479,9 +489,10 @@ return
 
 GuiText(Gtext, w:=300, l:=20)
 {
-	global myedit
+	global myedit, TextGuiHwnd
 	Gui,GuiText: Destroy
 	Gui,GuiText: Default
+	Gui, +HwndTextGuiHwnd
 	Gui, Add, Edit, Multi readonly w%w% r%l% vmyedit
 	GuiControl,, myedit, %Gtext%
 	gui, Show, AutoSize
@@ -595,5 +606,17 @@ RunScript(script, WaitResult:="false")
 	if WaitResult
 		return exec.StdOut.ReadAll()
 	else 
+return
+}
+
+CF_ToolTip(tipText, delay := 1000)
+{
+	ToolTip
+	ToolTip, % tipText
+	SetTimer, RemoveToolTip, % "-" delay
+return
+
+RemoveToolTip:
+	ToolTip
 return
 }
