@@ -45,9 +45,9 @@ IniRead, notepad2, %A_ScriptDir%\..\..\..\配置文件\如一.ini, 其他程序, notepad2,
 
   ;CP_ACP                  := 0           ; default to ANSI code page
 
-  g_strAppName            := "Smart Open File"
-  g_strVersion            := "2010.5.10"
-  g_strTitle              := g_strAppName A_Space g_strVersion
+  ;g_strAppName            := "Smart Open File"
+  ;g_strVersion            := "2010.5.10"
+  g_strTitle              := "文件夹中搜索文件"
   g_hMainWnd              := 0
 
   g_nFilesCount           := 0
@@ -110,7 +110,9 @@ IniRead, notepad2, %A_ScriptDir%\..\..\..\配置文件\如一.ini, 其他程序, notepad2,
 
 dLoadFolder:
       g_nMatchCount := 0
-      WinSetTitle, , , %g_strTitle% [%g_nMatchCount% of %g_nFilesCount%]
+      SplitPath, Folder, OutFileName
+
+      WinSetTitle, , , %g_strTitle% - %OutFileName% [%g_nMatchCount% of %g_nFilesCount%]
 
       GuiControl, Disable, BtnLoadFolder
       SetTimer, FileLoadProgressTimer, 100
@@ -133,7 +135,8 @@ dLoadFolder:
           return
 
       g_nMatchCount := 0
-      WinSetTitle, , , %g_strTitle% [%g_nMatchCount% of %g_nFilesCount%]
+      SplitPath, Folder, OutFileName
+      WinSetTitle, , , %g_strTitle% - %OutFileName% [%g_nMatchCount% of %g_nFilesCount%]
 
       GuiControl, Disable, BtnLoadFolder
       SetTimer, FileLoadProgressTimer, 100
@@ -217,7 +220,7 @@ dLoadFolder:
           GuiControl, Focus, EditSearchString,
       }
      WinSet, Redraw, , ahk_id %g_hMyListView%   ;重绘窗口
-      WinSetTitle, , , %g_strTitle% [%g_nMatchCount% of %g_nFilesCount%]
+      WinSetTitle, , , %g_strTitle% - %OutFileName% [%g_nMatchCount% of %g_nFilesCount%]
   Return
 
   IsMatch(ByRef strFileName, ByRef strFolder, strSubPattern)
@@ -244,7 +247,7 @@ dLoadFolder:
 
   FileLoadProgressTimer:
       Gui +LastFound
-      WinSetTitle, , , %g_strTitle% [%g_nMatchCount% of %g_nFilesCount%]
+      WinSetTitle, , , %g_strTitle% - %OutFileName% [%g_nMatchCount% of %g_nFilesCount%]
   Return
 
  /*

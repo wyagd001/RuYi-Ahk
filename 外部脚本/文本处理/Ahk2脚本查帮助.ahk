@@ -27,7 +27,7 @@ Cando_查新版帮助:
 				sleep, 2000
 				wb := WBGet("ahk_class HH Parent")
 				StringReplace, 直接打开, CandySel, #, _
-				Ahk跳转的地址 = /docs/commands/%直接打开%.htm
+				Ahk跳转的地址 = /docs/lib/%直接打开%.htm
 				myURL = mk:@MSITStore:%ahk中文帮助%::%Ahk跳转的地址%
 
 				wb.Navigate(myURL)

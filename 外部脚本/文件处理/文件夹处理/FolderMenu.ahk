@@ -183,6 +183,13 @@ FolderMenu(FolderPath, SpecifyExt:="*", MenuName:="", ShowIcon:=1, ShowOpenFolde
 }
 
 Run(a) {
+if getkeystate("Shift")
+{
+	IniRead, notepad2, %A_ScriptDir%\..\..\..\配置文件\如一.ini, 其他程序, notepad2
+	notepad2 := (notepad2 && notepad2 != "error" ) ? notepad2 : "notepad.exe"
+	run "%notepad2%" "%a%"
+}
+else
 	run, %a%
 }
 

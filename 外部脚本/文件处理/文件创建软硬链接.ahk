@@ -29,8 +29,10 @@ if (CandySel_Ext = "Folder")
 {
 	GuiControl, Disable, SHHL_Type_Hardlink
 	GuiControl, , SHHL_Type_SymbolicLink, 1
+	Gui, show, , 为文件夹 [%CandySel_FileName%] 创建链接
 }
-Gui, show, , 为文件[%CandySel_FileName%]创建链接
+else
+	Gui, show, , 为文件 [%CandySel_FileName%] 创建链接
 return
 
 SHHL_OK:

@@ -12,23 +12,23 @@ if RegExMatch(CandySel, "i)^(https://|http://)+(.*\.)+.*")
 	return
 }
 
-if RegExMatch(CandySel, "^[a-zA-Z0-9\+\-\*/\.\^%]+", Tmp_Out)
-{
-	if (strlen(Tmp_Out) >= 2)
-	{
-		if Tmp_Value := Eval(Tmp_Out)
-		{
-			msgbox % Tmp_Value
-			return
-		}
-	}
-}
-
 CandySel := Deref(CandySel)
 run %CandySel%,, UseErrorLevel
 ;msgbox  %CandySel%
 if ErrorLevel
 {
+	if RegExMatch(CandySel, "^[a-zA-Z0-9\+\-\*/\.\^%]+", Tmp_Out)
+	{
+		if (strlen(Tmp_Out) >= 2)
+		{
+			Tmp_Value := Eval(Tmp_Out)
+			if Tmp_Value is number
+			{
+				msgbox % Tmp_Value
+				return
+			}
+		}
+	}
 	run, https://www.baidu.com/s?wd=%CandySel%
 }
 return
