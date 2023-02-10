@@ -207,11 +207,11 @@ run, "%A_ScriptDir%\..\..\引用程序\AutoHotkeyU32.exe" "%A_ScriptDir%\输出excel数
 exitapp
 
 Cando_rar_prew:
-	IniRead, 7z, %ATA_settingFile%, app, 7z, %A_Space%
-	IniRead, winrar, %ATA_settingFile%, app, winrar, %A_Space%
+	IniRead, 7z, %ATA_settingFile%, 其他程序, 7z, %A_Space%
+	IniRead, winrar, %ATA_settingFile%, 其他程序, winrar, %A_Space%
 	if !7z
 	{
-		msgbox 没有找到 7z 程序，请检查设置文件中App的7z条目。 压缩包无法预览，程序退出。
+		msgbox 没有找到 7z 程序，请检查设置文件 [如一.ini] 中 [其他程序] 的7z条目，文件无法预览程序退出。
 		exitapp
 	}
 	; 提取整行

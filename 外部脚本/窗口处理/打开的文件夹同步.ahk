@@ -32,11 +32,11 @@ Else
 		}
 	}
 	Gui, Add, text, x10 y10, 源文件夹:
-	Gui, Add, edit, xp+70 w480 vfolder1, % folder1
-	Gui, Add, text, xp+500, 目标文件夹:
-	Gui, Add, edit, xp+80 y10 w460 vfolder2, % folder2
-	Gui, Add, ListView, x10 y40 w550 h500 vfilelist1 hwndHLV1 Checked AltSubmit gsync, 序号|文件名|修改日期|大小|md5
-	Gui, Add, ListView, x570 y40 w550 h500 vfilelist2 hwndHLV2 Checked AltSubmit gsync, 序号|文件名|修改日期|大小|相等|md5
+	Gui, Add, edit, xp+70 w480 h40 r2 vfolder1, % folder1
+	Gui, Add, text, xp+490, 目标文件夹:
+	Gui, Add, edit, xp+80 y10 w470 h40 r2 vfolder2, % folder2
+	Gui, Add, ListView, x10 y55 w550 h500 vfilelist1 hwndHLV1 Checked AltSubmit gsync, 序号|文件名|修改日期|大小|md5
+	Gui, Add, ListView, x570 y55 w550 h500 vfilelist2 hwndHLV2 Checked AltSubmit gsync, 序号|文件名|修改日期|大小|相等|md5
 	Gui, Add, Button, x10 yp+510 h30 gloderfolder, 加载列表
 	Gui, Add, Button, xp+70 h30 grpview, 预览结果
 	Gui, Add, Button, xp+70 h30 gsave, 执行同步
@@ -53,40 +53,6 @@ Else
 		gosub loderfolder
 }
 return
-
-MD5_File( sFile="", cSz=4 ) { ; www.autohotkey.com/forum/viewtopic.php?p=275910#275910
-	global Nomd5func
- cSz  := (cSz<0||cSz>8) ? 2**22 : 2**(18+cSz), VarSetCapacity( Buffer,cSz,0 )
- hFil := DllCall( "CreateFile", Str,sFile,UInt,0x80000000, Int,1,Int,0,Int,3,Int,0,Int,0)
- IfLess,hFil,1, Return,hFil
- DllCall( "GetFileSizeEx", UInt,hFil, Str,Buffer ),   fSz := NumGet( Buffer,0,"Int64" )
- VarSetCapacity( MD5_CTX,104,0 ),    DllCall( "advapi32\MD5Init", Str,MD5_CTX )
-	LoopNum := fSz//cSz
- Loop % ( LoopNum +!!Mod(fSz,cSz) )
-	{
-		if (LoopNum > 125)
-				tooltip % (A_index * cSz *100) / fSz "%"
-   DllCall( "ReadFile", UInt,hFil, Str,Buffer, UInt,cSz, UIntP,bytesRead, UInt,0 )
- , DllCall( "advapi32\MD5Update", Str,MD5_CTX, Str,Buffer, UInt,bytesRead )
-	if Nomd5func
-	break
-	}
-	if (LoopNum > 125)
-		tooltip
- DllCall( "advapi32\MD5Final", Str,MD5_CTX ), DllCall( "CloseHandle", UInt,hFil )
- Loop % StrLen( Hex:="123456789ABCDEF0" )
-  N := NumGet( MD5_CTX,87+A_Index,"Char"), MD5 .= SubStr(Hex,N>>4,1) . SubStr(Hex,N&15,1)
-Return MD5
-}
-
-Receive_WM_COPYDATA(wParam, lParam)
-{
-	Global CandySel2
-	StringAddress := NumGet(lParam + 2*A_PtrSize)  ; 获取 CopyDataStruct 的 lpData 成员.
-	CandySel2 := StrGet(StringAddress)  ; 从结构中复制字符串.
-	gosub SyncFolder
-return true
-}
 
 On_WM_NOTIFY(W, L, M, H) {
    Global HLV1, HLV2, IH
@@ -109,10 +75,12 @@ LV_GetItemHeight(HLV) {
 loderfolder:
 Gui, 66: Default
 Gui, submit, nohide
+tooltip % "正在对比文件夹, 请稍候..."
 ;folder1:="D:\资料\autohotkey 帮助\v2\docs"
 ;folder2:="F:\Program Files\运行\git\wyagd001.github.io\v2\docs"
 IniRead, 忽略目录, %folder1%\.忽略列表.ini, 目录, 忽略目录
 IniRead, 忽略文件, %folder1%\.忽略列表.ini, 文件
+IniRead, 判断类型, %folder1%\.忽略列表.ini, 判断依据, 判断类型, 文件md5
 Gui, ListView, filelist1
 LV_Delete()
 Gui, ListView, filelist2
@@ -122,7 +90,9 @@ folderobj2:={}
 flastwriteobj1:={}
 flastwriteobj2:={}
 fsizeobj1:={}
+fsizekbobj1:={}
 fsizeobj2:={}
+fsizekbobj2:={}
 fMD5obj1:={}
 fMD5obj2:={}
 Tmp_Str:=""
@@ -143,7 +113,8 @@ Loop, Files, %folder1%\*.*, DFR
 	else
 		folderobj1[relativePS] := 1
 	flastwriteobj1[relativePS] := A_LoopFileTimeModified
-	fsizeobj1[relativePS] := A_LoopFileSizeKB
+	fsizeobj1[relativePS] := A_LoopFileSize
+	fsizekbobj1[relativePS] := A_LoopFileSizeKB
 	;fMD5obj1[relativePS] := MD5_File(A_LoopFilePath)
 	Tmp_Str .= relativePS "`n"
 }
@@ -164,7 +135,8 @@ Loop, Files, %folder2%\*.*, DFR
 	else
 		folderobj2[relativePS] := 1
 	flastwriteobj2[relativePS] := A_LoopFileTimeModified
-	fsizeobj2[relativePS] := A_LoopFileSizeKB
+	fsizeobj2[relativePS] := A_LoopFileSize
+	fsizekbobj2[relativePS] := A_LoopFileSizeKB
 	;fMD5obj2[relativePS] := MD5_File(A_LoopFilePath)
 	Tmp_Str .= relativePS "`n"
 }
@@ -179,7 +151,7 @@ Loop, parse, Tmp_Str, `n, `r
 	Gui, ListView, filelist1
 	if folderobj1.HasKey(A_LoopField)
 	{
-		LV_Add("", A_Index, A_LoopField, flastwriteobj1[A_LoopField], fsizeobj1[A_LoopField])
+		LV_Add("", A_Index, A_LoopField, flastwriteobj1[A_LoopField], fsizekbobj1[A_LoopField])
 	}
 	else
 	{
@@ -189,24 +161,38 @@ Loop, parse, Tmp_Str, `n, `r
 	Gui, ListView, filelist2
 	if folderobj2.HasKey(A_LoopField)
 	{
-		if (fsizeobj1[A_LoopField]=fsizeobj2[A_LoopField])
+		if (fsizeobj1[A_LoopField] = fsizeobj2[A_LoopField])   ; 文件大小相等
 		{
-			fMD5obj2[A_LoopField] := MD5_File(folder2 "\" A_LoopField)
-			fMD5obj1[A_LoopField] := MD5_File(folder1 "\" A_LoopField)
-			if (fMD5obj1[A_LoopField]=fMD5obj2[A_LoopField])
+			if (判断类型 = "最近修改时间") ; 文件大小相同通过最近修改时间来判断为文件是否相同而不计算MD5
 			{
-				LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeobj2[A_LoopField], "是", fMD5obj2[A_LoopField])
+				if (flastwriteobj1[A_LoopField] = flastwriteobj2[A_LoopField])
+				{
+					LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeKBobj2[A_LoopField], "是")
+				}
+				else
+				{
+					LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeKBobj2[A_LoopField], "否")
+				}
 			}
-			else
+			else if (判断类型 = "文件md5")  ; 通过md5来判断文件是否相同
 			{
-				LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeobj2[A_LoopField], "否", fMD5obj2[A_LoopField])
-				Gui, ListView, filelist1
-				LV_Modify(A_Index, "check",,,,, fMD5obj1[A_LoopField])
+				fMD5obj2[A_LoopField] := MD5_File(folder2 "\" A_LoopField)
+				fMD5obj1[A_LoopField] := MD5_File(folder1 "\" A_LoopField)
+				if (fMD5obj1[A_LoopField] = fMD5obj2[A_LoopField])
+				{
+					LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeKBobj2[A_LoopField], "是", fMD5obj2[A_LoopField])
+				}
+				else
+				{
+					LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeKBobj2[A_LoopField], "否", fMD5obj2[A_LoopField])
+					Gui, ListView, filelist1
+					LV_Modify(A_Index, "check",,,,, fMD5obj1[A_LoopField])   ; md5 不同时写左侧文件的md5到列表
+				}
 			}
 		}
-		else
+		else   ; 文件大小不相等是不计算MD5
 		{
-			LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeobj2[A_LoopField], "否")
+			LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeKBobj2[A_LoopField], "否")
 			if folderobj1.HasKey(A_LoopField)
 			{
 				Gui, ListView, filelist1
@@ -234,6 +220,7 @@ LV_ModifyCol()
 GuiControl, +redraw, filelist1
 GuiControl, +redraw, filelist2
 
+CF_ToolTip("对比完成", 3000)
 IH := LV_GetItemHeight(HLV1)
 OnMessage(0x004E, "On_WM_NOTIFY")
 return
@@ -256,13 +243,6 @@ if (A_GuiControl = "filelist2") && (A_GuiEvent = "Normal")
 	LV_Modify(RF, "Select Focus Vis")
 }
 return
-
-66GuiClose:
-66Guiescape:
-Gui,66: Destroy
-Gui,GuiText: Destroy
-exitapp
-Return
 
 save:
 Gui, 66: Default
@@ -348,24 +328,6 @@ Loop
 }
 ;msgbox % Tmp_Str
 GuiText(Tmp_Str, 500, 20)
-return
-
-66GuiContextMenu:
-if (A_GuiControl = "filelist1")
-{
-	Gui, ListView, filelist1
-	lvfolder := 1
-	Menu, filelistMenu, Show
-}
-if (A_GuiControl = "filelist2")
-{
-	Gui, ListView, filelist2
-	lvfolder := 2
-	Menu, filelistMenu, Show
-}
-return
-
-nul:
 return
 
 delfillefromlist:
@@ -502,6 +464,65 @@ GuiText(Gtext, w:=300, l:=20)
 	GuiTextGuiescape:
 	Gui, GuiText: Destroy
 	Return
+}
+
+66GuiClose:
+66Guiescape:
+Gui,66: Destroy
+Gui,GuiText: Destroy
+exitapp
+Return
+
+66GuiContextMenu:
+if (A_GuiControl = "filelist1")
+{
+	Gui, ListView, filelist1
+	lvfolder := 1
+	Menu, filelistMenu, Show
+}
+if (A_GuiControl = "filelist2")
+{
+	Gui, ListView, filelist2
+	lvfolder := 2
+	Menu, filelistMenu, Show
+}
+return
+
+nul:
+return
+
+MD5_File( sFile="", cSz=4 ) { ; www.autohotkey.com/forum/viewtopic.php?p=275910#275910
+	global Nomd5func
+ cSz  := (cSz<0||cSz>8) ? 2**22 : 2**(18+cSz), VarSetCapacity( Buffer,cSz,0 )
+ hFil := DllCall( "CreateFile", Str,sFile,UInt,0x80000000, Int,1,Int,0,Int,3,Int,0,Int,0)
+ IfLess,hFil,1, Return,hFil
+ DllCall( "GetFileSizeEx", UInt,hFil, Str,Buffer ),   fSz := NumGet( Buffer,0,"Int64" )
+ VarSetCapacity( MD5_CTX,104,0 ),    DllCall( "advapi32\MD5Init", Str,MD5_CTX )
+	LoopNum := fSz//cSz
+ Loop % ( LoopNum +!!Mod(fSz,cSz) )
+	{
+		if (LoopNum > 125)
+				tooltip % (A_index * cSz *100) / fSz "%"
+   DllCall( "ReadFile", UInt,hFil, Str,Buffer, UInt,cSz, UIntP,bytesRead, UInt,0 )
+ , DllCall( "advapi32\MD5Update", Str,MD5_CTX, Str,Buffer, UInt,bytesRead )
+	if Nomd5func
+	break
+	}
+	if (LoopNum > 125)
+		tooltip
+ DllCall( "advapi32\MD5Final", Str,MD5_CTX ), DllCall( "CloseHandle", UInt,hFil )
+ Loop % StrLen( Hex:="123456789ABCDEF0" )
+  N := NumGet( MD5_CTX,87+A_Index,"Char"), MD5 .= SubStr(Hex,N>>4,1) . SubStr(Hex,N&15,1)
+Return MD5
+}
+
+Receive_WM_COPYDATA(wParam, lParam)
+{
+	Global CandySel2
+	StringAddress := NumGet(lParam + 2*A_PtrSize)  ; 获取 CopyDataStruct 的 lpData 成员.
+	CandySel2 := StrGet(StringAddress)  ; 从结构中复制字符串.
+	gosub SyncFolder
+return true
 }
 
 GetAllWindowOpenFolder()
