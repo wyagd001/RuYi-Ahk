@@ -1,8 +1,9 @@
-folder1 :=  A_Args[1]
-folder2 :=  A_Args[2]
+folder1 :=  A_Args[1], folder2 :=  A_Args[2]
 B_Autohotkey := A_ScriptDir "\..\..\引用程序\" (A_PtrSize = 8 ? "AutoHotkeyU64.exe" : "AutoHotkeyU32.exe")
 ; 1088
 OnMessage(0x4a, "Receive_WM_COPYDATA")
+
+
 SyncFolder:
 IfWinExist, 文件夹同步 ahk_class AutoHotkeyGUI
 {
@@ -13,7 +14,7 @@ IfWinExist, 文件夹同步 ahk_class AutoHotkeyGUI
 }
 Else
 {
-	Gui,66:Destroy
+	Gui,66: Destroy
 	Gui,66: Default
 	SplitPath, folder1, OutFileName
 	if !Fileexist(folder2)
@@ -165,13 +166,15 @@ Loop, parse, Tmp_Str, `n, `r
 		{
 			if (判断类型 = "最近修改时间") ; 文件大小相同通过最近修改时间来判断为文件是否相同而不计算MD5
 			{
-				if (flastwriteobj1[A_LoopField] = flastwriteobj2[A_LoopField])
+				if (flastwriteobj1[A_LoopField] = flastwriteobj2[A_LoopField]) or (folderobj2[A_LoopField] = "folder")
 				{
 					LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeKBobj2[A_LoopField], "是")
 				}
 				else
 				{
 					LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeKBobj2[A_LoopField], "否")
+					Gui, ListView, filelist1
+					LV_Modify(A_Index, "check")    ; 文件大小相同但是最近修改时间不同则勾选左侧
 				}
 			}
 			else if (判断类型 = "文件md5")  ; 通过md5来判断文件是否相同
@@ -190,15 +193,15 @@ Loop, parse, Tmp_Str, `n, `r
 				}
 			}
 		}
-		else   ; 文件大小不相等是不计算MD5
+		else   ; 文件大小不相等时不计算MD5
 		{
 			LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeKBobj2[A_LoopField], "否")
-			if folderobj1.HasKey(A_LoopField)
+			if folderobj1.HasKey(A_LoopField)   ; 左侧也存在该文件, 勾选左侧
 			{
 				Gui, ListView, filelist1
 				LV_Modify(A_Index, "check")
 			}
-			else
+			else                                ; 左侧不存在该文件, 勾选右侧  
 				LV_Modify(A_Index, "check")
 		}
 	}
@@ -213,10 +216,15 @@ Loop, parse, Tmp_Str, `n, `r
 Gui, ListView, filelist1
 {
 	LV_ModifyCol()
+	LV_ModifyCol(1, "Logical")
 	LV_ModifyCol(5, 220)
 }
 Gui, ListView, filelist2
-LV_ModifyCol()
+{
+	LV_ModifyCol()
+	LV_ModifyCol(1, "Logical")
+}
+
 GuiControl, +redraw, filelist1
 GuiControl, +redraw, filelist2
 
@@ -256,11 +264,11 @@ Loop
 		break
 
 	LV_GetText(Tmp_Str, RowNumber, 2)
-if (folderobj1[Tmp_Str] = "folder" )
-	FileCreateDir, %folder2%\%Tmp_Str%       ; 新建文件夹
-else
+	if (folderobj1[Tmp_Str] = "folder" )
+		FileCreateDir, %folder2%\%Tmp_Str%       ; 新建文件夹
+	else
 	{
-	FileCopy, %folder1%\%Tmp_Str%, %folder2%\%Tmp_Str%, 1   ; 同步文件
+		FileCopy, %folder1%\%Tmp_Str%, %folder2%\%Tmp_Str%, 1   ; 同步文件
 	}
 }
 
@@ -275,7 +283,7 @@ Loop
 	if (folderobj2[Tmp_Str] = "folder" )
 		Continue
 	else
-		FileDelete %folder2%\%Tmp_Str%    ; 删除文件
+		FileDelete %folder2%\%Tmp_Str%    ; 删除右侧有而左侧没有的文件
 }
 
 RowNumber := 0
@@ -286,7 +294,7 @@ Loop
 		break
 	LV_GetText(Tmp_Str, RowNumber, 2)
 	if (folderobj2[Tmp_Str] = "folder" )
-		FileRemoveDir, %folder2%\%Tmp_Str%
+		FileRemoveDir, %folder2%\%Tmp_Str%   ; 删除右侧有而左侧没有的文件夹
 }
 CF_ToolTip("同步完成", 3000)
 return
@@ -309,7 +317,12 @@ Loop
 	if (folderobj1[Tmp_Value] = "folder" )
 		Tmp_Str .= Tmp_index ". 新建文件夹: " Tmp_Value "`n"
 	else
-		Tmp_Str .= Tmp_index ". 同步的文件: "  Tmp_Value "`n"
+	{
+		if folderobj2[Tmp_Value]
+			Tmp_Str .= Tmp_index ". 同步的文件: "  Tmp_Value "`n"
+		else
+			Tmp_Str .= Tmp_index ". 新建的文件: "  Tmp_Value "`n"
+	}
 }
 
 Gui, ListView, filelist2
