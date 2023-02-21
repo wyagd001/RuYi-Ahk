@@ -44,6 +44,7 @@ Else
 	gui, show,, 文件夹同步
 	Menu, Tray, UseErrorLevel
 	Menu, filelistMenu, deleteall
+	Menu, filelistMenu, Add, 全不选, uncheckallfile
 	Menu, filelistMenu, Add, 下一个选中, jumpcheckedfile
 	Menu, filelistMenu, Add, 打开, openfilefromlist
 	Menu, filelistMenu, Add, 打开路径, openfilepfromlist
@@ -113,7 +114,8 @@ Loop, Files, %folder1%\*.*, DFR
 		folderobj1[relativePS] := "folder"
 	else
 		folderobj1[relativePS] := 1
-	flastwriteobj1[relativePS] := A_LoopFileTimeModified
+	FormatTime, Out_time, % A_LoopFileTimeModified, yyyy-MM-dd HH:mm:ss
+	flastwriteobj1[relativePS] := Out_time
 	fsizeobj1[relativePS] := A_LoopFileSize
 	fsizekbobj1[relativePS] := A_LoopFileSizeKB
 	;fMD5obj1[relativePS] := MD5_File(A_LoopFilePath)
@@ -135,7 +137,8 @@ Loop, Files, %folder2%\*.*, DFR
 		folderobj2[relativePS] := "folder"
 	else
 		folderobj2[relativePS] := 1
-	flastwriteobj2[relativePS] := A_LoopFileTimeModified
+	FormatTime, Out_time, % A_LoopFileTimeModified, yyyy-MM-dd HH:mm:ss
+	flastwriteobj2[relativePS] := Out_time
 	fsizeobj2[relativePS] := A_LoopFileSize
 	fsizekbobj2[relativePS] := A_LoopFileSizeKB
 	;fMD5obj2[relativePS] := MD5_File(A_LoopFilePath)
@@ -217,12 +220,14 @@ Gui, ListView, filelist1
 {
 	LV_ModifyCol()
 	LV_ModifyCol(1, "Logical")
+	LV_ModifyCol(2, 300)
 	LV_ModifyCol(5, 220)
 }
 Gui, ListView, filelist2
 {
 	LV_ModifyCol()
 	LV_ModifyCol(1, "Logical")
+	LV_ModifyCol(2, 300)
 }
 
 GuiControl, +redraw, filelist1
@@ -240,7 +245,8 @@ if (A_GuiControl = "filelist1") && (A_GuiEvent = "Normal")
 	RF := LV_GetNext("F")
 	Gui, ListView, filelist2
 	LV_Modify(0, "-Select")
-	LV_Modify(RF, "Select Focus Vis")
+	if RF
+		LV_Modify(RF, "Select Focus Vis")
 }
 if (A_GuiControl = "filelist2") && (A_GuiEvent = "Normal")
 {
@@ -248,7 +254,8 @@ if (A_GuiControl = "filelist2") && (A_GuiEvent = "Normal")
 	RF := LV_GetNext("F")
 	Gui, ListView, filelist1
 	LV_Modify(0, "-Select")
-	LV_Modify(RF, "Select Focus Vis")
+	if RF
+		LV_Modify(RF, "Select Focus Vis")
 }
 return
 
@@ -448,6 +455,11 @@ if Tmp_Str
 		Run, explorer.exe /select`, %folder2%\%Tmp_Str%
 	}
 }
+return
+
+uncheckallfile:
+Gui,66: Default
+LV_Modify(0, "-check")
 return
 
 jumpcheckedfile:

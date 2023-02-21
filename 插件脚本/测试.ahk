@@ -1,17 +1,31 @@
-﻿!q::
-FileAppend, %ClipboardAll%, %A_Desktop%\Clip.clip
+﻿OnMessage(0x4a, "Receive_WM_COPYDATA")
 return
 
-/*
 !q::
-send ^l
-SendInput javascript:document.querySelector("form input").value = '1234';document.querySelector('form').onsubmit()
+msgbox %A_ScriptDir%
+msgbox % addd(2, 3)
 return
-*/
 
-/*
-!q::
-robj:=dbGetTable("select * from history where actionobj =""无条件"" order by lastexectime desc LIMIT 24")
-msgbox % robj[1] " - " robj[2] " - " robj[3]
+Receive_WM_COPYDATA(wParam, lParam)
+{
+	ID := NumGet(lParam + 0)
+	StringAddress := NumGet(lParam + 2*A_PtrSize)
+	global Windy_CurWin_id := wParam
+	global CandySel := StrGet(StringAddress)
+	;msgbox %wParam% - %id%
+	if IsLabel(ID)
+	{
+		SetTimer, % ID, -200
+		return true
+	}
+}
+
+1209:
+测试标签:
+msgbox, 你好!
 return
-*/
+
+addd(x, y)
+{
+	return x + y
+}
