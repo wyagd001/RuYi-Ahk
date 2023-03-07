@@ -3,7 +3,6 @@ B_Autohotkey := A_ScriptDir "\..\..\引用程序\" (A_PtrSize = 8 ? "AutoHotkeyU64.e
 ; 1088
 OnMessage(0x4a, "Receive_WM_COPYDATA")
 
-
 SyncFolder:
 IfWinExist, 文件夹同步 ahk_class AutoHotkeyGUI
 {
@@ -177,7 +176,7 @@ Loop, parse, Tmp_Str, `n, `r
 				{
 					LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeKBobj2[A_LoopField], "否")
 					Gui, ListView, filelist1
-					LV_Modify(A_Index, "check")    ; 文件大小相同但是最近修改时间不同则勾选左侧
+					LV_Modify(A_Index, "check")    ; 文件大小相同但是最近修改时间不同则勾选左侧(不管右侧是否更新, 左侧为准)
 				}
 			}
 			else if (判断类型 = "文件md5")  ; 通过md5来判断文件是否相同
@@ -192,11 +191,11 @@ Loop, parse, Tmp_Str, `n, `r
 				{
 					LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeKBobj2[A_LoopField], "否", fMD5obj2[A_LoopField])
 					Gui, ListView, filelist1
-					LV_Modify(A_Index, "check",,,,, fMD5obj1[A_LoopField])   ; md5 不同时写左侧文件的md5到列表
+					LV_Modify(A_Index, "check",,,,, fMD5obj1[A_LoopField])   ; md5 不同时, 写左侧文件的md5到列表
 				}
 			}
 		}
-		else   ; 文件大小不相等时不计算MD5
+		else   ; 文件大小不相等时不计算比较MD5
 		{
 			LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeKBobj2[A_LoopField], "否")
 			if folderobj1.HasKey(A_LoopField)   ; 左侧也存在该文件, 勾选左侧

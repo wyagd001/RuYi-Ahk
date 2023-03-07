@@ -1,5 +1,6 @@
 ﻿CandySel := A_Args[1]
 IniMenuInifile := A_ScriptDir "\..\配置文件\外部脚本\ini菜单.ini"
+ATA_settingFile := A_ScriptDir "\..\配置文件\如一.ini"
 IniMenuobj := ini2obj(IniMenuInifile)
 show_obj(IniMenuobj,, CandySel)
 return
@@ -93,7 +94,6 @@ if RegExMatch(Candy_Cmd, "i)^(https://|http://)+(.*\.)+.*")
 	WinGet, Windy_CurWin_Fullpath, ProcessPath, A
 	WinGet, OutPID, PID, A
 	SplitPath, Windy_CurWin_Fullpath, Windy_CurWin_ProcName
-	ATA_settingFile := A_ScriptDir "\..\配置文件\如一.ini"
 	ATA_filepath := Candy_Cmd
 	Gosub CurrentWebOpen
 	return
@@ -239,7 +239,6 @@ Deref(String)
 
 CurrentWebOpen:
 ; ATA_filepath 含有 "/" 字符时, 使用浏览器打开, 网址中不支持中文字符
-TA_settingFile := A_ScriptDir "\..\..\配置文件\如一.ini"
 IniRead, Default_Browser, %ATA_settingFile%, Browser, Default_Browser, %A_Space%
 IniRead, url, %ATA_settingFile%, Browser, Default_Url
 IniRead, InUse_Browser, %ATA_settingFile%, Browser, InUse_Browser
