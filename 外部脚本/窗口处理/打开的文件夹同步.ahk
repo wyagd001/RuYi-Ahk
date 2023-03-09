@@ -79,6 +79,7 @@ Gui, submit, nohide
 tooltip % "正在对比文件夹, 请稍候..."
 ;folder1:="D:\资料\autohotkey 帮助\v2\docs"
 ;folder2:="F:\Program Files\运行\git\wyagd001.github.io\v2\docs"
+IniRead, 忽略路径, %folder1%\.忽略列表.ini, 路径, 忽略路径
 IniRead, 忽略目录, %folder1%\.忽略列表.ini, 目录, 忽略目录
 IniRead, 忽略文件, %folder1%\.忽略列表.ini, 文件
 IniRead, 判断类型, %folder1%\.忽略列表.ini, 判断依据, 判断类型, 文件md5
@@ -104,9 +105,11 @@ Loop, Files, %folder1%\*.*, DFR
 	if A_LoopFileAttrib contains H,R,S
 		continue
 	relativePS := StrReplace(A_LoopFilePath, folder1 "\")
-	if relativePS contains %忽略目录%
+	if relativePS contains %忽略路径%
 		Continue
-	if instr(忽略文件, relativePS)
+	if instr(忽略目录, relativePS) && InStr(A_LoopFileAttrib, "D")
+		Continue
+	if instr(忽略文件, relativePS) && !InStr(A_LoopFileAttrib, "D")
 		Continue
 
 	if InStr(A_LoopFileAttrib, "D")
@@ -127,7 +130,9 @@ Loop, Files, %folder2%\*.*, DFR
 	if A_LoopFileAttrib contains H,R,S
 		continue
 	relativePS := StrReplace(A_LoopFilePath, folder2 "\")
-	if relativePS contains %忽略目录%
+	if relativePS contains %忽略路径%
+		Continue
+	if instr(忽略目录, relativePS) && InStr(A_LoopFileAttrib, "D")
 		Continue
 	if instr(忽略文件, relativePS)
 		Continue
@@ -346,7 +351,7 @@ Loop
 		Tmp_Str .= Tmp_index ". 删除的文件: " Tmp_Value "`n"
 }
 ;msgbox % Tmp_Str
-GuiText(Tmp_Str, 500, 20)
+GuiText(Tmp_Str, "文件夹同步操作预览", 500, 20)
 return
 
 delfillefromlist:
@@ -473,7 +478,7 @@ if RF
 }
 return
 
-GuiText(Gtext, w:=300, l:=20)
+GuiText(Gtext, Title:="", w:=300, l:=20)
 {
 	global myedit, TextGuiHwnd
 	Gui,GuiText: Destroy
@@ -481,7 +486,7 @@ GuiText(Gtext, w:=300, l:=20)
 	Gui, +HwndTextGuiHwnd
 	Gui, Add, Edit, Multi readonly w%w% r%l% vmyedit
 	GuiControl,, myedit, %Gtext%
-	gui, Show, AutoSize
+	gui, Show, AutoSize, % Title
 	return
 
 	GuiTextGuiClose:
