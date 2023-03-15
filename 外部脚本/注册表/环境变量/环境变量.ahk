@@ -47,7 +47,7 @@ if (a_guievent == "DoubleClick" && a_eventinfo)
 {
 	Gui +OwnDialogs
 	RegExMatch(CurPL, "P)^(?:(?<E>[^;]*)(?:;|$)){" a_eventinfo "}", _)
-	_En := IB( "Edit PATH entry", substr(CurPL, _PosE, _LenE))
+	_En := IB( "编辑 PATH 变量条目", substr(CurPL, _PosE, _LenE))
 	if (ErrorLevel == 0)
 	{
 		if (InStr(FileExist(ExpEnv(_En)),"D"))
@@ -60,7 +60,7 @@ if (a_guievent == "DoubleClick" && a_eventinfo)
 				SPL := CurPL
 		}
 		else
-			MsgBox, , SysEnv, Path is not a directory.
+			MsgBox, , SysEnv, 路径不是目录.
 	}
 }
 return
@@ -77,7 +77,7 @@ if (A_GuiControl = "sysadd")
 	CurLB := "SysPath"
 }
 
-add := IB( "Add PATH entry" )
+add := IB( "新增 PATH 条目" )
 if (instr(fileexist(ExpEnv(add)),"D"))
 {
 	CurPL .= (strlen(CurPL) > 0 ? ";" : "") add
@@ -105,7 +105,7 @@ GuiControlGet, entry,, % CurLB   ; 有选项 AltSubmit 则获取位置编号
 if (entry)
 {
 	Gui, +OwnDialogs
-	MsgBox, 4, SysEnv -- Confirm, Remove entry #%entry% from PATH?
+	MsgBox, 4, SysEnv -- 确认, 从 PATH 变量中移除条目 #%entry%?
 	IfMsgBox Yes
 	{   ; 计算选中行的起始位置和长度
 		RegExMatch(CurPL, "P)^(?:(?<E>[^;]*)(?:;|$)){" entry "}", _)
@@ -230,7 +230,7 @@ Submit:
 Gui, +OwnDialogs
 if (firstUPL != UPL)
 {
-	MsgBox, 1, SysEnv -- Save Changes, Change system PATH to:`n`n%UPL%
+	MsgBox, 1, SysEnv -- 保存更改, 更改用户 Path 为:`n`n%UPL%
 	IfMsgBox, OK
 	{
 		RegWrite, REG_EXPAND_SZ, HKCU\Environment, PATH, %UPL%
@@ -238,17 +238,17 @@ if (firstUPL != UPL)
 		{
 			firstUPL := UPL
 			RefreshEnvironment()
-			MsgBox, 0, SysEnv -- Success!, Modifying the PATH variable was successful!
+			MsgBox, 0, SysEnv -- 成功!, 修改用户 PATH 变量成功!
 		}
 		Else
-			MsgBox,, SysEnv, Error has occurred and new PATH variable was not saved.
+			MsgBox,, SysEnv, 发生错误, 无法保存更改.
 	}
 	Else
-		MsgBox, , SysEnv -- Cancelled, Exiting now.
+		MsgBox, , SysEnv -- 取消, 退出.
 }
 if (firstSPL != SPL)
 {
-	MsgBox, 1, SysEnv -- Save Changes, Change system PATH to:`n`n%SPL%
+	MsgBox, 1, SysEnv --  保存更改, 更改系统 Path 为:`n`n%SPL%
 	IfMsgBox, OK
 	{
 		RegWrite, REG_EXPAND_SZ, HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment, PATH, %SPL%
@@ -256,13 +256,13 @@ if (firstSPL != SPL)
 		{
 			firstSPL := SPL
 			RefreshEnvironment()
-			MsgBox, 0, SysEnv -- Success!, Modifying the PATH variable was successful!
+			MsgBox, 0, SysEnv -- 成功!, 修改系统 PATH 变量成功!
 		}
 		Else
-			MsgBox,, SysEnv, Error has occurred and new PATH variable was not saved.
+			MsgBox,, SysEnv, 发生错误, 无法保存更改.
 	}
 	Else
-		MsgBox,, SysEnv -- Cancelled, Exiting now.
+		MsgBox,, SysEnv -- 取消, 退出.
 }
 return
 

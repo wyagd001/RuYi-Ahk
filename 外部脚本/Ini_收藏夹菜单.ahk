@@ -2,13 +2,13 @@
 IniMenuInifile := A_ScriptDir "\..\配置文件\外部脚本\ini菜单.ini"
 ATA_settingFile := A_ScriptDir "\..\配置文件\如一.ini"
 IniMenuobj := ini2obj(IniMenuInifile)
-show_obj(IniMenuobj,, CandySel)
+show_obj(IniMenuobj)
 return
 
 ini2obj(file){
 	iniobj := {}
 	FileRead, filecontent, %file% ;加载文件到变量
-	StringReplace, filecontent, filecontent, `r, , All
+	StringReplace, filecontent, filecontent, `r,, All
 	StringSplit, line, filecontent, `n, , ;用函数分割变量为伪数组
 	Loop ;循环
 	{
@@ -51,7 +51,7 @@ obj2ini(obj, file){
 Return 1
 }
 
-show_obj(obj, menu_name := "", Selfile:=""){
+show_obj(obj, menu_name := ""){
 	if menu_name =
 	{
 		main = 1
@@ -68,9 +68,9 @@ show_obj(obj, menu_name := "", Selfile:=""){
 			Menu, % submenu_name, add,
 			Menu, % submenu_name, DeleteAll
 			Menu, % menu_name, add, % k ? k : "", :%submenu_name%
-			Menu, % submenu_name, add, 添加选中文件到菜单, AddSelToMenu
+			Menu, % submenu_name, add, 添加选中到菜单, AddSelToMenu
 			Menu, % submenu_name, add
-			show_obj(v, submenu_name, Selfile)
+			show_obj(v, submenu_name)
 		}
 		Else
 		{

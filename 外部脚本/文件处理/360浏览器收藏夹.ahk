@@ -34,7 +34,7 @@ dbGetTable(qstr:="")
 	return RS
 }
 
-show_obj(obj, menu_name := "", Selfile:=""){
+show_obj(obj, menu_name := ""){
 	if menu_name =
 	{
 		main = 1
@@ -53,7 +53,7 @@ show_obj(obj, menu_name := "", Selfile:=""){
 			Menu, % menu_name, add, % k ? k : "", :%submenu_name%
 			Menu, % submenu_name, add, 添加选中文件到菜单, AddSelToMenu
 			Menu, % submenu_name, add
-			show_obj(v, submenu_name, Selfile)
+			show_obj(v, submenu_name)
 		}
 		Else
 		{

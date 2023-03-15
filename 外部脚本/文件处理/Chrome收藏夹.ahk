@@ -17,7 +17,8 @@ for k, v in Myobj.roots.bookmark_bar.children
 show_obj(uRLobj)
 return
 
-show_obj(obj, menu_name := "", Selfile:=""){
+show_obj(obj, menu_name := "")
+{
 	if menu_name =
 	{
 		main = 1
@@ -36,7 +37,7 @@ show_obj(obj, menu_name := "", Selfile:=""){
 			Menu, % menu_name, add, % k ? k : "", :%submenu_name%
 			Menu, % submenu_name, add, 添加选中文件到菜单, AddSelToMenu
 			Menu, % submenu_name, add
-			show_obj(v, submenu_name, Selfile)
+			show_obj(v, submenu_name)
 		}
 		Else
 		{
@@ -50,11 +51,11 @@ show_obj(obj, menu_name := "", Selfile:=""){
 MenuHandler:
 Candy_Cmd := uRLobj[A_ThisMenuItem]
 ;run %Candy_Cmd% %CandySel%,, UseErrorLevel
-	WinGet, Windy_CurWin_Fullpath, ProcessPath, A
-	WinGet, OutPID, PID, A
-	SplitPath, Windy_CurWin_Fullpath, Windy_CurWin_ProcName
-	ATA_filepath := Candy_Cmd
-	Gosub CurrentWebOpen
+WinGet, Windy_CurWin_Fullpath, ProcessPath, A
+WinGet, OutPID, PID, A
+SplitPath, Windy_CurWin_Fullpath, Windy_CurWin_ProcName
+ATA_filepath := Candy_Cmd
+Gosub CurrentWebOpen
 return
 
 CurrentWebOpen:

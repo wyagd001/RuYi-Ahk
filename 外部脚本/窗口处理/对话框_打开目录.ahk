@@ -1,15 +1,26 @@
 Windy_CurWin_id := A_Args[1]
 
-Windo_跳转到打开的目录:
+Windo_对话框打开目录:
+IniMenuInifile := A_ScriptDir "\..\..\配置文件\外部脚本\ini菜单.ini"
+IniMenuobj := ini2obj(IniMenuInifile)
 AllOpenFolder := GetAllWindowOpenFolder()
-Menu SendToOpenedFolder, Add, 跳转到打开的文件夹, nul
-Menu SendToOpenedFolder, Add
+
+for k,v in IniMenuobj["对话框"]
+{
+	Menu JumpToFavFolder, add, %v%, Windo_JumpToFolder
+}
+Menu DialogMenu, Add, 收藏的文件夹, :JumpToFavFolder
+Menu DialogMenu, Add
+
+Menu DialogMenu, Add, 跳转到打开的文件夹, nul
+Menu DialogMenu, Add
 for k, v in AllOpenFolder
 {
-	Menu SendToOpenedFolder, add, %v%, Windo_JumpToFolder
+	Menu DialogMenu, add, %v%, Windo_JumpToFolder
 }
-Menu SendToOpenedFolder, Show
-Menu, SendToOpenedFolder, DeleteAll
+
+Menu DialogMenu, Show
+Menu, DialogMenu, DeleteAll
 return
 
 Windo_JumpToFolder:
@@ -19,6 +30,38 @@ return
 
 nul:
 return
+
+ini2obj(file){
+	iniobj := {}
+	FileRead, filecontent, %file% ;加载文件到变量
+	StringReplace, filecontent, filecontent, `r,, All
+	StringSplit, line, filecontent, `n, , ;用函数分割变量为伪数组
+	Loop ;循环
+	{
+		if A_Index > %line0%
+			Break
+		content = % line%A_Index% ;赋值当前行
+		FSection := RegExMatch(content, "\[.*\]") ;正则表达式匹配section
+		if FSection = 1 ;如果找到
+		{
+			TSection := RegExReplace(content, "\[(.*)\]", "$1") ;正则替换并赋值临时section $为向后引用
+			iniobj[TSection] := {}
+		}
+		Else
+		{
+			FKey := RegExMatch(content, "^.*=.*") ;正则表达式匹配key
+			if FKey
+			{
+				TKey := RegExReplace(content, "^(.*?)=.*", "$1") ;正则替换并赋值临时key
+				StringReplace, TKey, TKey, ., _, All
+				TValue := RegExReplace(content, "^.*?=(.*)", "$1") ;正则替换并赋值临时value
+				if TKey
+					iniobj[TSection][TKey] := TValue
+			}
+		}
+	}
+Return iniobj
+}
 
 GetAllWindowOpenFolder()
 {
