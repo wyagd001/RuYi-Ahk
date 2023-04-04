@@ -1,49 +1,49 @@
-;À´Ô´ÍøÖ·: http://thinkai.net/page/16
-;´´½¨½çÃæ
-Gui, Add, Text, x0 y0 w40 h20 , Ãû³Æ:
+ï»¿;æ¥æºç½‘å€: http://thinkai.net/page/16
+;åˆ›å»ºç•Œé¢
+Gui, Add, Text, x0 y0 w40 h20 , åç§°:
 Gui, Add, Edit, x50 y0 w280 h20 vname,
-Gui, Add, Button, x330 y0 w80 h20 gapply, Ó¦ÓÃ
-Gui, Add, Button, x410 y0 w40 h20 ghelp, £¿
-Gui, Add, Text, x0 y20 w40 h20 , Í¼±ê
+Gui, Add, Button, x330 y0 w80 h20 gapply, åº”ç”¨
+Gui, Add, Button, x410 y0 w40 h20 ghelp, ï¼Ÿ
+Gui, Add, Text, x0 y20 w40 h20 , å›¾æ ‡
 Gui, Add, Picture, x40 y20 w24 h24 vsico,
 Gui, Add, Edit, x64 y20 w346 h20 vicon,
-Gui, Add, Button, x410 y20 w40 h20 gselectico, ä¯ÀÀ
-Gui, Add, Text, x0 y50 w50 h20 , ÓÒ¼ü²Ëµ¥
-Gui, Add, text, x0 y70 w40 h20 , ²Ëµ¥Ãû
+Gui, Add, Button, x410 y20 w40 h20 gselectico, æµè§ˆ
+Gui, Add, Text, x0 y50 w50 h20 , å³é”®èœå•
+Gui, Add, text, x0 y70 w40 h20 , èœå•å
 Gui, add, Edit, x40 y70 w100 h20 vmenu_name,
-Gui, Add, text, x140 y70 w40 h20 , ÃüÁîĞĞ
+Gui, Add, text, x140 y70 w40 h20 , å‘½ä»¤è¡Œ
 Gui, add, Edit, x180 y70 w230 h20 vmenu_cmd,
-Gui, Add, Button, x410 y70 w40 h20 gadd, Ìí¼Ó
-Gui, add, ListView, xo y90 w450 h100, id|ÊÇ·ñÄ¬ÈÏ|±êÌâ|ÃüÁî
-Gui, Show, , ÎÒµÄµçÄÔ/×ÀÃæÌí¼ÓÁ´½Ó By Thinkai
-;³õÊ¼»¯
+Gui, Add, Button, x410 y70 w40 h20 gadd, æ·»åŠ 
+Gui, add, ListView, xo y90 w450 h100, id|æ˜¯å¦é»˜è®¤|æ ‡é¢˜|å‘½ä»¤
+Gui, Show, , æˆ‘çš„ç”µè„‘/æ¡Œé¢æ·»åŠ é“¾æ¥ By Thinkai
+;åˆå§‹åŒ–
 option := object()
 option["index"] := 0
 Return
 
 add:
-gui, submit, nohide ;»ñÈ¡±íµ¥
-if (menu_name and menu_cmd) ;ÒÑ¾­ÌîĞ´
+gui, submit, nohide ;è·å–è¡¨å•
+if (menu_name and menu_cmd) ;å·²ç»å¡«å†™
 {
 	option["index"]++
-	Default = ·ñ
-	MsgBox, 36, ÌáÊ¾, ÊÇ·ñÉèÎªÄ¬ÈÏÏî£¿
+	Default = å¦
+	MsgBox, 36, æç¤º, æ˜¯å¦è®¾ä¸ºé»˜è®¤é¡¹ï¼Ÿ
 	IfMsgBox, Yes
 	{
 		option["default"] := option["index"]
-		Default = ÊÇ
-		loop % LV_GetCount() ;¸²¸ÇlvµÄÏÔÊ¾
+		Default = æ˜¯
+		loop % LV_GetCount() ;è¦†ç›–lvçš„æ˜¾ç¤º
 		{
-		LV_Modify(A_index, , , "·ñ")
+		LV_Modify(A_index, , , "å¦")
 		}
 	}
-	;¼üÖµÊÇ¸öÊı×é
+	;é”®å€¼æ˜¯ä¸ªæ•°ç»„
 	option[option["index"]] := object()
 	option[option["index"]]["name"] := menu_name
 	option[option["index"]]["cmd"] := menu_cmd
-	LV_Add("",option["index"],default,menu_name,menu_cmd) ;Ìí¼Óµ½ÁĞ±í ÁĞ±íÖ»ÊÇÏÔÊ¾ Ö´ĞĞ´ÓÊı×é×ß
-	LV_ModifyCol() ;µ÷ÕûÁĞ¿í
-	;Çå¿ÕÌîĞ´¿ò
+	LV_Add("",option["index"],default,menu_name,menu_cmd) ;æ·»åŠ åˆ°åˆ—è¡¨ åˆ—è¡¨åªæ˜¯æ˜¾ç¤º æ‰§è¡Œä»æ•°ç»„èµ°
+	LV_ModifyCol() ;è°ƒæ•´åˆ—å®½
+	;æ¸…ç©ºå¡«å†™æ¡†
 	GuiControl, , menu_name,
 	GuiControl, , menu_cmd,
 }
@@ -55,41 +55,41 @@ gui, submit, nohide
 if (name and icon)
 {
 	Random, n5, 10000, 99999
-	clsid = {FD4DF9E0-E3DE-11CE-BFCF-ABCD1DE%n5%} ;Ëæ»úCLSID
-	;if (A_Is64bitOS && (!InStr(A_OSType,"WIN_2003") or !InStr(A_OSType,"WIN_XP") or !InStr(A_OSType,"WIN_2000"))) ;ÊÇĞÂ°æ64Î»ÏµÍ³
+	clsid = {FD4DF9E0-E3DE-11CE-BFCF-ABCD1DE%n5%} ;éšæœºCLSID
+	;if (A_Is64bitOS && (!InStr(A_OSType,"WIN_2003") or !InStr(A_OSType,"WIN_XP") or !InStr(A_OSType,"WIN_2000"))) ;æ˜¯æ–°ç‰ˆ64ä½ç³»ç»Ÿ
 	;	item = Software\Classes\Wow6432Node\CLSID\%clsid%
 	;Else
 		item = Software\Classes\CLSID\%clsid%
-	;´´½¨¾ßÌåµÄCLSIDÏî
-	RegWrite, REG_SZ, HKCU, %item%, , %name% ;ÏÔÊ¾Ãû³Æ
-	RegWrite, REG_SZ, HKCU, %item%, InfoTip, ÓÒ¼ü²é¿´%name%¾ßÌåÏîÄ¿ ;ĞüÍ£ÌáÊ¾
+	;åˆ›å»ºå…·ä½“çš„CLSIDé¡¹
+	RegWrite, REG_SZ, HKCU, %item%, , %name% ;æ˜¾ç¤ºåç§°
+	RegWrite, REG_SZ, HKCU, %item%, InfoTip, å³é”®æŸ¥çœ‹%name%å…·ä½“é¡¹ç›® ;æ‚¬åœæç¤º
 	RegWrite, REG_SZ, HKCU, %item%, LocalizedString, %name%
-	RegWrite, REG_SZ, HKCU, %item%, System.ItemAuthors, ÓÒ¼ü²é¿´%name%¾ßÌåÏîÄ¿
+	RegWrite, REG_SZ, HKCU, %item%, System.ItemAuthors, å³é”®æŸ¥çœ‹%name%å…·ä½“é¡¹ç›®
 	RegWrite, REG_SZ, HKCU, %item%, TileInfo, prop:System.ItemAuthors
-	RegWrite, REG_SZ, HKCU, %item%\DefaultIcon, , %icon% ;Í¼±ê
+	RegWrite, REG_SZ, HKCU, %item%\DefaultIcon, , %icon% ;å›¾æ ‡
 	RegWrite, REG_SZ, HKCU, %item%\InprocServer32, , %SystemRoot%\system32\shdocvw.dll
 	RegWrite, REG_SZ, HKCU, %item%\InprocServer32, ThreadingModel, Apartment
-	;Ñ­»·Ìí¼ÓÃüÁî
+	;å¾ªç¯æ·»åŠ å‘½ä»¤
 	Loop % option["index"]
 	{
 	mname := option[A_index]["name"]
 	mcmd := option[A_index]["cmd"]
 	if option["default"] = A_index
 		RegWrite, REG_SZ, HKCU, %item%\Shell, , n_%A_Index%
-	RegWrite, REG_SZ, HKCU, %item%\Shell\n_%A_Index%, , %mname% ;Ãû³Æ
-	RegWrite, REG_SZ, HKCU, %item%\Shell\n_%A_Index%\Command, , %mcmd% ;ÃüÁî
+	RegWrite, REG_SZ, HKCU, %item%\Shell\n_%A_Index%, , %mname% ;åç§°
+	RegWrite, REG_SZ, HKCU, %item%\Shell\n_%A_Index%\Command, , %mcmd% ;å‘½ä»¤
 	}
-	;RegWrite, REG_BINARY, HKCU, %item%, Attributes, 00000000 ;ÊôĞÔ
-	RegWrite, REG_SZ, HKCU, Software\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\%clsid%, , %name% ;Ìí¼Óµ½ÎÒµÄµçÄÔ
-	RegWrite, REG_SZ, HKCU, SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\%clsid%, , %name% ;Ìí¼Óµ½×ÀÃæ
-	;Éú³ÉĞ¶ÔØreg
-	FileAppend, Windows Registry Editor Version 5.00, %A_ScriptDir%\Ğ¶ÔØ%name%.reg
-	FileAppend, `n[-HKEY_CURRENT_USER\%item%], %A_ScriptDir%\Ğ¶ÔØ%name%.reg
-	FileAppend, `n[-HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\%clsid%], %A_ScriptDir%\Ğ¶ÔØ%name%.reg
-	FileAppend, `n[-HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\%clsid%], %A_ScriptDir%\Ğ¶ÔØ%name%.reg
-	MsgBox, 4128, ÌáÊ¾, ÒÑ´´½¨Í¼±ê£¬×ÀÃæÉÏÇëÊÖ¶¯Ë¢ĞÂ£¡`nÈôÒªĞ¶ÔØ£¬ÇëÔÚ³ÌĞòÄ¿Â¼ÏÂ`nË«»÷"Ğ¶ÔØ%name%.reg"Ğ¶ÔØ!
+	;RegWrite, REG_BINARY, HKCU, %item%, Attributes, 00000000 ;å±æ€§
+	RegWrite, REG_SZ, HKCU, Software\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\%clsid%, , %name% ;æ·»åŠ åˆ°æˆ‘çš„ç”µè„‘
+	RegWrite, REG_SZ, HKCU, SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\%clsid%, , %name% ;æ·»åŠ åˆ°æ¡Œé¢
+	;ç”Ÿæˆå¸è½½reg
+	FileAppend, Windows Registry Editor Version 5.00, %A_ScriptDir%\å¸è½½%name%.reg
+	FileAppend, `n[-HKEY_CURRENT_USER\%item%], %A_ScriptDir%\å¸è½½%name%.reg
+	FileAppend, `n[-HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\%clsid%], %A_ScriptDir%\å¸è½½%name%.reg
+	FileAppend, `n[-HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\%clsid%], %A_ScriptDir%\å¸è½½%name%.reg
+	MsgBox, 4128, æç¤º, å·²åˆ›å»ºå›¾æ ‡ï¼Œæ¡Œé¢ä¸Šè¯·æ‰‹åŠ¨åˆ·æ–°ï¼`nè‹¥è¦å¸è½½ï¼Œè¯·åœ¨ç¨‹åºç›®å½•ä¸‹`nåŒå‡»"å¸è½½%name%.reg"å¸è½½!
 }
-;Çå¿ÕËùÓĞÌîĞ´
+;æ¸…ç©ºæ‰€æœ‰å¡«å†™
 GuiControl, , menu_name,
 GuiControl, , menu_cmd,
 GuiControl, , icon,
@@ -102,7 +102,7 @@ Return
 
 selectico:
 gui +owndialogs
-fileselectfile, icon, 1, %lastdir%, ´ò¿ªÒ»Í¼±êÎÄ¼ş, Í¼±êÎÄ¼ş(*.ico;*.exe)
+fileselectfile, icon, 1, %lastdir%, æ‰“å¼€ä¸€å›¾æ ‡æ–‡ä»¶, å›¾æ ‡æ–‡ä»¶(*.ico;*.exe)
 if icon =
 	Return
 GuiControl, , icon, %icon%
@@ -110,7 +110,7 @@ guicontrol, , sico, %icon%
 Return
 
 help:
-MsgBox, 4128, °ïÖú, ¡°Ãû³Æ¡±ÎªÔÚÎÒµÄµçÄÔºÍ×ÀÃæÏÔÊ¾µÄÃû³Æ`n¡°Í¼±ê¡±ÎªÔÚÎÒµÄµçÄÔºÍ×ÀÃæÏÔÊ¾µÄÍ¼±ê`n¡°²Ëµ¥Ãû¡±ÊÇÓÒ¼ü²Ëµ¥ÖĞµÄÏîÃû£¬¿ÉÒÔÊ¹ÓÃ¡°(&e)¡±ÕâÖÖ¿ì½İ¼ü`n¡°ÃüÁîĞĞ¡±Îª´ò¿ªÊ±Ö´ĞĞµÄÃüÁî¡£`n`nÈôÒªĞ¶ÔØ£¬ÇëÔÚ³ÌĞòÄ¿Â¼ÏÂ`nË«»÷Ğ¶ÔØxx.regĞ¶ÔØ¡£, 10
+MsgBox, 4128, å¸®åŠ©, â€œåç§°â€ä¸ºåœ¨æˆ‘çš„ç”µè„‘å’Œæ¡Œé¢æ˜¾ç¤ºçš„åç§°`nâ€œå›¾æ ‡â€ä¸ºåœ¨æˆ‘çš„ç”µè„‘å’Œæ¡Œé¢æ˜¾ç¤ºçš„å›¾æ ‡`nâ€œèœå•åâ€æ˜¯å³é”®èœå•ä¸­çš„é¡¹åï¼Œå¯ä»¥ä½¿ç”¨â€œ(&e)â€è¿™ç§å¿«æ·é”®`nâ€œå‘½ä»¤è¡Œâ€ä¸ºæ‰“å¼€æ—¶æ‰§è¡Œçš„å‘½ä»¤ã€‚`n`nè‹¥è¦å¸è½½ï¼Œè¯·åœ¨ç¨‹åºç›®å½•ä¸‹`nåŒå‡»å¸è½½xx.regå¸è½½ã€‚, 10
 Return
 
 show_obj(obj,menu_name:=""){
@@ -130,12 +130,12 @@ if (IsObject(v))
 	submenu_name = %A_Now%%rand%
     Menu, % submenu_name, add,
     Menu, % submenu_name, DeleteAll
-	Menu, % menu_name, add, % k ? "¡¾" k "¡¿[obj]" : "", :%submenu_name%
+	Menu, % menu_name, add, % k ? "ã€" k "ã€‘[obj]" : "", :%submenu_name%
     show_obj(v,submenu_name)
 	}
 Else
 	{
-	Menu, % menu_name, add, % k ? "¡¾" k "¡¿" v: "", MenuHandler
+	Menu, % menu_name, add, % k ? "ã€" k "ã€‘" v: "", MenuHandler
 	}
 }
 if main = 1

@@ -1,8 +1,8 @@
-; 1061
+ï»¿; 1061
 ComObjError(0)
 DetectHiddenWindows, On
-WinGetTitle, h_hwnd, »ñÈ¡µ±Ç°´°¿ÚĞÅÏ¢ ;ahk_class AutoHotkeyGUI
-Windy_CurWin_id := StrReplace(h_hwnd, "»ñÈ¡µ±Ç°´°¿ÚĞÅÏ¢_")
+WinGetTitle, h_hwnd, è·å–å½“å‰çª—å£ä¿¡æ¯ ;ahk_class AutoHotkeyGUI
+Windy_CurWin_id := StrReplace(h_hwnd, "è·å–å½“å‰çª—å£ä¿¡æ¯_")
 if Windy_CurWin_id
 {
 	WinGetClass, Windy_CurWin_Class, ahk_id %Windy_CurWin_id%
@@ -18,19 +18,19 @@ else
 	WinGet, Windy_CurWin_Fullpath, ProcessPath, A
 }
 
-; ´°¿Ú±êÌâÓĞÂ·¾¶µÄ´°¿ÚÖ±½Ó»ñÈ¡´°¿Ú±êÌâÎÄ×Ö
+; çª—å£æ ‡é¢˜æœ‰è·¯å¾„çš„çª—å£ç›´æ¥è·å–çª—å£æ ‡é¢˜æ–‡å­—
 IfInString, Windy_CurWin_Title, :\ 
 {
-	; Æ¥ÅäÄ¿Â¼²»ÄÜÆ¥ÅäÎÄ¼ş
+	; åŒ¹é…ç›®å½•ä¸èƒ½åŒ¹é…æ–‡ä»¶
 	;FullNamell:=RegExReplace(_Title,"^.*(.:(\\)?.*)\\.*$","$1")
-	; ±à¼­Æ÷ÎÄ¼şĞŞ¸Äºó±êÌâ¿ªÍ·´ø¡°*¡±
+	; ç¼–è¾‘å™¨æ–‡ä»¶ä¿®æ”¹åæ ‡é¢˜å¼€å¤´å¸¦â€œ*â€
 	RegExMatch(Windy_CurWin_Title, "i)^\*?\K.*\..*(?= [-*] )", FileFullPath)
 	FileFullPath := Trim(FileFullPath, " *[]")
 	If FileFullPath
 		goto OpenFileFullPath
 }
 
-; Word¡¢Excel¡¢WPS¡¢et¡¢Scite³ÌĞò
+; Wordã€Excelã€WPSã€etã€Sciteç¨‹åº
 FileFullPath := getDocumentPath(Windy_CurWin_Fullpath)
 if FileFullPath
 	goto OpenFileFullPath
@@ -54,7 +54,7 @@ IfInString, Windy_CurWin_Title, RealPlayer
 	WinGetText, Windy_CurWin_Title, %Windy_CurWin_Title%
 	IfInString, Windy_CurWin_Title, :/
 	{
-		; RealPlayerÊ½Àı£ºfile://N:/µçÓ°/Ğ¡ÊÓÆµ/¡¾ÌÙ²øÂ¥¡¿±Ø¿´£¡ÕıÈ·µÄµçÏßÈÆÈ¦ÊÕ¼¯·½·¨ ±êÇå.flv
+		; RealPlayerå¼ä¾‹ï¼šfile://N:/ç”µå½±/å°è§†é¢‘/ã€è—¤ç¼ æ¥¼ã€‘å¿…çœ‹ï¼æ­£ç¡®çš„ç”µçº¿ç»•åœˆæ”¶é›†æ–¹æ³• æ ‡æ¸….flv
 		StringReplace, Windy_CurWin_Title, Windy_CurWin_Title, /, \, 1
 		Loop, parse, Windy_CurWin_Title, `n, `r
 		{
@@ -67,13 +67,13 @@ IfInString, Windy_CurWin_Title, RealPlayer
 	Return
 }
 
-; Ö±½Ó´ò¿ª¼ÇÊÂ±¾³ÌĞò£¬È»ºó´ò¿ªÎÄ±¾ÎÄ¼ş£¬ÃüÁîĞĞÃ»ÓĞÎÄ¼şÂ·¾¶£¬Ê¹ÓÃ¶ÁÈ¡ÄÚ´æµÄ·½·¨µÃµ½Â·¾¶
-IfInString, Windy_CurWin_Title, ¼ÇÊÂ±¾
+; ç›´æ¥æ‰“å¼€è®°äº‹æœ¬ç¨‹åºï¼Œç„¶åæ‰“å¼€æ–‡æœ¬æ–‡ä»¶ï¼Œå‘½ä»¤è¡Œæ²¡æœ‰æ–‡ä»¶è·¯å¾„ï¼Œä½¿ç”¨è¯»å–å†…å­˜çš„æ–¹æ³•å¾—åˆ°è·¯å¾„
+IfInString, Windy_CurWin_Title, è®°äº‹æœ¬
 {
 	Windy_CurWin_Title := StrReplace(Windy_CurWin_Title, "*")
-	If(Windy_CurWin_Title = "ÎŞ±êÌâ - ¼ÇÊÂ±¾")
+	If(Windy_CurWin_Title = "æ— æ ‡é¢˜ - è®°äº‹æœ¬")
 	Return
-	OSRecentTextFile := A_AppData "\Microsoft\Windows\Recent\" StrReplace(Windy_CurWin_Title, " - ¼ÇÊÂ±¾") ".lnk"
+	OSRecentTextFile := A_AppData "\Microsoft\Windows\Recent\" StrReplace(Windy_CurWin_Title, " - è®°äº‹æœ¬") ".lnk"
 	FileGetShortcut, % OSRecentTextFile, FileFullPath
 	if FileExist(FileFullPath)
 		gosub OpenFileFullPath
@@ -81,7 +81,7 @@ IfInString, Windy_CurWin_Title, ¼ÇÊÂ±¾
 Return
 
 OpenFileFullPath:
-; QQ Ó°Òô  ÎÄ¼şÂ·¾¶Ä©Î²´ø¡°*¡±ºÅ
+; QQ å½±éŸ³  æ–‡ä»¶è·¯å¾„æœ«å°¾å¸¦â€œ*â€å·
 FileFullPath := Trim(FileFullPath, "`*")
 If Fileexist(FileFullPath)
 {
@@ -100,7 +100,7 @@ else
 	Splitpath, FileFullPath, , Filepath
 	If Fileexist(Filepath)
 	{
-		Msgbox, % "Ä¿±êÎÄ¼ş²»´æÔÚ " FileFullPath "£¬`r`n" "´ò¿ªÎÄ¼şËùÔÚÄ¿Â¼ " Filepath "¡£"
+		Msgbox, % "ç›®æ ‡æ–‡ä»¶ä¸å­˜åœ¨ " FileFullPath "ï¼Œ`r`n" "æ‰“å¼€æ–‡ä»¶æ‰€åœ¨ç›®å½• " Filepath "ã€‚"
 		Run, % Filepath
 		Return
 	}
@@ -131,7 +131,7 @@ getDocumentPath(_ProcessPath)
 	if !Application
 		Application := ComObjActive("WPS.Application")
 	ActiveDocument := Application.ActiveDocument
-	if !ActiveDocument   ; WPS Æô¶¯È»ºó´ò¿ª±í¸ñÎÄ¼şµÄÇé¿ö
+	if !ActiveDocument   ; WPS å¯åŠ¨ç„¶åæ‰“å¼€è¡¨æ ¼æ–‡ä»¶çš„æƒ…å†µ
 	{
 		Goto Case_ET
 	}
@@ -168,8 +168,8 @@ File_OpenAndSelect(sFullPath)
 {
 	SplitPath sFullPath, , sPath
 	FolderPidl := DllCall("shell32\ILCreateFromPath", "Str", sPath)
-	; QtTabBar Ê¹ÓÃ explorer /select, %sFullPath%, explorer %sFullPath% »á´ò¿ªĞÂ´°¿Ú
-	;run %sPath%  ; ÓÃ±êÇ©Ò³´ò¿ªÄ¿Â¼ºó, Ñ¡Ôñ²ÅÄÜ¿ìËÙ½áÊø,·ñÔòÏÂÃæµÄSHOpenFolderAndSelectItems¿ÉÄÜ»á¿¨×¡(°²×°QtTabBar)
+	; QtTabBar ä½¿ç”¨ explorer /select, %sFullPath%, explorer %sFullPath% ä¼šæ‰“å¼€æ–°çª—å£
+	;run %sPath%  ; ç”¨æ ‡ç­¾é¡µæ‰“å¼€ç›®å½•å, é€‰æ‹©æ‰èƒ½å¿«é€Ÿç»“æŸ,å¦åˆ™ä¸‹é¢çš„SHOpenFolderAndSelectItemså¯èƒ½ä¼šå¡ä½(å®‰è£…QtTabBar)
 	sleep 200
 	DllCall("shell32\SHParseDisplayName", "str", sFullPath, "Ptr", 0, "Ptr*", ItemPidl, "Uint", 0, "Uint*", 0)
 	DllCall("shell32\SHOpenFolderAndSelectItems", "Ptr", FolderPidl, "UInt", 1, "Ptr*", ItemPidl, "Int", 0)

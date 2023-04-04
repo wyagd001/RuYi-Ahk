@@ -1,8 +1,8 @@
-ATA_settingFile := A_ScriptDir "\..\..\ÅäÖÃÎÄ¼ş\ÈçÒ».ini"
+ï»¿ATA_settingFile := A_ScriptDir "\..\..\é…ç½®æ–‡ä»¶\å¦‚ä¸€.ini"
 ATA_filepath := A_Args[1]
 DetectHiddenWindows, On
-WinGetTitle, h_hwnd, »ñÈ¡µ±Ç°´°¿ÚĞÅÏ¢
-Windy_CurWin_id := StrReplace(h_hwnd, "»ñÈ¡µ±Ç°´°¿ÚĞÅÏ¢_")
+WinGetTitle, h_hwnd, è·å–å½“å‰çª—å£ä¿¡æ¯
+Windy_CurWin_id := StrReplace(h_hwnd, "è·å–å½“å‰çª—å£ä¿¡æ¯_")
 WinGet, Windy_CurWin_Fullpath, ProcessPath, Ahk_ID %Windy_CurWin_id%
 WinGet, OutPID, PID, Ahk_ID %Windy_CurWin_id%
 if !Windy_CurWin_Fullpath
@@ -13,7 +13,7 @@ if !Windy_CurWin_Fullpath
 SplitPath, Windy_CurWin_Fullpath, Windy_CurWin_ProcName
 ;msgbox %Windy_CurWin_ProcName% "%ATA_filepath%"
 CurrentWebOpen:
-; ATA_filepath º¬ÓĞ "/" ×Ö·ûÊ±, Ê¹ÓÃä¯ÀÀÆ÷´ò¿ª, ÍøÖ·ÖĞ²»Ö§³ÖÖĞÎÄ×Ö·û
+; ATA_filepath å«æœ‰ "/" å­—ç¬¦æ—¶, ä½¿ç”¨æµè§ˆå™¨æ‰“å¼€, ç½‘å€ä¸­ä¸æ”¯æŒä¸­æ–‡å­—ç¬¦
 IniRead, Default_Browser, %ATA_settingFile%, Browser, Default_Browser, %A_Space%
 IniRead, url, %ATA_settingFile%, Browser, Default_Url
 IniRead, InUse_Browser, %ATA_settingFile%, Browser, InUse_Browser
@@ -22,7 +22,7 @@ If Default_Browser
 {
 	Loop, parse, url, |
 	{
-		IfInString, ATA_filepath, %A_LoopField%    ;ATA_filepathÓĞÌØ¶¨×Ö·ûÊ±Ê¹ÓÃÄ¬ÈÏä¯ÀÀÆ÷´ò¿ª
+		IfInString, ATA_filepath, %A_LoopField%    ;ATA_filepathæœ‰ç‰¹å®šå­—ç¬¦æ—¶ä½¿ç”¨é»˜è®¤æµè§ˆå™¨æ‰“å¼€
 		{
 			Loop, parse, Default_Browser, `,
 			{
@@ -37,7 +37,7 @@ If Default_Browser
 	}
 }
 br := 0
-if InStr(InUse_Browser, Windy_CurWin_ProcName)   ;µ±Ç°´°¿ÚÔÚÊ¹ÓÃµÄä¯ÀÀÆ÷ÁĞ±íµ±ÖĞ
+if InStr(InUse_Browser, Windy_CurWin_ProcName)   ;å½“å‰çª—å£åœ¨ä½¿ç”¨çš„æµè§ˆå™¨åˆ—è¡¨å½“ä¸­
 {
 	If(Windy_CurWin_ProcName = "chrome.exe" or Windy_CurWin_ProcName = "firefox.exe")
 	{
@@ -53,7 +53,7 @@ if InStr(InUse_Browser, Windy_CurWin_ProcName)   ;µ±Ç°´°¿ÚÔÚÊ¹ÓÃµÄä¯ÀÀÆ÷ÁĞ±íµ±ÖĞ
 			br := 1
 	}
 }
-StringSplit, BApp, InUse_Browser, `,     ;µ±Ç°´°¿Ú½ø³ÌÃû²»ÔÚÊ¹ÓÃµÄä¯ÀÀÆ÷ÁĞ±íµ±ÖĞ
+StringSplit, BApp, InUse_Browser, `,     ;å½“å‰çª—å£è¿›ç¨‹åä¸åœ¨ä½¿ç”¨çš„æµè§ˆå™¨åˆ—è¡¨å½“ä¸­
 LoopN := 1
 if !br
 {
@@ -62,7 +62,7 @@ if !br
 		BCtrApp := BApp%LoopN%
 		LoopN++
 		Process, Exist, %BCtrApp%
-		If (errorlevel<>0)    ;  Ê¹ÓÃµÄä¯ÀÀÆ÷ÁĞ±íµ±ÖĞµÄä¯ÀÀÆ÷½ø³ÌÊÇ·ñ´æÔÚ
+		If (errorlevel<>0)    ;  ä½¿ç”¨çš„æµè§ˆå™¨åˆ—è¡¨å½“ä¸­çš„æµè§ˆå™¨è¿›ç¨‹æ˜¯å¦å­˜åœ¨
 		{
 			NewPID = %ErrorLevel%
 			If(BCtrApp = "chrome.exe" or BCtrApp = "firefox.exe")
@@ -85,7 +85,7 @@ if !br
 		}
 	}
 }
-if !br   ; Ã»ÓĞ´ò¿ªµÄä¯ÀÀÆ÷Ê±Ê¹ÓÃÄ¬ÈÏµÄä¯ÀÀÆ÷
+if !br   ; æ²¡æœ‰æ‰“å¼€çš„æµè§ˆå™¨æ—¶ä½¿ç”¨é»˜è®¤çš„æµè§ˆå™¨
 {
 	If Default_Browser
 	{
@@ -97,14 +97,14 @@ if !br   ; Ã»ÓĞ´ò¿ªµÄä¯ÀÀÆ÷Ê±Ê¹ÓÃÄ¬ÈÏµÄä¯ÀÀÆ÷
 		}
 		if (ErrorLevel = "error") && (A_LastError = 2)
 		{
-			msgbox % "ÕÒ²»µ½Ä¬ÈÏµÄä¯ÀÀÆ÷, Çë¼ì²éÉèÖÃÎÄ¼şµÄ Default_Browser ÌõÄ¿, Ö¸¶¨Ä¬ÈÏµÄä¯ÀÀÆ÷Î»ÖÃ»òÃû³Æ."
+			msgbox % "æ‰¾ä¸åˆ°é»˜è®¤çš„æµè§ˆå™¨, è¯·æ£€æŸ¥è®¾ç½®æ–‡ä»¶çš„ Default_Browser æ¡ç›®, æŒ‡å®šé»˜è®¤çš„æµè§ˆå™¨ä½ç½®æˆ–åç§°."
 		}
 	}
 	else
 	{
 		run iexplore.exe %ATA_filepath%,, UseErrorLevel
 		if (ErrorLevel = "error")
-		msgbox Çë¼ì²éÍøÖ·: %ATA_filepath%
+		msgbox è¯·æ£€æŸ¥ç½‘å€: %ATA_filepath%
 	}
 }
 return
@@ -113,7 +113,7 @@ GetModuleFileNameEx(p_pid)
 {
 	if A_OSVersion in WIN_95,WIN_98,WIN_ME,WIN_XP
 	{
-		MsgBox, Windows °æ±¾ (%A_OSVersion%) ²»Ö§³Ö¡£Win 7 ¼°ÒÔÉÏÏµÍ³²ÅÄÜÕı³£Ê¹ÓÃ¡£
+		MsgBox, Windows ç‰ˆæœ¬ (%A_OSVersion%) ä¸æ”¯æŒã€‚Win 7 åŠä»¥ä¸Šç³»ç»Ÿæ‰èƒ½æ­£å¸¸ä½¿ç”¨ã€‚
 		return
 	}
 

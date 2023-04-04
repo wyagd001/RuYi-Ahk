@@ -1,5 +1,6 @@
 ﻿#SingleInstance force
 CandySel := A_Args[1]
+CandySel2 := A_Args[2]
 OnMessage(0x4a, "Receive_WM_COPYDATA")
 cando_MD5:
 Gui, 66: Default
@@ -23,26 +24,32 @@ Else
 	if (Md5FilePath = "")
 		exitapp
 	SplitPath, Md5FilePath, OutFileName,, OutExtension, OutNameNoExt
-	Md5FilePath2 := ""
-	AllOpenFolder := GetAllWindowOpenFolder()
-	for k,v in AllOpenFolder
+	if CandySel2
+		Md5FilePath2 := CandySel2
+	else
+		Md5FilePath2 := ""
+	if !FileExist(Md5FilePath2)
 	{
-		Tmp_Fp := v "\" OutNameNoExt
-		Tmp_Fp := StrReplace(Tmp_Fp, "\\", "\")
-		if FileExist(Tmp_Fp "*.*")
+		AllOpenFolder := GetAllWindowOpenFolder()
+		for k,v in AllOpenFolder
 		{
-			if FileExist(Tmp_Fp "." OutExtension) && (Tmp_Fp (OutExtension?".":"") OutExtension != Md5FilePath)
+			Tmp_Fp := v "\" OutNameNoExt
+			Tmp_Fp := StrReplace(Tmp_Fp, "\\", "\")
+			if FileExist(Tmp_Fp "*.*")
 			{
-				Md5FilePath2 := Tmp_Fp (OutExtension?".":"") OutExtension
-				break
-			}
-			Loop, Files, % Tmp_Fp "*.*", F
-			{
-				if InStr(A_LoopFileName, OutNameNoExt) && (A_LoopFileName != OutFileName)
+				if FileExist(Tmp_Fp "." OutExtension) && (Tmp_Fp (OutExtension?".":"") OutExtension != Md5FilePath)
 				{
-					Md5FilePath2 := v "\" A_LoopFileName
-					Md5FilePath2 := StrReplace(Md5FilePath2, "\\", "\")
-					break 2
+					Md5FilePath2 := Tmp_Fp (OutExtension?".":"") OutExtension
+					break
+				}
+				Loop, Files, % Tmp_Fp "*.*", F
+				{
+					if InStr(A_LoopFileName, OutNameNoExt) && (A_LoopFileName != OutFileName)
+					{
+						Md5FilePath2 := v "\" A_LoopFileName
+						Md5FilePath2 := StrReplace(Md5FilePath2, "\\", "\")
+						break 2
+					}
 				}
 			}
 		}

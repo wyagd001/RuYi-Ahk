@@ -1,4 +1,12 @@
 ﻿CandySel := A_Args[1]
+if !CandySel
+{
+	DetectHiddenWindows, On
+	ControlGetText, CandySel, Edit1, 获取当前窗口信息_ 
+	DetectHiddenWindows, Off
+	if !CandySel
+		exitapp
+}
 ; 1046
 修改文件属性:
 StringSplit, ary, CandySel, `n, `r
@@ -280,4 +288,3 @@ GuiEscape:
 Gui,Destroy
 exitapp
 Return
-

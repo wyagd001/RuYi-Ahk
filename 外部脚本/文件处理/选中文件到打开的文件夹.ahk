@@ -1,12 +1,23 @@
-CandySel := A_Args[1]
+﻿CandySel := A_Args[1]
+if !CandySel
+{
+	DetectHiddenWindows, On
+	ControlGetText, CandySel, Edit1, 获取当前窗口信息_ 
+	DetectHiddenWindows, Off
+	if !CandySel
+		exitapp
+}
 CandySel2 := A_Args[2]
+;msgbox % CandySel " - " CandySel2
+;Return
+
 if CandySel2
 	goto SendToFolder
 ;msgbox % CandySel
 ; 1109
 Cando_CopyToOpenedFolder:
 AllOpenFolder := GetAllWindowOpenFolder()
-Menu SendToOpenedFolder, Add, ���͵��򿪵��ļ���, nul
+Menu SendToOpenedFolder, Add, 发送到打开的文件夹, nul
 Menu SendToOpenedFolder, Add
 for k, v in AllOpenFolder
 {
@@ -20,7 +31,7 @@ nul:
 return
 
 Cando_SendToFolder:
-if !instr(CandySel, "`n")
+if !instr(CandySel, "`n")   ; 单文件
 {
 	SplitPath, CandySel, CandySel_FileName
 	TargetFile := PathU(A_ThisMenuItem "\" CandySel_FileName)

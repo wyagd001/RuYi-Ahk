@@ -1,5 +1,13 @@
 ﻿; 1081
 CandySel := A_Args[1]
+if !CandySel
+{
+	DetectHiddenWindows, On
+	ControlGetText, CandySel, Edit1, 获取当前窗口信息_ 
+	DetectHiddenWindows, Off
+	if !CandySel
+		exitapp
+}
 Files_TwoFilesSwapName(CandySel)
 Return
 

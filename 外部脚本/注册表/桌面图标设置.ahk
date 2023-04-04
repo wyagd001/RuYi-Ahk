@@ -1,57 +1,57 @@
-global A_icon := Object("¼ÆËã»ú", "{20D04FE0-3AEA-1069-A2D8-08002B30309D}", "»ØÊÕÕ¾", "{645FF040-5081-101B-9F08-00AA002F954E}", "ÓÃ»§µÄÎÄ¼ş", "{59031a47-3f72-44a7-89c5-5595fe6b30ee}", "¿ØÖÆÃæ°å", "{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}", "ÍøÂç", "{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}", "¿â", "{031E4825-7B94-4dc3-B131-E946B44C8DD5}")
+ï»¿global A_icon := Object("è®¡ç®—æœº", "{20D04FE0-3AEA-1069-A2D8-08002B30309D}", "å›æ”¶ç«™", "{645FF040-5081-101B-9F08-00AA002F954E}", "ç”¨æˆ·çš„æ–‡ä»¶", "{59031a47-3f72-44a7-89c5-5595fe6b30ee}", "æ§åˆ¶é¢æ¿", "{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}", "ç½‘ç»œ", "{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}", "åº“", "{031E4825-7B94-4dc3-B131-E946B44C8DD5}")
 ;global A_icon2 := Object()
-global A_iconDy := Object("¼ÆËã»ú", "vcomputer", "»ØÊÕÕ¾", "vrecycle", "ÓÃ»§µÄÎÄ¼ş", "vdocument", "¿ØÖÆÃæ°å", "vcontrol","ÍøÂç", "vweb", "¿â", "vlib")
-global A_iconDy2 := Object("¼ÆËã»ú", "vcomputer_all", "»ØÊÕÕ¾", "vrecycle_all", "ÓÃ»§µÄÎÄ¼ş", "vdocument_all", "¿ØÖÆÃæ°å", "vcontrol_all", "ÍøÂç", "vweb_all", "¿â", "vlib_all")
-global A_iconDy3 := Object("¼ÆËã»ú", "vcomputer_fsys", "»ØÊÕÕ¾", "vrecycle_fsys", "ÓÃ»§µÄÎÄ¼ş", "vdocument_fsys", "¿ØÖÆÃæ°å", "vcontrol_fsys", "ÍøÂç", "vweb_fsys", "¿â", "vlib_fsys")
-global A_iconSt := Object("¼ÆËã»ú", 0, "»ØÊÕÕ¾", 0, "ÓÃ»§µÄÎÄ¼ş", 0, "¿ØÖÆÃæ°å", 0, "ÍøÂç", 0, "¿â", 0)
-global A_iconSt2 := Object("¼ÆËã»ú", 0, "»ØÊÕÕ¾", 0, "ÓÃ»§µÄÎÄ¼ş", 0, "¿ØÖÆÃæ°å", 0, "ÍøÂç", 0, "¿â", 0)
-global A_iconSt3 := Object("¼ÆËã»ú", 0, "»ØÊÕÕ¾", 0, "ÓÃ»§µÄÎÄ¼ş", 0, "¿ØÖÆÃæ°å", 0, "ÍøÂç", 0, "¿â", 0)
+global A_iconDy := Object("è®¡ç®—æœº", "vcomputer", "å›æ”¶ç«™", "vrecycle", "ç”¨æˆ·çš„æ–‡ä»¶", "vdocument", "æ§åˆ¶é¢æ¿", "vcontrol","ç½‘ç»œ", "vweb", "åº“", "vlib")
+global A_iconDy2 := Object("è®¡ç®—æœº", "vcomputer_all", "å›æ”¶ç«™", "vrecycle_all", "ç”¨æˆ·çš„æ–‡ä»¶", "vdocument_all", "æ§åˆ¶é¢æ¿", "vcontrol_all", "ç½‘ç»œ", "vweb_all", "åº“", "vlib_all")
+global A_iconDy3 := Object("è®¡ç®—æœº", "vcomputer_fsys", "å›æ”¶ç«™", "vrecycle_fsys", "ç”¨æˆ·çš„æ–‡ä»¶", "vdocument_fsys", "æ§åˆ¶é¢æ¿", "vcontrol_fsys", "ç½‘ç»œ", "vweb_fsys", "åº“", "vlib_fsys")
+global A_iconSt := Object("è®¡ç®—æœº", 0, "å›æ”¶ç«™", 0, "ç”¨æˆ·çš„æ–‡ä»¶", 0, "æ§åˆ¶é¢æ¿", 0, "ç½‘ç»œ", 0, "åº“", 0)
+global A_iconSt2 := Object("è®¡ç®—æœº", 0, "å›æ”¶ç«™", 0, "ç”¨æˆ·çš„æ–‡ä»¶", 0, "æ§åˆ¶é¢æ¿", 0, "ç½‘ç»œ", 0, "åº“", 0)
+global A_iconSt3 := Object("è®¡ç®—æœº", 0, "å›æ”¶ç«™", 0, "ç”¨æˆ·çš„æ–‡ä»¶", 0, "æ§åˆ¶é¢æ¿", 0, "ç½‘ç»œ", 0, "åº“", 0)
 for key in A_icon
 {
 	A_iconSt[key] := readshoworhide(key)
 	A_iconSt2[key] := readshoworhide(key, 1)
 }
 
-Gui, Add, Button, x295 y310 w70 h30 gGuiSave, È·¶¨
-Gui, Add, Button, xp+80 yp w70 h30 gGuiClose, È¡Ïû
-Gui, Add, Button, xp+80 yp w70 h30 gGuiApply, Ó¦ÓÃ
+Gui, Add, Button, x295 y310 w70 h30 gGuiSave, ç¡®å®š
+Gui, Add, Button, xp+80 yp w70 h30 gGuiClose, å–æ¶ˆ
+Gui, Add, Button, xp+80 yp w70 h30 gGuiApply, åº”ç”¨
 
-Gui, Add, Tab, x-4 y1 w530 h300, ³£¹æ|ÆäËû
-Gui, Tab, ³£¹æ
-Gui, Add, GroupBox, x10 y30 w500 h120, µ±Ç°ÓÃ»§
-Gui, Add, CheckBox, % "x20 yp+30 w80 h20 vvcomputer gdelfollow Checked" A_iconSt["¼ÆËã»ú"], ¼ÆËã»ú
-Gui, Add, CheckBox, % "xp+80 yp w80 h20 vvcomputer_fsys gfollowsys Checked" A_iconSt3["¼ÆËã»ú"], ¸úËæÏµÍ³
-Gui, Add, CheckBox, % "xp+120 yp w80 h20 vvrecycle gdelfollow Checked" A_iconSt["»ØÊÕÕ¾"], »ØÊÕÕ¾
-Gui, Add, CheckBox, % "xp+80 yp w80 h20 vvrecycle_fsys gfollowsys Checked" A_iconSt3["»ØÊÕÕ¾"], ¸úËæÏµÍ³
-Gui, Add, CheckBox, % "x20 yp+30 w80 h20 vvdocument gdelfollow Checked" A_iconSt["ÓÃ»§µÄÎÄ¼ş"], ÓÃ»§µÄÎÄ¼ş
-Gui, Add, CheckBox, % "xp+80 yp w80 h20 vvdocument_fsys gfollowsys Checked" A_iconSt3["ÓÃ»§µÄÎÄ¼ş"], ¸úËæÏµÍ³
-Gui, Add, CheckBox, % "xp+120 yp w80 h20 vvcontrol gdelfollow Checked" A_iconSt["¿ØÖÆÃæ°å"], ¿ØÖÆÃæ°å
-Gui, Add, CheckBox, % "xp+80 yp w80 h20 vvcontrol_fsys gfollowsys Checked" A_iconSt3["ÓÃ»§µÄÎÄ¼ş"], ¸úËæÏµÍ³
-Gui, Add, CheckBox, % "x20 yp+30 w80 h20 vvweb gdelfollow Checked" A_iconSt["ÍøÂç"], ÍøÂç
-Gui, Add, CheckBox, % "xp+80 yp w80 h20 vvweb_fsys gfollowsys Checked" A_iconSt3["ÓÃ»§µÄÎÄ¼ş"], ¸úËæÏµÍ³
+Gui, Add, Tab, x-4 y1 w530 h300, å¸¸è§„|å…¶ä»–
+Gui, Tab, å¸¸è§„
+Gui, Add, GroupBox, x10 y30 w500 h120, å½“å‰ç”¨æˆ·
+Gui, Add, CheckBox, % "x20 yp+30 w80 h20 vvcomputer gdelfollow Checked" A_iconSt["è®¡ç®—æœº"], è®¡ç®—æœº
+Gui, Add, CheckBox, % "xp+80 yp w80 h20 vvcomputer_fsys gfollowsys Checked" A_iconSt3["è®¡ç®—æœº"], è·Ÿéšç³»ç»Ÿ
+Gui, Add, CheckBox, % "xp+120 yp w80 h20 vvrecycle gdelfollow Checked" A_iconSt["å›æ”¶ç«™"], å›æ”¶ç«™
+Gui, Add, CheckBox, % "xp+80 yp w80 h20 vvrecycle_fsys gfollowsys Checked" A_iconSt3["å›æ”¶ç«™"], è·Ÿéšç³»ç»Ÿ
+Gui, Add, CheckBox, % "x20 yp+30 w80 h20 vvdocument gdelfollow Checked" A_iconSt["ç”¨æˆ·çš„æ–‡ä»¶"], ç”¨æˆ·çš„æ–‡ä»¶
+Gui, Add, CheckBox, % "xp+80 yp w80 h20 vvdocument_fsys gfollowsys Checked" A_iconSt3["ç”¨æˆ·çš„æ–‡ä»¶"], è·Ÿéšç³»ç»Ÿ
+Gui, Add, CheckBox, % "xp+120 yp w80 h20 vvcontrol gdelfollow Checked" A_iconSt["æ§åˆ¶é¢æ¿"], æ§åˆ¶é¢æ¿
+Gui, Add, CheckBox, % "xp+80 yp w80 h20 vvcontrol_fsys gfollowsys Checked" A_iconSt3["ç”¨æˆ·çš„æ–‡ä»¶"], è·Ÿéšç³»ç»Ÿ
+Gui, Add, CheckBox, % "x20 yp+30 w80 h20 vvweb gdelfollow Checked" A_iconSt["ç½‘ç»œ"], ç½‘ç»œ
+Gui, Add, CheckBox, % "xp+80 yp w80 h20 vvweb_fsys gfollowsys Checked" A_iconSt3["ç”¨æˆ·çš„æ–‡ä»¶"], è·Ÿéšç³»ç»Ÿ
 
-Gui, Add, GroupBox, x10 y165 w500 h120, ÏµÍ³(ËùÓĞÓÃ»§)
-Gui, Add, CheckBox, % "xp+10 yp+30 w80 h20 vvcomputer_all Checked" A_iconSt2["¼ÆËã»ú"], ¼ÆËã»ú
-Gui, Add, CheckBox, % "xp+150 yp w80 h20 vvrecycle_all Checked" A_iconSt2["»ØÊÕÕ¾"], »ØÊÕÕ¾
-Gui, Add, CheckBox, % "xp-150 yp+30 w80 h20 vvdocument_all Checked" A_iconSt2["ÓÃ»§µÄÎÄ¼ş"], ÓÃ»§µÄÎÄ¼ş
-Gui, Add, CheckBox, % "xp+150 yp w80 h20 vvcontrol_all Checked" A_iconSt2["¿ØÖÆÃæ°å"], ¿ØÖÆÃæ°å
-Gui, Add, CheckBox, % "xp-150 yp+30 w80 h20 vvweb_all Checked" A_iconSt2["ÍøÂç"], ÍøÂç
-;Gui, Add, CheckBox, % "xp+150 yp w40 h20 vvlib_all Checked" A_iconSt["¿â"], ¿â
+Gui, Add, GroupBox, x10 y165 w500 h120, ç³»ç»Ÿ(æ‰€æœ‰ç”¨æˆ·)
+Gui, Add, CheckBox, % "xp+10 yp+30 w80 h20 vvcomputer_all Checked" A_iconSt2["è®¡ç®—æœº"], è®¡ç®—æœº
+Gui, Add, CheckBox, % "xp+150 yp w80 h20 vvrecycle_all Checked" A_iconSt2["å›æ”¶ç«™"], å›æ”¶ç«™
+Gui, Add, CheckBox, % "xp-150 yp+30 w80 h20 vvdocument_all Checked" A_iconSt2["ç”¨æˆ·çš„æ–‡ä»¶"], ç”¨æˆ·çš„æ–‡ä»¶
+Gui, Add, CheckBox, % "xp+150 yp w80 h20 vvcontrol_all Checked" A_iconSt2["æ§åˆ¶é¢æ¿"], æ§åˆ¶é¢æ¿
+Gui, Add, CheckBox, % "xp-150 yp+30 w80 h20 vvweb_all Checked" A_iconSt2["ç½‘ç»œ"], ç½‘ç»œ
+;Gui, Add, CheckBox, % "xp+150 yp w40 h20 vvlib_all Checked" A_iconSt["åº“"], åº“
 
-Gui, Tab, ÆäËû
-Gui, Add, GroupBox, x10 y30 w500 h120, µ±Ç°ÓÃ»§(ĞèÒªµ¼º½À¸¹´Ñ¡¿â²ÅÄÜÉúĞ§)
-Gui, Add, CheckBox, % "x20 yp+30 w80 h20 vvlib gdelfollow Checked" A_iconSt["¿â"], ¿â
-Gui, Add, CheckBox, % "xp+80 yp w80 h20 vvlib_fsys gfollowsys Checked" A_iconSt3["¿â"], ¸úËæÏµÍ³
-;Gui, Add, CheckBox, % "xp+150 yp w120 h20 vvpicture Checked" A_iconSt["Í¼Æ¬"], Í¼Æ¬
-;Gui, Add, CheckBox, % "xp-150 yp+30 w120 h20 vvdocument Checked" A_iconSt["ÎÄµµ"], ÎÄµµ
-;Gui, Add, CheckBox, % "xp+150 yp w120 h20 vvdownload Checked" A_iconSt["ÏÂÔØ"], ÏÂÔØ
-;Gui, Add, CheckBox, % "xp-150 yp+30 w120 h20 vvmusic Checked" A_iconSt["ÒôÀÖ"], ÒôÀÖ
-;Gui, Add, CheckBox, % "xp+150 yp w120 h20 vvdesktop Checked" A_iconSt["×ÀÃæ"], ×ÀÃæ
+Gui, Tab, å…¶ä»–
+Gui, Add, GroupBox, x10 y30 w500 h120, å½“å‰ç”¨æˆ·(éœ€è¦å¯¼èˆªæ å‹¾é€‰åº“æ‰èƒ½ç”Ÿæ•ˆ)
+Gui, Add, CheckBox, % "x20 yp+30 w80 h20 vvlib gdelfollow Checked" A_iconSt["åº“"], åº“
+Gui, Add, CheckBox, % "xp+80 yp w80 h20 vvlib_fsys gfollowsys Checked" A_iconSt3["åº“"], è·Ÿéšç³»ç»Ÿ
+;Gui, Add, CheckBox, % "xp+150 yp w120 h20 vvpicture Checked" A_iconSt["å›¾ç‰‡"], å›¾ç‰‡
+;Gui, Add, CheckBox, % "xp-150 yp+30 w120 h20 vvdocument Checked" A_iconSt["æ–‡æ¡£"], æ–‡æ¡£
+;Gui, Add, CheckBox, % "xp+150 yp w120 h20 vvdownload Checked" A_iconSt["ä¸‹è½½"], ä¸‹è½½
+;Gui, Add, CheckBox, % "xp-150 yp+30 w120 h20 vvmusic Checked" A_iconSt["éŸ³ä¹"], éŸ³ä¹
+;Gui, Add, CheckBox, % "xp+150 yp w120 h20 vvdesktop Checked" A_iconSt["æ¡Œé¢"], æ¡Œé¢
 
-Gui, Add, GroupBox, x10 y165 w500 h120, ÏµÍ³(ËùÓĞÓÃ»§)(ĞèÒªµ¼º½À¸¹´Ñ¡¿â²ÅÄÜÉúĞ§)
-Gui, Add, CheckBox, % "xp+10 yp+30 w120 h20 vvlib_all Checked" A_iconSt2["¿â"], ¿â
+Gui, Add, GroupBox, x10 y165 w500 h120, ç³»ç»Ÿ(æ‰€æœ‰ç”¨æˆ·)(éœ€è¦å¯¼èˆªæ å‹¾é€‰åº“æ‰èƒ½ç”Ÿæ•ˆ)
+Gui, Add, CheckBox, % "xp+10 yp+30 w120 h20 vvlib_all Checked" A_iconSt2["åº“"], åº“
 
-gui, show, , ×ÀÃæÍ¼±êµÄÏÔÊ¾/Òş²Ø
+gui, show, , æ¡Œé¢å›¾æ ‡çš„æ˜¾ç¤º/éšè—
 return
 
 GuiEscape:
@@ -158,7 +158,7 @@ writeshoworhide(sKey, sValue:=0, alluser:=0)
 	RegWrite, REG_DWORD, %APath%, %tmp_val%, %sValue%
 	;msgbox % APath " - " tmp_val " - " sValue " - " ErrorLevel " - " A_LastError
 	;msgbox % sValue " - " sKey " - " RegKeyExist(sKey)
-	if (sValue = 1) && (sKey = "¿â") && !RegKeyExist(sKey)
+	if (sValue = 1) && (sKey = "åº“") && !RegKeyExist(sKey)
 	{
 		RegWrite, REG_SZ, HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\{031E4825-7B94-4dc3-B131-E946B44C8DD5}
 	}

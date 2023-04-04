@@ -1,4 +1,4 @@
-;if !CF_RegWrite("REG_SZ", "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons", "29", "C:\WINDOWS\system32\imageres.dll,197")
+ï»¿;if !CF_RegWrite("REG_SZ", "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons", "29", "C:\WINDOWS\system32\imageres.dll,197")
 ;	msgbox
 	; % CF_RegDelete("HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons", "29")
 
@@ -10,17 +10,17 @@
 
 #SingleInstance force
 SetRegView, 64
-global A_icon := Object("Ä¬ÈÏ", A_WinDir "\System32\imageres.dll,154", "Í¸Ã÷", A_WinDir "\System32\imageres.dll,197", "¾­µä", A_WinDir "\System32\shell32.dll,29", "´óÍ¼±ê", A_WinDir "\System32\shell32.dll,263")
+global A_icon := Object("é»˜è®¤", A_WinDir "\System32\imageres.dll,154", "é€æ˜", A_WinDir "\System32\imageres.dll,197", "ç»å…¸", A_WinDir "\System32\shell32.dll,29", "å¤§å›¾æ ‡", A_WinDir "\System32\shell32.dll,263")
 global Arr_sel := [A_WinDir "\System32\imageres.dll,154", A_WinDir "\System32\imageres.dll,197", A_WinDir "\System32\shell32.dll,29", A_WinDir "\System32\shell32.dll,263"]
-global A_icon2 := Object("Ä¬ÈÏ", A_WinDir "\System32\imageres.dll,-163", "Í¸Ã÷", A_WinDir "\System32\imageres.dll,-1015", "¾­µä", A_WinDir "\System32\shell32.dll,-30", "´óÍ¼±ê", A_WinDir "\System32\shell32.dll,-16769")
-global A_iconSt := Object("Ä¬ÈÏ", 0, "Í¸Ã÷", 0, "¾­µä", 0, "´óÍ¼±ê", 0, "´ø¿ì½İ·½Ê½×ÖÑù", 0)
+global A_icon2 := Object("é»˜è®¤", A_WinDir "\System32\imageres.dll,-163", "é€æ˜", A_WinDir "\System32\imageres.dll,-1015", "ç»å…¸", A_WinDir "\System32\shell32.dll,-30", "å¤§å›¾æ ‡", A_WinDir "\System32\shell32.dll,-16769")
+global A_iconSt := Object("é»˜è®¤", 0, "é€æ˜", 0, "ç»å…¸", 0, "å¤§å›¾æ ‡", 0, "å¸¦å¿«æ·æ–¹å¼å­—æ ·", 0)
 if !RegKeyExist("Shell Icons")
-	A_iconSt["Ä¬ÈÏ"] := 1
+	A_iconSt["é»˜è®¤"] := 1
 else
 {
 	Alnk_icon := CF_RegRead("HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons", 29)
 	if (Alnk_icon = "")
-		A_iconSt["Ä¬ÈÏ"] := 1
+		A_iconSt["é»˜è®¤"] := 1
 	;tooltip % Alnk_icon
 	lnk_icon := ExpandEnvVars(Alnk_icon)
 	;msgbox % lnk_icon
@@ -33,7 +33,7 @@ else
 	else
 		Icon_index := Array[2] + 1
 
-	if !A_iconSt["Ä¬ÈÏ"]
+	if !A_iconSt["é»˜è®¤"]
 	{
 	for k,v in A_icon
 	{
@@ -56,34 +56,34 @@ else
 
 Alnk_text := CF_RegRead("HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer", "link")
 if (Alnk_text = "1e000000")
-	A_iconSt["´ø¿ì½İ·½Ê½×ÖÑù"] := 0
+	A_iconSt["å¸¦å¿«æ·æ–¹å¼å­—æ ·"] := 0
 else if (Alnk_text = "00000000")
-	A_iconSt["´ø¿ì½İ·½Ê½×ÖÑù"] := 1
+	A_iconSt["å¸¦å¿«æ·æ–¹å¼å­—æ ·"] := 1
 
 
 gui, +HwndMyGuiHwnd
-Gui, Add, GroupBox, x10 y10 w470 h140, ¿ì½İ·½Ê½Ğ¡¼ıÍ·Í¼±êÉèÖÃ(ÖØÆô×ÀÃæÉúĞ§)
-Gui, Add, Radio, % "xp+10 yp+30 w40 h20 vMyRadioGroup gselectedicon Checked" A_iconSt["Ä¬ÈÏ"], Ä¬ÈÏ
-Gui, Add, Radio, % "xp+80 yp w40 h20 gselectedicon Checked" A_iconSt["Í¸Ã÷"], Í¸Ã÷
-Gui, Add, Radio, % "xp+80 yp w40 h20 gselectedicon Checked" A_iconSt["¾­µä"], ¾­µä
-Gui, Add, Radio, % "xp+80 yp w60 h20 gselectedicon Checked" A_iconSt["´óÍ¼±ê"], ´óÍ¼±ê
-Gui, Add, Picture, x60 yp-10 w32 h32, % A_ScriptDir "\..\..\½Å±¾Í¼±ê\default_shortcut_arrow.ico"
-Gui, Add, Picture, xp+80 yp w32 h32, % A_ScriptDir "\..\..\½Å±¾Í¼±ê\blank.png"
-Gui, Add, Picture, xp+85 yp-3 w32 h32, % A_ScriptDir "\..\..\½Å±¾Í¼±ê\classic_arrow.png"
-Gui, Add, Picture, xp+90 yp+3 w32 h32, % A_ScriptDir "\..\..\½Å±¾Í¼±ê\large_shortcut_arrow.ico"
+Gui, Add, GroupBox, x10 y10 w470 h140, å¿«æ·æ–¹å¼å°ç®­å¤´å›¾æ ‡è®¾ç½®(é‡å¯æ¡Œé¢ç”Ÿæ•ˆ)
+Gui, Add, Radio, % "xp+10 yp+30 w40 h20 vMyRadioGroup gselectedicon Checked" A_iconSt["é»˜è®¤"], é»˜è®¤
+Gui, Add, Radio, % "xp+80 yp w40 h20 gselectedicon Checked" A_iconSt["é€æ˜"], é€æ˜
+Gui, Add, Radio, % "xp+80 yp w40 h20 gselectedicon Checked" A_iconSt["ç»å…¸"], ç»å…¸
+Gui, Add, Radio, % "xp+80 yp w60 h20 gselectedicon Checked" A_iconSt["å¤§å›¾æ ‡"], å¤§å›¾æ ‡
+Gui, Add, Picture, x60 yp-10 w32 h32, % A_ScriptDir "\..\..\è„šæœ¬å›¾æ ‡\default_shortcut_arrow.ico"
+Gui, Add, Picture, xp+80 yp w32 h32, % A_ScriptDir "\..\..\è„šæœ¬å›¾æ ‡\blank.png"
+Gui, Add, Picture, xp+85 yp-3 w32 h32, % A_ScriptDir "\..\..\è„šæœ¬å›¾æ ‡\classic_arrow.png"
+Gui, Add, Picture, xp+90 yp+3 w32 h32, % A_ScriptDir "\..\..\è„šæœ¬å›¾æ ‡\large_shortcut_arrow.ico"
 
-Gui, Add, text, % "x20 yp+50 w70 h60", Í¼±êÂ·¾¶:
+Gui, Add, text, % "x20 yp+50 w70 h60", å›¾æ ‡è·¯å¾„:
 Gui, Add, edit, % "xp+70 yp-2 w350 h25 vvlnk_icon gload_icon", % lnk_icon
 Gui, Add, Picture, % "xp+355 yp w32 h32 vPic5 gsel_icon Icon" Icon_index, % Array[1]
 
-Gui, Add, CheckBox, % "x20 yp+40 w120 h20 vvlnk_text Checked" A_iconSt["´ø¿ì½İ·½Ê½×ÖÑù"], È¥³ı¿ì½İ·½Ê½×ÖÑù
-;Gui, Add, CheckBox, % "xp-150 yp+30 w40 h20 vvmusic Checked" A_iconSt["ÒôÀÖ"], ÒôÀÖ
-;Gui, Add, CheckBox, % "xp+150 yp w40 h20 vvdesktop Checked" A_iconSt["×ÀÃæ"], ×ÀÃæ
-Gui, Add, Button, x140 y160 w100 h30 gRestartExplorer, Ó¦ÓÃ²¢ÖØÆô×ÀÃæ
-Gui, Add, Button, xp+110 yp w70 h30 gGuiSave, È·¶¨
-Gui, Add, Button, xp+80 yp w70 h30 gGuiClose, È¡Ïû
-Gui, Add, Button, xp+80 yp w70 h30 gGuiApply, Ó¦ÓÃ
-gui, show,, ¿ì½İ·½Ê½Ğ¡¼ıÍ·Í¼±êµÄÉèÖÃ
+Gui, Add, CheckBox, % "x20 yp+40 w120 h20 vvlnk_text Checked" A_iconSt["å¸¦å¿«æ·æ–¹å¼å­—æ ·"], å»é™¤å¿«æ·æ–¹å¼å­—æ ·
+;Gui, Add, CheckBox, % "xp-150 yp+30 w40 h20 vvmusic Checked" A_iconSt["éŸ³ä¹"], éŸ³ä¹
+;Gui, Add, CheckBox, % "xp+150 yp w40 h20 vvdesktop Checked" A_iconSt["æ¡Œé¢"], æ¡Œé¢
+Gui, Add, Button, x140 y160 w100 h30 gRestartExplorer, åº”ç”¨å¹¶é‡å¯æ¡Œé¢
+Gui, Add, Button, xp+110 yp w70 h30 gGuiSave, ç¡®å®š
+Gui, Add, Button, xp+80 yp w70 h30 gGuiClose, å–æ¶ˆ
+Gui, Add, Button, xp+80 yp w70 h30 gGuiApply, åº”ç”¨
+gui, show,, å¿«æ·æ–¹å¼å°ç®­å¤´å›¾æ ‡çš„è®¾ç½®
 return
 
 GuiEscape:
@@ -98,9 +98,9 @@ if (vLnk_Icon != ALnk_Icon)
 {
 	CF_RegWrite("REG_SZ", "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons", "29", vLnk_Icon)
 }
-if (vlnk_text != A_iconSt["´ø¿ì½İ·½Ê½×ÖÑù"])
+if (vlnk_text != A_iconSt["å¸¦å¿«æ·æ–¹å¼å­—æ ·"])
 {
-	A_iconSt["´ø¿ì½İ·½Ê½×ÖÑù"] := vlnk_text
+	A_iconSt["å¸¦å¿«æ·æ–¹å¼å­—æ ·"] := vlnk_text
 	if vlnk_text
 		CF_RegWrite("REG_BINARY", "HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer", "link", "00000000")
 	else

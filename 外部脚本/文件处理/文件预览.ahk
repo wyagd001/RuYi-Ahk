@@ -1,6 +1,6 @@
-#SingleInstance force
+﻿#SingleInstance force
 #include <ImagePut>
-ATA_settingFile := A_ScriptDir "\..\..\�����ļ�\��һ.ini"
+ATA_settingFile := A_ScriptDir "\..\..\配置文件\如一.ini"
 ATA_filepath := A_Args[1]
 PrewFile:
 SplitPath, ATA_filepath,,, Prew_File_Ext
@@ -35,7 +35,7 @@ FileEncoding, % File_Encode
 if (File_Size > 102400) && ((File_Encode = "CP936") or (File_Encode = "UTF-8-RAW"))
 {
 	FileReadLine, LineVar, % ATA_filepath, 1
-		MsgBox, 36, ѡ��Դ�ļ��ı���ANSI/UTF-8, �ļ���һ������: %LineVar%`n��ǰʹ�ñ���Ϊ: %File_Encode%`n�ı�������ʾ���"��"��������"��"��, 2
+		MsgBox, 36, 选择源文件的编码ANSI/UTF-8, 文件第一行内容: %LineVar%`n当前使用编码为: %File_Encode%`n文本正常显示点击"是"，否则点击"否"。, 2
 	IfMsgBox, No
 	{
 		File_Encode := (File_Encode = "CP936") ? "UTF-8" : "CP936"
@@ -59,7 +59,7 @@ else
 FileEncoding
 Gui, +ReSize +MinSize800x540
 Gui, Add, Edit, w800 Multi ReadOnly vdisplayArea,
-Gui,PreWWin:Show, w800 h540 Center, % ATA_filepath " - �ļ�Ԥ��"
+Gui,PreWWin:Show, w800 h540 Center, % ATA_filepath " - 文件预览"
 GuiControl,, displayArea, %FileR_TFC%
 ;GuiControl, Move, displayArea, x0 y0 w800 h510
 FileR_TFC := File_Encode := File_Size := ""
@@ -69,11 +69,11 @@ Cando_music_prew:
 Gui, +LastFound +Resize
 Gui, Add, ActiveX, x0 y0 w0 h0 vWMP, WMPLayer.OCX
 WMP.Url := ATA_filepath
-Gui, PreWWin:Show, w500 h300 Center,% ATA_filepath " - �ļ�Ԥ��"
+Gui, PreWWin:Show, w500 h300 Center,% ATA_filepath " - 文件预览"
 return
 
 Cando_pic_prew:
-hwnd := ImagePutWindow(ATA_filepath, ATA_filepath " - �ļ�Ԥ��")
+hwnd := ImagePutWindow(ATA_filepath, ATA_filepath " - 文件预览")
 loop 
 {
 if WinExist("ahk_id" hwnd)
@@ -100,7 +100,7 @@ pipa := ComObjQuery(WB, IOleInPlaceActiveObject_Interface)
 TranslateAccelerator := NumGet(NumGet(pipa+0) + 5*A_PtrSize)
 OnMessage(0x0100, "WM_KeyPress") ; WM_KEYDOWN 
 OnMessage(0x0101, "WM_KeyPress") ; WM_KEYUP   
-Gui, PreWWin:Show ,,% ATA_filepath " - �ļ�Ԥ��"
+Gui, PreWWin:Show ,,% ATA_filepath " - 文件预览"
 return
 
 class WB_events
@@ -148,7 +148,7 @@ Static Vars := "hWnd | nMsg | wParam | lParam | A_EventInfo | A_GuiX | A_GuiY"
 
 Cando_pdf_prew:
 	gosub, IE_Open
-	WB.Navigate("https://wyagd001.github.io/pdfjs/es5/web/viewer.html?file=blank.pdf")  ; IE�����
+	WB.Navigate("https://wyagd001.github.io/pdfjs/es5/web/viewer.html?file=blank.pdf")  ; IE浏览器
 	WBStartTime := A_TickCount
 	loop 
 	{
@@ -156,7 +156,7 @@ Cando_pdf_prew:
 		Sleep, 500
 	}
 	Until (wb.Document.Readystate = "Complete") or WBElapsedTime>5000
-	settimer,autoopenpdf,-1500  ; ģ��ѡ���ļ�
+	settimer,autoopenpdf,-1500  ; 模拟选择文件
 	wb.document.getElementById("openFile").click()
 return
 
@@ -193,34 +193,34 @@ Tmp_Str := xd2txlib.ExtractText(ATA_filepath)
 Gui, +ReSize +MinSize800x540
 Gui, Add, Edit, w800 h520 Multi ReadOnly vdisplayArea
 GuiControl,, displayArea, %Tmp_Str%
-Gui,PreWWin:Show, w800 h540 Center, % ATA_filepath " - �ļ�Ԥ��"
-sendmessage, 0xB1, -1, -1, Edit1, �ļ�Ԥ��
+Gui,PreWWin:Show, w800 h540 Center, % ATA_filepath " - 文件预览"
+sendmessage, 0xB1, -1, -1, Edit1, 文件预览
 Tmp_Str := ""
 return
 
 Cando_xls_prew:
-IniRead, AutoHotkeyU32, %ATA_settingFile%, ��������, AutoHotkeyU32, %A_Space%
+IniRead, AutoHotkeyU32, %ATA_settingFile%, 其他程序, AutoHotkeyU32, %A_Space%
 if fileexist(AutoHotkeyU32)
-run, "%AutoHotkeyU32%" "%A_ScriptDir%\���excel���ݵ�GUI.ahk" "%ATA_filepath%"
+run, "%AutoHotkeyU32%" "%A_ScriptDir%\输出excel数据到GUI.ahk" "%ATA_filepath%"
 else
-run, "%A_ScriptDir%\..\..\���ó���\AutoHotkeyU32.exe" "%A_ScriptDir%\���excel���ݵ�GUI.ahk" "%ATA_filepath%"
+run, "%A_ScriptDir%\..\..\引用程序\AutoHotkeyU32.exe" "%A_ScriptDir%\输出excel数据到GUI.ahk" "%ATA_filepath%"
 exitapp
 
 Cando_rar_prew:
-	IniRead, 7z, %ATA_settingFile%, ��������, 7z, %A_Space%
-	IniRead, winrar, %ATA_settingFile%, ��������, winrar, %A_Space%
+	IniRead, 7z, %ATA_settingFile%, 其他程序, 7z, %A_Space%
+	IniRead, winrar, %ATA_settingFile%, 其他程序, winrar, %A_Space%
 	if !7z
 	{
-		msgbox û���ҵ� 7z �������������ļ� [��һ.ini] �� [��������] ��7z��Ŀ���ļ��޷�Ԥ�������˳���
+		msgbox 没有找到 7z 程序，请检查设置文件 [如一.ini] 中 [其他程序] 的7z条目，文件无法预览程序退出。
 		exitapp
 	}
-	; ��ȡ����
+	; 提取整行
 	Tmp_Str := cmdSilenceReturn("for /f ""skip=12 tokens=* delims=-"" `%a in ('^;""" 7z """ ""l"" " """" ATA_filepath """') do @echo `%a")
 	if FileExist(winrar)
 	{
-		��_ע���ļ� := A_Temp "\123_" A_Now ".txt"
-		RunWait, %comspec% /c ""%winrar%" cw "%ATA_filepath%" "%��_ע���ļ�%"",,hide
-		FileRead, ��_ע��, %��_ע���ļ�%
+		包_注释文件 := A_Temp "\123_" A_Now ".txt"
+		RunWait, %comspec% /c ""%winrar%" cw "%ATA_filepath%" "%包_注释文件%"",,hide
+		FileRead, 包_注释, %包_注释文件%
 	}
 	;msgbox % Tmp_Str
 	StringReplace, Tmp_Str, Tmp_Str, `n, `n, UseErrorLevel
@@ -242,24 +242,24 @@ Cando_rar_prew:
 	}
 Sort, Tmp_Val
 Gui, +ReSize
-ImageListID := IL_Create(5)  ; ������ʼ����Ϊ 5 ��ͼ���ͼ���б�.
-Loop 5  ; ����һЩ��׼ϵͳͼ�굽ͼ���б���.
+ImageListID := IL_Create(5)  ; 创建初始容量为 5 个图标的图像列表.
+Loop 5  ; 加载一些标准系统图标到图像列表中.
     IL_Add(ImageListID, "shell32.dll", A_Index)
 Gui, Add, TreeView,r30 w800 h500 ImageList%ImageListID%
-if ��_ע��
-	Gui, Add, Edit, r5 w800 h100 readonly, %��_ע��%
-Gui, Add, button, gtree2text, ��ʾ�ı�
+if 包_注释
+	Gui, Add, Edit, r5 w800 h100 readonly, %包_注释%
+Gui, Add, button, gtree2text, 显示文本
 AddBranchesToTree(Tmp_Val)
-Gui,PreWWin: Show, AutoSize Center, % ATA_filepath " - �ļ�Ԥ��"
+Gui,PreWWin: Show, AutoSize Center, % ATA_filepath " - 文件预览"
 ;GuiControl,, displayArea, %Tmp_Val%
-Tmp_Str := Tmp_FileName := Tmp_Lines := ��_ע�� := ""
+Tmp_Str := Tmp_FileName := Tmp_Lines := 包_注释 := ""
 return
 
 tree2text:
 GUI,66:Destroy
 Gui,66:Default 
 Gui, Add, Edit, w600 h300 ReadOnly, %ATA_filepath%`n%Tmp_Val%
-Gui show, AutoSize Center, % ATA_filepath " - �ļ�Ԥ��"
+Gui show, AutoSize Center, % ATA_filepath " - 文件预览"
 return
 
 cmdSilenceReturn(command){
@@ -275,7 +275,7 @@ cmdSilenceReturn(command){
 return  FileR_CMDReturn
 }
 
-; ��Դ��ַ: https://autohotkey.com/board/topic/39809-script-to-open-list-of-filesfolders-in-treeview/
+; 来源网址: https://autohotkey.com/board/topic/39809-script-to-open-list-of-filesfolders-in-treeview/
 AddBranchesToTree(filelist)
 {
 	level = 0
@@ -344,8 +344,8 @@ build_tree:
 	return
 }
 
-SkSub_Regex_IniRead(ini, sec, reg)      ; ����ʽ�Ķ�ȡ���Ⱥ���������������
-{  ; ��ini��ĳ�����ڣ����ҷ���ĳ���������ַ���������ҵ�����valueֵ���Ҳ������򷵻� Error
+SkSub_Regex_IniRead(ini, sec, reg)      ; 正则方式的读取，等号左侧符合正则条件
+{  ; 在ini的某个段内，查找符合某正则规则的字符串，如果找到返回value值。找不到，则返回 Error
 	IniRead, keylist, %ini%, %sec%,
 	Loop, Parse, keylist, `n
 	{
@@ -360,35 +360,35 @@ SkSub_Regex_IniRead(ini, sec, reg)      ; ����ʽ�Ķ�ȡ���Ⱥ���������������
 }
 
 /*!
-	����: File_GetEncoding
-		���� chardet Py��, ����ļ��Ĵ���ҳ.
+	函数: File_GetEncoding
+		类似 chardet Py库, 检测文件的代码页.
 
-	����:
-		aFile - Ҫ�������ⲿ�ļ�·��.
+	参数:
+		aFile - 要分析的外部文件路径.
 
-	��ע:
-			> ע��:
-			> ANSI �ĵ�ΪȫӢ��ʱ, Ĭ�Ϸ��� UTF-8.
+	备注:
+			> 注意:
+			> ANSI 文档为全英文时, 默认返回 UTF-8.
 
-	����ֵ:
-		�ַ���
-		0      - ����, �ļ�������
-		CPnnn  - ANSI (CPnnn), ������������ַ���, ���ܺ� UTF-8 ��ǩ�� ���ֿ�.
+	返回值:
+		字符串
+		0      - 错误, 文件不存在
+		CPnnn  - ANSI (CPnnn), 必须带有中文字符串, 才能和 UTF-8 无签名 区分开.
 		UTF-16 - text Utf-16 LE File
 		CP1201 - text Utf-16 BE File
 		UTF-32 - text Utf-32 BE/LE File
-		UTF-8  - text Utf-8 File (UTF-8 + BOM). ������ļ�̫С, �����Լ��ʱ, Ĭ�Ϸ��� UTF-8.
-		UTF-8-RAW  - UTF-8 ��ǩ��. 
-		���� UTF-8-RAW ��˵����
-		1.�ļ�С��100k ��ȡ�����ļ�, ������������ַ���(�ļ��д������루�����ַ���ʱ���ܵõ�����Ľ��), ���ܺ� CP936 ���ֿ�.
-		2.�ļ�����100k ��ȡ�ļ�ǰ9���ֽڣ�ǰ3���ַ�Ϊ����ʱ���нϴ����ȡ����ȷ�Ľ��, ���ܺ� CP936 ���ֿ���
+		UTF-8  - text Utf-8 File (UTF-8 + BOM). 检验的文件太小, 不足以检查时, 默认返回 UTF-8.
+		UTF-8-RAW  - UTF-8 无签名. 
+		对于 UTF-8-RAW 的说明：
+		1.文件小于100k 读取整个文件, 必须带有中文字符串(文件中存在乱码（特殊字符）时可能得到错误的结果), 才能和 CP936 区分开.
+		2.文件大于100k 读取文件前9个字节，前3个字符为中文时才有较大可能取得正确的结果, 才能和 CP936 区分开。
 */
 
 ; isBinFile
 ; https://www.autohotkey.com/boards/viewtopic.php?f=76&t=144&start=20
 
 /*
-; ʾ��
+; 示例
 Loop, Files, *.txt
 msgbox % A_LoopFileName " - " File_GetEncoding(A_LoopFileLongPath)
 */
@@ -402,15 +402,15 @@ File_GetEncoding(aFile, aNumBytes = 0, aMinimum = 4)
 	;force position to 0 (zero)
 	_hFile.Position := 0
 
-	; �ļ�С��100k,���ȡ�����ļ�
+	; 文件小于100k,则读取整个文件
 	_nBytes := (_hFile.length < 102400) ? (_hFile.RawRead(_rawBytes, _hFile.length)) : (aNumBytes > 0) ? (_hFile.RawRead(_rawBytes, aNumBytes)) : (_hFile.RawRead(_rawBytes, 9))
 
 	_hFile.Close()
 
-	; Ϊ�� unicode ���, �Ƽ� aMinimum Ϊ 4  (4���ֽ����µ��ļ��޷��ж�����)
+	; 为了 unicode 检测, 推荐 aMinimum 为 4  (4个字节以下的文件无法判断类型)
 	if (_nBytes < aMinimum)
 	{
-		; ����ı�̫�̣����ر���"UTF-8"
+		; 如果文本太短，返回编码"UTF-8"
 		return "UTF-8"
 	}
 
@@ -520,14 +520,14 @@ File_GetEncoding(aFile, aNumBytes = 0, aMinimum = 4)
 		break
 	}
 
-	; while ѭ��û��ʧ�ܣ�Ȼ��ȷ��Ϊutf-8
+	; while 循环没有失败，然后确认为utf-8
 	if (_t = 0)
 	{
 		return "UTF-8-RAW"
 	}
 
-	; ���ͨ�������ж�û�л�ȡ���ļ�����
-	; ͨ������ļ��Ƿ��в��ɼ��ַ������ж��Ƿ�Ϊexe���͵Ķ������ļ�
+	; 如果通过以上判断没有获取到文件编码
+	; 通过检测文件是否含有不可见字符来简单判断是否为exe类型的二进制文件
 /*
 	loop, %_nBytes%
 	{
@@ -538,8 +538,8 @@ File_GetEncoding(aFile, aNumBytes = 0, aMinimum = 4)
 		}
 	}
 */
-	; δ�������������ķ���ϵͳĬ�� ansi ����
-	; ��������ϵͳĬ�Ϸ��ص��� CP936, ������ϵͳ��������ʾ���Ļ�����,���Ҫ��ʾ���Ŀ�ֱ�Ӹ�Ϊ"CP936"
+	; 未符合上面条件的返回系统默认 ansi 内码
+	; 简体中文系统默认返回的是 CP936, 非中文系统的内码显示中文会乱码,如果要显示中文可直接改为"CP936"
 	return "CP" DllCall("GetACP")  
 }
 
@@ -2087,7 +2087,7 @@ return
 
 ; http://ebstudio.info/home/xdoc2txt.html
 Class xd2txlib {
-Static xd2txlibdll := A_ScriptDir . "\..\..\���ó���" (A_PtrSize=8 ? "\x64\" : "\x32\") . "xd2txlib.dll"
+Static xd2txlibdll := A_ScriptDir . "\..\..\引用程序" (A_PtrSize=8 ? "\x64\" : "\x32\") . "xd2txlib.dll"
 
 get_Init()
 {

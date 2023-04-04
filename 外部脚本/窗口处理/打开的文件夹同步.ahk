@@ -1,15 +1,18 @@
-folder1 :=  A_Args[1], folder2 :=  A_Args[2]
-B_Autohotkey := A_ScriptDir "\..\..\ÒıÓÃ³ÌĞò\" (A_PtrSize = 8 ? "AutoHotkeyU64.exe" : "AutoHotkeyU32.exe")
+ï»¿folder1 :=  A_Args[1], folder2 :=  A_Args[2]
+B_Autohotkey := A_ScriptDir "\..\..\å¼•ç”¨ç¨‹åº\" (A_PtrSize = 8 ? "AutoHotkeyU64.exe" : "AutoHotkeyU32.exe")
 ; 1088
 OnMessage(0x4a, "Receive_WM_COPYDATA")
 
 SyncFolder:
-IfWinExist, ÎÄ¼ş¼ĞÍ¬²½ ahk_class AutoHotkeyGUI
+IfWinExist, æ–‡ä»¶å¤¹åŒæ­¥ ahk_class AutoHotkeyGUI
 {
 	folder2 := CandySel2
-	GuiControl,, folder2, %folder2%
-	if (folder2 != folder1)
-		gosub loderfolder
+	if folder2
+	{
+		GuiControl,, folder2, %folder2%
+		if (folder2 != folder1)
+			gosub loderfolder
+	}
 }
 Else
 {
@@ -31,25 +34,29 @@ Else
 			}
 		}
 	}
-	Gui, Add, text, x10 y10, Ô´ÎÄ¼ş¼Ğ:
+	Gui, Add, text, x10 y10, æºæ–‡ä»¶å¤¹:
 	Gui, Add, edit, xp+70 w480 h40 r2 vfolder1, % folder1
-	Gui, Add, text, xp+490, Ä¿±êÎÄ¼ş¼Ğ:
+	Gui, Add, text, xp+490, ç›®æ ‡æ–‡ä»¶å¤¹:
 	Gui, Add, edit, xp+80 y10 w470 h40 r2 vfolder2, % folder2
-	Gui, Add, ListView, x10 y55 w550 h500 vfilelist1 hwndHLV1 Checked AltSubmit gsync, ĞòºÅ|ÎÄ¼şÃû|ĞŞ¸ÄÈÕÆÚ|´óĞ¡|md5
-	Gui, Add, ListView, x570 y55 w550 h500 vfilelist2 hwndHLV2 Checked AltSubmit gsync, ĞòºÅ|ÎÄ¼şÃû|ĞŞ¸ÄÈÕÆÚ|´óĞ¡|ÏàµÈ|md5
-	Gui, Add, Button, x10 yp+510 h30 gloderfolder, ¼ÓÔØÁĞ±í
-	Gui, Add, Button, xp+70 h30 grpview, Ô¤ÀÀ½á¹û
-	Gui, Add, Button, xp+70 h30 gsave, Ö´ĞĞÍ¬²½
-	gui, show,, ÎÄ¼ş¼ĞÍ¬²½
+	Gui, Add, ListView, x10 y55 w550 h500 vfilelist1 hwndHLV1 Checked AltSubmit gsync, åºå·|æ–‡ä»¶å|ä¿®æ”¹æ—¥æœŸ|å¤§å°|md5
+	Gui, Add, ListView, x570 y55 w550 h500 vfilelist2 hwndHLV2 Checked AltSubmit gsync, åºå·|æ–‡ä»¶å|ä¿®æ”¹æ—¥æœŸ|å¤§å°|ç›¸ç­‰|md5
+	Gui, Add, Button, x10 yp+510 h30 gloderfolder, åŠ è½½åˆ—è¡¨
+	Gui, Add, Button, xp+70 h30 gswitchlr, å·¦å³äº¤æ¢
+	Gui, Add, Button, xp+70 h30 ggxzccz vgxz, åªå‹¾é€‰ä»…å·¦ä¾§å­˜åœ¨çš„æ–‡ä»¶
+	Gui, Add, Button, xp+150 h30 ggxzycz vgxzy, åªå‹¾é€‰å·¦å³éƒ½å­˜åœ¨çš„æ–‡ä»¶
+	Gui, Add, Button, xp+150 h30 grpview, é¢„è§ˆç»“æœ
+	Gui, Add, Button, xp+70 h30 gsave, æ‰§è¡ŒåŒæ­¥
+	gui, show,, æ–‡ä»¶å¤¹åŒæ­¥
 	Menu, Tray, UseErrorLevel
 	Menu, filelistMenu, deleteall
-	Menu, filelistMenu, Add, È«²»Ñ¡, uncheckallfile
-	Menu, filelistMenu, Add, ÏÂÒ»¸öÑ¡ÖĞ, jumpcheckedfile
-	Menu, filelistMenu, Add, ´ò¿ª, openfilefromlist
-	Menu, filelistMenu, Add, ´ò¿ªÂ·¾¶, openfilepfromlist
-	Menu, filelistMenu, Add, ±à¼­Ñ¡ÖĞÎÄ¼ş, editfilefromlist
-	Menu, filelistMenu, Add, ÎÄ±¾ÎÄ¼ş¶Ô±È, compfilefromlist
-	Menu, filelistMenu, Add, É¾³ıÑ¡ÖĞÎÄ¼ş, delfillefromlist
+	Menu, filelistMenu, Add, å…¨ä¸é€‰, uncheckallfile
+	Menu, filelistMenu, Add, ä¸‹ä¸€ä¸ªé€‰ä¸­, jumpcheckedfile
+	Menu, filelistMenu, Add, æ‰“å¼€, openfilefromlist
+	Menu, filelistMenu, Add, æ‰“å¼€è·¯å¾„, openfilepfromlist
+	Menu, filelistMenu, Add, ç¼–è¾‘é€‰ä¸­æ–‡ä»¶, editfilefromlist
+	Menu, filelistMenu, Add, æ–‡æœ¬æ–‡ä»¶å¯¹æ¯”, compfilefromlist
+	Menu, filelistMenu, Add, æ–‡ä»¶MD5å¯¹æ¯”, compfileMD5fromlist
+	Menu, filelistMenu, Add, åˆ é™¤é€‰ä¸­æ–‡ä»¶, delfillefromlist
 	if folder2 && (folder2 != folder1)
 		gosub loderfolder
 }
@@ -73,16 +80,85 @@ LV_GetItemHeight(HLV) {
    Return 0
 }
 
+switchlr:
+Gui, 66: Default
+Gui, submit, nohide
+GuiControl,, folder1, %folder2%
+GuiControl,, folder2, %folder1%
+if folder1 && folder2
+	gosub loderfolder
+Return
+
+gxzccz:
+Gui, 66: Default
+GuiControl, Disable, gxz
+GuiControl, Disable, gxzy
+Gui, ListView, filelist2
+LV_Modify(0, "-check")
+
+Gui, ListView, filelist1
+RowNumber := 0  ; è¿™æ ·ä½¿å¾—é¦–æ¬¡å¾ªç¯ä»åˆ—è¡¨çš„é¡¶éƒ¨å¼€å§‹æœç´¢.
+Tmp_Str := ""
+Loop
+{
+	RowNumber := LV_GetNext(RowNumber, "C")  ; åœ¨å‰ä¸€æ¬¡æ‰¾åˆ°çš„ä½ç½®åç»§ç»­æœç´¢.
+	;msgbox % RowNumber
+	if not RowNumber  ; ä¸Šé¢è¿”å›é›¶, æ‰€ä»¥é€‰æ‹©çš„è¡Œå·²ç»éƒ½æ‰¾åˆ°äº†.
+		break
+
+	LV_GetText(Tmp_Value, RowNumber, 2)
+	if (folderobj1[Tmp_Value] = "folder" )
+		Continue
+	else
+	{
+		if folderobj2[Tmp_Value]
+			LV_Modify(RowNumber, "-check")
+		else
+			Continue
+	}
+}
+Return
+
+gxzycz:
+Gui, 66: Default
+GuiControl, Disable, gxz
+GuiControl, Disable, gxzy
+Gui, ListView, filelist2
+LV_Modify(0, "-check")
+
+Gui, ListView, filelist1
+RowNumber := 0  ; è¿™æ ·ä½¿å¾—é¦–æ¬¡å¾ªç¯ä»åˆ—è¡¨çš„é¡¶éƒ¨å¼€å§‹æœç´¢.
+Tmp_Str := ""
+Loop
+{
+	RowNumber := LV_GetNext(RowNumber, "C")  ; åœ¨å‰ä¸€æ¬¡æ‰¾åˆ°çš„ä½ç½®åç»§ç»­æœç´¢.
+	;msgbox % RowNumber
+	if not RowNumber  ; ä¸Šé¢è¿”å›é›¶, æ‰€ä»¥é€‰æ‹©çš„è¡Œå·²ç»éƒ½æ‰¾åˆ°äº†.
+		break
+
+	LV_GetText(Tmp_Value, RowNumber, 2)
+	if (folderobj1[Tmp_Value] = "folder" )
+		LV_Modify(RowNumber, "-check")
+	else
+	{
+		if folderobj2[Tmp_Value]
+			Continue
+		else
+			LV_Modify(RowNumber, "-check")
+	}
+}
+Return
+
 loderfolder:
 Gui, 66: Default
 Gui, submit, nohide
-tooltip % "ÕıÔÚ¶Ô±ÈÎÄ¼ş¼Ğ, ÇëÉÔºò..."
-;folder1:="D:\×ÊÁÏ\autohotkey °ïÖú\v2\docs"
-;folder2:="F:\Program Files\ÔËĞĞ\git\wyagd001.github.io\v2\docs"
-IniRead, ºöÂÔÂ·¾¶, %folder1%\.ºöÂÔÁĞ±í.ini, Â·¾¶, ºöÂÔÂ·¾¶
-IniRead, ºöÂÔÄ¿Â¼, %folder1%\.ºöÂÔÁĞ±í.ini, Ä¿Â¼, ºöÂÔÄ¿Â¼
-IniRead, ºöÂÔÎÄ¼ş, %folder1%\.ºöÂÔÁĞ±í.ini, ÎÄ¼ş
-IniRead, ÅĞ¶ÏÀàĞÍ, %folder1%\.ºöÂÔÁĞ±í.ini, ÅĞ¶ÏÒÀ¾İ, ÅĞ¶ÏÀàĞÍ, ÎÄ¼şmd5
+tooltip % "æ­£åœ¨å¯¹æ¯”æ–‡ä»¶å¤¹, è¯·ç¨å€™..."
+;folder1:="D:\èµ„æ–™\autohotkey å¸®åŠ©\v2\docs"
+;folder2:="F:\Program Files\è¿è¡Œ\git\wyagd001.github.io\v2\docs"
+IniRead, å¿½ç•¥è·¯å¾„, %folder1%\.å¿½ç•¥åˆ—è¡¨.ini, è·¯å¾„, å¿½ç•¥è·¯å¾„
+IniRead, å¿½ç•¥ç›®å½•, %folder1%\.å¿½ç•¥åˆ—è¡¨.ini, ç›®å½•
+IniRead, å¿½ç•¥æ–‡ä»¶, %folder1%\.å¿½ç•¥åˆ—è¡¨.ini, æ–‡ä»¶
+IniRead, åˆ¤æ–­ç±»å‹, %folder1%\.å¿½ç•¥åˆ—è¡¨.ini, åˆ¤æ–­ä¾æ®, åˆ¤æ–­ç±»å‹, æœ€è¿‘ä¿®æ”¹æ—¶é—´   ;æ–‡ä»¶md5
 Gui, ListView, filelist1
 LV_Delete()
 Gui, ListView, filelist2
@@ -105,11 +181,11 @@ Loop, Files, %folder1%\*.*, DFR
 	if A_LoopFileAttrib contains H,R,S
 		continue
 	relativePS := StrReplace(A_LoopFilePath, folder1 "\")
-	if relativePS contains %ºöÂÔÂ·¾¶%
+	if relativePS contains %å¿½ç•¥è·¯å¾„%
 		Continue
-	if instr(ºöÂÔÄ¿Â¼, relativePS) && InStr(A_LoopFileAttrib, "D")
+	if å¿½ç•¥ç›®å½• && instr(å¿½ç•¥ç›®å½•, relativePS) && InStr(A_LoopFileAttrib, "D")
 		Continue
-	if instr(ºöÂÔÎÄ¼ş, relativePS) && !InStr(A_LoopFileAttrib, "D")
+	if å¿½ç•¥æ–‡ä»¶ && instr(å¿½ç•¥æ–‡ä»¶, relativePS) && !InStr(A_LoopFileAttrib, "D")
 		Continue
 
 	if InStr(A_LoopFileAttrib, "D")
@@ -130,11 +206,11 @@ Loop, Files, %folder2%\*.*, DFR
 	if A_LoopFileAttrib contains H,R,S
 		continue
 	relativePS := StrReplace(A_LoopFilePath, folder2 "\")
-	if relativePS contains %ºöÂÔÂ·¾¶%
+	if relativePS contains %å¿½ç•¥è·¯å¾„%
 		Continue
-	if instr(ºöÂÔÄ¿Â¼, relativePS) && InStr(A_LoopFileAttrib, "D")
+	if å¿½ç•¥ç›®å½• && instr(å¿½ç•¥ç›®å½•, relativePS) && InStr(A_LoopFileAttrib, "D")
 		Continue
-	if instr(ºöÂÔÎÄ¼ş, relativePS)
+	if å¿½ç•¥æ–‡ä»¶ && instr(å¿½ç•¥æ–‡ä»¶, relativePS) && !InStr(A_LoopFileAttrib, "D")
 		Continue
 
 	if InStr(A_LoopFileAttrib, "D")
@@ -163,58 +239,58 @@ Loop, parse, Tmp_Str, `n, `r
 	}
 	else
 	{
-		LV_Add("", A_Index, "¿Õ")
+		LV_Add("", A_Index, "ç©º")
 	}
 
 	Gui, ListView, filelist2
 	if folderobj2.HasKey(A_LoopField)
 	{
-		if (fsizeobj1[A_LoopField] = fsizeobj2[A_LoopField])   ; ÎÄ¼ş´óĞ¡ÏàµÈ
+		if (fsizeobj1[A_LoopField] = fsizeobj2[A_LoopField])   ; æ–‡ä»¶å¤§å°ç›¸ç­‰
 		{
-			if (ÅĞ¶ÏÀàĞÍ = "×î½üĞŞ¸ÄÊ±¼ä") ; ÎÄ¼ş´óĞ¡ÏàÍ¬Í¨¹ı×î½üĞŞ¸ÄÊ±¼äÀ´ÅĞ¶ÏÎªÎÄ¼şÊÇ·ñÏàÍ¬¶ø²»¼ÆËãMD5
+			if (åˆ¤æ–­ç±»å‹ = "æœ€è¿‘ä¿®æ”¹æ—¶é—´") ; æ–‡ä»¶å¤§å°ç›¸åŒé€šè¿‡æœ€è¿‘ä¿®æ”¹æ—¶é—´æ¥åˆ¤æ–­ä¸ºæ–‡ä»¶æ˜¯å¦ç›¸åŒè€Œä¸è®¡ç®—MD5
 			{
 				if (flastwriteobj1[A_LoopField] = flastwriteobj2[A_LoopField]) or (folderobj2[A_LoopField] = "folder")
 				{
-					LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeKBobj2[A_LoopField], "ÊÇ")
+					LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeKBobj2[A_LoopField], "æ˜¯")
 				}
 				else
 				{
-					LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeKBobj2[A_LoopField], "·ñ")
+					LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeKBobj2[A_LoopField], "å¦")
 					Gui, ListView, filelist1
-					LV_Modify(A_Index, "check")    ; ÎÄ¼ş´óĞ¡ÏàÍ¬µ«ÊÇ×î½üĞŞ¸ÄÊ±¼ä²»Í¬Ôò¹´Ñ¡×ó²à(²»¹ÜÓÒ²àÊÇ·ñ¸üĞÂ, ×ó²àÎª×¼)
+					LV_Modify(A_Index, "check")    ; æ–‡ä»¶å¤§å°ç›¸åŒä½†æ˜¯æœ€è¿‘ä¿®æ”¹æ—¶é—´ä¸åŒåˆ™å‹¾é€‰å·¦ä¾§(ä¸ç®¡å³ä¾§æ˜¯å¦æ˜¯è¾ƒæ–°çš„æ–‡ä»¶, å·¦ä¾§ä¸ºå‡†)
 				}
 			}
-			else if (ÅĞ¶ÏÀàĞÍ = "ÎÄ¼şmd5")  ; Í¨¹ımd5À´ÅĞ¶ÏÎÄ¼şÊÇ·ñÏàÍ¬
+			else if (åˆ¤æ–­ç±»å‹ = "æ–‡ä»¶md5")  ; é€šè¿‡md5æ¥åˆ¤æ–­æ–‡ä»¶æ˜¯å¦ç›¸åŒ
 			{
 				fMD5obj2[A_LoopField] := MD5_File(folder2 "\" A_LoopField)
 				fMD5obj1[A_LoopField] := MD5_File(folder1 "\" A_LoopField)
 				if (fMD5obj1[A_LoopField] = fMD5obj2[A_LoopField])
 				{
-					LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeKBobj2[A_LoopField], "ÊÇ", fMD5obj2[A_LoopField])
+					LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeKBobj2[A_LoopField], "æ˜¯", fMD5obj2[A_LoopField])
 				}
 				else
 				{
-					LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeKBobj2[A_LoopField], "·ñ", fMD5obj2[A_LoopField])
+					LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeKBobj2[A_LoopField], "å¦", fMD5obj2[A_LoopField])
 					Gui, ListView, filelist1
-					LV_Modify(A_Index, "check",,,,, fMD5obj1[A_LoopField])   ; md5 ²»Í¬Ê±, Ğ´×ó²àÎÄ¼şµÄmd5µ½ÁĞ±í
+					LV_Modify(A_Index, "check",,,,, fMD5obj1[A_LoopField])   ; md5 ä¸åŒæ—¶, å†™å·¦ä¾§æ–‡ä»¶çš„md5åˆ°åˆ—è¡¨
 				}
 			}
 		}
-		else   ; ÎÄ¼ş´óĞ¡²»ÏàµÈÊ±²»¼ÆËã±È½ÏMD5
+		else   ; æ–‡ä»¶å¤§å°ä¸ç›¸ç­‰æ—¶ä¸è®¡ç®—æ¯”è¾ƒMD5
 		{
-			LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeKBobj2[A_LoopField], "·ñ")
-			if folderobj1.HasKey(A_LoopField)   ; ×ó²àÒ²´æÔÚ¸ÃÎÄ¼ş, ¹´Ñ¡×ó²à
+			LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeKBobj2[A_LoopField], "å¦")
+			if folderobj1.HasKey(A_LoopField)   ; å·¦ä¾§ä¹Ÿå­˜åœ¨è¯¥æ–‡ä»¶, å‹¾é€‰å·¦ä¾§
 			{
 				Gui, ListView, filelist1
 				LV_Modify(A_Index, "check")
 			}
-			else                                ; ×ó²à²»´æÔÚ¸ÃÎÄ¼ş, ¹´Ñ¡ÓÒ²à  
+			else                                ; å·¦ä¾§ä¸å­˜åœ¨è¯¥æ–‡ä»¶, å‹¾é€‰å³ä¾§  
 				LV_Modify(A_Index, "check")
 		}
 	}
 	else
 	{
-		LV_Add("", A_Index, "¿Õ")
+		LV_Add("", A_Index, "ç©º")
 		Gui, ListView, filelist1
 		LV_Modify(A_Index, "check")
 	}
@@ -237,9 +313,12 @@ Gui, ListView, filelist2
 GuiControl, +redraw, filelist1
 GuiControl, +redraw, filelist2
 
-CF_ToolTip("¶Ô±ÈÍê³É", 3000)
+CF_ToolTip("å¯¹æ¯”å®Œæˆ", 3000)
+GuiControl, Enable, gxz
+GuiControl, Enable, gxzy
 IH := LV_GetItemHeight(HLV1)
 OnMessage(0x004E, "On_WM_NOTIFY")
+WinActivate, æ–‡ä»¶å¤¹åŒæ­¥ ahk_class AutoHotkeyGUI
 return
 
 sync:
@@ -266,20 +345,20 @@ return
 save:
 Gui, 66: Default
 Gui, ListView, filelist1
-RowNumber := 0  ; ÕâÑùÊ¹µÃÊ×´ÎÑ­»·´ÓÁĞ±íµÄ¶¥²¿¿ªÊ¼ËÑË÷.
+RowNumber := 0  ; è¿™æ ·ä½¿å¾—é¦–æ¬¡å¾ªç¯ä»åˆ—è¡¨çš„é¡¶éƒ¨å¼€å§‹æœç´¢.
 Loop
 {
-	RowNumber := LV_GetNext(RowNumber, "C")  ; ÔÚÇ°Ò»´ÎÕÒµ½µÄÎ»ÖÃºó¼ÌĞøËÑË÷.
+	RowNumber := LV_GetNext(RowNumber, "C")  ; åœ¨å‰ä¸€æ¬¡æ‰¾åˆ°çš„ä½ç½®åç»§ç»­æœç´¢.
 	;msgbox % RowNumber
-	if not RowNumber  ; ÉÏÃæ·µ»ØÁã, ËùÒÔÑ¡ÔñµÄĞĞÒÑ¾­¶¼ÕÒµ½ÁË.
+	if not RowNumber  ; ä¸Šé¢è¿”å›é›¶, æ‰€ä»¥é€‰æ‹©çš„è¡Œå·²ç»éƒ½æ‰¾åˆ°äº†.
 		break
 
 	LV_GetText(Tmp_Str, RowNumber, 2)
 	if (folderobj1[Tmp_Str] = "folder" )
-		FileCreateDir, %folder2%\%Tmp_Str%       ; ĞÂ½¨ÎÄ¼ş¼Ğ
+		FileCreateDir, %folder2%\%Tmp_Str%       ; æ–°å»ºæ–‡ä»¶å¤¹
 	else
 	{
-		FileCopy, %folder1%\%Tmp_Str%, %folder2%\%Tmp_Str%, 1   ; Í¬²½ÎÄ¼ş
+		FileCopy, %folder1%\%Tmp_Str%, %folder2%\%Tmp_Str%, 1   ; åŒæ­¥æ–‡ä»¶
 	}
 }
 
@@ -287,52 +366,52 @@ Gui, ListView, filelist2
 RowNumber := 0
 Loop
 {
-	RowNumber := LV_GetNext(RowNumber, "C")  ; ÔÚÇ°Ò»´ÎÕÒµ½µÄÎ»ÖÃºó¼ÌĞøËÑË÷.
-	if not RowNumber  ; ÉÏÃæ·µ»ØÁã, ËùÒÔÑ¡ÔñµÄĞĞÒÑ¾­¶¼ÕÒµ½ÁË.
+	RowNumber := LV_GetNext(RowNumber, "C")  ; åœ¨å‰ä¸€æ¬¡æ‰¾åˆ°çš„ä½ç½®åç»§ç»­æœç´¢.
+	if not RowNumber  ; ä¸Šé¢è¿”å›é›¶, æ‰€ä»¥é€‰æ‹©çš„è¡Œå·²ç»éƒ½æ‰¾åˆ°äº†.
 		break
 	LV_GetText(Tmp_Str, RowNumber, 2)
 	if (folderobj2[Tmp_Str] = "folder" )
 		Continue
 	else
-		FileDelete %folder2%\%Tmp_Str%    ; É¾³ıÓÒ²àÓĞ¶ø×ó²àÃ»ÓĞµÄÎÄ¼ş
+		FileDelete %folder2%\%Tmp_Str%    ; åˆ é™¤å³ä¾§æœ‰è€Œå·¦ä¾§æ²¡æœ‰çš„æ–‡ä»¶
 }
 
 RowNumber := 0
 Loop
 {
-	RowNumber := LV_GetNext(RowNumber, "C")  ; ÔÚÇ°Ò»´ÎÕÒµ½µÄÎ»ÖÃºó¼ÌĞøËÑË÷.
-	if not RowNumber  ; ÉÏÃæ·µ»ØÁã, ËùÒÔÑ¡ÔñµÄĞĞÒÑ¾­¶¼ÕÒµ½ÁË.
+	RowNumber := LV_GetNext(RowNumber, "C")  ; åœ¨å‰ä¸€æ¬¡æ‰¾åˆ°çš„ä½ç½®åç»§ç»­æœç´¢.
+	if not RowNumber  ; ä¸Šé¢è¿”å›é›¶, æ‰€ä»¥é€‰æ‹©çš„è¡Œå·²ç»éƒ½æ‰¾åˆ°äº†.
 		break
 	LV_GetText(Tmp_Str, RowNumber, 2)
 	if (folderobj2[Tmp_Str] = "folder" )
-		FileRemoveDir, %folder2%\%Tmp_Str%   ; É¾³ıÓÒ²àÓĞ¶ø×ó²àÃ»ÓĞµÄÎÄ¼ş¼Ğ
+		FileRemoveDir, %folder2%\%Tmp_Str%   ; åˆ é™¤å³ä¾§æœ‰è€Œå·¦ä¾§æ²¡æœ‰çš„æ–‡ä»¶å¤¹
 }
-CF_ToolTip("Í¬²½Íê³É", 3000)
+CF_ToolTip("åŒæ­¥å®Œæˆ", 3000)
 return
 
 rpview:
 Gui, 66: Default
 
 Gui, ListView, filelist1
-RowNumber := 0  ; ÕâÑùÊ¹µÃÊ×´ÎÑ­»·´ÓÁĞ±íµÄ¶¥²¿¿ªÊ¼ËÑË÷.
+RowNumber := 0  ; è¿™æ ·ä½¿å¾—é¦–æ¬¡å¾ªç¯ä»åˆ—è¡¨çš„é¡¶éƒ¨å¼€å§‹æœç´¢.
 Tmp_Str := ""
 Loop
 {
-	RowNumber := LV_GetNext(RowNumber, "C")  ; ÔÚÇ°Ò»´ÎÕÒµ½µÄÎ»ÖÃºó¼ÌĞøËÑË÷.
+	RowNumber := LV_GetNext(RowNumber, "C")  ; åœ¨å‰ä¸€æ¬¡æ‰¾åˆ°çš„ä½ç½®åç»§ç»­æœç´¢.
 	;msgbox % RowNumber
-	if not RowNumber  ; ÉÏÃæ·µ»ØÁã, ËùÒÔÑ¡ÔñµÄĞĞÒÑ¾­¶¼ÕÒµ½ÁË.
+	if not RowNumber  ; ä¸Šé¢è¿”å›é›¶, æ‰€ä»¥é€‰æ‹©çš„è¡Œå·²ç»éƒ½æ‰¾åˆ°äº†.
 		break
 
 	LV_GetText(Tmp_Value, RowNumber, 2)
 	Tmp_index := Format("{:04}", A_Index)
 	if (folderobj1[Tmp_Value] = "folder" )
-		Tmp_Str .= Tmp_index ". ĞÂ½¨ÎÄ¼ş¼Ğ: " Tmp_Value "`n"
+		Tmp_Str .= Tmp_index ". æ–°å»ºæ–‡ä»¶å¤¹: " Tmp_Value "`n"
 	else
 	{
 		if folderobj2[Tmp_Value]
-			Tmp_Str .= Tmp_index ". Í¬²½µÄÎÄ¼ş: "  Tmp_Value "`n"
+			Tmp_Str .= Tmp_index ". åŒæ­¥çš„æ–‡ä»¶: "  Tmp_Value "`n"
 		else
-			Tmp_Str .= Tmp_index ". ĞÂ½¨µÄÎÄ¼ş: "  Tmp_Value "`n"
+			Tmp_Str .= Tmp_index ". æ–°å»ºçš„æ–‡ä»¶: "  Tmp_Value "`n"
 	}
 }
 
@@ -340,18 +419,18 @@ Gui, ListView, filelist2
 RowNumber := 0
 Loop
 {
-	RowNumber := LV_GetNext(RowNumber, "C")  ; ÔÚÇ°Ò»´ÎÕÒµ½µÄÎ»ÖÃºó¼ÌĞøËÑË÷.
-	if not RowNumber  ; ÉÏÃæ·µ»ØÁã, ËùÒÔÑ¡ÔñµÄĞĞÒÑ¾­¶¼ÕÒµ½ÁË.
+	RowNumber := LV_GetNext(RowNumber, "C")  ; åœ¨å‰ä¸€æ¬¡æ‰¾åˆ°çš„ä½ç½®åç»§ç»­æœç´¢.
+	if not RowNumber  ; ä¸Šé¢è¿”å›é›¶, æ‰€ä»¥é€‰æ‹©çš„è¡Œå·²ç»éƒ½æ‰¾åˆ°äº†.
 		break
 	LV_GetText(Tmp_Value, RowNumber, 2)
 	Tmp_index := Format("{:04}", A_Index)
 	if (folderobj2[Tmp_Value] = "folder" )
-		Tmp_Str .= Tmp_index ". É¾³ıµÄÎÄ¼ş¼Ğ: " Tmp_Value "`n"
+		Tmp_Str .= Tmp_index ". åˆ é™¤çš„æ–‡ä»¶å¤¹: " Tmp_Value "`n"
 	else
-		Tmp_Str .= Tmp_index ". É¾³ıµÄÎÄ¼ş: " Tmp_Value "`n"
+		Tmp_Str .= Tmp_index ". åˆ é™¤çš„æ–‡ä»¶: " Tmp_Value "`n"
 }
 ;msgbox % Tmp_Str
-GuiText(Tmp_Str, "ÎÄ¼ş¼ĞÍ¬²½²Ù×÷Ô¤ÀÀ", 500, 20)
+GuiText(Tmp_Str, "æ–‡ä»¶å¤¹åŒæ­¥æ“ä½œé¢„è§ˆ", 500, 20)
 return
 
 delfillefromlist:
@@ -367,12 +446,12 @@ if Tmp_Str
 	if (lvfolder=1)
 	{
 		FileDelete %folder1%\%Tmp_Str%
-		LV_Modify(RF, "-check",, "¿Õ", "", "", "")
+		LV_Modify(RF, "-check",, "ç©º", "", "", "")
 	}
 	if (lvfolder=2)
 	{
 		FileDelete %folder2%\%Tmp_Str%
-		LV_Modify(RF, "-check",, "¿Õ", "", "", "", "")
+		LV_Modify(RF, "-check",, "ç©º", "", "", "", "")
 	}
 }
 return
@@ -387,7 +466,7 @@ if RF
 }
 if Tmp_Str
 {
-	IniRead, notepad2, %A_ScriptDir%\..\..\ÅäÖÃÎÄ¼ş\ÈçÒ».ini, ÆäËû³ÌĞò, notepad2
+	IniRead, notepad2, %A_ScriptDir%\..\..\é…ç½®æ–‡ä»¶\å¦‚ä¸€.ini, å…¶ä»–ç¨‹åº, notepad2
 	notepad2 := notepad2 ? notepad2 : "notepad.exe"
 	if (lvfolder=1)
 	{
@@ -414,7 +493,24 @@ if Tmp_Str
 {
 	if (folderobj1[Tmp_Str] != "folder") && folderobj2[Tmp_Str]
 	{
-		run %B_Autohotkey% "%A_ScriptDir%\..\ÎÄ¼ş´¦Àí\ÎÄ±¾±È½Ï.ahk" "%folder1%\%Tmp_Str%" "%folder2%\%Tmp_Str%"
+		run %B_Autohotkey% "%A_ScriptDir%\..\æ–‡ä»¶å¤„ç†\æ–‡æœ¬æ¯”è¾ƒ.ahk" "%folder1%\%Tmp_Str%" "%folder2%\%Tmp_Str%"
+	}
+}
+return
+
+compfileMD5fromlist:
+Gui,66: Default
+RF := LV_GetNext("F")
+Tmp_Str := ""
+if RF
+{
+	LV_GetText(Tmp_Str, RF, 2)
+}
+if Tmp_Str
+{
+	if (folderobj1[Tmp_Str] != "folder") && folderobj2[Tmp_Str]
+	{
+		run %B_Autohotkey% "%A_ScriptDir%\..\æ–‡ä»¶å¤„ç†\MD5.ahk" "%folder1%\%Tmp_Str%" "%folder2%\%Tmp_Str%"
 	}
 }
 return
@@ -548,8 +644,8 @@ Return MD5
 Receive_WM_COPYDATA(wParam, lParam)
 {
 	Global CandySel2
-	StringAddress := NumGet(lParam + 2*A_PtrSize)  ; »ñÈ¡ CopyDataStruct µÄ lpData ³ÉÔ±.
-	CandySel2 := StrGet(StringAddress)  ; ´Ó½á¹¹ÖĞ¸´ÖÆ×Ö·û´®.
+	StringAddress := NumGet(lParam + 2*A_PtrSize)  ; è·å– CopyDataStruct çš„ lpData æˆå‘˜.
+	CandySel2 := StrGet(StringAddress)  ; ä»ç»“æ„ä¸­å¤åˆ¶å­—ç¬¦ä¸².
 	gosub SyncFolder
 return true
 }

@@ -185,7 +185,7 @@ compare()
 	if (compmode=1) 
 		de := ""
 	else if (compmode=2)
-		de := ["，" , "。", " ", "`n", "`r"]
+		de := ["，", "。", " ", "`n", "`r"]
 	else
 		de := ["`n", "`r"]
 

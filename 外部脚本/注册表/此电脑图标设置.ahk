@@ -1,50 +1,50 @@
-global A_icon := Object("ÊÓÆµ", "{f86fa3ab-70d2-4fc7-9c99-fcbf05467f3a}", "Í¼Æ¬", "{24ad3ad4-a569-4530-98e1-ab02f9417aa8}", "ÎÄµµ", "{d3162b92-9365-467a-956b-92703aca08af}", "ÏÂÔØ", "{088e3905-0323-4b02-9826-5d99428e115f}", "ÒôÀÖ", "{3dfdf296-dbec-4fb4-81d1-6a3438bcf4de}", "×ÀÃæ", "{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}", "3D", "{0DB7E03F-FC29-4DC6-9020-FF41B59E513A}")
-global A_icon2 := Object("ÊÓÆµ", "{35286a68-3c57-41a1-bbb1-0eae73d76c95}", "Í¼Æ¬", "{0ddd015d-b06c-45d5-8c4c-f59713854639}", "ÎÄµµ", "{f42ee2d3-909f-4907-8871-4c22fc0bf756}", "ÏÂÔØ", "{7d83ee9b-2244-4e70-b1f5-5393042af1e4}", "ÒôÀÖ", "{a0c69a99-21c8-4671-8703-7934162fcf1d}", "×ÀÃæ", "{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}", "3D", "{31C0DD25-9439-4F12-BF41-7FF4EDA38722}")
-global A_iconDy := Object("ÊÓÆµ", "vvideo", "Í¼Æ¬", "vpicture", "ÎÄµµ", "vdocument", "ÏÂÔØ", "vdownload","ÒôÀÖ", "vmusic","×ÀÃæ", "vdesktop", "3D", "v3d")
-global A_iconDy2 := Object("ÊÓÆµ", "vvideo_32", "Í¼Æ¬", "vpicture_32", "ÎÄµµ", "vdocument", "ÏÂÔØ", "vdownload_32","ÒôÀÖ", "vmusic_32","×ÀÃæ", "vdesktop_32", "3D", "v3d_32")
-global A_iconSt := Object("ÊÓÆµ", 0, "Í¼Æ¬", 0, "ÎÄµµ", 0, "ÏÂÔØ", 0,"ÒôÀÖ", 0,"×ÀÃæ", 0)
-global A_iconSt2 := Object("ÊÓÆµ", 0, "Í¼Æ¬", 0, "ÎÄµµ", 0, "ÏÂÔØ", 0,"ÒôÀÖ", 0,"×ÀÃæ", 0)
+ï»¿global A_icon := Object("è§†é¢‘", "{f86fa3ab-70d2-4fc7-9c99-fcbf05467f3a}", "å›¾ç‰‡", "{24ad3ad4-a569-4530-98e1-ab02f9417aa8}", "æ–‡æ¡£", "{d3162b92-9365-467a-956b-92703aca08af}", "ä¸‹è½½", "{088e3905-0323-4b02-9826-5d99428e115f}", "éŸ³ä¹", "{3dfdf296-dbec-4fb4-81d1-6a3438bcf4de}", "æ¡Œé¢", "{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}", "3D", "{0DB7E03F-FC29-4DC6-9020-FF41B59E513A}")
+global A_icon2 := Object("è§†é¢‘", "{35286a68-3c57-41a1-bbb1-0eae73d76c95}", "å›¾ç‰‡", "{0ddd015d-b06c-45d5-8c4c-f59713854639}", "æ–‡æ¡£", "{f42ee2d3-909f-4907-8871-4c22fc0bf756}", "ä¸‹è½½", "{7d83ee9b-2244-4e70-b1f5-5393042af1e4}", "éŸ³ä¹", "{a0c69a99-21c8-4671-8703-7934162fcf1d}", "æ¡Œé¢", "{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}", "3D", "{31C0DD25-9439-4F12-BF41-7FF4EDA38722}")
+global A_iconDy := Object("è§†é¢‘", "vvideo", "å›¾ç‰‡", "vpicture", "æ–‡æ¡£", "vdocument", "ä¸‹è½½", "vdownload","éŸ³ä¹", "vmusic","æ¡Œé¢", "vdesktop", "3D", "v3d")
+global A_iconDy2 := Object("è§†é¢‘", "vvideo_32", "å›¾ç‰‡", "vpicture_32", "æ–‡æ¡£", "vdocument", "ä¸‹è½½", "vdownload_32","éŸ³ä¹", "vmusic_32","æ¡Œé¢", "vdesktop_32", "3D", "v3d_32")
+global A_iconSt := Object("è§†é¢‘", 0, "å›¾ç‰‡", 0, "æ–‡æ¡£", 0, "ä¸‹è½½", 0,"éŸ³ä¹", 0,"æ¡Œé¢", 0)
+global A_iconSt2 := Object("è§†é¢‘", 0, "å›¾ç‰‡", 0, "æ–‡æ¡£", 0, "ä¸‹è½½", 0,"éŸ³ä¹", 0,"æ¡Œé¢", 0)
 for key in A_icon
 {
 	A_iconSt[key] := readshoworhide(key)
 	A_iconSt2[key] := readshoworhide(key, 1)
 }
 
-Gui, Add, Button, x295 y310 w70 h30 gGuiSave, È·¶¨
-Gui, Add, Button, xp+80 yp w70 h30 gGuiClose, È¡Ïû
-Gui, Add, Button, xp+80 yp w70 h30 gGuiApply, Ó¦ÓÃ
+Gui, Add, Button, x295 y310 w70 h30 gGuiSave, ç¡®å®š
+Gui, Add, Button, xp+80 yp w70 h30 gGuiClose, å–æ¶ˆ
+Gui, Add, Button, xp+80 yp w70 h30 gGuiApply, åº”ç”¨
 
-Gui, Add, Tab, x-4 y1 w530 h300, 6¸öÎÄ¼ş¼Ğ|ÆäËûÎÄ¼ş¼Ğ
-Gui, Tab, 6¸öÎÄ¼ş¼Ğ
-Gui, Add, GroupBox, x10 y30 w500 h120, ´ËµçÄÔ6¸öÎÄ¼ş¼ĞÍ¼±ê
-Gui, Add, CheckBox, % "xp+10 yp+30 w40 h20 vvvideo Checked" A_iconSt["ÊÓÆµ"], ÊÓÆµ
-Gui, Add, CheckBox, % "xp+150 yp w40 h20 vvpicture Checked" A_iconSt["Í¼Æ¬"], Í¼Æ¬
-Gui, Add, CheckBox, % "xp-150 yp+30 w40 h20 vvdocument Checked" A_iconSt["ÎÄµµ"], ÎÄµµ
-Gui, Add, CheckBox, % "xp+150 yp w40 h20 vvdownload Checked" A_iconSt["ÏÂÔØ"], ÏÂÔØ
-Gui, Add, CheckBox, % "xp-150 yp+30 w40 h20 vvmusic Checked" A_iconSt["ÒôÀÖ"], ÒôÀÖ
-Gui, Add, CheckBox, % "xp+150 yp w40 h20 vvdesktop Checked" A_iconSt["×ÀÃæ"], ×ÀÃæ
+Gui, Add, Tab, x-4 y1 w530 h300, 6ä¸ªæ–‡ä»¶å¤¹|å…¶ä»–æ–‡ä»¶å¤¹
+Gui, Tab, 6ä¸ªæ–‡ä»¶å¤¹
+Gui, Add, GroupBox, x10 y30 w500 h120, æ­¤ç”µè„‘6ä¸ªæ–‡ä»¶å¤¹å›¾æ ‡
+Gui, Add, CheckBox, % "xp+10 yp+30 w40 h20 vvvideo Checked" A_iconSt["è§†é¢‘"], è§†é¢‘
+Gui, Add, CheckBox, % "xp+150 yp w40 h20 vvpicture Checked" A_iconSt["å›¾ç‰‡"], å›¾ç‰‡
+Gui, Add, CheckBox, % "xp-150 yp+30 w40 h20 vvdocument Checked" A_iconSt["æ–‡æ¡£"], æ–‡æ¡£
+Gui, Add, CheckBox, % "xp+150 yp w40 h20 vvdownload Checked" A_iconSt["ä¸‹è½½"], ä¸‹è½½
+Gui, Add, CheckBox, % "xp-150 yp+30 w40 h20 vvmusic Checked" A_iconSt["éŸ³ä¹"], éŸ³ä¹
+Gui, Add, CheckBox, % "xp+150 yp w40 h20 vvdesktop Checked" A_iconSt["æ¡Œé¢"], æ¡Œé¢
 
-Gui, Add, GroupBox, x10 y165 w500 h120, 32Î»³ÌĞò(´ò¿ª¶Ô»°¿òµÈ)
-Gui, Add, CheckBox, % "xp+10 yp+30 w40 h20 vvvideo_32 Checked" A_iconSt2["ÊÓÆµ"], ÊÓÆµ
-Gui, Add, CheckBox, % "xp+150 yp w40 h20 vvpicture_32 Checked" A_iconSt2["Í¼Æ¬"], Í¼Æ¬
-Gui, Add, CheckBox, % "xp-150 yp+30 w40 h20 vvdocument_32 Checked" A_iconSt2["ÎÄµµ"], ÎÄµµ
-Gui, Add, CheckBox, % "xp+150 yp w40 h20 vvdownload_32 Checked" A_iconSt2["ÏÂÔØ"], ÏÂÔØ
-Gui, Add, CheckBox, % "xp-150 yp+30 w40 h20 vvmusic_32 Checked" A_iconSt2["ÒôÀÖ"], ÒôÀÖ
-Gui, Add, CheckBox, % "xp+150 yp w40 h20 vvdesktop_32 Checked" A_iconSt2["×ÀÃæ"], ×ÀÃæ
+Gui, Add, GroupBox, x10 y165 w500 h120, 32ä½ç¨‹åº(æ‰“å¼€å¯¹è¯æ¡†ç­‰)
+Gui, Add, CheckBox, % "xp+10 yp+30 w40 h20 vvvideo_32 Checked" A_iconSt2["è§†é¢‘"], è§†é¢‘
+Gui, Add, CheckBox, % "xp+150 yp w40 h20 vvpicture_32 Checked" A_iconSt2["å›¾ç‰‡"], å›¾ç‰‡
+Gui, Add, CheckBox, % "xp-150 yp+30 w40 h20 vvdocument_32 Checked" A_iconSt2["æ–‡æ¡£"], æ–‡æ¡£
+Gui, Add, CheckBox, % "xp+150 yp w40 h20 vvdownload_32 Checked" A_iconSt2["ä¸‹è½½"], ä¸‹è½½
+Gui, Add, CheckBox, % "xp-150 yp+30 w40 h20 vvmusic_32 Checked" A_iconSt2["éŸ³ä¹"], éŸ³ä¹
+Gui, Add, CheckBox, % "xp+150 yp w40 h20 vvdesktop_32 Checked" A_iconSt2["æ¡Œé¢"], æ¡Œé¢
 
-Gui, Tab, ÆäËûÎÄ¼ş¼Ğ
-Gui, Add, GroupBox, x10 y30 w500 h120, ÆäËûÎÄ¼ş¼ĞÍ¼±ê
-Gui, Add, CheckBox, % "xp+10 yp+30 w120 h20 vv3d Checked" A_iconSt["3d"], 3D ¶ÔÏó
-;Gui, Add, CheckBox, % "xp+150 yp w120 h20 vvpicture Checked" A_iconSt["Í¼Æ¬"], Í¼Æ¬
-;Gui, Add, CheckBox, % "xp-150 yp+30 w120 h20 vvdocument Checked" A_iconSt["ÎÄµµ"], ÎÄµµ
-;Gui, Add, CheckBox, % "xp+150 yp w120 h20 vvdownload Checked" A_iconSt["ÏÂÔØ"], ÏÂÔØ
-;Gui, Add, CheckBox, % "xp-150 yp+30 w120 h20 vvmusic Checked" A_iconSt["ÒôÀÖ"], ÒôÀÖ
-;Gui, Add, CheckBox, % "xp+150 yp w120 h20 vvdesktop Checked" A_iconSt["×ÀÃæ"], ×ÀÃæ
+Gui, Tab, å…¶ä»–æ–‡ä»¶å¤¹
+Gui, Add, GroupBox, x10 y30 w500 h120, å…¶ä»–æ–‡ä»¶å¤¹å›¾æ ‡
+Gui, Add, CheckBox, % "xp+10 yp+30 w120 h20 vv3d Checked" A_iconSt["3d"], 3D å¯¹è±¡
+;Gui, Add, CheckBox, % "xp+150 yp w120 h20 vvpicture Checked" A_iconSt["å›¾ç‰‡"], å›¾ç‰‡
+;Gui, Add, CheckBox, % "xp-150 yp+30 w120 h20 vvdocument Checked" A_iconSt["æ–‡æ¡£"], æ–‡æ¡£
+;Gui, Add, CheckBox, % "xp+150 yp w120 h20 vvdownload Checked" A_iconSt["ä¸‹è½½"], ä¸‹è½½
+;Gui, Add, CheckBox, % "xp-150 yp+30 w120 h20 vvmusic Checked" A_iconSt["éŸ³ä¹"], éŸ³ä¹
+;Gui, Add, CheckBox, % "xp+150 yp w120 h20 vvdesktop Checked" A_iconSt["æ¡Œé¢"], æ¡Œé¢
 
-Gui, Add, GroupBox, x10 y165 w500 h120, 32Î»³ÌĞò´ò¿ª¶Ô»°¿ò
-Gui, Add, CheckBox, % "xp+10 yp+30 w120 h20 vv3d_32 Checked" A_iconSt2["3d"], 3D ¶ÔÏó
+Gui, Add, GroupBox, x10 y165 w500 h120, 32ä½ç¨‹åºæ‰“å¼€å¯¹è¯æ¡†
+Gui, Add, CheckBox, % "xp+10 yp+30 w120 h20 vv3d_32 Checked" A_iconSt2["3d"], 3D å¯¹è±¡
 
-gui, show, , ´ËµçÄÔÖĞÎÄ¼ş¼ĞÍ¼±êµÄÏÔÊ¾/Òş²Ø
+gui, show, , æ­¤ç”µè„‘ä¸­æ–‡ä»¶å¤¹å›¾æ ‡çš„æ˜¾ç¤º/éšè—
 return
 
 GuiEscape:

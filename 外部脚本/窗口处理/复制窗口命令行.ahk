@@ -1,8 +1,8 @@
-; 1151
+ï»¿; 1151
 ComObjError(0)
 DetectHiddenWindows, On
-WinGetTitle, h_hwnd, »ñÈ¡µ±Ç°´°¿ÚĞÅÏ¢ ;ahk_class AutoHotkeyGUI
-Windy_CurWin_id := StrReplace(h_hwnd, "»ñÈ¡µ±Ç°´°¿ÚĞÅÏ¢_")
+WinGetTitle, h_hwnd, è·å–å½“å‰çª—å£ä¿¡æ¯ ;ahk_class AutoHotkeyGUI
+Windy_CurWin_id := StrReplace(h_hwnd, "è·å–å½“å‰çª—å£ä¿¡æ¯_")
 if Windy_CurWin_id
 {
 	WinGet Windy_CurWin_Pid, PID, ahk_id %Windy_CurWin_id%

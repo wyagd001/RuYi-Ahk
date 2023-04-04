@@ -1,5 +1,13 @@
-CandySel := A_Args[1]
 ; 1039
+CandySel := A_Args[1]
+if !CandySel
+{
+	DetectHiddenWindows, On
+	ControlGetText, CandySel, Edit1, 获取当前窗口信息_ 
+	DetectHiddenWindows, Off
+	if !CandySel
+		exitapp
+}
 Loop, Parse, CandySel, `n, `r
 {
 	FileFullPath := A_LoopField

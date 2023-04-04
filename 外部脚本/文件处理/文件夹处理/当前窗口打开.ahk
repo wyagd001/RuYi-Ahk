@@ -1,8 +1,8 @@
-CandySel :=  A_Args[1]
-; 1042 ²ÎÊı¿É±ä, ¶àÌõÄ¿
+ï»¿CandySel :=  A_Args[1]
+; 1042 å‚æ•°å¯å˜, å¤šæ¡ç›®
 DetectHiddenWindows, On
-WinGetTitle, h_hwnd, »ñÈ¡µ±Ç°´°¿ÚĞÅÏ¢ ;ahk_class AutoHotkeyGUI
-Windy_CurWin_id := StrReplace(h_hwnd, "»ñÈ¡µ±Ç°´°¿ÚĞÅÏ¢_")
+WinGetTitle, h_hwnd, è·å–å½“å‰çª—å£ä¿¡æ¯ ;ahk_class AutoHotkeyGUI
+Windy_CurWin_id := StrReplace(h_hwnd, "è·å–å½“å‰çª—å£ä¿¡æ¯_")
 if !Windy_CurWin_id
 	WinGet, Windy_CurWin_id, ID, A
 WinActivate, ahk_id %Windy_CurWin_id%
@@ -92,9 +92,9 @@ ShellNavigate(sPath, bExplore = False, hWnd=0)
 {
 	If (window := Explorer_GetWindow(hwnd))
 	{
-		if !InStr(sPath, "#")  ; ÅÅ³ıÌØÊâÎÄ¼şÃû
+		if !InStr(sPath, "#")  ; æ’é™¤ç‰¹æ®Šæ–‡ä»¶å
 		{
-			window.Navigate2(sPath) ; µ±Ç°×ÊÔ´¹ÜÀíÆ÷´°¿ÚÇĞ»»µ½Ö¸¶¨Ä¿Â¼
+			window.Navigate2(sPath) ; å½“å‰èµ„æºç®¡ç†å™¨çª—å£åˆ‡æ¢åˆ°æŒ‡å®šç›®å½•
 		}
 		else ; https://www.autohotkey.com/boards/viewtopic.php?f=5&t=526&p=153676#p153676
 		{
@@ -109,8 +109,8 @@ ShellNavigate(sPath, bExplore = False, hWnd=0)
 		}
 	}
 	Else If bExplore
-		ComObjCreate("Shell.Application").Explore[sPath]  ; ĞÂ´°¿Ú´ò¿ªÄ¿Â¼(´ø×ó²àµ¼º½SysTreeView321¿Ø¼ş)
-	Else ComObjCreate("Shell.Application").Open[sPath]  ; ĞÂ´°¿Ú´ò¿ªÄ¿Â¼
+		ComObjCreate("Shell.Application").Explore[sPath]  ; æ–°çª—å£æ‰“å¼€ç›®å½•(å¸¦å·¦ä¾§å¯¼èˆªSysTreeView321æ§ä»¶)
+	Else ComObjCreate("Shell.Application").Open[sPath]  ; æ–°çª—å£æ‰“å¼€ç›®å½•
 }
 
 CF_Isinteger(ByRef hNumber){
@@ -130,8 +130,8 @@ CF_IsFolder(sfile){
 		return 0
 }
 
-; ½âÎöÓÃ»§¡¢ÏµÍ³»·¾³±äÁ¿
-; ppath Îª ²»´øÒıºÅµÄÎÄ±¾»ò°Ù·ÖºÅ°üÎ§µÄÎÄ±¾
+; è§£æç”¨æˆ·ã€ç³»ç»Ÿç¯å¢ƒå˜é‡
+; ppath ä¸º ä¸å¸¦å¼•å·çš„æ–‡æœ¬æˆ–ç™¾åˆ†å·åŒ…å›´çš„æ–‡æœ¬
 ExpandEnvVars(ppath)
 {
 	VarSetCapacity(dest, 2000)
@@ -176,20 +176,20 @@ IsDialog(window=0)
 		;Check for old FileOpen dialog
 		If(!result)
 		{
-			ControlGet, hwnd, Hwnd, , ToolbarWindow321, %window%          ;¹¤¾ßÀ¸
+			ControlGet, hwnd, Hwnd, , ToolbarWindow321, %window%          ;å·¥å…·æ 
 			If(hwnd)
 			{
-				ControlGet, hwnd, Hwnd, , SysListView321, %window%        ;ÎÄ¼şÁĞ±í
+				ControlGet, hwnd, Hwnd, , SysListView321, %window%        ;æ–‡ä»¶åˆ—è¡¨
 				If(hwnd)
 				{
-					ControlGet, hwnd, Hwnd, , ComboBox3, %window%         ;ÎÄ¼şÀàĞÍÏÂÀ­Ñ¡Ôñ¿ò
+					ControlGet, hwnd, Hwnd, , ComboBox3, %window%         ;æ–‡ä»¶ç±»å‹ä¸‹æ‹‰é€‰æ‹©æ¡†
 					If(hwnd)
 					{
-						ControlGet, hwnd, Hwnd, , Button3, %window%       ;È¡Ïû°´Å¥
+						ControlGet, hwnd, Hwnd, , Button3, %window%       ;å–æ¶ˆæŒ‰é’®
 						If(hwnd)
 						{
-							;ControlGet, hwnd, Hwnd , , SysHeader321 , %window%    ;ÏêÏ¸ÊÓÍ¼µÄÁĞ±êÌâ
-							ControlGet, hwnd, Hwnd, , ToolBarWindow322, %window%  ;×ó²àµ¼º½À¸
+							;ControlGet, hwnd, Hwnd , , SysHeader321 , %window%    ;è¯¦ç»†è§†å›¾çš„åˆ—æ ‡é¢˜
+							ControlGet, hwnd, Hwnd, , ToolBarWindow322, %window%  ;å·¦ä¾§å¯¼èˆªæ 
 							If(hwnd)
 								result := 2
 						}

@@ -1,18 +1,18 @@
-Windy_CurWin_id := A_Args[1]
+ï»¿Windy_CurWin_id := A_Args[1]
 
-Windo_¶Ô»°¿ò´ò¿ªÄ¿Â¼:
-IniMenuInifile := A_ScriptDir "\..\..\ÅäÖÃÎÄ¼ş\Íâ²¿½Å±¾\ini²Ëµ¥.ini"
+Windo_å¯¹è¯æ¡†æ‰“å¼€ç›®å½•:
+IniMenuInifile := A_ScriptDir "\..\..\é…ç½®æ–‡ä»¶\å¤–éƒ¨è„šæœ¬\inièœå•.ini"
 IniMenuobj := ini2obj(IniMenuInifile)
 AllOpenFolder := GetAllWindowOpenFolder()
 
-for k,v in IniMenuobj["¶Ô»°¿ò"]
+for k,v in IniMenuobj["å¯¹è¯æ¡†"]
 {
 	Menu JumpToFavFolder, add, %v%, Windo_JumpToFolder
 }
-Menu DialogMenu, Add, ÊÕ²ØµÄÎÄ¼ş¼Ğ, :JumpToFavFolder
+Menu DialogMenu, Add, æ”¶è—çš„æ–‡ä»¶å¤¹, :JumpToFavFolder
 Menu DialogMenu, Add
 
-Menu DialogMenu, Add, Ìø×ªµ½´ò¿ªµÄÎÄ¼ş¼Ğ, nul
+Menu DialogMenu, Add, è·³è½¬åˆ°æ‰“å¼€çš„æ–‡ä»¶å¤¹, nul
 Menu DialogMenu, Add
 for k, v in AllOpenFolder
 {
@@ -33,28 +33,28 @@ return
 
 ini2obj(file){
 	iniobj := {}
-	FileRead, filecontent, %file% ;¼ÓÔØÎÄ¼şµ½±äÁ¿
+	FileRead, filecontent, %file% ;åŠ è½½æ–‡ä»¶åˆ°å˜é‡
 	StringReplace, filecontent, filecontent, `r,, All
-	StringSplit, line, filecontent, `n, , ;ÓÃº¯Êı·Ö¸î±äÁ¿ÎªÎ±Êı×é
-	Loop ;Ñ­»·
+	StringSplit, line, filecontent, `n, , ;ç”¨å‡½æ•°åˆ†å‰²å˜é‡ä¸ºä¼ªæ•°ç»„
+	Loop ;å¾ªç¯
 	{
 		if A_Index > %line0%
 			Break
-		content = % line%A_Index% ;¸³Öµµ±Ç°ĞĞ
-		FSection := RegExMatch(content, "\[.*\]") ;ÕıÔò±í´ïÊ½Æ¥Åäsection
-		if FSection = 1 ;Èç¹ûÕÒµ½
+		content = % line%A_Index% ;èµ‹å€¼å½“å‰è¡Œ
+		FSection := RegExMatch(content, "\[.*\]") ;æ­£åˆ™è¡¨è¾¾å¼åŒ¹é…section
+		if FSection = 1 ;å¦‚æœæ‰¾åˆ°
 		{
-			TSection := RegExReplace(content, "\[(.*)\]", "$1") ;ÕıÔòÌæ»»²¢¸³ÖµÁÙÊ±section $ÎªÏòºóÒıÓÃ
+			TSection := RegExReplace(content, "\[(.*)\]", "$1") ;æ­£åˆ™æ›¿æ¢å¹¶èµ‹å€¼ä¸´æ—¶section $ä¸ºå‘åå¼•ç”¨
 			iniobj[TSection] := {}
 		}
 		Else
 		{
-			FKey := RegExMatch(content, "^.*=.*") ;ÕıÔò±í´ïÊ½Æ¥Åäkey
+			FKey := RegExMatch(content, "^.*=.*") ;æ­£åˆ™è¡¨è¾¾å¼åŒ¹é…key
 			if FKey
 			{
-				TKey := RegExReplace(content, "^(.*?)=.*", "$1") ;ÕıÔòÌæ»»²¢¸³ÖµÁÙÊ±key
+				TKey := RegExReplace(content, "^(.*?)=.*", "$1") ;æ­£åˆ™æ›¿æ¢å¹¶èµ‹å€¼ä¸´æ—¶key
 				StringReplace, TKey, TKey, ., _, All
-				TValue := RegExReplace(content, "^.*?=(.*)", "$1") ;ÕıÔòÌæ»»²¢¸³ÖµÁÙÊ±value
+				TValue := RegExReplace(content, "^.*?=(.*)", "$1") ;æ­£åˆ™æ›¿æ¢å¹¶èµ‹å€¼ä¸´æ—¶value
 				if TKey
 					iniobj[TSection][TKey] := TValue
 			}

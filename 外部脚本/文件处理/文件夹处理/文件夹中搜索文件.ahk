@@ -1,4 +1,4 @@
-  ;
+ï»¿  ;
   ; AutoHotkey Version:  1.1 (modified version)
   ; Language:       English
   ; Platform:       Win9x/NT
@@ -9,7 +9,7 @@
   ; update the result in real time as the search pattern changed.
   ;   Use at your own risk.
 
-  ;Ë¢ĞÂÎÊÌâÆäÊµÊÇCommon Control£¬¼´ Comctl32.dllµÄÎÊÌâ£¬Ö»ÒªÊÇ6.0ÒÔÉÏ¾Í²»»áÓĞË¢ĞÂÎÊÌâ
+  ;åˆ·æ–°é—®é¢˜å…¶å®æ˜¯Common Controlï¼Œå³ Comctl32.dllçš„é—®é¢˜ï¼Œåªè¦æ˜¯6.0ä»¥ä¸Šå°±ä¸ä¼šæœ‰åˆ·æ–°é—®é¢˜
 
 #SingleInstance ignore
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
@@ -17,7 +17,7 @@ CandySel :=  A_Args[1]
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 SetBatchLines, -1   ; Never sleep
-IniRead, notepad2, %A_ScriptDir%\..\..\..\ÅäÖÃÎÄ¼ş\ÈçÒ».ini, ÆäËû³ÌĞò, notepad2, F:\Program Files\Editor\Notepad2\Notepad2.exe
+IniRead, notepad2, %A_ScriptDir%\..\..\..\é…ç½®æ–‡ä»¶\å¦‚ä¸€.ini, å…¶ä»–ç¨‹åº, notepad2, F:\Program Files\Editor\Notepad2\Notepad2.exe
 
   WM_NOTIFY               := 0x004E
   LVN_FIRST               := -100
@@ -47,7 +47,7 @@ IniRead, notepad2, %A_ScriptDir%\..\..\..\ÅäÖÃÎÄ¼ş\ÈçÒ».ini, ÆäËû³ÌĞò, notepad2,
 
   ;g_strAppName            := "Smart Open File"
   ;g_strVersion            := "2010.5.10"
-  g_strTitle              := "ÎÄ¼ş¼ĞÖĞËÑË÷ÎÄ¼ş"
+  g_strTitle              := "æ–‡ä»¶å¤¹ä¸­æœç´¢æ–‡ä»¶"
   g_hMainWnd              := 0
 
   g_nFilesCount           := 0
@@ -58,14 +58,14 @@ IniRead, notepad2, %A_ScriptDir%\..\..\..\ÅäÖÃÎÄ¼ş\ÈçÒ».ini, ÆäËû³ÌĞò, notepad2,
   Gui +Resize
 
   ; Create some buttons:
-  Gui, Add, Button, Default vBtnLoadFolder gButtonLoadFolder, &Ñ¡ÔñÎÄ¼ş¼Ğ
-  Gui, Add, Button, x+15 gopenfolder, ´ò¿ªÄ¿Â¼(&D)
-  Gui, Add, Button, x+15 gopenfile, ´ò¿ªÎÄ¼ş(&F)
-  Gui, Add, Button, x+15 geditfile, ±à¼­ÎÄ¼ş(¼ÇÊÂ±¾)(&E)
-  Gui, Add, Button, x+15 gporse, ÊôĞÔ(&R)
+  Gui, Add, Button, Default vBtnLoadFolder gButtonLoadFolder, &é€‰æ‹©æ–‡ä»¶å¤¹
+  Gui, Add, Button, x+15 gopenfolder, æ‰“å¼€ç›®å½•(&D)
+  Gui, Add, Button, x+15 gopenfile, æ‰“å¼€æ–‡ä»¶(&F)
+  Gui, Add, Button, x+15 geditfile, ç¼–è¾‘æ–‡ä»¶(è®°äº‹æœ¬)(&E)
+  Gui, Add, Button, x+15 gporse, å±æ€§(&R)
 
   ; Create the ListView with two columns, Name and Size:
-  Gui, Add, ListView, Grid xm r20 w700 NoSort vMyListView Hwndg_hMyListView  +0x1140 +LV0x014000, ÎÄ¼şÃû|ËùÔÚÄ¿Â¼|ĞŞ¸ÄÊ±¼ä|´óĞ¡(KB)|ÀàĞÍ
+  Gui, Add, ListView, Grid xm r20 w700 NoSort vMyListView Hwndg_hMyListView  +0x1140 +LV0x014000, æ–‡ä»¶å|æ‰€åœ¨ç›®å½•|ä¿®æ”¹æ—¶é—´|å¤§å°(KB)|ç±»å‹
 
   ; Create an ImageList so that the ListView can display some icons:
   ;ImageListID1 := IL_Create(10)
@@ -130,7 +130,7 @@ dLoadFolder:
 
   ButtonLoadFolder:
       Gui +OwnDialogs  ; Forces user to dismiss the following dialog before using main window.
-      FileSelectFolder, Folder,, 3, Ñ¡ÔñÒªËÑË÷µÄÎÄ¼ş¼Ğ:
+      FileSelectFolder, Folder,, 3, é€‰æ‹©è¦æœç´¢çš„æ–‡ä»¶å¤¹:
       if not Folder  ; The user canceled the dialog.
           return
 
@@ -219,7 +219,7 @@ dLoadFolder:
           Send, {Home}
           GuiControl, Focus, EditSearchString,
       }
-     WinSet, Redraw, , ahk_id %g_hMyListView%   ;ÖØ»æ´°¿Ú
+     WinSet, Redraw, , ahk_id %g_hMyListView%   ;é‡ç»˜çª—å£
       WinSetTitle, , , %g_strTitle% - %OutFileName% [%g_nMatchCount% of %g_nFilesCount%]
   Return
 
@@ -266,7 +266,7 @@ OnNotify(idCtrl, pnmh)
    Static HDN_BEGINTRACKW     := -326 ; (HDN_FIRST - 26)
           M := NumGet(pnmh + 8, 0, "Int")
           If (M = HDN_BEGINTRACKA) || (M = HDN_BEGINTRACKW)
-         Return True ; prevent sizing   ¸÷ÁĞ½ûÖ¹¸Ä±ä³ß´ç
+         Return True ; prevent sizing   å„åˆ—ç¦æ­¢æ”¹å˜å°ºå¯¸
 
 	global g_hMyListView, LVN_GETDISPINFO
    Critical, 300

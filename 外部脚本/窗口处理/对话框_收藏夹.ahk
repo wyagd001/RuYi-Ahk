@@ -20,7 +20,7 @@ hdialogedit := ""
 If WinActive("ahk_class #32770")
 {
 	WinGetPos, hX, hY, , , ahk_class #32770
-	ControlGet, hTreeView, Hwnd,, SysTreeView321, ahk_class #32770
+	ControlGet, hTreeView, Hwnd,, SysTreeView321, ahk_id %Windy_CurWin_id%
 	ControlGet, hdialogedit, Hwnd,, DirectUIHWND3, ahk_class #32770
 }
 else If WinActive("ahk_class RegEdit_RegEdit")
@@ -36,7 +36,7 @@ Gui DialogTv:New
 Gui DialogTv:Default 
 Gui, Add, Picture, x0 y0 w24 h24 vhpic gDialogCandyMenu, %A_ScriptDir%\..\..\脚本图标\如意\e1ce.png
 Gui, Add, Edit, x+0 yp+0 w300 h25 vdpath
-Gui, Add, button,  x+0 yp+0 w30 h25 gsetpath, Go!
+Gui, Add, button,  x+0 yp+0 w30 h25 Default gsetpath, Go!
 Gui, Add, button,  x+0 yp+0 w30 h25 gDialogTvGuiEscape, X
 gui, show, % "x" . hX . " y" . ((hY>30)?(hy-30):(hy+30)) . " w380 h1"
 gui, -Caption -Border +AlwaysOnTop +Owner
@@ -70,13 +70,15 @@ If WinExist("ahk_class #32770")
 	dpath := StrReplace(dpath, "\desktop", "\桌面")
 }
 ;tooltip % dpath
+hdialogedit := 0
 if (A_OSVersion = "WIN_7")
 	TVPath_Set(hTreeView, (hdialogedit?"计算机\":instr(dpath, "桌面")?"":"桌面\计算机\") dpath, outMatchPath,,,10)
 else ; 适配 Win10
-	TVPath_Set(hTreeView, (hdialogedit?"此电脑\":"桌面\计算机\") dpath, outMatchPath,,,10)
+	TVPath_Set(hTreeView, (hdialogedit?"此电脑\":instr(dpath, "桌面")?"":"此电脑\") dpath, outMatchPath,,,10)
 ControlFocus, , ahk_id %hTreeView%
-ControlSend, , {Enter}, ahk_id %hTreeView%
-;msgbox % (hdialogedit?"此电脑\":"桌面\计算机\") dpath "`n" hdialogedit
+if hdialogedit
+	ControlSend, , {Enter}, ahk_id %hTreeView%
+;ToolTip % (hdialogedit?"此电脑\":instr(dpath, "桌面")?"":"此电脑\") dpath "`n" hdialogedit
 return
 
 Cando_Dialogsetpath:
@@ -98,9 +100,10 @@ If WinExist("ahk_class #32770")
 if (A_OSVersion = "WIN_7")
 	TVPath_Set(hTreeView, (hdialogedit?"计算机\":instr(dpath, "桌面")?"":"桌面\计算机\") dpath, outMatchPath,,,10)
 else ; 适配 Win10
-	TVPath_Set(hTreeView, (hdialogedit?"此电脑\":"桌面\计算机\") dpath, outMatchPath,,,10)
+	TVPath_Set(hTreeView, (hdialogedit?"此电脑\":"此电脑\") dpath, outMatchPath,,,10)
 ControlFocus, , ahk_id %hTreeView%
-ControlSend, , {Enter}, ahk_id %hTreeView%
+if hdialogedit
+	ControlSend, , {Enter}, ahk_id %hTreeView%
 ;msgbox % (hdialogedit?"此电脑\":"桌面\计算机\") dpath "`n" hdialogedit
 }
 If WinExist("ahk_class RegEdit_RegEdit")
@@ -342,7 +345,6 @@ TVPath_Get(hTreeView, ByRef outPath, Delimiter="\")
     else
 	HasError:="process"
 
-
 	;释放内存
 	if(pszTextRemote)
 		VirtualFreeEx(hProcess, pszTextRemote, cchTextMax * BytePerChar, MEM_RELEASE)
@@ -438,10 +440,10 @@ TVPath_Set(hTreeView, inPath, ByRef outMatchPath,  EscapeChar="", Delimiter="\",
 	Else
 		hSelItem:=errorlevel
 
-		htext:=TVPath_GetText(hTreeView, hSelItem)
+		htext := TVPath_GetText(hTreeView, hSelItem)
 		CF_tooltip(htext, 2000)
 		;if (htext = "收藏夹") || (htext = "快速访问") ; 资源管理器 首个节点为收藏夹
-		if (htext != "此电脑") && (htext != "计算机")
+		if (htext != "此电脑") && (htext != "计算机")     ;or (htext != "桌面")
 		{
 			Loop 20
 			{

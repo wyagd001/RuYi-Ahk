@@ -1,10 +1,20 @@
-CandySel := A_Args[1]
+ï»¿CandySel := A_Args[1]
+if !CandySel
+{
+	DetectHiddenWindows, On
+	ControlGetText, CandySel, Edit1, è·å–å½“å‰çª—å£ä¿¡æ¯_ 
+	DetectHiddenWindows, Off
+	if !CandySel
+		exitapp
+}
 TargetFolder := A_Args[2]
+;msgbox % CandySel " - " TargetFolder
+;Return
 
 Cando_CutTo:
 if(GetKeyState("Shift"))
 	Mode_OpenFolder:=1
-Menu, %TargetFolder%, add, % (Mode_OpenFolder?"´ò¿ª ":"ÒÆ¶¯µ½ ") TargetFolder, Cando_CutToFolder
+Menu, %TargetFolder%, add, % (Mode_OpenFolder?"æ‰“å¼€ ":"ç§»åŠ¨åˆ° ") TargetFolder, Cando_CutToFolder
 Loop, %TargetFolder%\*.*, 2, 1 ; Folders only
 {
 	if A_LoopFileAttrib contains H,R,S  ; Skip any file that is either H (Hidden), R (Read-only), or S (System). Note: No spaces in "H,R,S".
@@ -20,7 +30,7 @@ Loop, %TargetFolder%\*.*, 2, 1 ; Folders only
 	}
 	if filecount
 	{
-		Menu, %A_LoopFileLongPath%, add, % (Mode_OpenFolder?"´ò¿ª ":"ÒÆ¶¯µ½ ") A_LoopFileName, Cando_CutToFolder
+		Menu, %A_LoopFileLongPath%, add, % (Mode_OpenFolder?"æ‰“å¼€ ":"ç§»åŠ¨åˆ° ") A_LoopFileName, Cando_CutToFolder
 		Menu, %ParentFolderDirectory%, add, %A_LoopFileName%, :%A_LoopFileLongPath%
 	}
 	else

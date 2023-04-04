@@ -1,13 +1,23 @@
-﻿CandySel := A_Args[1]
+﻿CandySel := A_Args[1]    ; 单个文件
+if !CandySel             ; 多个文件
+{
+	DetectHiddenWindows, On
+	ControlGetText, CandySel, Edit1, 获取当前窗口信息_ 
+	DetectHiddenWindows, Off
+	if !CandySel
+		exitapp
+}
+
 ATA_settingFile := A_ScriptDir "\..\..\配置文件\如一.ini"
 IniRead, 7z, %ATA_settingFile%, 其他程序, 7z, %A_Space%
 	IniRead, 7zg, %ATA_settingFile%, 其他程序, 7zg, %A_Space%
 
 cando_智能解压:
-If !CandySel
-Return
 Loop Parse, CandySel, `n, `r
-	7z_smart_Unarchiver(A_LoopField)
+{
+	if A_LoopField
+		7z_smart_Unarchiver(A_LoopField)
+}
 Return
 
 ; 智能解压

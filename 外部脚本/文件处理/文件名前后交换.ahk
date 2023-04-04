@@ -1,7 +1,18 @@
 ﻿; 1081
 CandySel := A_Args[1]
+if !CandySel             ; 多个文件
+{
+	DetectHiddenWindows, On
+	ControlGetText, CandySel, Edit1, 获取当前窗口信息_ 
+	DetectHiddenWindows, Off
+	if !CandySel
+		exitapp
+}
 Loop Parse, CandySel, `n, `r
-	File_SwapAB(A_LoopField)
+{
+	if A_LoopField
+		File_SwapAB(A_LoopField)
+}
 Return
 
 File_SwapAB(filename, SepStr := "-", Con := " - ")

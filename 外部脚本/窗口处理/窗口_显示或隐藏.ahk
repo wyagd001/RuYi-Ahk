@@ -20,8 +20,6 @@ Loop %W% {
          LV_Add( Checked, ID, Class, Title, PID, Process, Parent )
 } Gui, Show, , * List of all windows ( Hidden / Shown )
 LV_Ready := True
-
-
 Return
 
 ShowHide:
@@ -33,7 +31,8 @@ ShowHide:
   Else {
          WinShow, ahk_id %ID%
          WinActivate, ahk_id %ID%
-} Return
+}
+Return
 
 GuiClose:
 GuiEscape:

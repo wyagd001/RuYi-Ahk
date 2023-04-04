@@ -1,4 +1,4 @@
-#Requires AutoHotkey v1.1.33+
+ï»¿#Requires AutoHotkey v1.1.33+
 ;1232
 CandySel :=  A_Args[1]
 if !CandySel
@@ -6,10 +6,10 @@ if !CandySel
 if !Env_SystemRead("PATH", CandySel)
 {
 	Env_SystemAdd("PATH", CandySel)
-	msgbox ÒÑ¾­³É¹¦½«Â·¾¶ "%CandySel%" Ìí¼Óµ½ Path ±äÁ¿ÖĞ.
+	msgbox å·²ç»æˆåŠŸå°†è·¯å¾„ "%CandySel%" æ·»åŠ åˆ° Path å˜é‡ä¸­.
 }
 else
-	msgbox Path ±äÁ¿ÖĞÒÑ¾­°üº¬¸ÃÂ·¾¶.`n%CandySel%
+	msgbox Path å˜é‡ä¸­å·²ç»åŒ…å«è¯¥è·¯å¾„.`n%CandySel%
 return
 
 /*
@@ -27,7 +27,7 @@ key := Env_UserRead("ANSWER") ; returns 42
 ; Delete an Environment Variable
 Env_UserDel("ANSWER")
 
-;À´Ô´ÍøÖ·: https://www.autohotkey.com/boards/viewtopic.php?f=6&t=30977&sid=e55c033a4297dd06138e2222a268f1cc
+;æ¥æºç½‘å€: https://www.autohotkey.com/boards/viewtopic.php?f=6&t=30977&sid=e55c033a4297dd06138e2222a268f1cc
 ; Use EnvSystem to edit the System Environment Variables
 Env_SystemAdd("PATH", "X:\Backup\bin")
 ; Sort System PATH in alphabetical order

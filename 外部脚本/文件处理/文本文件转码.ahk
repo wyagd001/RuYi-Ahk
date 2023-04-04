@@ -1,22 +1,61 @@
 ﻿; 1044
 CandySel := A_Args[1]
+if !CandySel
+{
+	DetectHiddenWindows, On
+	ControlGetText, CandySel, Edit1, 获取当前窗口信息_ 
+	DetectHiddenWindows, Off
+	if !CandySel
+		exitapp
+	MultiF := InStr(CandySel, "`r")
+	if MultiF
+	{
+		CandySel_org := CandySel
+		CandySel := SubStr(CandySel, 1, MultiF - 1)   ;  第一行的文件
+	}
+}
 aInCp := File_GetEncoding(CandySel)
-SplitPath, CandySel, OutFileName, , , , OutDrive
-vvaluetocp := {"ANSI": "CP936", "UTF-8 BOM": "UTF-8", "UTF-8": "UTF-8-Raw", "Unicode": "UTF-16","Unicode 高位在前": "cp1201", "ANSI(日文)": "CP932", "ANSI(韩文)": "CP949"}
+SplitPath, CandySel, CandySel_FileName, , , , CandySel_Drive
+vvaluetocp := {"ANSI": "CP936", "UTF-8 BOM": "UTF-8", "UTF-8": "UTF-8-Raw", "Unicode": "UTF-16","Unicode 高位在前": "cp1201", "ANSI(日文)": "CP932", "ANSI(韩文)": "CP949", "ANSI(拉丁语 1)": "CP1252"}
 cptovvalue := {"CP936": "ANSI", "UTF-8": "UTF-8 BOM", "UTF-8-Raw": "UTF-8", "UTF-16": "Unicode", "cp1201": "Unicode 高位在前"}
 
 gui add, text, x5 y5, 原编码:
-gui add, ComboBox, xp+50 yp-3 w110 vvaInCp, ANSI|UTF-8|UTF-8 BOM|Unicode|Unicode 高位在前|ANSI(日文)|ANSI(韩文)
+gui add, ComboBox, xp+50 yp-3 w110 vvaInCp, ANSI|UTF-8|UTF-8 BOM|Unicode|Unicode 高位在前|ANSI(日文)|ANSI(韩文)|ANSI(拉丁语 1)
 gui add, text, xp+120 y5, 新编码:
 gui add, ComboBox, xp+50 yp-3 w100 vvOutCp, ANSI|UTF-8|UTF-8 BOM|Unicode|Unicode 高位在前
 gui add, Button, xp+120 h25 gchange, 转换
+Gui, Add, Radio, xs h20 vMyRadioGroup Checked, 新建文件, 并保留原文件
+Gui, Add, Radio, xs h20, 文件名不变并删除原文件
 GuiControl, ChooseString, vaInCp, % cptovvalue[aInCp]
-gui show,, 文件 %OutDrive%\...\%OutFileName% 转码
+if MultiF
+	TC = 批量
+else
+	TC = %CandySel_Drive%\...\%CandySel_FileName%
+gui show,, 文件 %TC% 转码
 return
 
 change:
 Gui, submit, nohide
-File_CpTransform(CandySel, vvaluetocp[vaInCp], vvaluetocp[vOutCp])
+if instr(vaInCp, "Cp")
+	F_vaInCp := vaInCp
+else
+	F_vaInCp := vvaluetocp[vaInCp]
+if (MyRadioGroup = 1)
+{
+	loop, parse, CandySel_org, `n, `r
+	{
+		if A_LoopField
+			File_CpTransform(A_LoopField, F_vaInCp, vvaluetocp[vOutCp])
+	}
+}
+else if if (MyRadioGroup = 2)
+{
+	loop, parse, CandySel_org, `n, `r
+	{
+		if A_LoopField
+			File_CpTransform(A_LoopField, F_vaInCp, vvaluetocp[vOutCp], 0)
+	}
+}
 return
 
 GuiClose:
@@ -25,7 +64,7 @@ Gui, Destroy
 exitapp
 return
 
-File_CpTransform(aInFile, aInCp := "", aOutCp := "")
+File_CpTransform(aInFile, aInCp := "", aOutCp := "", aOutNewFile := 1)
 {
 	if (aInCp = "CP1201")
 	{
@@ -46,84 +85,35 @@ File_CpTransform(aInFile, aInCp := "", aOutCp := "")
 	if !aOutCp or (aOutCp = "ansi")
 		aOutCp := aSysCp
 
-		SplitPath, % aInFile, , aOutDir, OutExtension, OutNameNoExt
-		aOutFile := aOutDir "\" OutNameNoExt "转码(" aOutCp ")." OutExtension
+	SplitPath, % aInFile, , aOutDir, OutExtension, OutNameNoExt
+	if aOutNewFile
+	{
+		aOutFile := aOutDir "\" OutNameNoExt "(" aInCp "转码" aOutCp ")." OutExtension
 		aOutFile := PathU(aOutFile)
+	}
+	else
+	{
+		FileRecycle, %aInFile%
+		aOutFile := aInFile
+	}
 
-	if (aOutCp = aSysCp)
+	if (aOutCp != "CP1201")
 	{
 		if (aInCp = "CP1201")
 		{
 			LCMAP_BYTEREV := 0x800
-			cch:=DllCall( "LCMapStringW", UInt,0, UInt,LCMAP_BYTEREV, Str,FileR_TFRaw, UInt,-1, Str,0, UInt,0)
+			cch:=DllCall("LCMapStringW", "UInt", 0, "UInt", LCMAP_BYTEREV, "Str", FileR_TFRaw, "UInt", -1, "Str", 0, "UInt", 0)
 			VarSetCapacity(LE, cch * 2)
-			DllCall( "LCMapStringW", UInt,0, UInt,LCMAP_BYTEREV, Str,FileR_TFRaw, UInt,cch, Str,LE, UInt,cch)
+			DllCall("LCMapStringW", "UInt",0, "UInt", LCMAP_BYTEREV, "Str", FileR_TFRaw, "UInt", cch, "Str", LE, "UInt", cch)
 			FileAppend, %LE%, % aOutFile, % aOutCp
 			FileR_TFRaw := LE := ""
-		return
+			return
 		}
 		else
 		{
 			FileAppend, %FileR_TFC%, % aOutFile, % aOutCp
 			FileR_TFC := ""
-		return
-		}
-	}
-	else if (aOutCp = "UTF-8") or (aOutCp = "CP65001")
-	{
-		if (aInCp = "CP1201")
-		{
-			LCMAP_BYTEREV := 0x800
-			cch:=DllCall( "LCMapStringW", UInt,0, UInt,LCMAP_BYTEREV, Str,FileR_TFRaw, UInt,-1, Str,0, UInt,0)
-			VarSetCapacity(LE, cch * 2)
-			DllCall( "LCMapStringW", UInt,0, UInt,LCMAP_BYTEREV, Str,FileR_TFRaw, UInt,cch, Str,LE, UInt,cch)
-			FileAppend, %LE%, % aOutFile, % aOutCp
-			FileR_TFRaw := LE := ""
-		return
-		}
-		else
-		{
-			FileAppend, %FileR_TFC%, % aOutFile, % aOutCp
-			FileR_TFC := ""
-		return
-		}
-	}
-	else if (aOutCp = "UTF-8-RAW")
-	{
-		if (aInCp = "CP1201")
-		{
-			LCMAP_BYTEREV := 0x800
-			cch:=DllCall( "LCMapStringW", UInt,0, UInt,LCMAP_BYTEREV, Str,FileR_TFRaw, UInt,-1, Str,0, UInt,0)
-			VarSetCapacity(LE, cch * 2)
-			DllCall( "LCMapStringW", UInt,0, UInt,LCMAP_BYTEREV, Str,FileR_TFRaw, UInt,cch, Str,LE, UInt,cch)
-			FileAppend, %LE%, % aOutFile, % aOutCp
-			FileR_TFRaw := LE := ""
-		return
-		}
-		else
-		{
-			FileAppend, %FileR_TFC%, % aOutFile, % aOutCp
-			FileR_TFC := ""
-		return
-		}
-	}
-	else if (aOutCp = "UTF-16")
-	{
-		if (aInCp = "CP1201")
-		{
-			LCMAP_BYTEREV := 0x800
-			cch:=DllCall( "LCMapStringW", UInt,0, UInt,LCMAP_BYTEREV, Str,FileR_TFRaw, UInt,-1, Str,0, UInt,0)
-			VarSetCapacity(LE, cch * 2)
-			DllCall( "LCMapStringW", UInt,0, UInt,LCMAP_BYTEREV, Str,FileR_TFRaw, UInt,cch, Str,LE, UInt,cch)
-			FileAppend, %LE%, % aOutFile, % aOutCp
-			FileR_TFRaw := LE := ""
-		return
-		}
-		else
-		{
-			FileAppend, %FileR_TFC%, % aOutFile, % aOutCp
-			FileR_TFC := ""
-		return
+			return
 		}
 	}
 	else if (aOutCp = "CP1201")
@@ -135,20 +125,20 @@ File_CpTransform(aInFile, aInCp := "", aOutCp := "")
 			_hFile.RawWrite(code, 2)
 			_hFile.RawWrite(FileR_TFRaw, aInLen)
 			FileR_TFRaw := ""
-		return
+			return
 		}
 		else
 		{
 			LCMAP_BYTEREV := 0x800
-			cch:=DllCall( "LCMapStringW", UInt,0, UInt,LCMAP_BYTEREV, Str,FileR_TFC, UInt,-1, Str,0, UInt,0)
+			cch:=DllCall("LCMapStringW", "UInt",0, "UInt", LCMAP_BYTEREV, "Str", FileR_TFC, "UInt", -1, "Str", 0, "UInt", 0)
 			VarSetCapacity(BE, cch * 2)
-			DllCall( "LCMapStringW", UInt,0, UInt,LCMAP_BYTEREV, Str,FileR_TFC, UInt,cch, Str,BE, UInt,cch)
+			DllCall("LCMapStringW", "UInt", 0, "UInt", LCMAP_BYTEREV, "Str", FileR_TFC, "UInt", cch, "Str", BE, "UInt", cch)
 			_hFile := FileOpen(aOutFile, "w")
 			MCode(code, "FEFF")
 			_hFile.RawWrite(code, 2)
 			_hFile.RawWrite(BE, cch * 2-2)
 			FileR_TFC := BE := ""
-		return
+			return
 		}
 	}
 }
@@ -340,14 +330,14 @@ File_GetEncoding(aFile, aNumBytes = 0, aMinimum = 4)
 MCode(ByRef code, hex) 
 { ; allocate memory and write Machine Code there
 	VarSetCapacity(code, 0) 
-	VarSetCapacity(code,StrLen(hex)//2+2)
+	VarSetCapacity(code, StrLen(hex)//2+2)
 	Loop % StrLen(hex)//2 + 2
-		NumPut("0x" . SubStr(hex,2*A_Index-1,2), code, A_Index-1, "Char")
+		NumPut("0x" . SubStr(hex, 2*A_Index-1, 2), code, A_Index-1, "Char")
 }
 
 PathU(sFile) {                     ; PathU v0.90 by SKAN on D35E/D35F @ tiny.cc/pathu 
 Local Q, F := VarSetCapacity(Q,520,0) 
-  DllCall("kernel32\GetFullPathNameW", "WStr",sFile, "UInt",260, "Str",Q, "PtrP",F)
-  DllCall("shell32\PathYetAnotherMakeUniqueName","Str",Q, "Str",Q, "Ptr",0, "Ptr",F)
+  DllCall("kernel32\GetFullPathNameW", "WStr", sFile, "UInt", 260, "Str", Q, "PtrP", F)
+  DllCall("shell32\PathYetAnotherMakeUniqueName", "Str", Q, "Str", Q, "Ptr", 0, "Ptr", F)
 Return A_IsUnicode ? Q : StrGet(&Q, "UTF-16")
 }

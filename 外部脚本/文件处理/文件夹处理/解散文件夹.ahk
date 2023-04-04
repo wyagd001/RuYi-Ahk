@@ -1,29 +1,29 @@
-CandySel :=  A_Args[1]
+ï»¿CandySel :=  A_Args[1]
 SplitPath, CandySel,, CandySel_ParentPath
 ; 1040
 ErrorCount := MoveFilesAndFolders(CandySel "\*.*", CandySel_ParentPath)
 if (ErrorCount != 0)
-    MsgBox %ErrorCount% ¸öÎÄ¼ş/ÎÄ¼ş¼ĞÒÆ¶¯Ê§°Ü.
+    MsgBox %ErrorCount% ä¸ªæ–‡ä»¶/æ–‡ä»¶å¤¹ç§»åŠ¨å¤±è´¥.
 else
     FileRecycle, % CandySel
 return
 
 MoveFilesAndFolders(SourcePattern, DestinationFolder, DoOverwrite = false)
-; ÒÆ¶¯Æ¥Åä SourcePattern µÄËùÓĞÎÄ¼şºÍÎÄ¼ş¼Ğµ½ DestinationFolder ÎÄ¼ş¼ĞÖĞÇÒ
-; ·µ»ØÎŞ·¨ÒÆ¶¯µÄÎÄ¼ş/ÎÄ¼ş¼ĞµÄÊıÄ¿. ´Ëº¯ÊıĞèÒª [v1.0.38+]
-; ÒòÎªËüÊ¹ÓÃÁË FileMoveDir µÄÄ£Ê½ 2.
+; ç§»åŠ¨åŒ¹é… SourcePattern çš„æ‰€æœ‰æ–‡ä»¶å’Œæ–‡ä»¶å¤¹åˆ° DestinationFolder æ–‡ä»¶å¤¹ä¸­ä¸”
+; è¿”å›æ— æ³•ç§»åŠ¨çš„æ–‡ä»¶/æ–‡ä»¶å¤¹çš„æ•°ç›®. æ­¤å‡½æ•°éœ€è¦ [v1.0.38+]
+; å› ä¸ºå®ƒä½¿ç”¨äº† FileMoveDir çš„æ¨¡å¼ 2.
 {
     if (DoOverwrite = 1)
-        DoOverwrite := 2  ; Çë²ÎÔÄ FileMoveDir ÁË½âÄ£Ê½ 2 ÓëÄ£Ê½ 1 µÄÇø±ğ.
-    ; Ê×ÏÈÒÆ¶¯ËùÓĞÎÄ¼ş(²»ÊÇÎÄ¼ş¼Ğ):
+        DoOverwrite := 2  ; è¯·å‚é˜… FileMoveDir äº†è§£æ¨¡å¼ 2 ä¸æ¨¡å¼ 1 çš„åŒºåˆ«.
+    ; é¦–å…ˆç§»åŠ¨æ‰€æœ‰æ–‡ä»¶(ä¸æ˜¯æ–‡ä»¶å¤¹):
     FileMove, %SourcePattern%, %DestinationFolder%, %DoOverwrite%
     ErrorCount := ErrorLevel
-    ; ÏÖÔÚÒÆ¶¯ËùÓĞÎÄ¼ş¼Ğ:
-    Loop, %SourcePattern%, 2  ; 2 ±íÊ¾ "Ö»»ñÈ¡ÎÄ¼ş¼Ğ".
+    ; ç°åœ¨ç§»åŠ¨æ‰€æœ‰æ–‡ä»¶å¤¹:
+    Loop, %SourcePattern%, 2  ; 2 è¡¨ç¤º "åªè·å–æ–‡ä»¶å¤¹".
     {
         FileMoveDir, %A_LoopFileFullPath%, %DestinationFolder%\%A_LoopFileName%, %DoOverwrite%
         ErrorCount += ErrorLevel
-        if ErrorLevel  ; ±¨¸æÃ¿¸ö³öÏÖÎÊÌâµÄÎÄ¼ş¼ĞÃû³Æ.
+        if ErrorLevel  ; æŠ¥å‘Šæ¯ä¸ªå‡ºç°é—®é¢˜çš„æ–‡ä»¶å¤¹åç§°.
             MsgBox Could not move %A_LoopFileFullPath% into %DestinationFolder%.
     }
     return ErrorCount

@@ -1,10 +1,10 @@
-global A_icon := Object("ÊÕ²Ø¼Ğ", "{323CA680-C24D-4099-B94D-446DD2D7249E}", "¿â", "{031E4825-7B94-4dc3-B131-E946B44C8DD5}", "¼ÒÍ¥×é", "{B4FB3F98-C1EA-428d-A78A-D1F5659CBA93}", "ÍøÂç", "{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}", "OneDrive", "{018D5C66-4533-4307-9B53-224DE2ED1FE6}", "¿ìËÙ·ÃÎÊ", "{679f85cb-0220-4080-b29b-5540cc05aab6}")
-global A_iconev := Object("ÊÕ²Ø¼Ğ", "a0900100", "¿â", "b080010d", "¼ÒÍ¥×é", "b084010c", "ÍøÂç", "b0040064", "OneDrive", "f080004d", "¿ìËÙ·ÃÎÊ", "a0100000")
-global A_icondv := Object("ÊÕ²Ø¼Ğ", "a9400100", "¿â", "b090010d", "¼ÒÍ¥×é", "b094010c", "ÍøÂç", "b0940064", "OneDrive", "f090004d", "¿ìËÙ·ÃÎÊ", "a0600000")
-global A_iconDy := Object("ÊÕ²Ø¼Ğ", "vfav", "¿â", "vlib", "¼ÒÍ¥×é", "vhomegroup", "ÍøÂç", "vweb", "OneDrive", "voned", "¿ìËÙ·ÃÎÊ", "vquickac")
-global A_iconDy2 := Object("ÊÕ²Ø¼Ğ", "vfav_32", "¿â", "vlib_32", "¼ÒÍ¥×é", "vhomegroup_32", "ÍøÂç", "vweb_32", "OneDrive", "voned_32", "¿ìËÙ·ÃÎÊ", "vquickac_32")
-global A_iconSt := Object("ÊÕ²Ø¼Ğ", 0, "¿â", 0, "¼ÒÍ¥×é", 0, "ÍøÂç", 0, "OneDrive", 0, "¿ìËÙ·ÃÎÊ", 0)
-global A_iconSt2 := Object("ÊÕ²Ø¼Ğ", 0, "¿â", 0, "¼ÒÍ¥×é", 0, "ÍøÂç", 0, "OneDrive", 0, "¿ìËÙ·ÃÎÊ", 0)
+ï»¿global A_icon := Object("æ”¶è—å¤¹", "{323CA680-C24D-4099-B94D-446DD2D7249E}", "åº“", "{031E4825-7B94-4dc3-B131-E946B44C8DD5}", "å®¶åº­ç»„", "{B4FB3F98-C1EA-428d-A78A-D1F5659CBA93}", "ç½‘ç»œ", "{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}", "OneDrive", "{018D5C66-4533-4307-9B53-224DE2ED1FE6}", "å¿«é€Ÿè®¿é—®", "{679f85cb-0220-4080-b29b-5540cc05aab6}")
+global A_iconev := Object("æ”¶è—å¤¹", "a0900100", "åº“", "b080010d", "å®¶åº­ç»„", "b084010c", "ç½‘ç»œ", "b0040064", "OneDrive", "f080004d", "å¿«é€Ÿè®¿é—®", "a0100000")
+global A_icondv := Object("æ”¶è—å¤¹", "a9400100", "åº“", "b090010d", "å®¶åº­ç»„", "b094010c", "ç½‘ç»œ", "b0940064", "OneDrive", "f090004d", "å¿«é€Ÿè®¿é—®", "a0600000")
+global A_iconDy := Object("æ”¶è—å¤¹", "vfav", "åº“", "vlib", "å®¶åº­ç»„", "vhomegroup", "ç½‘ç»œ", "vweb", "OneDrive", "voned", "å¿«é€Ÿè®¿é—®", "vquickac")
+global A_iconDy2 := Object("æ”¶è—å¤¹", "vfav_32", "åº“", "vlib_32", "å®¶åº­ç»„", "vhomegroup_32", "ç½‘ç»œ", "vweb_32", "OneDrive", "voned_32", "å¿«é€Ÿè®¿é—®", "vquickac_32")
+global A_iconSt := Object("æ”¶è—å¤¹", 0, "åº“", 0, "å®¶åº­ç»„", 0, "ç½‘ç»œ", 0, "OneDrive", 0, "å¿«é€Ÿè®¿é—®", 0)
+global A_iconSt2 := Object("æ”¶è—å¤¹", 0, "åº“", 0, "å®¶åº­ç»„", 0, "ç½‘ç»œ", 0, "OneDrive", 0, "å¿«é€Ÿè®¿é—®", 0)
 for key in A_icon
 {
 	A_iconSt[key] := readshoworhide(key)
@@ -14,15 +14,15 @@ if (A_PtrSize = 8)
 {
 	if FileExist(A_ScriptDir "\x64\SetACL.exe")
 		AbsP := A_ScriptDir "\x64\SetACL.exe"
-	else if FileExist(A_ScriptDir "\..\ÒıÓÃ³ÌĞò\x64\SetACL.exe")
+	else if FileExist(A_ScriptDir "\..\å¼•ç”¨ç¨‹åº\x64\SetACL.exe")
 	{
 		VarSetCapacity(AbsP,260,0)
-		DllCall("shlwapi\PathCombineW", "Str", AbsP, "Str", A_ScriptDir, "Str", "..\ÒıÓÃ³ÌĞò\x64\SetACL.exe")
+		DllCall("shlwapi\PathCombineW", "Str", AbsP, "Str", A_ScriptDir, "Str", "..\å¼•ç”¨ç¨‹åº\x64\SetACL.exe")
 	}
-	else if FileExist(A_ScriptDir "\..\..\ÒıÓÃ³ÌĞò\x64\SetACL.exe")
+	else if FileExist(A_ScriptDir "\..\..\å¼•ç”¨ç¨‹åº\x64\SetACL.exe")
 	{
 		VarSetCapacity(AbsP,260,0)
-		DllCall("shlwapi\PathCombineW", "Str", AbsP, "Str", A_ScriptDir, "Str", "..\..\ÒıÓÃ³ÌĞò\x64\SetACL.exe")
+		DllCall("shlwapi\PathCombineW", "Str", AbsP, "Str", A_ScriptDir, "Str", "..\..\å¼•ç”¨ç¨‹åº\x64\SetACL.exe")
 	}
 	else
 		AbsP := A_ScriptDir "\SetACL.exe"
@@ -31,57 +31,57 @@ else
 {
 	if FileExist(A_ScriptDir "\x32\SetACL.exe")
 		AbsP := A_ScriptDir "\x32\SetACL.exe"
-	else if FileExist(A_ScriptDir "\..\ÒıÓÃ³ÌĞò\x64\SetACL.exe")
+	else if FileExist(A_ScriptDir "\..\å¼•ç”¨ç¨‹åº\x64\SetACL.exe")
 	{
 		VarSetCapacity(AbsP,260,0)
-		DllCall("shlwapi\PathCombineW", "Str", AbsP, "Str", A_ScriptDir, "Str", "..\ÒıÓÃ³ÌĞò\x64\SetACL.exe")
+		DllCall("shlwapi\PathCombineW", "Str", AbsP, "Str", A_ScriptDir, "Str", "..\å¼•ç”¨ç¨‹åº\x64\SetACL.exe")
 	}
-	else if FileExist(A_ScriptDir "\..\..\ÒıÓÃ³ÌĞò\x32\SetACL.exe")
+	else if FileExist(A_ScriptDir "\..\..\å¼•ç”¨ç¨‹åº\x32\SetACL.exe")
 	{
 		VarSetCapacity(AbsP,260,0)
-		DllCall("shlwapi\PathCombineW", "Str", AbsP, "Str", A_ScriptDir, "Str", "..\..\ÒıÓÃ³ÌĞò\x64\SetACL.exe")
+		DllCall("shlwapi\PathCombineW", "Str", AbsP, "Str", A_ScriptDir, "Str", "..\..\å¼•ç”¨ç¨‹åº\x64\SetACL.exe")
 	}
 	else
 		AbsP := A_ScriptDir "\SetACL.exe"
 }
 global AbsP
 
-Gui, Add, Button, x185 y310 w100 h30 gRestartExplorer, Ó¦ÓÃ²¢ÖØÆô×ÀÃæ
-Gui, Add, Button, xp+110 yp w70 h30 gGuiSave, È·¶¨
-Gui, Add, Button, xp+80 yp w70 h30 gGuiClose, È¡Ïû
-Gui, Add, Button, xp+80 yp w70 h30 gGuiApply, Ó¦ÓÃ
+Gui, Add, Button, x185 y310 w100 h30 gRestartExplorer, åº”ç”¨å¹¶é‡å¯æ¡Œé¢
+Gui, Add, Button, xp+110 yp w70 h30 gGuiSave, ç¡®å®š
+Gui, Add, Button, xp+80 yp w70 h30 gGuiClose, å–æ¶ˆ
+Gui, Add, Button, xp+80 yp w70 h30 gGuiApply, åº”ç”¨
 
-Gui, Add, Tab, x-4 y1 w530 h300, µ¼º½À¸ÏîÄ¿|ÆäËûÎÄ¼ş¼Ğ
-Gui, Tab, µ¼º½À¸ÏîÄ¿
-Gui, Add, GroupBox, x10 y30 w500 h120,µ¼º½À¸ÏîÄ¿(È¡Ïûºó¶ÔÓ¦µÄ×ÀÃæÍ¼±ê½«»áÉ¾³ı)
-Gui, Add, CheckBox, % "xp+10 yp+30 w80 h20 vvfav Checked" A_iconSt["ÊÕ²Ø¼Ğ"], ÊÕ²Ø¼Ğ
-Gui, Add, CheckBox, % "xp+150 yp w80 h20 vvlib Checked" A_iconSt["¿â"], ¿â
-Gui, Add, CheckBox, % "xp-150 yp+30 w80 h20 vvhomegroup Checked" A_iconSt["¼ÒÍ¥×é"], ¼ÒÍ¥×é
-Gui, Add, CheckBox, % "xp+150 yp w80 h20 vvweb Checked" A_iconSt["ÍøÂç"], ÍøÂç
+Gui, Add, Tab, x-4 y1 w530 h300, å¯¼èˆªæ é¡¹ç›®|å…¶ä»–æ–‡ä»¶å¤¹
+Gui, Tab, å¯¼èˆªæ é¡¹ç›®
+Gui, Add, GroupBox, x10 y30 w500 h120,å¯¼èˆªæ é¡¹ç›®(å–æ¶ˆåå¯¹åº”çš„æ¡Œé¢å›¾æ ‡å°†ä¼šåˆ é™¤)
+Gui, Add, CheckBox, % "xp+10 yp+30 w80 h20 vvfav Checked" A_iconSt["æ”¶è—å¤¹"], æ”¶è—å¤¹
+Gui, Add, CheckBox, % "xp+150 yp w80 h20 vvlib Checked" A_iconSt["åº“"], åº“
+Gui, Add, CheckBox, % "xp-150 yp+30 w80 h20 vvhomegroup Checked" A_iconSt["å®¶åº­ç»„"], å®¶åº­ç»„
+Gui, Add, CheckBox, % "xp+150 yp w80 h20 vvweb Checked" A_iconSt["ç½‘ç»œ"], ç½‘ç»œ
 Gui, Add, CheckBox, % "xp-150 yp+30 w80 h20 vvoned Checked" A_iconSt["OneDrive"], OneDrive
-Gui, Add, CheckBox, % "xp+150 yp w80 h20 vvquickac Checked" A_iconSt["¿ìËÙ·ÃÎÊ"], ¿ìËÙ·ÃÎÊ
+Gui, Add, CheckBox, % "xp+150 yp w80 h20 vvquickac Checked" A_iconSt["å¿«é€Ÿè®¿é—®"], å¿«é€Ÿè®¿é—®
 
-Gui, Add, GroupBox, x10 y165 w500 h120, 32Î»³ÌĞò´ò¿ª¶Ô»°¿ò(ÉÏÏÂÁ½×éÉèÖÃ¶¼ĞèÒªÖØÆôexplorer²Å»á¿´µ½Ğ§¹û)
-Gui, Add, CheckBox, % "xp+10 yp+30 w80 h20 vvfav_32 Checked" A_iconSt2["ÊÕ²Ø¼Ğ"], ÊÕ²Ø¼Ğ
-Gui, Add, CheckBox, % "xp+150 yp w80 h20 vvlib_32 Checked" A_iconSt2["¿â"], ¿â
-Gui, Add, CheckBox, % "xp-150 yp+30 w80 h20 vvhomegroup_32 Checked" A_iconSt2["¼ÒÍ¥×é"], ¼ÒÍ¥×é
-Gui, Add, CheckBox, % "xp+150 yp w80 h20 vvweb_32 Checked" A_iconSt2["ÍøÂç"], ÍøÂç
+Gui, Add, GroupBox, x10 y165 w500 h120, 32ä½ç¨‹åºæ‰“å¼€å¯¹è¯æ¡†(ä¸Šä¸‹ä¸¤ç»„è®¾ç½®éƒ½éœ€è¦é‡å¯exploreræ‰ä¼šçœ‹åˆ°æ•ˆæœ)
+Gui, Add, CheckBox, % "xp+10 yp+30 w80 h20 vvfav_32 Checked" A_iconSt2["æ”¶è—å¤¹"], æ”¶è—å¤¹
+Gui, Add, CheckBox, % "xp+150 yp w80 h20 vvlib_32 Checked" A_iconSt2["åº“"], åº“
+Gui, Add, CheckBox, % "xp-150 yp+30 w80 h20 vvhomegroup_32 Checked" A_iconSt2["å®¶åº­ç»„"], å®¶åº­ç»„
+Gui, Add, CheckBox, % "xp+150 yp w80 h20 vvweb_32 Checked" A_iconSt2["ç½‘ç»œ"], ç½‘ç»œ
 Gui, Add, CheckBox, % "xp-150 yp+30 w80 h20 vvoned_32 Checked" A_iconSt2["OneDrive"], OneDrive
-Gui, Add, CheckBox, % "xp+150 yp w80 h20 vvquickac_32 Checked" A_iconSt2["¿ìËÙ·ÃÎÊ"], ¿ìËÙ·ÃÎÊ
+Gui, Add, CheckBox, % "xp+150 yp w80 h20 vvquickac_32 Checked" A_iconSt2["å¿«é€Ÿè®¿é—®"], å¿«é€Ÿè®¿é—®
 
-Gui, Tab, ÆäËûÎÄ¼ş¼Ğ
-Gui, Add, GroupBox, x10 y30 w500 h120, ´ı¶¨
-Gui, Add, CheckBox, % "xp+10 yp+30 w120 h20 vv3d Checked" A_iconSt["3d"], ÎŞÏîÄ¿
-;Gui, Add, CheckBox, % "xp+150 yp w120 h20 vvpicture Checked" A_iconSt["Í¼Æ¬"], Í¼Æ¬
-;Gui, Add, CheckBox, % "xp-150 yp+30 w120 h20 vvdocument Checked" A_iconSt["ÎÄµµ"], ÎÄµµ
-;Gui, Add, CheckBox, % "xp+150 yp w120 h20 vvdownload Checked" A_iconSt["ÏÂÔØ"], ÏÂÔØ
-;Gui, Add, CheckBox, % "xp-150 yp+30 w120 h20 vvmusic Checked" A_iconSt["ÒôÀÖ"], ÒôÀÖ
-;Gui, Add, CheckBox, % "xp+150 yp w120 h20 vvdesktop Checked" A_iconSt["×ÀÃæ"], ×ÀÃæ
+Gui, Tab, å…¶ä»–æ–‡ä»¶å¤¹
+Gui, Add, GroupBox, x10 y30 w500 h120, å¾…å®š
+Gui, Add, CheckBox, % "xp+10 yp+30 w120 h20 vv3d Checked" A_iconSt["3d"], æ— é¡¹ç›®
+;Gui, Add, CheckBox, % "xp+150 yp w120 h20 vvpicture Checked" A_iconSt["å›¾ç‰‡"], å›¾ç‰‡
+;Gui, Add, CheckBox, % "xp-150 yp+30 w120 h20 vvdocument Checked" A_iconSt["æ–‡æ¡£"], æ–‡æ¡£
+;Gui, Add, CheckBox, % "xp+150 yp w120 h20 vvdownload Checked" A_iconSt["ä¸‹è½½"], ä¸‹è½½
+;Gui, Add, CheckBox, % "xp-150 yp+30 w120 h20 vvmusic Checked" A_iconSt["éŸ³ä¹"], éŸ³ä¹
+;Gui, Add, CheckBox, % "xp+150 yp w120 h20 vvdesktop Checked" A_iconSt["æ¡Œé¢"], æ¡Œé¢
 
-Gui, Add, GroupBox, x10 y165 w500 h120, 32Î»³ÌĞò´ò¿ª¶Ô»°¿ò
-Gui, Add, CheckBox, % "xp+10 yp+30 w120 h20 vv3d_32 Checked" A_iconSt2["3d"], ÎŞÏîÄ¿
+Gui, Add, GroupBox, x10 y165 w500 h120, 32ä½ç¨‹åºæ‰“å¼€å¯¹è¯æ¡†
+Gui, Add, CheckBox, % "xp+10 yp+30 w120 h20 vv3d_32 Checked" A_iconSt2["3d"], æ— é¡¹ç›®
 
-gui, show, , ×ÊÔ´¹ÜÀíÆ÷µ¼º½À¸ÏîÄ¿µÄÏÔÊ¾/Òş²Ø
+gui, show, , èµ„æºç®¡ç†å™¨å¯¼èˆªæ é¡¹ç›®çš„æ˜¾ç¤º/éšè—
 return
 
 GuiEscape:

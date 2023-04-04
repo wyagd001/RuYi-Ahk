@@ -1,7 +1,19 @@
-dbpath := A_ScriptDir "\..\..\..\ÅäÖÃÎÄ¼ş\folder.db"
-IniRead, notepad2, %A_ScriptDir%\..\..\..\ÅäÖÃÎÄ¼ş\ÈçÒ».ini, ÆäËû³ÌĞò, notepad2, F:\Program Files\Editor\Notepad2\Notepad2.exe
-SplitPath, % A_Args[1],,,, CandySel_FileNameNoExt
-CandySel := CandySel_FileNameNoExt ? CandySel_FileNameNoExt : A_Args[1]
+ï»¿#SingleInstance force
+#InputLevel 10   ; ä¼˜å…ˆçº§è®¾ç½®æ¯”å¦‚æ„ä¸­çš„é«˜, æŒ‰ä¸‹ç›¸åŒçƒ­é”®åå…ˆè§¦å‘è„šæœ¬è‡ªèº«çš„
+
+dbpath := A_ScriptDir "\..\..\..\é…ç½®æ–‡ä»¶\folder.db"
+IniRead, notepad2, %A_ScriptDir%\..\..\..\é…ç½®æ–‡ä»¶\å¦‚ä¸€.ini, å…¶ä»–ç¨‹åº, notepad2, F:\Program Files\Editor\Notepad2\Notepad2.exe
+IniRead, flibfolder1, %A_ScriptDir%\..\..\..\é…ç½®æ–‡ä»¶\å¦‚ä¸€.ini, å¤–éƒ¨è„šæœ¬, æ–‡ä»¶åº“æ–‡ä»¶å¤¹ä¸€, G:\Music
+IniRead, flibfolder2, %A_ScriptDir%\..\..\..\é…ç½®æ–‡ä»¶\å¦‚ä¸€.ini, å¤–éƒ¨è„šæœ¬, æ–‡ä»¶åº“æ–‡ä»¶å¤¹äºŒ, G:\èµ„æ–™\è„šæœ¬æ”¶é›†
+if fileexist(A_Args[1])  ; å‚æ•°ä¸ºæ–‡ä»¶æ—¶è®¾ç½® CandySel
+{
+	CandySel :=  A_Args[1]   
+	SplitPath, CandySel,,,, CandySel_FileNameNoExt
+	flib_SearchText := CandySel_FileNameNoExt
+}
+else
+	flib_SearchText := A_Args[1]
+
 flib_partial := 0
 if (!FileExist(DBPATH))
 	isnewdb := 1
@@ -10,58 +22,162 @@ else
 global DB := new SQLiteDB
 if (!DB.OpenDB(dbpath))
 {
-	MsgBox, 16, SQLite´íÎó, % "ÏûÏ¢:`t" . DB.ErrorMsg . "`n´úÂë:`t" . DB.ErrorCode
+	MsgBox, 16, SQLiteé”™è¯¯, % "æ¶ˆæ¯:`t" . DB.ErrorMsg . "`nä»£ç :`t" . DB.ErrorCode
 }
 if (isnewdb = 1)
 	createfliedb()
-Gui, Add, Text, x10 y12, ËÑË÷¹ıÂË
-Gui, Add, Checkbox, xp+60 y6 h25 Checked%flib_partial% vflib_partial gswitchSL, ½öÔÚÎÄ¼şÃûÖĞËÑË÷
-Gui, Add, Edit, xp+130 y10 w390 vflib_SearchText, % CandySel
-Gui, Add, Button, xp+400 y9 h25 gflib_Search Default, ËÑË÷ÎÄ¼ş
-Gui, Add, ListView, xs+1 HWNDhistoryLV vhistoryLV  LV0x4000 h400 w650, Ãû³Æ|Â·¾¶|´óĞ¡|ĞŞ¸ÄÊ±¼ä  ;ghistoryLV
-Gui, Add, Button, xs+1 h30 gOpenFile, ´ò¿ªÎÄ¼ş
-Gui, Add, Button, xp+70 yp h30 gEditFile, ±à¼­ÎÄ¼ş
-Gui, Add, Button, xp+70 yp h30 gOpenFolder, ´ò¿ªÂ·¾¶
-Gui, Add, Button, xp+438 yp h30 gupdateMlib, ¸üĞÂÎÄ¼ş¿â
-Gui, Show, w670 h480, ÎÄ¼ş¿âÖĞËÑË÷ÎÄ¼ş
-if CandySel
+Gui, Add, Text, x10 y12, æœç´¢è¿‡æ»¤
+Gui, Add, Checkbox, xp+60 y6 h25 Checked%flib_partial% vflib_partial gswitchSL, ä»…åœ¨æ–‡ä»¶åä¸­æœç´¢
+Gui, Add, Edit, xp+130 y10 w390 vflib_SearchText, % flib_SearchText
+Gui, Add, Button, xp+400 y9 h25 gflib_Search Default, æœç´¢æ–‡ä»¶
+Gui, Add, ListView, xs+1 HWNDhistoryLV vhistoryLV  LV0x4000 h400 w650 AltSubmit gupdatesb, åç§°|è·¯å¾„|å¤§å°(KB)|ä¿®æ”¹æ—¶é—´|MD5|å¤§å°|  ;ghistoryLV
+Gui, Add, Button, xs+1 h30 gOpenFile, æ‰“å¼€æ–‡ä»¶
+Gui, Add, Button, xp+70 yp h30 gEditFile, ç¼–è¾‘æ–‡ä»¶
+Gui, Add, Button, xp+70 yp h30 gOpenFolder, æ‰“å¼€è·¯å¾„
+Gui, Add, Button, xp+70 yp h30 gcheckmd5, è®¡ç®—Md5
+Gui, Add, Button, xp+368 yp h30 gupdateMlib, æ›´æ–°æ–‡ä»¶åº“
+Gui, Add, StatusBar,, 
+Gui, Show, w670 h500, æ–‡ä»¶åº“ä¸­æœç´¢æ–‡ä»¶
+if flib_SearchText
+	gosub flib_Search
+OnMessage(0x4a, "Receive_WM_COPYDATA")
+return
+
+!l::
+CandySel := flib_SearchText := ""
+GText := GetSelText()
+if fileexist(GText)
+{
+	CandySel := GText
+	SplitPath, CandySel,,,, CandySel_FileNameNoExt
+	flib_SearchText := CandySel_FileNameNoExt
+}
+else
+{
+	if GText
+		flib_SearchText := GText
+	else
+		return
+}
+GuiControl,, flib_SearchText, %flib_SearchText%
+WinActivate, æ–‡ä»¶åº“ä¸­æœç´¢æ–‡ä»¶ ahk_class AutoHotkeyGUI
+sleep 500
+Gui, Submit, NoHide
 gosub flib_Search
 return
+
+setflib_SearchText:
+if fileexist(CandySel)
+{
+	SplitPath, CandySel,,,, CandySel_FileNameNoExt
+	flib_SearchText := CandySel_FileNameNoExt
+}
+else
+{
+	flib_SearchText := CandySel
+	CandySel := ""
+}
+GuiControl,, flib_SearchText, %flib_SearchText%
+WinActivate, æ–‡ä»¶åº“ä¸­æœç´¢æ–‡ä»¶ ahk_class AutoHotkeyGUI
+sleep 500
+Gui, Submit, NoHide
+gosub flib_Search
+return
+
+Receive_WM_COPYDATA(wParam, lParam)
+{
+	Global CandySel
+	ID := NumGet(lParam + 0)
+	StringAddress := NumGet(lParam + 2*A_PtrSize)  ; è·å– CopyDataStruct çš„ lpData æˆå‘˜.
+	CandySel := StrGet(StringAddress)  ; ä»ç»“æ„ä¸­å¤åˆ¶å­—ç¬¦ä¸².
+	;ToolTip % CandySel " - " Id
+	if (CandySel = "WhoAreYou")
+		Return 2
+	if CandySel
+	{
+		SetTimer, setflib_SearchText, -200
+		return true
+	}
+	return False
+}
 
 GuiEscape:
 GuiClose:
 ExitSub:
-    ExitApp ; Terminate the script unconditionally
+	ExitApp ; Terminate the script unconditionally
 return
 
+GetSelText(returntype := 1, ByRef _isFile := "", ByRef _ClipAll := "", waittime := 0.5)
+{
+	global clipmonitor
+	clipmonitor := (returntype = 0) ? 1 : 0
+	BackUp_ClipBoard := ClipboardAll    ; å¤‡ä»½å‰ªè´´æ¿
+	Clipboard =    ; æ¸…ç©ºå‰ªè´´æ¿
+	Send, ^c
+	sleep 100
+	ClipWait, % waittime
+	If(ErrorLevel) ; å¦‚æœç²˜è´´æ¿é‡Œé¢æ²¡æœ‰å†…å®¹ï¼Œåˆ™è¿˜åŸå‰ªè´´æ¿
+	{
+		Clipboard := BackUp_ClipBoard
+		sleep 100
+		clipmonitor := 1
+	Return
+	}
+	If(returntype = 0)
+	Return Clipboard
+	else If(returntype=1)
+		_isFile := _ClipAll := ""
+	else
+	{
+		_isFile := DllCall("IsClipboardFormatAvailable", "UInt", 15) ; æ˜¯å¦æ˜¯æ–‡ä»¶ç±»å‹
+		_ClipAll := ClipboardAll
+	}
+	ClipSel := Clipboard
+
+	Clipboard := BackUp_ClipBoard  ; è¿˜åŸç²˜è´´æ¿
+	sleep 100
+	clipmonitor := 1
+	return ClipSel
+}
+
 updateMlib:
-tooltip ¿ªÊ¼¸üĞÂÎÄ¼ş¿â...
+tooltip å¼€å§‹æ›´æ–°æ–‡ä»¶åº“...
 StartTime := A_TickCount
 filelistarray := {}
-Loop, Files, G:\Music\*.*, FR
+if fileexist(flibfolder1)
 {
-if A_LoopFileAttrib contains H,R,S
-	continue
-filelistarray[a_loopfilefullpath]:=1
+	Loop, Files, %flibfolder1%\*.*, FR
+	{
+		if A_LoopFileAttrib contains H,R,S
+			continue
+		filelistarray[a_loopfilefullpath] := 1
+	}
 }
-Loop, Files, G:\×ÊÁÏ\½Å±¾ÊÕ¼¯\*.*, FR
+if fileexist(flibfolder2)
 {
-if A_LoopFileAttrib contains H,R,S
-	continue
-filelistarray[a_loopfilefullpath]:=1
+	Loop, Files, %flibfolder2%\*.*, FR
+	{
+		if A_LoopFileAttrib contains H,R,S
+			continue
+		filelistarray[a_loopfilefullpath] := 1
+	}
 }
-StackLoop("G:\Github")
-tooltip ±éÀúÎÄ¼şÍê³É.
-updateFlib()
+if fileexist("G:\Github")
+	StackLoop("G:\Github")
+tooltip éå†æ–‡ä»¶å®Œæˆ.
+if !fileexist(flibfolder1) && !fileexist(flibfolder2) && !fileexist("G:\Github")
+	msgbox % "é…ç½®æ–‡ä»¶ä¸­ [å¤–éƒ¨è„šæœ¬] ä¸‹çš„ ""æ–‡ä»¶åº“æ–‡ä»¶å¤¹ä¸€"" å’Œ ""æ–‡ä»¶åº“æ–‡ä»¶å¤¹äºŒ"" é¡¹ç›®è®¾ç½®çš„æ–‡ä»¶å¤¹éƒ½ä¸å­˜åœ¨, è¯·æ£€æŸ¥ å¦‚ä¸€.ini æ–‡ä»¶."
+Else
+	updateFlib()
 ;MsgBox, % ElapsedTime / 1000
 return
 
 switchSL:
 Gui, Submit, NoHide
 if (flib_partial = 0)
-GuiControl,, flib_partial, ½öÔÚÎÄ¼şÃûÖĞËÑË÷
+	GuiControl,, flib_partial, ä»…åœ¨æ–‡ä»¶åä¸­æœç´¢
 if (flib_partial = 1)
-GuiControl,, flib_partial, ÔÚÍêÕûÂ·¾¶ÖĞËÑË÷
+	GuiControl,, flib_partial, åœ¨å®Œæ•´è·¯å¾„ä¸­æœç´¢
 return
 
 StackLoop(path) {
@@ -92,14 +208,229 @@ global filelistarray
             ; Append this file or folder to the list.  Unconditionally
             ; inserting `n avoids a small amount of computation per
             ; file and folder, though it mightn't be significant.
-						if A_LoopFileAttrib not contains D
-            filelistarray[a_loopfilefullpath]:=1
+            if A_LoopFileAttrib not contains D
+                filelistarray[a_loopfilefullpath]:=1
         }
     }
     ; Continue looping until the stack is empty.
     until st.MaxIndex() = ""
     return
 }
+
+flib_Search:
+Gui, Submit, NoHide
+searchdb(flib_SearchText, flib_partial)
+return
+
+OpenFile:
+LV_GetText(FileFullPath, LV_GetNext("F"), 2)
+If Fileexist(FileFullPath)
+Run, "%FileFullPath%"
+return
+
+OpenFolder:
+LV_GetText(FileFullPath, LV_GetNext("F"), 2)
+SplitPath, FileFullPath,, oPath
+;msgbox % FileFullPath "`n" oPath
+;Run, explorer.exe %oPath%    ; æŒ‡å®š explorer.exe åæ‰“å¼€
+Run, %oPath%   ; ä¸æŒ‡å®šè¿›ç¨‹ explorer.exe è‹¥æ–‡ä»¶å¤¹ä¸åŒåçš„exeåœ¨ä¸€ä¸ªç›®å½•ä¸­, ä¼˜å…ˆæ‰“å¼€ exe æ–‡ä»¶
+return
+
+EditFile:
+LV_GetText(FileFullPath, LV_GetNext("F"), 2)
+If Fileexist(FileFullPath)
+Run,"%notepad2%" "%FileFullPath%"
+return
+
+checkmd5:
+LV_GetText(FileFullPath, RF := LV_GetNext("F"), 2)
+LV_GetText(FileMD5V, RF, 5)
+File_Md5 := MD5_File(FileFullPath)
+if File_Md5 && (File_Md5 != -1) && (File_Md5 != FileMD5V)
+{
+   updatefilemd5(FileFullPath, File_Md5)
+   LV_Modify(RF, "Col5", File_Md5)
+   LV_ModifyCol(5, 230)
+}
+
+if fileexist(CandySel)
+{
+	File_Md5_2 := MD5_File(CandySel)
+	if (File_Md5 = File_Md5_2)
+		CF_ToolTip("ä¸¤æ–‡ä»¶ md5 ä¸€è‡´", 3000)
+	else
+		CF_ToolTip("ä¸¤æ–‡ä»¶ md5 ä¸ä¸€è‡´", 3000)
+}
+return
+
+searchdb(crit="", partial=false)
+{
+	local result, Row
+	LV_Delete()
+
+	crit := trim(crit)
+	if (crit == ""){
+		return
+	} else if partial {
+		likestr := ""
+		loop, parse, crit, % " `t", % " `t"    ; åœ¨è·¯å¾„ä¸­æœç´¢
+			likestr .= "File_Path like ""%" A_loopfield "%"" and "
+		likestr := Substr(likestr, 1, -4)
+		q := "select * from flib where " likestr
+	} else {   ; ä»…åœ¨æ–‡ä»¶åä¸­æœç´¢
+		q := "select * from flib where File_Name like ""%" crit "%"""
+	}
+
+	result := ""
+	if !DB.GetTable(q, result)
+		msgbox error
+	loop % result.RowCount
+	{
+		result.Next(Row)
+		File_Name := Row[2] ;data
+		File_Path := Row[4]
+		File_MT := Row[6]
+		File_SizeKB := byte2KB(Row[8])
+		File_Md5 := Row[9]
+		File_SizeHM := byte2human(Row[8])
+		LV_Add("", File_Name, File_Path, File_SizeKB, File_MT, File_Md5, File_SizeHM)
+	}
+	LV_ModifyCol()
+	LV_ModifyCol(1, 160)
+	LV_ModifyCol(2, 320)
+	LV_ModifyCol(3, "60 Logical")
+	LV_ModifyCol(6, 0)
+	SB_SetText("")
+}
+
+byte2KB(byteV)
+{
+	if (byteV < 1024)
+		return 1
+	else
+		return Floor(byteV / 1024)
+}
+
+; æ²¡æœ‰è€ƒè™‘æ•°å­—ä¸ºæ•´æ•°çš„æƒ…å†µ å¦‚ 3.00 kb
+byte2human(byteV)
+{
+	if (byteV < 1024)
+		return byteV " å­—èŠ‚"
+	else if (byteV > 1024) and (byteV < 10240)   ; 1k ä»¥ä¸Š 10k ä»¥ä¸‹
+	{
+		byteV := ZTrim(Format("{:.2f}", byteV / 1024 - 0.005))
+		return byteV " KB"
+	}
+	else if (byteV >= 10240) and (byteV < 102400)  ; 10k ä»¥ä¸Š 100kä»¥ä¸‹
+	{
+		byteV := ZTrim(Format("{:.1f}", byteV / 1024 - 0.05))
+		return byteV " KB"
+	}
+	else if (byteV >= 102400) and (byteV < 1048576) ; 100kä»¥ä¸Š 1mb ä»¥ä¸‹
+	{
+		byteV := ZTrim(Format("{:.0f}", byteV / 1024 - 0.5))
+		return byteV " KB"
+	}
+	else if (byteV >= 1048576) and (byteV < 10485760) ; 1 mbä»¥ä¸Š 10mb ä»¥ä¸‹
+	{
+		byteV := ZTrim(Format("{:.2f}", byteV / 1024 / 1024  - 0.005))
+		return byteV " MB"
+	}
+	else if (byteV >= 10485760) and (byteV < 104857600) ; 10 mbä»¥ä¸Š 100mb ä»¥ä¸‹
+	{
+		byteV := ZTrim(Format("{:.1f}", byteV / 1024 / 1024 - 0.05))
+		return byteV " MB"
+	}
+	else if (byteV >= 104857600) and (byteV < 1073741824) ; 100mb ä»¥ä¸Š 1GB ä»¥ä¸‹
+	{
+		byteV := ZTrim(Format("{:.0f}", byteV / 1024 / 1024 - 0.5))
+		return byteV " MB"
+	}
+	else if (byteV >= 1073741824) and (byteV < 10737418240) ; 1 GBä»¥ä¸Š 10GB ä»¥ä¸‹
+	{
+		byteV := ZTrim(Format("{:.2f}", byteV / 1024 / 1024 / 1024 - 0.005))
+		return byteV " GB"
+	}
+	else if (byteV >= 10737418240) and (byteV < 107374182400) ; 10 GBä»¥ä¸Š 100Gb ä»¥ä¸‹
+	{
+		byteV := ZTrim(Format("{:.1f}", byteV / 1024 / 1024 / 1024 - 0.05))
+		return byteV " GB"
+	}
+	else if (byteV >= 107374182400) and (byteV < 1099511627776) ; 100 GBä»¥ä¸Š 1TB ä»¥ä¸‹
+	{
+		byteV := ZTrim(Format("{:.0f}", byteV / 1024 / 1024 / 1024 - 0.5))
+		return byteV " GB"
+	}
+	else if (byteV >= 1099511627776) and (byteV < 10995116277760) ; 1TB ä»¥ä¸Š 10TB ä»¥ä¸‹
+	{
+		byteV := ZTrim(Format("{:.2f}", byteV / 1024 / 1024 / 1024 / 1024 - 0.005))
+		return byteV " TB"
+	}
+	else if (byteV >= 10995116277760)    ; 10TB ä»¥ä¸Š
+	{
+		byteV := ZTrim(Format("{:.1f}", byteV / 1024 / 1024 / 1024 / 1024))
+		return byteV " TB"
+	}
+}
+
+ZTrim( N := "" )
+{ ; SKAN /  CD:01-Jul-2017 | LM:03-Jul-2017 | Topic: goo.gl/TgWDb5
+	Local    V  := StrSplit( N, ".", A_Space ) 
+	Local    V0 := SubStr( V.1,1,1 ),   V1 := Abs( V.1 ),      V2 :=  RTrim( V.2, "0" )
+Return ( V0 = "-" ? "-" : ""   )  ( V1 = "" ? 0 : V1 )   ( V2 <> "" ? "." V2 : "" )
+}
+
+updatesb:
+Gui Submit, nohide
+if (A_GuiEvent = "K")
+{
+	RF := LV_GetNext("F")
+	if RF
+	{
+		LV_GetText(File_Name, RF, 1)
+		LV_GetText(File_SizeHM, RF, 6)
+	}
+}
+if (A_GuiEvent = "Normal")
+{
+	RF := LV_GetNext("F")
+	if RF
+	{
+		LV_GetText(File_Name, RF, 1)
+		LV_GetText(File_SizeHM, RF, 6)
+	}
+}
+SB_SetText(File_Name " " File_SizeHM)
+return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 createfliedb()
 {
@@ -113,84 +444,129 @@ createfliedb()
 		File_CT	TEXT,
 		File_MT	TEXT,
 		File_AT	TEXT,
-		File_Size 	NUMBER
+		File_Size 	NUMBER,
+		File_Md5 	TEXT
 		`)
 	)
 	if !DB.Exec(q)
-		MsgBox, 16, SQLite´íÎó, % "ÏûÏ¢:`t" . DB.ErrorMsg . "`n´úÂë:`t" . DB.ErrorCode
+		MsgBox, 16, SQLiteé”™è¯¯, % "æ¶ˆæ¯:`t" . DB.ErrorMsg . "`nä»£ç :`t" . DB.ErrorCode
 }
 
 updateFlib()
 {
-global filelistarray
+	global filelistarray
 
-flibarray:={}
-db.Query("Select File_Path from Flib", result)
-while result.Next(Row) !=-1
-flibarray.Push(Row[1])
+	flibarray:={}
+	db.Query("Select File_Path from Flib", result)
+	while result.Next(Row) != -1
+		flibarray.Push(Row[1])
 
-deletefilelistarray:=[]
-for k,v in flibarray
-{
-if !filelistarray.Delete(v)
-deletefilelistarray.Push(v)
-}
-
-if filelistarray.Count()
-PLaddfile(filelistarray)
-
-;fileappend, % Array_ToString(filelistarray), %A_ScriptDir%\aaa.txt
-
-if deletefilelistarray.length()
-PLdeletefile(deletefilelistarray)
-return
-}
-
-PLaddfile(aArray){
-; adds some text data to history
-; the timestamp is in A_Now format
-global StartTime
-q:=""
-counter:=0
-DB.Exec("BEGIN TRANSACTION")
-for k,v in aArray
-{
-	counter++
-	SplitPath, k, File_Name,, File_Ext
-	File_CT := convertTimeSql( CF_FileGetTime(k, "C") )
-	File_MT := convertTimeSql( CF_FileGetTime(k) )
-	File_AT := convertTimeSql( CF_FileGetTime(k, "A") )
-	p :=  "(""" 
-		. File_Name
-		. """, """ . File_Ext . """, """ . k . """, """
-		. File_CT . """, """ . File_MT . """, """ . File_AT . """, "
-		. CF_FileGetSize(k) ")"
-	q .= p ","
-	if counter > 5000
+	deletefilelistarray:=[]
+	for k,v in flibarray
 	{
-		q := Trim(q, ",")
-		q := "insert into Flib (File_Name, File_Ext, File_Path, File_CT, File_MT, File_AT, File_Size) values " q
+		if !filelistarray.Delete(v)
+		deletefilelistarray.Push(v)
+	}
+
+	if filelistarray.Count()
+		PLaddfile(filelistarray)
+
+	;fileappend, % Array_ToString(filelistarray), %A_ScriptDir%\aaa.txt
+
+	if deletefilelistarray.length()
+		PLdeletefile(deletefilelistarray)
+	return
+}
+
+PLaddfile(aArray)
+{
+	; adds some text data to history
+	; the timestamp is in A_Now format
+	global StartTime
+	q:=""
+	counter:=0
+	DB.Exec("BEGIN TRANSACTION")
+	for k,v in aArray
+	{
+		counter++
+		SplitPath, k, File_Name,, File_Ext
+		File_CT := convertTimeSql( CF_FileGetTime(k, "C") )
+		File_MT := convertTimeSql( CF_FileGetTime(k) )
+		File_AT := convertTimeSql( CF_FileGetTime(k, "A") )
+		p :=  "(""" 
+			. File_Name
+			. """, """ . File_Ext . """, """ . k . """, """
+			. File_CT . """, """ . File_MT . """, """ . File_AT . """, "
+			. CF_FileGetSize(k) . ", """ . 0 """)"
+		q .= p ","
+		if counter > 5000
+		{
+			q := Trim(q, ",")
+			q := "insert into Flib (File_Name, File_Ext, File_Path, File_CT, File_MT, File_AT, File_Size, File_Md5) values " q
+			if (!DB.Exec(q))
+				MsgBox, 16, SQLite é”™è¯¯, % "æ¶ˆæ¯:`t" . DB.ErrorMsg . "`nä»£ç :`t" . DB.ErrorCode
+			tooltip % "å·²ç”¨æ—¶:" (A_TickCount - StartTime) / 1000 "`nå·²å®Œæˆ:" A_index *100 / aArray.count() "%"
+			counter := 0
+			q := ""
+		}
+	}
+	q := Trim(q, ",")
+	if q
+	{
+		q := "insert into Flib (File_Name, File_Ext, File_Path, File_CT, File_MT, File_AT, File_Size, File_Md5) values " q
 		if (!DB.Exec(q))
-			MsgBox, 16, SQLite ´íÎó, % "ÏûÏ¢:`t" . DB.ErrorMsg . "`n´úÂë:`t" . DB.ErrorCode
-		tooltip % "ÒÑÓÃÊ±:" (A_TickCount - StartTime) / 1000 "`nÒÑÍê³É:" A_index *100 / aArray.count() "%"
+			MsgBox, 16, SQLite é”™è¯¯, % "æ¶ˆæ¯:`t" . DB.ErrorMsg . "`nä»£ç :`t" . DB.ErrorCode
 		counter := 0
 		q := ""
 	}
+	;fileappend, % q, %A_ScriptDir%\ddd.txt
+	DB.Exec("COMMIT TRANSACTION")
+	tooltip % "å·²ç”¨æ—¶:" (A_TickCount - StartTime) / 1000
+	q:=""
+	return
 }
-q := Trim(q, ",")
-if q
+
+updatefilemd5(file, hmd5)
 {
-q := "insert into Flib (File_Name, File_Ext, File_Path, File_CT, File_MT, File_AT, File_Size) values " q
-if (!DB.Exec(q))
-	MsgBox, 16, SQLite ´íÎó, % "ÏûÏ¢:`t" . DB.ErrorMsg . "`n´úÂë:`t" . DB.ErrorCode
-counter := 0
-q := ""
-}
-;fileappend, % q, %A_ScriptDir%\ddd.txt
-DB.Exec("COMMIT TRANSACTION")
-tooltip % "ÒÑÓÃÊ±:" (A_TickCount - StartTime) / 1000
-q:=""
+	q := "select * from Flib where File_Path =""" file """"
+	if !DB.Query(q, recordSet)
+		msgbox ERROR
+	if (recordSet.RowCount == 0)
+		return 
+	if !hmd5
+		hmd5 := MD5_File(file)
+
+	;q := "Update Mlib Set lastplayedtime=""" lastplayedtime """, plcount=""" plcount """ Where mp3=""" file """"
+	q := "Update Flib Set File_Md5=""" hmd5 """ Where File_Path=""" file """"
+
+	if (!DB.Exec(q))
+    MsgBox, 16, SQLite é”™è¯¯, % "æ¶ˆæ¯:`t" . DB.ErrorMsg . "`nä»£ç :`t" . DB.ErrorCode
 return
+}
+
+MD5_File( sFile="", cSz=4 ) { ; www.autohotkey.com/forum/viewtopic.php?p=275910#275910
+	global Nomd5func
+ cSz  := (cSz<0||cSz>8) ? 2**22 : 2**(18+cSz), VarSetCapacity( Buffer,cSz,0 )
+ hFil := DllCall( "CreateFile", Str,sFile,UInt,0x80000000, Int,1,Int,0,Int,3,Int,0,Int,0)
+ IfLess,hFil,1, Return,hFil
+ DllCall( "GetFileSizeEx", UInt,hFil, Str,Buffer ),   fSz := NumGet( Buffer,0,"Int64" )
+ VarSetCapacity( MD5_CTX,104,0 ),    DllCall( "advapi32\MD5Init", Str,MD5_CTX )
+	LoopNum := fSz//cSz
+ Loop % ( LoopNum +!!Mod(fSz,cSz) )
+	{
+		if (LoopNum > 125)
+				tooltip % (A_index * cSz *100) / fSz "%"
+   DllCall( "ReadFile", UInt,hFil, Str,Buffer, UInt,cSz, UIntP,bytesRead, UInt,0 )
+ , DllCall( "advapi32\MD5Update", Str,MD5_CTX, Str,Buffer, UInt,bytesRead )
+	if Nomd5func
+	break
+	}
+	if (LoopNum > 125)
+		tooltip
+ DllCall( "advapi32\MD5Final", Str,MD5_CTX ), DllCall( "CloseHandle", UInt,hFil )
+ Loop % StrLen( Hex:="123456789ABCDEF0" )
+  N := NumGet( MD5_CTX,87+A_Index,"Char"), MD5 .= SubStr(Hex,N>>4,1) . SubStr(Hex,N&15,1)
+Return MD5
 }
 
 ; Converts YYYYMMDDHHMMSS to YYYY-MM-DD HH:MM:SS
@@ -202,32 +578,44 @@ convertTimeSql(t=""){
 
 CF_FileGetTime(file, ttype:="M")
 {
-FileGetTime, OutputVar, % file, % ttype
-return OutputVar
+	FileGetTime, OutputVar, % file, % ttype
+	return OutputVar
 }
 
-CF_FileGetSize(file)
+CF_FileGetSize(file, type := "")
 {
-FileGetSize, OutputVar, % file, K
-return OutputVar
+	FileGetSize, OutputVar, % file, % type
+	return OutputVar
+}
+
+CF_ToolTip(tipText, delay := 1000)
+{
+	ToolTip
+	ToolTip, % tipText
+	SetTimer, RemoveToolTip, % "-" delay
+return
+
+RemoveToolTip:
+	ToolTip
+return
 }
 
 PLdeletefile(aArray){
-q:=""
-for k,v in aArray
-{
-p:= """" v """"
-q:= q p ","
-}
-q:= Trim(q, ",")
-if !q
-return
+	q:=""
+	for k,v in aArray
+	{
+		p:= """" v """"
+		q:= q p ","
+	}
+	q:= Trim(q, ",")
+	if !q
+		return
 
-q := "delete from Flib where File_Path in (" q ")"
-execSql(q)
-q:=""
-tooltip ¸üĞÂÎÄ¼ş¿âÍê³É.
-return
+	q := "delete from Flib where File_Path in (" q ")"
+	execSql(q)
+	q:=""
+	tooltip æ›´æ–°æ–‡ä»¶åº“å®Œæˆ.
+	return
 }
 
 execSql(s, warn:=0){
@@ -236,87 +624,6 @@ execSql(s, warn:=0){
 		if (warn)
 			msgbox % DB.ErrorCode "`n" DB.ErrorMsg
 }
-
-flib_Search:
-Gui, Submit, NoHide
-searchdb(flib_SearchText, flib_partial)
-return
-
-searchdb(crit="", partial=false)
-{
-local result, Row
-	LV_Delete()
-
-	crit := trim(crit)
-	if (crit == ""){
-		return
-	} else if partial {
-		likestr := ""
-		loop, parse, crit, % " `t", % " `t"    ; ÔÚÂ·¾¶ÖĞËÑË÷
-			likestr .= "File_Path like ""%" A_loopfield "%"" and "
-		likestr := Substr(likestr, 1, -4)
-		q := "select * from flib where " likestr
-	} else {   ; ½öÔÚÎÄ¼şÃûÖĞËÑË÷
-		q := "select * from flib where File_Name like ""%" crit "%"""
-	}
-
-	result := ""
-	if !DB.GetTable(q, result)
-		msgbox error
-	loop % result.RowCount
-	{
-		result.Next(Row)
-		File_Name := Row[2] ;data
-		File_Path := Row[4]
-		File_MT := Row[6]
-		File_Size := Row[8]
-		LV_Add("", File_Name, File_Path, File_Size, File_MT)
-	}
-	LV_ModifyCol()
-	LV_ModifyCol(1, 160)
-	LV_ModifyCol(2, 320)
-}
-
-OpenFile:
-LV_GetText(FileFullPath, LV_GetNext("F"), 2)
-If Fileexist(FileFullPath)
-Run, "%FileFullPath%"
-return
-
-OpenFolder:
-LV_GetText(FileFullPath, LV_GetNext("F"), 2)
-SplitPath, FileFullPath,, oPath
-Run %oPath%
-return
-
-EditFile:
-LV_GetText(FileFullPath, LV_GetNext("F"), 2)
-If Fileexist(FileFullPath)
-Run,"%notepad2%" "%FileFullPath%"
-return
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ; ======================================================================================================================
 ; Github            https://github.com/AHK-just-me/Class_SQLiteDB
@@ -341,8 +648,8 @@ return
 ; Remarks:          Names of "private" properties / methods are prefixed with an underscore,
 ;                   they must not be set / called by the script!
 ;                   
-;                   SQLite3.dll ¼Ù¶¨ÔÚ½Å±¾Ä¿Â¼ÖĞ, ´Ë½Å±¾ĞŞ¸ÄÖ¸¶¨ÁËdllÎÄ¼şµÄÎ»ÖÃºÍÃû³Æ
-;                   ÎÄ¼şÃû 32 Î»ÏµÍ³ÖĞÎª \Dll\SQLite3_x32.dll, 64 Î»ÏµÍ³ÖĞÎª \Dll\SQLite3_x64.dll
+;                   SQLite3.dll å‡å®šåœ¨è„šæœ¬ç›®å½•ä¸­, æ­¤è„šæœ¬ä¿®æ”¹æŒ‡å®šäº†dllæ–‡ä»¶çš„ä½ç½®å’Œåç§°
+;                   æ–‡ä»¶å 32 ä½ç³»ç»Ÿä¸­ä¸º \Dll\SQLite3_x32.dll, 64 ä½ç³»ç»Ÿä¸­ä¸º \Dll\SQLite3_x64.dll
 ;
 ;                   Encoding of SQLite DBs is assumed to be UTF-8
 ;                   Minimum supported SQLite3.dll version is 3.6
@@ -364,7 +671,7 @@ Class SQLiteDB {
    ; BaseClass - SQLiteDB base class
    ; ===================================================================================================================
       Static Version := ""
-      Static _SQLiteDLL := A_ScriptDir . (A_PtrSize=8 ? "\..\..\..\ÒıÓÃ³ÌĞò\x64\sqlite3_x64.dll" : "\..\..\..\ÒıÓÃ³ÌĞò\x32\sqlite3_x32.dll")
+      Static _SQLiteDLL := A_ScriptDir . (A_PtrSize=8 ? "\..\..\..\å¼•ç”¨ç¨‹åº\x64\sqlite3_x64.dll" : "\..\..\..\å¼•ç”¨ç¨‹åº\x32\sqlite3_x32.dll")
       Static _RefCount := 0
       Static _MinVersion := "3.6"
    ; ===================================================================================================================
@@ -475,12 +782,12 @@ Class SQLiteDB {
          This.ErrorMsg := ""
          This.ErrorCode := 0
          If !(This._Handle) {
-            This.ErrorMsg := "ÎŞĞ§µÄ²éÑ¯¾ä±ú!"
+            This.ErrorMsg := "æ— æ•ˆçš„æŸ¥è¯¢å¥æŸ„!"
             Return False
          }
          RC := DllCall(SQLiteDB._SQLiteDLL "\sqlite3_step", "Ptr", This._Handle, "Cdecl Int")
          If (ErrorLevel) {
-            This.ErrorMsg := "DllCall sqlite3_step Ê§°Ü!"
+            This.ErrorMsg := "DllCall sqlite3_step å¤±è´¥!"
             This.ErrorCode := ErrorLevel
             Return False
          }
@@ -496,12 +803,12 @@ Class SQLiteDB {
          }
          RC := DllCall(SQLiteDB._SQLiteDLL "\sqlite3_data_count", "Ptr", This._Handle, "Cdecl Int")
          If (ErrorLevel) {
-            This.ErrorMsg := "DllCall sqlite3_data_count Ê§°Ü!"
+            This.ErrorMsg := "DllCall sqlite3_data_count å¤±è´¥!"
             This.ErrorCode := ErrorLevel
             Return False
          }
          If (RC < 1) {
-            This.ErrorMsg := "¼ÇÂ¼¼¯Îª¿Õ!"
+            This.ErrorMsg := "è®°å½•é›†ä¸ºç©º!"
             This.ErrorCode := This._DB._ReturnCode("SQLITE_EMPTY")
             Return False
          }
@@ -510,7 +817,7 @@ Class SQLiteDB {
             Column := A_Index - 1
             ColumnType := DllCall(SQLiteDB._SQLiteDLL "\sqlite3_column_type", "Ptr", This._Handle, "Int", Column, "Cdecl Int")
             If (ErrorLevel) {
-               This.ErrorMsg := "DllCall sqlite3_column_type Ê§°Ü!"
+               This.ErrorMsg := "DllCall sqlite3_column_type å¤±è´¥!"
                This.ErrorCode := ErrorLevel
                Return False
             }
@@ -532,7 +839,7 @@ Class SQLiteDB {
             } Else {
                StrPtr := DllCall(SQLiteDB._SQLiteDLL "\sqlite3_column_text", "Ptr", This._Handle, "Int", Column, "Cdecl UPtr")
                If (ErrorLevel) {
-                  This.ErrorMsg := "DllCall sqlite3_column_text Ê§°Ü!"
+                  This.ErrorMsg := "DllCall sqlite3_column_text å¤±è´¥!"
                   This.ErrorCode := ErrorLevel
                   Return False
                }
@@ -553,12 +860,12 @@ Class SQLiteDB {
          This.ErrorMsg := ""
          This.ErrorCode := 0
          If !(This._Handle) {
-            This.ErrorMsg := "ÎŞĞ§µÄ²éÑ¯¾ä±ú!"
+            This.ErrorMsg := "æ— æ•ˆçš„æŸ¥è¯¢å¥æŸ„!"
             Return False
          }
          RC := DllCall(SQLiteDB._SQLiteDLL "\sqlite3_reset", "Ptr", This._Handle, "Cdecl Int")
          If (ErrorLevel) {
-            This.ErrorMsg := "DllCall sqlite3_reset Ê§°Ü!"
+            This.ErrorMsg := "DllCall sqlite3_reset å¤±è´¥!"
             This.ErrorCode := ErrorLevel
             Return False
          }
@@ -584,7 +891,7 @@ Class SQLiteDB {
             Return True
          RC := DllCall(SQLiteDB._SQLiteDLL "\sqlite3_finalize", "Ptr", This._Handle, "Cdecl Int")
          If (ErrorLevel) {
-            This.ErrorMsg := "DllCall sqlite3_finalize Ê§°Ü!"
+            This.ErrorMsg := "DllCall sqlite3_finalize å¤±è´¥!"
             This.ErrorCode := ErrorLevel
             Return False
          }
@@ -824,7 +1131,7 @@ Class SQLiteDB {
             Return True
          RC := DllCall(SQLiteDB._SQLiteDLL "\sqlite3_finalize", "Ptr", This._Handle, "Cdecl Int")
          If (ErrorLevel) {
-            This.ErrorMsg := "DllCall sqlite3_finalize Ê§°Ü!"
+            This.ErrorMsg := "DllCall sqlite3_finalize å¤±è´¥!"
             This.ErrorCode := ErrorLevel
             Return False
          }
@@ -855,7 +1162,7 @@ Class SQLiteDB {
 ;               This.base._SQLiteDLL := SQLiteDLL
 ;         }
          If !(DLL := DllCall("LoadLibrary", "Str", This.base._SQLiteDLL, "UPtr")) {
-            MsgBox, 16, SQLiteDB Error, % "DLL ÎÄ¼ş " . This.base._SQLiteDLL . " ²»´æÔÚ!"
+            MsgBox, 16, SQLiteDB Error, % "DLL æ–‡ä»¶ " . This.base._SQLiteDLL . " ä¸å­˜åœ¨!"
             return
          }
          This.Base.Version := StrGet(DllCall(This.base._SQLiteDLL "\sqlite3_libversion", "Cdecl UPtr"), "UTF-8")
@@ -863,8 +1170,8 @@ Class SQLiteDB {
          MinVersion := StrSplit(This.Base._MinVersion, ".")
          If (SQLVersion[1] < MinVersion[1]) || ((SQLVersion[1] = MinVersion[1]) && (SQLVersion[2] < MinVersion[2])){
             DllCall("FreeLibrary", "Ptr", DLL)
-            MsgBox, 16, SQLite ERROR, % "²»Ö§³ÖµÄ SQLite3.dll °æ±¾ " . This.Base.Version .  "!`n`n"
-                                      . "Äã¿ÉÒÔÔÚ www.sqlite.org ÏÂÔØÖ§³ÖµÄ°æ±¾!"
+            MsgBox, 16, SQLite ERROR, % "ä¸æ”¯æŒçš„ SQLite3.dll ç‰ˆæœ¬ " . This.Base.Version .  "!`n`n"
+                                      . "ä½ å¯ä»¥åœ¨ www.sqlite.org ä¸‹è½½æ”¯æŒçš„ç‰ˆæœ¬!"
             return
          }
       }
@@ -986,7 +1293,7 @@ Class SQLiteDB {
       If (DBPath = This._Path) && (This._Handle)
          Return True
       If (This._Handle) {
-         This.ErrorMsg := "Äú±ØĞëÊ×ÏÈ¹Ø±Õ DB " . This._Path . "!"
+         This.ErrorMsg := "æ‚¨å¿…é¡»é¦–å…ˆå…³é—­ DB " . This._Path . "!"
          Return False
       }
       Flags := 0
@@ -1004,7 +1311,7 @@ Class SQLiteDB {
       RC := DllCall(This.base._SQLiteDLL "\sqlite3_open_v2", "Ptr", &UTF8, "UPtrP", HDB, "Int", Flags, "Ptr", 0, "Cdecl Int")
       If (ErrorLevel) {
          This._Path := ""
-         This.ErrorMsg := "DllCall sqlite3_open_v2 Ê§°Ü!"
+         This.ErrorMsg := "DllCall sqlite3_open_v2 å¤±è´¥!"
          This.ErrorCode := ErrorLevel
          Return False
       }
@@ -1033,7 +1340,7 @@ Class SQLiteDB {
          DllCall(This.base._SQLiteDLL "\sqlite3_finalize", "Ptr", Query, "Cdecl Int")
       RC := DllCall(This.base._SQLiteDLL "\sqlite3_close", "Ptr", This._Handle, "Cdecl Int")
       If (ErrorLevel) {
-         This.ErrorMsg := "DllCall sqlite3_close Ê§°Ü!"
+         This.ErrorMsg := "DllCall sqlite3_close å¤±è´¥!"
          This.ErrorCode := ErrorLevel
          Return False
       }
@@ -1090,7 +1397,7 @@ Class SQLiteDB {
       This.ErrorCode := 0
       This.SQL := SQL
       If !(This._Handle) {
-         This.ErrorMsg := "ÎŞĞ§µÄ database ¾ä±ú!"
+         This.ErrorMsg := "æ— æ•ˆçš„ database å¥æŸ„!"
          Return False
       }
       CBPtr := 0
@@ -1104,7 +1411,7 @@ Class SQLiteDB {
       If (CBPtr)
          DllCall("Kernel32.dll\GlobalFree", "Ptr", CBPtr)
       If (CallError) {
-         This.ErrorMsg := "DllCall sqlite3_exec Ê§°Ü!"
+         This.ErrorMsg := "DllCall sqlite3_exec å¤±è´¥!"
          This.ErrorCode := CallError
          Return False
       }
@@ -1135,7 +1442,7 @@ Class SQLiteDB {
       This.ErrorCode := 0
       This.SQL := SQL
       If !(This._Handle) {
-         This.ErrorMsg := "ÎŞĞ§µÄ database ¾ä±ú!"
+         This.ErrorMsg := "æ— æ•ˆçš„ database å¥æŸ„!"
          Return False
       }
       Names := ""
@@ -1150,7 +1457,7 @@ Class SQLiteDB {
       RC := DllCall(This.base._SQLiteDLL "\sqlite3_get_table", "Ptr", This._Handle, "Ptr", &UTF8, "PtrP", Table
                   , "IntP", Rows, "IntP", Cols, "UPtrP", Err, "Cdecl Int")
       If (ErrorLevel) {
-         This.ErrorMsg := "DllCall sqlite3_get_table Ê§°Ü!"
+         This.ErrorMsg := "DllCall sqlite3_get_table å¤±è´¥!"
          This.ErrorCode := ErrorLevel
          Return False
       }
@@ -1166,7 +1473,7 @@ Class SQLiteDB {
       If (MaxResult = -1) {
          DllCall(This.base._SQLiteDLL "\sqlite3_free_table", "Ptr", Table, "Cdecl")
          If (ErrorLevel) {
-            This.ErrorMsg := "DllCall sqlite3_free_table Ê§°Ü!"
+            This.ErrorMsg := "DllCall sqlite3_free_table å¤±è´¥!"
             This.ErrorCode := ErrorLevel
             Return False
          }
@@ -1199,7 +1506,7 @@ Class SQLiteDB {
       DllCall(This.base._SQLiteDLL "\sqlite3_free_table", "Ptr", Table, "Cdecl")
       If (ErrorLevel) {
          TB := ""
-         This.ErrorMsg := "DllCall sqlite3_free_table Ê§°Ü!"
+         This.ErrorMsg := "DllCall sqlite3_free_table å¤±è´¥!"
          This.ErrorCode := ErrorLevel
          Return False
       }
@@ -1226,7 +1533,7 @@ Class SQLiteDB {
       This.ErrorCode := 0
       This.SQL := SQL
       If !(This._Handle) {
-         This.ErrorMsg := "ÎŞĞ§µÄ database ¾ä±ú!"
+         This.ErrorMsg := "æ— æ•ˆçš„ database å¥æŸ„!"
          Return False
       }
       Stmt := 0
@@ -1265,7 +1572,7 @@ Class SQLiteDB {
       ColumnCount := 0
       HasRows := False
       If !(This._Handle) {
-         This.ErrorMsg := "ÎŞĞ§µÄ database ¾ä±ú!"
+         This.ErrorMsg := "æ— æ•ˆçš„ database å¥æŸ„!"
          Return False
       }
       Query := 0
@@ -1273,7 +1580,7 @@ Class SQLiteDB {
       RC := DllCall(This.base._SQLiteDLL "\sqlite3_prepare_v2", "Ptr", This._Handle, "Ptr", &UTF8, "Int", -1
                   , "UPtrP", Query, "Ptr", 0, "Cdecl Int")
       If (ErrorLeveL) {
-         This.ErrorMsg := "DllCall sqlite3_prepare_v2 Ê§°Ü!"
+         This.ErrorMsg := "DllCall sqlite3_prepare_v2 å¤±è´¥!"
          This.ErrorCode := ErrorLevel
          Return False
       }
@@ -1284,7 +1591,7 @@ Class SQLiteDB {
       }
       RC := DllCall(This.base._SQLiteDLL "\sqlite3_column_count", "Ptr", Query, "Cdecl Int")
       If (ErrorLevel) {
-         This.ErrorMsg := "DllCall sqlite3_column_count Ê§°Ü!"
+         This.ErrorMsg := "DllCall sqlite3_column_count å¤±è´¥!"
          This.ErrorCode := ErrorLevel
          Return False
       }
@@ -1298,7 +1605,7 @@ Class SQLiteDB {
       Loop, %RC% {
          StrPtr := DllCall(This.base._SQLiteDLL "\sqlite3_column_name", "Ptr", Query, "Int", A_Index - 1, "Cdecl UPtr")
          If (ErrorLevel) {
-            This.ErrorMsg := "DllCall sqlite3_column_name Ê§°Ü!"
+            This.ErrorMsg := "DllCall sqlite3_column_name å¤±è´¥!"
             This.ErrorCode := ErrorLevel
             Return False
          }
@@ -1306,7 +1613,7 @@ Class SQLiteDB {
       }
       RC := DllCall(This.base._SQLiteDLL "\sqlite3_step", "Ptr", Query, "Cdecl Int")
       If (ErrorLevel) {
-         This.ErrorMsg := "DllCall sqlite3_step Ê§°Ü!"
+         This.ErrorMsg := "DllCall sqlite3_step å¤±è´¥!"
          This.ErrorCode := ErrorLevel
          Return False
       }
@@ -1314,7 +1621,7 @@ Class SQLiteDB {
          HasRows := True
       RC := DllCall(This.base._SQLiteDLL "\sqlite3_reset", "Ptr", Query, "Cdecl Int")
       If (ErrorLevel) {
-         This.ErrorMsg := "DllCall sqlite3_reset Ê§°Ü!"
+         This.ErrorMsg := "DllCall sqlite3_reset å¤±è´¥!"
          This.ErrorCode := ErrorLevel
          Return False
       }
@@ -1346,13 +1653,13 @@ Class SQLiteDB {
       This.ErrorMsg := ""
       This.ErrorCode := 0
       If !(This._Handle) {
-         This.ErrorMsg := "ÎŞĞ§ database ¾ä±ú!"
+         This.ErrorMsg := "æ— æ•ˆ database å¥æŸ„!"
          Return False
       }
       RC := DllCall(This.base._SQLiteDLL "\sqlite3_create_function", "Ptr", This._Handle, "AStr", Name, "Int", Args, "Int", Enc
                                                          , "Ptr", Param, "Ptr", Func, "Ptr", 0, "Ptr", 0, "Cdecl Int")
       If (ErrorLeveL) {
-         This.ErrorMsg := "DllCall sqlite3_create_function Ê§°Ü!"
+         This.ErrorMsg := "DllCall sqlite3_create_function å¤±è´¥!"
          This.ErrorCode := ErrorLevel
          Return False
       }
@@ -1374,13 +1681,13 @@ Class SQLiteDB {
       This.ErrorCode := 0
       This.SQL := ""
       If !(This._Handle) {
-         This.ErrorMsg := "ÎŞĞ§µÄ database ¾ä±ú!"
+         This.ErrorMsg := "æ— æ•ˆçš„ database å¥æŸ„!"
          Return False
       }
       RowID := 0
       RC := DllCall(This.base._SQLiteDLL "\sqlite3_last_insert_rowid", "Ptr", This._Handle, "Cdecl Int64")
       If (ErrorLevel) {
-         This.ErrorMsg := "DllCall sqlite3_last_insert_rowid Ê§°Ü!"
+         This.ErrorMsg := "DllCall sqlite3_last_insert_rowid å¤±è´¥!"
          This.ErrorCode := ErrorLevel
          Return False
       }
@@ -1398,13 +1705,13 @@ Class SQLiteDB {
       This.ErrorCode := 0
       This.SQL := ""
       If !(This._Handle) {
-         This.ErrorMsg := "ÎŞĞ§µÄ database ¾ä±ú!"
+         This.ErrorMsg := "æ— æ•ˆçš„ database å¥æŸ„!"
          Return False
       }
       Rows := 0
       RC := DllCall(This.base._SQLiteDLL "\sqlite3_total_changes", "Ptr", This._Handle, "Cdecl Int")
       If (ErrorLevel) {
-         This.ErrorMsg := "DllCall sqlite3_total_changes Ê§°Ü!"
+         This.ErrorMsg := "DllCall sqlite3_total_changes å¤±è´¥!"
          This.ErrorCode := ErrorLevel
          Return False
       }
@@ -1423,14 +1730,14 @@ Class SQLiteDB {
       This.ErrorCode := 0
       This.SQL := ""
       If !(This._Handle) {
-         This.ErrorMsg := "ÎŞĞ§µÄ database ¾ä±ú!"
+         This.ErrorMsg := "æ— æ•ˆçš„ database å¥æŸ„!"
          Return False
       }
       If Timeout Is Not Integer
          Timeout := 1000
       RC := DllCall(This.base._SQLiteDLL "\sqlite3_busy_timeout", "Ptr", This._Handle, "Int", Timeout, "Cdecl Int")
       If (ErrorLevel) {
-         This.ErrorMsg := "DllCall sqlite3_busy_timeout Ê§°Ü!"
+         This.ErrorMsg := "DllCall sqlite3_busy_timeout å¤±è´¥!"
          This.ErrorCode := ErrorLevel
          Return False
       }
@@ -1453,7 +1760,7 @@ Class SQLiteDB {
       This.ErrorCode := 0
       This.SQL := ""
       If !(This._Handle) {
-         This.ErrorMsg := "ÎŞĞ§µÄ database ¾ä±ú!"
+         This.ErrorMsg := "æ— æ•ˆçš„ database å¥æŸ„!"
          Return False
       }
       If Str Is Number
@@ -1463,7 +1770,7 @@ Class SQLiteDB {
       This._StrToUTF8(Str, UTF8)
       Ptr := DllCall(This.base._SQLiteDLL "\sqlite3_mprintf", "Ptr", &OP, "Ptr", &UTF8, "Cdecl UPtr")
       If (ErrorLevel) {
-         This.ErrorMsg := "DllCall sqlite3_mprintf Ê§°Ü!"
+         This.ErrorMsg := "DllCall sqlite3_mprintf å¤±è´¥!"
          This.ErrorCode := ErrorLevel
          Return False
       }
@@ -1490,11 +1797,11 @@ Class SQLiteDB {
       This.ErrorMsg := ""
       This.ErrorCode := 0
       If !(This._Handle) {
-         This.ErrorMsg := "ÎŞĞ§µÄ database ¾ä±ú!"
+         This.ErrorMsg := "æ— æ•ˆçš„ database å¥æŸ„!"
          Return False
       }
       If !RegExMatch(SQL, "i)^\s*(INSERT|UPDATE|REPLACE)\s") {
-         This.ErrorMsg := A_ThisFunc . " ĞèÒª INSERT/UPDATE/REPLACE Óï¾ä!"
+         This.ErrorMsg := A_ThisFunc . " éœ€è¦ INSERT/UPDATE/REPLACE è¯­å¥!"
          Return False
       }
       Query := 0
@@ -1502,7 +1809,7 @@ Class SQLiteDB {
       RC := DllCall(This.base._SQLiteDLL "\sqlite3_prepare_v2", "Ptr", This._Handle, "Ptr", &UTF8, "Int", -1
                   , "UPtrP", Query, "Ptr", 0, "Cdecl Int")
       If (ErrorLeveL) {
-         This.ErrorMsg := A_ThisFunc . ": DllCall sqlite3_prepare_v2 Ê§°Ü!"
+         This.ErrorMsg := A_ThisFunc . ": DllCall sqlite3_prepare_v2 å¤±è´¥!"
          This.ErrorCode := ErrorLevel
          Return False
       }
@@ -1513,14 +1820,14 @@ Class SQLiteDB {
       }
       For BlobNum, Blob In BlobArray {
          If !(Blob.Addr) || !(Blob.Size) {
-            This.ErrorMsg := A_ThisFunc . ": ÎŞĞ§µÄ BlobArray ²ÎÊı!"
+            This.ErrorMsg := A_ThisFunc . ": æ— æ•ˆçš„ BlobArray å‚æ•°!"
             This.ErrorCode := ErrorLevel
             Return False
          }
          RC := DllCall(This.base._SQLiteDLL "\sqlite3_bind_blob", "Ptr", Query, "Int", BlobNum, "Ptr", Blob.Addr
                      , "Int", Blob.Size, "Ptr", SQLITE_STATIC, "Cdecl Int")
          If (ErrorLeveL) {
-            This.ErrorMsg := A_ThisFunc . ": DllCall sqlite3_bind_blob Ê§°Ü!"
+            This.ErrorMsg := A_ThisFunc . ": DllCall sqlite3_bind_blob å¤±è´¥!"
             This.ErrorCode := ErrorLevel
             Return False
          }
@@ -1532,7 +1839,7 @@ Class SQLiteDB {
       }
       RC := DllCall(This.base._SQLiteDLL "\sqlite3_step", "Ptr", Query, "Cdecl Int")
       If (ErrorLevel) {
-         This.ErrorMsg := A_ThisFunc . ": DllCall sqlite3_step Ê§°Ü!"
+         This.ErrorMsg := A_ThisFunc . ": DllCall sqlite3_step å¤±è´¥!"
          This.ErrorCode := ErrorLevel
          Return False
       }
@@ -1543,7 +1850,7 @@ Class SQLiteDB {
       }
       RC := DllCall(This.base._SQLiteDLL "\sqlite3_finalize", "Ptr", Query, "Cdecl Int")
       If (ErrorLevel) {
-         This.ErrorMsg := A_ThisFunc . ": DllCall sqlite3_finalize Ê§°Ü!"
+         This.ErrorMsg := A_ThisFunc . ": DllCall sqlite3_finalize å¤±è´¥!"
          This.ErrorCode := ErrorLevel
          Return False
       }

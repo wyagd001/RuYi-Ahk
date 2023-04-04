@@ -1,4 +1,12 @@
 ﻿CandySel := A_Args[1]
+if !CandySel
+{
+	DetectHiddenWindows, On
+	ControlGetText, CandySel, Edit1, 获取当前窗口信息_ 
+	DetectHiddenWindows, Off
+	if !CandySel
+		exitapp
+}
 ; 1067 多文件
 Cando_合并文本文件:
 loop, parse, CandySel, `n, `r
