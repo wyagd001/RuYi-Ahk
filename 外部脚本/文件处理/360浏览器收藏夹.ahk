@@ -10,6 +10,7 @@ if (!DB.OpenDB(CandySel))
 	MsgBox, 16, SQLite错误, % "消息:`t" . DB.ErrorMsg . "`n代码:`t" . DB.ErrorCode
 }
 uRLobj:= dbGetTable(qstr:="")
+;msgbox % Array_ToString(uRLobj, 5)
 show_obj(uRLobj)
 return
 
@@ -23,11 +24,25 @@ dbGetTable(qstr:="")
 	if !DB.GetTable(qstr, recordSet)
 		msgbox error
 	;msgbox %  recordSet.RowCount
+	folder := {}
 	loop % recordSet.RowCount
 	{
 		recordSet.Next(Row)
 		;msgbox % Row[1] " - "Row[2] " - " Row[4] " - " Row[5]
-		RS.Insert(Row[4], Row[5])
+		if (Row[3] = 1)   ; 文件夹
+		{
+			RS[Row[4]] := {}
+			folder["A_" Row[1]] := Row[4]
+		}
+		Else
+		{
+			if (Row[2] != 0)
+			{
+				RS[folder["A_" Row[2]]][Row[4]] := Row[5]
+			}
+			Else
+				RS.Insert(Row[4], Row[5])
+		}
 		;RS[Row[4]] := Row[5]
 		if (A_index > 40)
 			break
@@ -52,8 +67,6 @@ show_obj(obj, menu_name := ""){
 			Menu, % submenu_name, add,
 			Menu, % submenu_name, DeleteAll
 			Menu, % menu_name, add, % k ? k : "", :%submenu_name%
-			Menu, % submenu_name, add, 添加选中文件到菜单, AddSelToMenu
-			Menu, % submenu_name, add
 			show_obj(v, submenu_name)
 		}
 		Else
@@ -66,7 +79,9 @@ show_obj(obj, menu_name := ""){
 }
 
 MenuHandler:
-Candy_Cmd := uRLobj[A_ThisMenuItem]
+Candy_Cmd := URLobj[A_ThisMenu][A_ThisMenuItem]
+if !Candy_Cmd
+	Candy_Cmd := URLobj[A_ThisMenuItem]
 ;run %Candy_Cmd% %CandySel%,, UseErrorLevel
 	WinGet, Windy_CurWin_Fullpath, ProcessPath, A
 	WinGet, OutPID, PID, A
@@ -1547,4 +1562,18 @@ oaInsertBefore(obj, key, prm*)
         obj._keys.Insert(k)
     }
     return r
+}
+
+Array_ToString(array, depth=5, indentLevel="")
+{
+   for k,v in Array
+   {
+      list.= indentLevel "[" k "]"
+      if (IsObject(v) && depth>1)
+         list.="`n" Array_ToString(v, depth-1, indentLevel . "    ")
+      Else
+         list.=" => " v
+      list.="`n"
+   }
+   return rtrim(list)
 }

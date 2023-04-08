@@ -35,8 +35,6 @@ show_obj(obj, menu_name := "")
 			Menu, % submenu_name, add,
 			Menu, % submenu_name, DeleteAll
 			Menu, % menu_name, add, % k ? k : "", :%submenu_name%
-			Menu, % submenu_name, add, 添加选中文件到菜单, AddSelToMenu
-			Menu, % submenu_name, add
 			show_obj(v, submenu_name)
 		}
 		Else

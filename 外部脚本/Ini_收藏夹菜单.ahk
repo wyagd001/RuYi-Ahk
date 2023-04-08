@@ -112,28 +112,25 @@ if instr(Tmp_Str, CandySel)
 	return
 if fileexist(CandySel)
 {
-	SplitPath, CandySel,,,, CandySel_FileNameNoExt
 	if !InStr(FileExist(CandySel), "D")
 	{
 		if (CandySel_Ext = "exe")
-			iniwrite, %CandySel%, %IniMenuInifile%, 程序, %CandySel_FileNameNoExt%
+			iniwrite, %CandySel%, %IniMenuInifile%, 程序, % CandySel_FileNameNoExt "．" CandySel_Ext
 		else
-			iniwrite, %CandySel%, %IniMenuInifile%, 文件, %CandySel_FileNameNoExt%
+			iniwrite, %CandySel%, %IniMenuInifile%, 文件, % CandySel_FileNameNoExt "．" CandySel_Ext
 	}
 	else
 		iniwrite, %CandySel%, %IniMenuInifile%, 文件夹, %CandySel_FileNameNoExt%
 }
 else if RegExMatch(CandySel, "i)^(https://|http://)+(.*\.)+.*")
 {
-	SplitPath, CandySel,,,,, OutDrive
-	domain := StrReplace(OutDrive, "https://", "")
+	domain := StrReplace(CandySel_Drive, "https://", "")
 	domain := StrReplace(domain, "http://", "")
 	iniwrite, %CandySel%, %IniMenuInifile%, 网址, %domain%
 }
 else if (RegExMatch(CandySel, "i)^(HKCU|HKCR|HKCC|HKU|HKLM|HKEY|计算机\\HK|\[HK)"))
 {
-	SplitPath, CandySel, keyname
-	iniwrite, %CandySel%, %IniMenuInifile%, 注册表, %keyname%
+	iniwrite, %CandySel%, %IniMenuInifile%, 注册表, %CandySel_FileName%
 }
 else
 	iniwrite, %CandySel%, %IniMenuInifile%, 命令, %CandySel%

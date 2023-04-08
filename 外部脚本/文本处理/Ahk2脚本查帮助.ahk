@@ -15,9 +15,9 @@ Cando_查新版帮助:
 	{
 		IfWinNotExist, %Ahk帮助标题%
 		{
-			VarSetCapacity(ak, ak_size := 8+5*A_PtrSize+4, 0) ; HH_AKLINK struct
-			NumPut(ak_size, ak, 0, "UInt")
-			NumPut(&CandySel, ak, 8)
+			;VarSetCapacity(ak, ak_size := 8+5*A_PtrSize+4, 0) ; HH_AKLINK struct
+			;NumPut(ak_size, ak, 0, "UInt")
+			;NumPut(&CandySel, ak, 8)
 			;if !DllCall("HHCtrl.ocx\HtmlHelp", "Ptr", hGui, "str", ahk中文帮助, "UInt", 0x000D, "ptr", &ak)
 			;{
 			;	msgbox % ErrorLevel " - " A_LastError
@@ -46,7 +46,7 @@ Cando_查新版帮助:
 ;是否已经运行
 		IfWinNotExist,%Ahk帮助标题%
 		{
-			Runwait, %ahk中文帮助%
+			Run, %ahk中文帮助%
 			WinWait,%Ahk帮助标题%,,5
 		}
 		WinActivate, %Ahk帮助标题%

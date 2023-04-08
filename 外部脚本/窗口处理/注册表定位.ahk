@@ -2,6 +2,11 @@
 
 If WinExist("ahk_class RegEdit_RegEdit")
 {
+	if A_Is64bitOS && (A_ptrSize = 4)
+	{
+		msgbox, % "操作系统为64位, 当前程序为32位, 无法定位注册表."
+		return
+	}
 	if CandySel
 	{
 		if !instr(CandySel, "计算机\")

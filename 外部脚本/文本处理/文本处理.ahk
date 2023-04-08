@@ -7,10 +7,10 @@ if !CandySel
 gui +ReSize +hwndGuiID +Delimiter`n
 gui, font, s11, 宋体
 gui, add, listbox, x5 y5 vcomm w160 h635 gupdateparam, % "查找替换`n`n高亮查找`n提取查找字符所在行`n移除查找字符所在行`n单行正则提取`n单行正则替换`n提取中文`n删除首尾空格制表符"
- . "`n行首尾添加字符`n行首添加序号`n按数量提取行前后字符`n按数量删除行前后字符`n按数量分割单行"
- . "`n按行号提取`n删除空白行`n删除重复行`n行倒序排列`n行字顺序颠倒`n字符串反转`n竖排文字"
+ . "`n行首尾添加字符`n行首添加序号`n按数量提取行前后字符`n按数量删除行前后字符`n按数量分割单行`n按分隔符提取"
+ . "`n按行号提取`n删除空白行`n删除重复行`n行倒序排列`n行字顺序颠倒`n字符串反转`n竖排文字`n行排序"
  . "`n字数统计`n查看中文所属字集`n左右对比`nBase64加密`nBase64解密`nUnicode码转字符`nURL解码"
- . "`n首字母转大写`n英文字母大小写`n中英文添加空格`n英文标点改中文`n中文标点改英文`n全角空格改半角"
+ . "`n首字母转大写`n英文字母大小写`n中英文添加空格`n英文标点改中文`n中文标点改英文`n全角空格改半角`n半角转全角"
  . "`n阿拉伯数字与中文`n简体与繁体`n中文转拼音`n查看编码"
 gui, add, Text, x170 yp w140 vmyparam1, 参数1:
 gui, add, ComboBox, xp+140 yp w450 vmyedit1, 
@@ -190,10 +190,23 @@ else if (comm = "按数量分割单行")
 	commmode("数量:", "前缀:", "后缀:", "enable", "enable", "enable")
 	GuiControl,, myedit1, `n`n`n1❤❤❤删除开头空白字符`n
 }
+else if (comm = "按分隔符提取")
+{
+	commmode("位置:", "数量:", "分隔符:", "enable", "enable", "enable")
+	GuiControl,, myedit1, `n1❤❤❤第2组开始`n`n2❤❤❤第2组开始`n
+	GuiControl,, myedit2, `n1❤❤❤提取1组`n`n2❤❤❤提取2组`n
+}
 else if (comm = "竖排文字")
 {
 	commmode("列开始方向:", "每列字符数:",, "enable", "enable")
 	GuiControl,, myedit1, `n左`n`n右
+}
+else if (comm = "行排序")
+{
+	commmode("选项:", "行预处理:",, "enable", "enable")
+	GuiControl,, myedit1, `n❤❤❤默认的字母顺序排序, 对中文的支持有限`n`nR❤❤❤逆序`nD,❤❤❤逗号分隔`nN❤❤❤数值大小`nU❤❤❤去重`nRandom❤❤❤随机`n\❤❤❤路径中的文件名`nN P5❤❤❤从第5个字符开始数值`nF Line_StrLen❤❤❤自定义函数, 按行字符数量`n拼音排序❤❤❤不使用 Sort 命令, 使用自定义的排序函数
+	GuiControl,, myedit2, `n`n`n统一长度为_20❤❤❤行首填充字符行字符数统一以便按位置
+	GuiControl,, myedit3, RichEdit 控件默认换行符为``r 没有 D 选项时默认带有 D``r
 }
 else if (comm = "字数统计")
 {
@@ -517,7 +530,7 @@ return
 
 单行正则提取:
 linestr := ""
-myedit1 := SubStr(myedit1, 1, InStr(myedit1, "❤❤❤") - 1)
+myedit1 := SubStr(myedit1, 1, (pos := InStr(myedit1, "❤❤❤")) ? pos - 1 : 50)
 ;msgbox % myedit1
 Loop, Parse, oldtxt, `r, `n
 {
@@ -875,9 +888,7 @@ if InStr(myedit1_org, "删除开头空白字符")
 else
 	TrimBL := 0
 
-hpos := InStr(myedit1, "❤❤❤")
-if hpos
-	myedit1 := SubStr(myedit1, 1, hpos - 1)
+myedit1 := SubStr(myedit1, 1, (pos := InStr(myedit1, "❤❤❤")) ? pos - 1 : 3)
 myedit1 := (myedit1 = "") ? 1 : myedit1
 if myedit1 is not integer
 	myedit1 := 1
@@ -913,6 +924,26 @@ else
 }
 t2.SetText(newStr)
 return
+
+按分隔符提取:
+;oldtxt := StrReplace(oldtxt, "`r", "`r`n")
+myedit1 := SubStr(myedit1, 1, (pos := InStr(myedit1, "❤❤❤")) ? pos - 1 : 3)
+;MsgBox % myedit1 ", " pos
+if !myedit1
+	myedit1 := 1
+myedit2 := SubStr(myedit2, 1, (pos := InStr(myedit2, "❤❤❤")) ? pos - 1 : 3)
+if !myedit2
+	myedit2 := 1
+;MsgBox % myedit1 ", " myedit2 ", " myedit3
+if zhuanyi
+{
+	myedit3 := StrReplace(myedit3, "\r", "`r")
+	myedit3 := StrReplace(myedit3, "\t", "`t")
+	myedit3 := StrReplace(myedit3, "\n", "`r")
+}
+newStr := LineStr(oldtxt, myedit1, myedit2, myedit3)
+t2.SetText(newStr)
+Return
 
 提取中文:
 if zhuanyi
@@ -1012,6 +1043,49 @@ else
 t2.SetText(newStr)
 return
 
+行排序:
+myedit1 := SubStr(myedit1, 1, (pos := InStr(myedit1, "❤❤❤")) ? pos - 1 : 30)
+if (myedit1 = "拼音排序")
+{
+	newStr := SortByPinyin(oldtxt, "`r", "`r")
+}
+Else
+{
+	myedit2 := SubStr(myedit2, 1, (pos := InStr(myedit2, "❤❤❤")) ? pos - 1 : 30)
+	lineTC := 0
+	if InStr(myedit2, "统一长度为_")
+	{
+		myedit2 := StrReplace(myedit2, "统一长度为_")
+		if myedit2 is integer
+		{
+			lineTC := 1
+			StrTC := "☆"
+			Loop, % myedit2
+				StrTC .= "☆"
+			newStr := ""
+			Loop, Parse, oldtxt, `r, `n
+			{
+				if ((ThisLen := StrLen(A_LoopField)) < myedit2)
+				{
+					newStr .= SubStr(StrTC, 1, myedit2 - ThisLen) A_LoopField "`r"
+				}
+			}
+			oldtxt := newStr
+		}
+	}
+	;msgbox % oldtxt "`n " myedit2 " - " ThisLen
+	if !InStr(myedit1, " D") && (InStr(myedit1, "D") != 1)
+		myedit1 := myedit1 " D`r"
+	Sort, oldtxt, % myedit1
+	newStr := ""
+	if lineTC
+		newStr := StrReplace(oldtxt, "☆")
+	Else
+		newStr := oldtxt
+}
+t2.SetText(newStr)
+return
+
 Base64加密:
 newStr := Base64Encode(oldtxt)
 t2.SetText(newStr)
@@ -1107,6 +1181,11 @@ newStr := StrReplace(oldtxt, "　", " ")
 t2.SetText(newStr)
 Return
 
+半角转全角:
+K3_StrBJ2QJ(oldtxt, newStr)
+t2.SetText(newStr)
+Return
+
 阿拉伯数字与中文:
 ;ToolTip % myedit1 " - " oldtxt
 if (myedit1 = "转为大写金额")
@@ -1146,7 +1225,7 @@ t2.SetText(newStr)
 Return
 
 查看编码:
-myedit1 := SubStr(myedit1, 1, InStr(myedit1, "❤❤❤") - 1)
+myedit1 := SubStr(myedit1, 1, (pos := InStr(myedit1, "❤❤❤")) ? pos - 1 : 10)
 newStr := Encode(oldtxt, myedit1)
 t2.SetText(newStr)
 Return
@@ -1289,13 +1368,105 @@ Return
 
 
 
+LineStr(ByRef S, P, C:="", D:="") {   ;  LineStr v0.9d,   by SKAN on D341/D449 @ tiny.cc/linestr
+Local L := StrLen(S),   DL := StrLen(D:=(D ? D : Instr(S,"`r`n") ? "`r`n" : "`n") ),   F, P1, P2
+Return SubStr(S,(P1:=L?(P!=1&&InStr(S,D,,0))?(F:=InStr(S,D,,P>0,Abs(P-1)))?F+DL:P-1<1?1:0:(F:=1)
+:0),(P2:=(P1&&C!=0)?C!=""?(F:=InStr(S,D,,(C>0?F+DL:0),Abs(C)))?F-1:C>0?L:1:L:0)>=P1?P2-P1+1:0)
+}
 
+;来源网址: https://www.autoahk.com/archives/38067
+SortByPinyin(str, deliIn := "`n", deliOut := "`n") {
+	; 拆分成数组
+	words := StrSplit(str, deliIn)
+	; 冒泡排序
+	loop % words.Length() - 1
+		loop % words.Length() - A_Index
+			if (PinyinCompare(words[A_Index], words[A_Index + 1]) > 0){
+				buf := words[A_Index]
+				words[A_Index] := words[A_Index + 1]
+				words[A_Index + 1] := buf
+			}
+	; 重新组合
+	for key, word in words
+		sorted .= deliOut word
+	return StrReplace(sorted, deliOut,,, 1)
+}
 
+PinyinCompare(str1, str2){
+	; 提供中英混排
+	static lowers := {"a": 45216.1, "b": 45252.1 ,"c": 45760.1, "d": 46317.1
+	, "e": 46825.1, "f": 47009.1, "g": 47296.1, "h": 47613.1, "i": 48118.1
+	, "j": 48118.3, "k": 49061.1, "l": 49323.1, "m": 49895.1, "n": 50370.1
+	, "o": 50613.1, "p": 50621.1, "q": 50905.1, "r": 51386.1, "s": 51445.1
+	, "t": 52217.1, "u": 52697.1, "v": 52697.3, "w": 52697.5, "x": 52979.1, "y": 53688.1, "z": 54480.1}
+	static uppers := {"A": 45216.2, "B": 45252.2, "C": 45761.2, "D": 46317.2
+		, "E": 46825.2, "F": 47009.2, "G": 47296.2, "H": 47613.2, "I": 48118.2
+		, "J": 48118.4, "K": 49061.2, "L": 49323.2, "M": 49895.2, "N": 50370.2
+		, "O": 50613.2, "P": 50621.2, "Q": 50905.2, "R": 51386.2, "S": 51445.2
+		, "T": 52217.2, "U": 52697.2, "V": 52697.4, "W": 52697.6, "X": 52979.2, "Y": 53688.2, "Z": 54480.2}
+	static capcity := VarSetCapacity(buf, 2)
+	; 拆分成单字对比
+	chars1 := StrSplit(Trim(str1, " `t`n")), chars2 := StrSplit(Trim(str2, " `t`n"))
+	loop % (chars1.Length() < chars2.Length()) ? chars1.Length() : chars2.Length() {
+		c1 := chars1[A_Index], c2 := chars2[A_Index]
+		if c1 is upper
+			code1 := uppers[c1]
+		else if c1 is lower
+			code1 := lowers[c1]
+		else {
+			StrPut(c1, &buf, 2, "cp936")
+			code1 := (NumGet(buf, 0, "UChar") << 8) + NumGet(buf, 1, "UChar")
+		}
+		if c2 is upper
+			code2 := uppers[c2]
+		else if c2 is lower
+			code2 := lowers[c2]
+		else {
+			StrPut(c2, &buf, "cp936")
+			code2 := (NumGet(buf, 0, "UChar") << 8) + NumGet(buf, 1, "UChar")
+		}
+		if (code1 != code2)
+			return code1 - code2
+	}
+	return chars1.Length - chars2.Length
+}
 
+Line_StrLen(lineA, lineB, offset)
+{
+    ; Return positive if lineA is longer than line B.
+    ; Return negative if lineA is shorter than line B.
+    if StrLen(lineA) != StrLen(lineB)
+        return StrLen(lineA)-StrLen(lineB)
+    ; Use offset to try to preserve the order in the file when two lines are of equal length.
+    return -offset
+}
 
+K3_StrBJ2QJ(byref srcnr, byref tarnr) ; 注意初始化tarnr，新半角转全角，每个字符分析，理论上正常
+{
+    isSecond := 0
+    loop, parse, srcnr
+    {
+        If isSecond
+            tarnr .= A_Loopfield , isSecond := 0
+        else { ; 非第二个字符
+            NowAscii := asc(A_Loopfield)
+            If ( NowAscii > 128 )
+                tarnr .= A_Loopfield , isSecond := 1
+            else {
+                If ( NowAscii > 32 )
+                    tarnr .= K3_CharBJ2QJ(NowAscii)
+                else
+                    tarnr .= A_loopfield
+            }
+        }
+    }
+}
 
-
-
+K3_CharBJ2QJ(AsciiNum=97) ; 单个字符转换为全角
+{
+    static Ascii_33 := "！" , Ascii_34 := "＂" , Ascii_35 := "＃" , Ascii_36 := "＄" , Ascii_37 := "％" , Ascii_38 := "＆" , Ascii_39 := "＇" , Ascii_40 := "（" , Ascii_41 := "）" , Ascii_42 := "＊" , Ascii_43 := "＋" , Ascii_44 := "，" , Ascii_45 := "－" , Ascii_46 := "．" , Ascii_47 := "／" , Ascii_48 := "０" , Ascii_49 := "１" , Ascii_50 := "２" , Ascii_51 := "３" , Ascii_52 := "４" , Ascii_53 := "５" , Ascii_54 := "６" , Ascii_55 := "７" , Ascii_56 := "８" , Ascii_57 := "９" , Ascii_58 := "：" , Ascii_59 := "；" , Ascii_60 := "＜" , Ascii_61 := "＝" , Ascii_62 := "＞" , Ascii_63 := "？" , Ascii_64 := "＠" , Ascii_65 := "Ａ" , Ascii_66 := "Ｂ" , Ascii_67 := "Ｃ" , Ascii_68 := "Ｄ" , Ascii_69 := "Ｅ" , Ascii_70 := "Ｆ" , Ascii_71 := "Ｇ" , Ascii_72 := "Ｈ" , Ascii_73 := "Ｉ" , Ascii_74 := "Ｊ" , Ascii_75 := "Ｋ" , Ascii_76 := "Ｌ" , Ascii_77 := "Ｍ" , Ascii_78 := "Ｎ" , Ascii_79 := "Ｏ" , Ascii_80 := "Ｐ" , Ascii_81 := "Ｑ" , Ascii_82 := "Ｒ" , Ascii_83 := "Ｓ" , Ascii_84 := "Ｔ" , Ascii_85 := "Ｕ" , Ascii_86 := "Ｖ" , Ascii_87 := "Ｗ" , Ascii_88 := "Ｘ" , Ascii_89 := "Ｙ" , Ascii_90 := "Ｚ" , Ascii_91 := "［" , Ascii_92 := "＼" , Ascii_93 := "］" , Ascii_94 := "＾" , Ascii_95 := "＿" , Ascii_96 := "｀" , Ascii_97 := "ａ" , Ascii_98 := "ｂ" , Ascii_99 := "ｃ" , Ascii_100 := "ｄ" , Ascii_101 := "ｅ" , Ascii_102 := "ｆ" , Ascii_103 := "ｇ" , Ascii_104 := "ｈ" , Ascii_105 := "ｉ" , Ascii_106 := "ｊ" , Ascii_107 := "ｋ" , Ascii_108 := "ｌ" , Ascii_109 := "ｍ" , Ascii_110 := "ｎ" , Ascii_111 := "ｏ" , Ascii_112 := "ｐ" , Ascii_113 := "ｑ" , Ascii_114 := "ｒ" , Ascii_115 := "ｓ" , Ascii_116 := "ｔ" , Ascii_117 := "ｕ" , Ascii_118 := "ｖ" , Ascii_119 := "ｗ" , Ascii_120 := "ｘ" , Ascii_121 := "ｙ" , Ascii_122 := "ｚ" , Ascii_123 := "｛" , Ascii_124 := "｜" , Ascii_125 := "｝" , Ascii_126 := "～"
+    return, Ascii_%AsciiNum%
+}
 
 
 Encode(Str, Encoding, Separator := " ")
@@ -1448,8 +1619,8 @@ s.=",蕏zhū,藷zhū,朱zhū,劯zhū,侏zhū,诛zhū,邾zhū,洙zhū,茱zhū,株
 
 Simplified2Traditional(ByRef String, toSimp:=0){
 	LCMAP_SIMPLIFIED_CHINESE := 0x02000000, LCMAP_TRADITIONAL_CHINESE := 0x04000000
-	VarSetCapacity(output, 256)
-	DllCall("kernel32\LCMapString", "UInt", DllCall("kernel32\GetUserDefaultLCID"), "UInt", (!toSimp?LCMAP_TRADITIONAL_CHINESE:LCMAP_SIMPLIFIED_CHINESE), "WStr", String, "Int", -1, "WStr", output, "Int", 256)
+	VarSetCapacity(output, 10240)
+	DllCall("kernel32\LCMapString", "UInt", DllCall("kernel32\GetUserDefaultLCID"), "UInt", (!toSimp?LCMAP_TRADITIONAL_CHINESE:LCMAP_SIMPLIFIED_CHINESE), "WStr", String, "Int", -1, "WStr", output, "Int", 10240)
 	reStr := output, VarSetCapacity(output, -1)
 	Return reStr
 }
