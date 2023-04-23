@@ -120,6 +120,7 @@ Tochinese:
 	Gui, Submit, NoHide
 	WButton := StrReplace(A_GuiControl, "tochinese", "")
 	code := %WButton%
+	msgbox % code
 	If(code = "")
 		Return
 	Gosub, clearedit

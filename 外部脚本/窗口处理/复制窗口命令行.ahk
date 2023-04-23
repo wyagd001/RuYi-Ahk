@@ -1,8 +1,12 @@
 ﻿; 1151
 ComObjError(0)
-DetectHiddenWindows, On
-WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI
-Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")
+Windy_CurWin_id := A_Args[1]
+if !Windy_CurWin_id
+{
+	DetectHiddenWindows, On
+	WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI
+	Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")
+}
 if Windy_CurWin_id
 {
 	WinGet Windy_CurWin_Pid, PID, ahk_id %Windy_CurWin_id%

@@ -35,8 +35,10 @@ Else
 		}
 	}
 	Gui, Add, text, x10 y10, 源文件夹:
-	Gui, Add, edit, xp+70 w480 h40 r2 vfolder1, % folder1
-	Gui, Add, text, xp+490, 目标文件夹:
+	Gui, Add, Button, x10 y28 h20 gopenfolder1, Open
+	Gui, Add, edit, xp+70 y10 w480 h40 r2 vfolder1, % folder1
+	Gui, Add, text, xp+490 y10, 目标文件夹:
+	Gui, Add, Button, xp y28 h20 gopenfolder2, Open
 	Gui, Add, edit, xp+80 y10 w470 h40 r2 vfolder2, % folder2
 	Gui, Add, ListView, x10 y55 w550 h500 vfilelist1 hwndHLV1 Checked AltSubmit gsync, 序号|文件名|修改日期|大小|md5
 	Gui, Add, ListView, x570 y55 w550 h500 vfilelist2 hwndHLV2 Checked AltSubmit gsync, 序号|文件名|修改日期|大小|相等|md5
@@ -79,6 +81,20 @@ LV_GetItemHeight(HLV) {
       Return (NumGet(RC, 12, "Int") - NumGet(RC, 4, "Int"))
    Return 0
 }
+
+openfolder1:
+Gui, 66: Default
+Gui, submit, nohide
+if folder1
+	run % folder1
+Return
+
+openfolder2:
+Gui, 66: Default
+Gui, submit, nohide
+if folder2
+	run % folder2
+Return
 
 switchlr:
 Gui, 66: Default
@@ -646,7 +662,7 @@ Receive_WM_COPYDATA(wParam, lParam)
 	Global CandySel2
 	StringAddress := NumGet(lParam + 2*A_PtrSize)  ; 获取 CopyDataStruct 的 lpData 成员.
 	CandySel2 := StrGet(StringAddress)  ; 从结构中复制字符串.
-	gosub SyncFolder
+	SetTimer  SyncFolder, -300
 return true
 }
 

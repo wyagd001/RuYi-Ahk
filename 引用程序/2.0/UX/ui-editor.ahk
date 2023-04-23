@@ -1,4 +1,4 @@
-; This script shows a GUI for setting the default .ahk editor.
+﻿; This script shows a GUI for setting the default .ahk editor.
 #requires AutoHotkey v2.0-beta.3
 
 #NoTrayIcon

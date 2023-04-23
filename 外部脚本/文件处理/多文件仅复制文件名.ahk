@@ -1,17 +1,17 @@
-; 1119
+ï»¿; 1119
 CandySel := A_Args[1]
 if !CandySel
 {
 	DetectHiddenWindows, On
-	ControlGetText, CandySel, Edit1, »ñÈ¡µ±Ç°´°¿ÚĞÅÏ¢_ 
+	ControlGetText, CandySel, Edit1, è·å–å½“å‰çª—å£ä¿¡æ¯_ 
 	DetectHiddenWindows, Off
 	if !CandySel
 		exitapp
 }
 ;msgbox % CandySel
-cando_¶àÎÄ¼ş¸´ÖÆÎÄ¼şÃû:
+cando_å¤šæ–‡ä»¶å¤åˆ¶æ–‡ä»¶å:
 Tmp_Val := ""
-Loop, Parse, CandySel, `n,`r 
+Loop, Parse, CandySel, `n, `r
 {
 	SplitPath, A_LoopField, outfilename
 	Tmp_Val .= (Tmp_Val = "" ? "" : "`r`n") outfilename

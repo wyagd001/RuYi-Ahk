@@ -1,11 +1,11 @@
-﻿CandySel := A_Args[1]
-
-DetectHiddenWindows, On
-WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI
-Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")
-if Windy_CurWin_id
-	WinGetClass, Windy_CurWin_Class, ahk_id %Windy_CurWin_id%
-else
+﻿Windy_CurWin_id := A_Args[1]
+if !Windy_CurWin_id
+{
+	DetectHiddenWindows, On
+	WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI
+	Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")
+}
+if !Windy_CurWin_id
 	Windy_CurWin_id := WinExist("A")
 setwinappid(Windy_CurWin_id, "My_Custom_Group")
 return

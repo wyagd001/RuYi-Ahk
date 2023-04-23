@@ -168,7 +168,10 @@ send {enter}
 return
 
 Cando_md_html_prew:
-Fileread, Tmp_val, % Prew_File
+File_Encode := File_GetEncoding(ATA_filepath)
+FileEncoding, % File_Encode
+Fileread, Tmp_val, % ATA_filepath
+FileEncoding
 gosub, IE_Open
 WB.Navigate("http://editor.md.ipandao.com/examples/simple.html")
 WBStartTime := A_TickCount
@@ -185,6 +188,7 @@ MouseClick , Right, 300,200
 ;sendevent ^v
 ;MouseClick , left, 350,320
 clipboard := backclip
+Tmp_val := ""
 ;msgbox % wb.document.querySelector("#test-editormd > textarea").value
 return
 
@@ -380,8 +384,8 @@ SkSub_Regex_IniRead(ini, sec, reg)      ; 正则方式的读取，等号左侧�
 		UTF-8  - text Utf-8 File (UTF-8 + BOM). 检验的文件太小, 不足以检查时, 默认返回 UTF-8.
 		UTF-8-RAW  - UTF-8 无签名. 
 		对于 UTF-8-RAW 的说明：
-		1.文件小于100k 读取整个文件, 必须带有中文字符串(文件中存在乱码（特殊字符）时可能得到错误的结果), 才能和 CP936 区分开.
-		2.文件大于100k 读取文件前9个字节，前3个字符为中文时才有较大可能取得正确的结果, 才能和 CP936 区分开。
+		1.文件小于100kb 读取整个文件, 必须带有中文字符串(文件中存在乱码（特殊字符）时可能得到错误的结果), 才能和 CP936 区分开.
+		2.文件大于100kb 读取文件前 100kb 的内容。
 */
 
 ; isBinFile
@@ -397,16 +401,43 @@ File_GetEncoding(aFile, aNumBytes = 0, aMinimum = 4)
 {
 	if !FileExist(aFile) or InStr(FileExist(aFile), "D")
 		return 0
+
 	_rawBytes := ""
 	_hFile := FileOpen(aFile, "r")
-	;force position to 0 (zero)
+	; force position to 0 (zero)
 	_hFile.Position := 0
-
-	; 文件小于100k,则读取整个文件
-	_nBytes := (_hFile.length < 102400) ? (_hFile.RawRead(_rawBytes, _hFile.length)) : (aNumBytes > 0) ? (_hFile.RawRead(_rawBytes, aNumBytes)) : (_hFile.RawRead(_rawBytes, 9))
-
+	; 文件小于100k, 则读取整个文件
+	_nBytes := (_hFile.length < 102400) ? (_hFile.RawRead(_rawBytes, _hFile.length)) : (aNumBytes = 0) ? (_hFile.RawRead(_rawBytes, 102402)) : (_hFile.RawRead(_rawBytes, aNumBytes))
 	_hFile.Close()
 
+	; Initialize vars
+	_t := 0, _i := 0, _bytesArr := []
+
+	loop % _nBytes ; create c-style _bytesArr array
+		_bytesArr[(A_Index - 1)] := Numget(&_rawBytes, (A_Index - 1), "UChar")
+
+	; determine BOM if possible/existant
+	if ((_bytesArr[0] = 0xFE) && (_bytesArr[1] = 0xFF))
+	{
+		; text Utf-16 BE File
+		return "CP1201"
+	}
+	if ((_bytesArr[0] = 0xFF) && (_bytesArr[1] = 0xFE))
+	{
+		; text Utf-16 LE File
+		return "UTF-16"
+	}
+	if ((_bytesArr[0] = 0xEF) && (_bytesArr[1] = 0xBB) && (_bytesArr[2] = 0xBF))
+	{
+		; text Utf-8 File
+		return "UTF-8"
+	}
+	if ((_bytesArr[0] = 0x00) && (_bytesArr[1] = 0x00) && (_bytesArr[2] = 0xFE) && (_bytesArr[3] = 0xFF))
+	|| ((_bytesArr[0] = 0xFF) && (_bytesArr[1] = 0xFE) && (_bytesArr[2]= 0x00) && (_bytesArr[3] = x00))
+	{
+		; text Utf-32 BE/LE File
+		return "UTF-32"
+	}
 	; 为了 unicode 检测, 推荐 aMinimum 为 4  (4个字节以下的文件无法判断类型)
 	if (_nBytes < aMinimum)
 	{
@@ -414,39 +445,9 @@ File_GetEncoding(aFile, aNumBytes = 0, aMinimum = 4)
 		return "UTF-8"
 	}
 
-	;Initialize vars
-	_t := 0, _i := 0, _bytesArr := []
-
-	loop % _nBytes ;create c-style _bytesArr array
-		_bytesArr[(A_Index - 1)] := Numget(&_rawBytes, (A_Index - 1), "UChar")
-
-	;determine BOM if possible/existant
-	if ((_bytesArr[0]=0xFE) && (_bytesArr[1]=0xFF))
-	{
-		;text Utf-16 BE File
-		return "CP1201"
-	}
-	if ((_bytesArr[0]=0xFF) && (_bytesArr[1]=0xFE))
-	{
-		;text Utf-16 LE File
-		return "UTF-16"
-	}
-	if ((_bytesArr[0]=0xEF)	&& (_bytesArr[1]=0xBB) && (_bytesArr[2]=0xBF))
-	{
-		;text Utf-8 File
-		return "UTF-8"
-	}
-	if ((_bytesArr[0]=0x00)	&& (_bytesArr[1]=0x00) && (_bytesArr[2]=0xFE) && (_bytesArr[3]=0xFF))
-	|| ((_bytesArr[0]=0xFF)	&& (_bytesArr[1]=0xFE) && (_bytesArr[2]=0x00) && (_bytesArr[3]=0x00))
-	{
-		;text Utf-32 BE/LE File
-		return "UTF-32"
-	}
-
 	while(_i < _nBytes)
 	{
-
-		;// ASCII
+		; // ASCII
 		if (_bytesArr[_i] == 0x09)
 		|| (_bytesArr[_i] == 0x0A)
 		|| (_bytesArr[_i] == 0x0D)
@@ -456,17 +457,20 @@ File_GetEncoding(aFile, aNumBytes = 0, aMinimum = 4)
 			continue
 		}
 
-		;// non-overlong 2-byte
+		; // non-overlong 2-byte
 		if (0xC2 <= _bytesArr[_i])
 		&& (_bytesArr[_i] <= 0xDF)
 		&& (0x80 <= _bytesArr[_i + 1])
 		&& (_bytesArr[_i + 1] <= 0xBF)
 		{
 			_i += 2
-			continue
+			if (_i + 1 > 102400) or (_i + 2 > 102400)
+				break
+			else
+				continue
 		}
 
-		;// excluding overlongs, straight 3-byte, excluding surrogates
+		; // excluding overlongs, straight 3-byte, excluding surrogates
 		if (((_bytesArr[_i] == 0xE0)
 		&& ((0xA0 <= _bytesArr[_i + 1])
 		&& (_bytesArr[_i + 1] <= 0xBF))
@@ -487,9 +491,13 @@ File_GetEncoding(aFile, aNumBytes = 0, aMinimum = 4)
 		&& (_bytesArr[_i + 2] <= 0xBF))))
 		{
 			_i += 3
-			continue
+			if (_i + 1 > 102400) or (_i + 2 > 102400) or (_i + 3 > 102400)
+				break
+			else
+				continue
 		}
-		;// planes 1-3, planes 4-15, plane 16
+
+		; // planes 1-3, planes 4-15, plane 16
 		if (((_bytesArr[_i] == 0xF0)
 		&& ((0x90 <= _bytesArr[_i + 1])
 		&& (_bytesArr[_i + 1] <= 0xBF))
@@ -538,6 +546,47 @@ File_GetEncoding(aFile, aNumBytes = 0, aMinimum = 4)
 		}
 	}
 */
+
+	changyongzi := ["的", "一", "是", "了", "不", "在", "有", "个", "人", "这", "上", "中", "大", "为", "来", "我", "到", "出", "要", "以", "时", "和", "地", "们", "得", "可", "下", "对", "生", "也", "子", "就", "过", "能", "他", "会", "多", "发", "说", "而", "于", "自", "之", "用", "年", "行", "家", "方", "后", "作", "成", "开", "面", "事", "好", "小", "心", "前", "所", "道", "法", "如", "进", "着", "同", "经", "分", "定", "都", "然", "与", "本", "还", "其", "当", "起", "动", "已", "两", "点", "从", "问", "里", "主", "实", "天", "高", "去", "现", "长", "此", "三", "将", "无", "国", "全", "文", "理", "明", "日"]
+	readstr := StrGet(&_rawBytes, _nBytes, "CP65001")
+	changyongzi_jishu := 0
+	for k,v in changyongzi
+	{
+		if InStr(readstr, v)
+			changyongzi_jishu := changyongzi_jishu + 1
+		if (changyongzi_jishu > 5)
+		{
+			return "UTF-8-Raw"
+		}
+	}
+
+	readstr := StrGet(&_rawBytes, _nBytes, "CP936")
+	changyongzi_jishu := 0
+	for k,v in changyongzi
+	{
+		if InStr(readstr, v)
+		{
+			changyongzi_jishu := changyongzi_jishu + 1
+		}
+		if (changyongzi_jishu > 5)
+		{
+			return "CP936"
+		}
+	}
+
+	changyongzi2 :=["的", "一", "是", "了", "不", "在", "有", "個", "人", "這", "上", "中", "大", "為", "來", "我", "到", "出", "要", "以", "時", "和", "地", "們", "得", "可", "下", "對", "生", "也", "子", "就", "過", "能", "他", "會", "多", "發", "說", "而", "于", "自", "之", "用", "年", "行", "家", "方", "后", "作", "成", "開", "面", "事", "好", "小", "心", "前", "所", "道", "法", "如", "進", "著", "同", "經", "分", "定", "都", "然", "與", "本", "還", "其", "當", "起", "動", "已", "兩", "點", "從", "問", "里", "主", "實", "天", "高", "去", "現", "長", "此", "三", "將", "無", "國", "全", "文", "理", "明", "日"]
+	readstr := StrGet(&_rawBytes, _nBytes, "CP950")
+	changyongzi_jishu := 0
+	for k,v in changyongzi
+	{
+		if InStr(readstr, v)
+			changyongzi_jishu := changyongzi_jishu + 1
+		if (changyongzi_jishu > 5)
+		{
+			return "CP950"
+		}
+	}
+
 	; 未符合上面条件的返回系统默认 ansi 内码
 	; 简体中文系统默认返回的是 CP936, 非中文系统的内码显示中文会乱码,如果要显示中文可直接改为"CP936"
 	return "CP" DllCall("GetACP")  

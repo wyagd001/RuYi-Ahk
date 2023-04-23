@@ -14,7 +14,7 @@ else
 	WinGet, Windy_CurWin_Fullpath, ProcessPath, A
 }
 
-if (Windy_CurWin_Class = "Notepad") or (Windy_CurWin_Class = "Notepad2U")
+if (Windy_CurWin_Class = "Notepad") or (Windy_CurWin_Class = "Notepad2U") or (Windy_CurWin_Class = "SciTEWindow")
 menu, % LnkFolderMenu(RecentFolderPath, "txt,ahk,htm","收藏夹",0,2,1,1), show
 else if (Windy_CurWin_Class = "CabinetWClass") or (Windy_CurWin_Class = "Progman")
 menu, % LnkFolderMenu(RecentFolderPath, "","收藏夹",0,2,1,0), show

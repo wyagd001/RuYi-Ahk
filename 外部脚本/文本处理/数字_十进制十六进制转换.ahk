@@ -7,7 +7,7 @@ Cando_十进制十六进制转换:
 	Gui, add, Edit, xp+60 yp-3 w150 h20 vNumDec, 
 	Gui, add, text, xp+160 yp+3, 十六进制:
 	Gui, add, Edit, xp+70 yp-3 w150 h20 vNumHex,
-	Gui, add, button, xp+160 yp w60 h20 gNumUptoDown, 转换
+	Gui, add, button, xp+160 yp w60 h20 gNumUptoDown Default, 转换
 
 	Gui, add, text, x10 yp+40, 十六进制:
 	Gui, add, Edit, xp+60 yp-3 w150 h20 vDectoHex,

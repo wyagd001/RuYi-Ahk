@@ -1,4 +1,4 @@
-CreateAppShortcut(linkFile, target, args, description, aumid, uninst) {
+﻿CreateAppShortcut(linkFile, target, args, description, aumid, uninst) {
     lnk := ComObject('{00021401-0000-0000-C000-000000000046}' ; CLSID_ShellLink
                     ,'{000214F9-0000-0000-C000-000000000046}') ; IID_IShellLink
     

@@ -1,4 +1,4 @@
-; Run this script to download and install an additional AutoHotkey version.
+﻿; Run this script to download and install an additional AutoHotkey version.
 ; Specify the version as a single command line parameter.  If omitted or
 ; incomplete like "1.1" or "2.0", the latest version will be downloaded.
 #requires AutoHotkey v2.0-beta.6

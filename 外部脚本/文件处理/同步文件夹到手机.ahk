@@ -389,7 +389,9 @@ if RF
 }
 if Tmp_Str
 {
-	Run, explorer.exe /select`, %folder1%\%Tmp_Str%
+	SplitPath, Tmp_Str,, OutDir
+	Run, %OutDir%
+	;Run, explorer.exe /select`, %folder1%\%Tmp_Str%
 }
 return
 

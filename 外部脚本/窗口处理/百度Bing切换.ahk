@@ -1,12 +1,15 @@
-﻿CandySel := A_Args[1]
-; 1153
-DetectHiddenWindows, On
-WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI
-Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")
-if Windy_CurWin_id
-	WinGetClass, Windy_CurWin_Class, ahk_id %Windy_CurWin_id%
-else
-	WinGetClass, Windy_CurWin_Class, A
+﻿; 1153
+Windy_CurWin_Class := A_Args[1]
+if !Windy_CurWin_Class
+{
+	DetectHiddenWindows, On
+	WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI
+	Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")
+	if Windy_CurWin_id
+		WinGetClass, Windy_CurWin_Class, ahk_id %Windy_CurWin_id%
+	else
+		WinGetClass, Windy_CurWin_Class, A
+}
 
 sURL := GetActiveBrowserURL(Windy_CurWin_Class)
 if inStr(sURL, "baidu.com")

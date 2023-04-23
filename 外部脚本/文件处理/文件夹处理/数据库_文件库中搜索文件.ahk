@@ -1,5 +1,7 @@
 ﻿#SingleInstance force
 #InputLevel 10   ; 优先级设置比如意中的高, 按下相同热键后先触发脚本自身的
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\e8a3.png"
 
 dbpath := A_ScriptDir "\..\..\..\配置文件\folder.db"
 IniRead, notepad2, %A_ScriptDir%\..\..\..\配置文件\如一.ini, 其他程序, notepad2, F:\Program Files\Editor\Notepad2\Notepad2.exe
@@ -232,8 +234,8 @@ OpenFolder:
 LV_GetText(FileFullPath, LV_GetNext("F"), 2)
 SplitPath, FileFullPath,, oPath
 ;msgbox % FileFullPath "`n" oPath
-;Run, explorer.exe %oPath%    ; 指定 explorer.exe 后打开
-Run, %oPath%   ; 不指定进程 explorer.exe 若文件夹与同名的exe在一个目录中, 优先打开 exe 文件
+;Run, explorer.exe %oPath%    ; 指定 explorer.exe 后打开, 使用 explorer.exe 打开速度5秒左右
+Run, %oPath%   ; 不指定进程 explorer.exe 若文件夹与同名的exe在一个目录中, 优先打开 exe 文件. 可能出错但是速度快, 用时1.5秒左右.
 return
 
 EditFile:

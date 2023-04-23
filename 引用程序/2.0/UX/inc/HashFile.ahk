@@ -1,4 +1,4 @@
-; HashFile by Deo
+﻿; HashFile by Deo
 ; https://autohotkey.com/board/topic/66139-ahk-l-calculating-md5sha-checksum-from-file/
 ; Modified for AutoHotkey v2 by lexikos.
 

@@ -1,4 +1,4 @@
-class AutoHotkeyUxGui extends Gui {
+﻿class AutoHotkeyUxGui extends Gui {
     __new(title, opt:='') {
         super.__new(opt, title, this)
         this.SetFont('s9', "Segoe UI")

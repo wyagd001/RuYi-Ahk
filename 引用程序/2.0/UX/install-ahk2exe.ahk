@@ -1,4 +1,4 @@
-; Run this script to launch or download and install Ahk2Exe into A_ScriptDir '\..\Compiler'.
+﻿; Run this script to launch or download and install Ahk2Exe into A_ScriptDir '\..\Compiler'.
 #requires AutoHotkey v2.0-beta.4-
 
 #include install.ahk

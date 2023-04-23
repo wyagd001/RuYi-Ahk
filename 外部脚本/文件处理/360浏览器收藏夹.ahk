@@ -4,14 +4,17 @@ CandySel := A_Args[1]
 if !CandySel
 	CandySel := A_AppData "\360se6\User Data\Default\a67cb9a4f61518f302b62d86e2814245\360sefav.dat"
 ATA_settingFile := A_ScriptDir "\..\..\配置文件\如一.ini"
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\f131.png"
 global DB := new SQLiteDB
 if (!DB.OpenDB(CandySel))
 {
 	MsgBox, 16, SQLite错误, % "消息:`t" . DB.ErrorMsg . "`n代码:`t" . DB.ErrorCode
 }
-uRLobj:= dbGetTable(qstr:="")
+uRLobj := dbGetTable(qstr:="")
 ;msgbox % Array_ToString(uRLobj, 5)
 show_obj(uRLobj)
+
 return
 
 dbGetTable(qstr:="")

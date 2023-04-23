@@ -1,4 +1,4 @@
-; This script clears any file type assocation made via the "open with" dialog,
+﻿; This script clears any file type assocation made via the "open with" dialog,
 ; so that the standard registration under HKCR\.ahk can take effect.
 #include inc\bounce-v1.ahk
 /* v1 stops here */

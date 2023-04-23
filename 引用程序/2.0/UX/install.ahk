@@ -1,4 +1,4 @@
-; This script contains AutoHotkey (un)installation routines.
+﻿; This script contains AutoHotkey (un)installation routines.
 ; See the AutoHotkey v2 documentation for usage.
 #include inc\bounce-v1.ahk
 /* v1 stops here */

@@ -1,4 +1,4 @@
-#include identify_regex.ahk
+﻿#include identify_regex.ahk
 
 IdentifyBySyntax(code) {
     static identify_regex := get_identify_regex()

@@ -1,4 +1,4 @@
-; Dash: AutoHotkey's "main menu".
+﻿; Dash: AutoHotkey's "main menu".
 ; Run the script to show the GUI.
 #include inc\bounce-v1.ahk
 /* v1 stops here */

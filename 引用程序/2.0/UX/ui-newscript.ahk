@@ -1,4 +1,4 @@
-#requires AutoHotkey v2.0-beta.4-
+﻿#requires AutoHotkey v2.0-beta.4-
 
 #NoTrayIcon
 #SingleInstance Off

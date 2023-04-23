@@ -1,4 +1,4 @@
-/*
+﻿/*
 [NewScriptTemplate]
 Description = Just #Requires v2
 */

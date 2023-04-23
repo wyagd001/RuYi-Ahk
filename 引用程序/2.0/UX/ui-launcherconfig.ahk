@@ -1,4 +1,4 @@
-; This script shows a GUI for configuring the launcher.
+﻿; This script shows a GUI for configuring the launcher.
 #requires AutoHotkey v2.0-beta.3
 
 #NoTrayIcon

@@ -1,9 +1,9 @@
-; 1039
+ï»¿; 1039
 CandySel := A_Args[1]
 if !CandySel
 {
 	DetectHiddenWindows, On
-	ControlGetText, CandySel, Edit1, »ñÈ¡µ±Ç°´°¿ÚĞÅÏ¢_ 
+	ControlGetText, CandySel, Edit1, è·å–å½“å‰çª—å£ä¿¡æ¯_ 
 	DetectHiddenWindows, Off
 	if !CandySel
 		exitapp
@@ -39,7 +39,7 @@ Loop, Parse, CandySel, `n, `r
 				}
 			}
 		}
-		; ÎŞÍ¬ÃûÎÄ¼şÊ±£¬¸´ÖÆÎÄ¼ş
+		; æ— åŒåæ–‡ä»¶æ—¶ï¼Œå¤åˆ¶æ–‡ä»¶
 		else
 		{
 			Run, %comspec% /c move "%FileFullPath%" "%TargetFile%",,hide
