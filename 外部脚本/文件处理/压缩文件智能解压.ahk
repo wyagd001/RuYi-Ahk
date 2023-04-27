@@ -9,8 +9,13 @@ if !CandySel             ; 多个文件
 }
 
 ATA_settingFile := A_ScriptDir "\..\..\配置文件\如一.ini"
-IniRead, 7z, %ATA_settingFile%, 其他程序, 7z, %A_Space%
-	IniRead, 7zg, %ATA_settingFile%, 其他程序, 7zg, %A_Space%
+7z := (A_PtrSize = 8) ? (A_ScriptDir "\..\..\引用程序\x64\7z.exe") : (A_ScriptDir "\..\..\引用程序\x32\7z.exe")
+7zG := (A_PtrSize = 8) ? (A_ScriptDir "\..\..\引用程序\x64\7zG.exe") : (A_ScriptDir "\..\..\引用程序\x32\7zG.exe")
+if !FileExist(7z) or !FileExist(7zG)
+{
+	IniRead, 7z, %ATA_settingFile%, 其他程序, 7z, %A_Space%  ; 使用7z命令行解压, 会有cmd窗口, 遇到需要覆盖时, 会在cmd询问
+	IniRead, 7zg, %ATA_settingFile%, 其他程序, 7zg, %A_Space%  ; 图形界面
+}
 
 cando_智能解压:
 Loop Parse, CandySel, `n, `r
@@ -49,7 +54,7 @@ Return
 	RunWait, %comspec% /c ""%7Z%" l "%S_File%"`>"%包_列表%"",,hide
 	loop, read, %包_列表%
 	{
-		; 合计项老版 7z 不显示日期, 新版添加额外的条件
+		; 合计项老版 7z 不显示日期, 新版需要添加额外的条件
 		if InStr(A_loopreadline, "-------------------")
 		{
 			SmartUnZip_FileB +=1
@@ -112,7 +117,7 @@ Return
 			Run, %7ZG% x "%S_File%" -o"%包_目录%"
 		}
 	}
-	Else  ;压缩文件内，首层有多个文件夹
+	Else  ; 其他情况
 	{
 		IfExist %包_目录%\%包_文件名%  ;已经存在了以“包文件名”的文件夹，怎么办？
 		{
@@ -133,7 +138,6 @@ Return
 	}
 	if S_tooltip
 		CF_ToolTip("文件%包_完整文件名%解压完成！", 2000)
-*/
 Return
 }
 

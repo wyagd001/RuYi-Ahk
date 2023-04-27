@@ -1,4 +1,4 @@
-﻿folder1 :=  A_Args[1], folder2 :=  A_Args[2]
+﻿folder1 := A_Args[1], folder2 := A_Args[2]
 B_Autohotkey := A_ScriptDir "\..\..\引用程序\" (A_PtrSize = 8 ? "AutoHotkeyU64.exe" : "AutoHotkeyU32.exe")
 ; 1088
 OnMessage(0x4a, "Receive_WM_COPYDATA")
@@ -10,7 +10,7 @@ IfWinExist, 文件夹同步 ahk_class AutoHotkeyGUI
 	if folder2
 	{
 		GuiControl,, folder2, %folder2%
-		if (folder2 != folder1)
+		if folder1 && folder2 && (folder2 != folder1)
 			gosub loderfolder
 	}
 }
@@ -18,19 +18,22 @@ Else
 {
 	Gui,66: Destroy
 	Gui,66: Default
-	SplitPath, folder1, OutFileName
-	if !Fileexist(folder2)
+	if folder1
 	{
-		AllOpenFolder := GetAllWindowOpenFolder()
-		for k,v in AllOpenFolder
+		SplitPath, folder1, OutFileName
+		if !Fileexist(folder2)
 		{
-			if (v = folder1)
-				Continue
-			SplitPath, v, Tmp_OutFileName
-			if (OutFileName = Tmp_OutFileName)
+			AllOpenFolder := GetAllWindowOpenFolder()
+			for k,v in AllOpenFolder
 			{
-				folder2 := v
-				break
+				if (v = folder1)
+					Continue
+				SplitPath, v, Tmp_OutFileName
+				if (OutFileName = Tmp_OutFileName)
+				{
+					folder2 := v
+					break
+				}
 			}
 		}
 	}
@@ -46,7 +49,10 @@ Else
 	Gui, Add, Button, xp+70 h30 gswitchlr, 左右交换
 	Gui, Add, Button, xp+70 h30 ggxzccz vgxz, 只勾选仅左侧存在的文件
 	Gui, Add, Button, xp+150 h30 ggxzycz vgxzy, 只勾选左右都存在的文件
-	Gui, Add, Button, xp+150 h30 grpview, 预览结果
+	Gui, Add, Button, xp+150 h30 gshowNot vgxzytb, 仅显示需要同步的文件
+
+	Gui, Add, Button, x895 yp h30 gsinglesave, 单个文件同步
+	Gui, Add, Button, xp+95 yp h30 grpview, 预览结果
 	Gui, Add, Button, xp+70 h30 gsave, 执行同步
 	gui, show,, 文件夹同步
 	Menu, Tray, UseErrorLevel
@@ -59,7 +65,7 @@ Else
 	Menu, filelistMenu, Add, 文本文件对比, compfilefromlist
 	Menu, filelistMenu, Add, 文件MD5对比, compfileMD5fromlist
 	Menu, filelistMenu, Add, 删除选中文件, delfillefromlist
-	if folder2 && (folder2 != folder1)
+	if folder1 && folder2 && (folder2 != folder1)
 		gosub loderfolder
 }
 return
@@ -172,6 +178,7 @@ tooltip % "正在对比文件夹, 请稍候..."
 ;folder1:="D:\资料\autohotkey 帮助\v2\docs"
 ;folder2:="F:\Program Files\运行\git\wyagd001.github.io\v2\docs"
 IniRead, 忽略路径, %folder1%\.忽略列表.ini, 路径, 忽略路径
+IniRead, 忽略扩展名, %folder1%\.忽略列表.ini, 扩展名, 忽略扩展名
 IniRead, 忽略目录, %folder1%\.忽略列表.ini, 目录
 IniRead, 忽略文件, %folder1%\.忽略列表.ini, 文件
 IniRead, 判断类型, %folder1%\.忽略列表.ini, 判断依据, 判断类型, 最近修改时间   ;文件md5
@@ -199,6 +206,8 @@ Loop, Files, %folder1%\*.*, DFR
 	relativePS := StrReplace(A_LoopFilePath, folder1 "\")
 	if relativePS contains %忽略路径%
 		Continue
+	if A_LoopFileExt in %忽略扩展名%
+		continue
 	if 忽略目录 && instr(忽略目录, relativePS) && InStr(A_LoopFileAttrib, "D")
 		Continue
 	if 忽略文件 && instr(忽略文件, relativePS) && !InStr(A_LoopFileAttrib, "D")
@@ -211,7 +220,12 @@ Loop, Files, %folder1%\*.*, DFR
 	FormatTime, Out_time, % A_LoopFileTimeModified, yyyy-MM-dd HH:mm:ss
 	flastwriteobj1[relativePS] := Out_time
 	fsizeobj1[relativePS] := A_LoopFileSize
-	fsizekbobj1[relativePS] := A_LoopFileSizeKB
+	if (A_LoopFileSize = 0)
+		fsizekbobj1[relativePS] := 0
+	else if (A_LoopFileSize < 1024) && (A_LoopFileSize != 0)
+		fsizekbobj1[relativePS] := 1
+	else
+		fsizekbobj1[relativePS] := A_LoopFileSizeKB
 	;fMD5obj1[relativePS] := MD5_File(A_LoopFilePath)
 	Tmp_Str .= relativePS "`n"
 }
@@ -224,6 +238,8 @@ Loop, Files, %folder2%\*.*, DFR
 	relativePS := StrReplace(A_LoopFilePath, folder2 "\")
 	if relativePS contains %忽略路径%
 		Continue
+	if A_LoopFileExt in %忽略扩展名%
+		continue
 	if 忽略目录 && instr(忽略目录, relativePS) && InStr(A_LoopFileAttrib, "D")
 		Continue
 	if 忽略文件 && instr(忽略文件, relativePS) && !InStr(A_LoopFileAttrib, "D")
@@ -236,7 +252,12 @@ Loop, Files, %folder2%\*.*, DFR
 	FormatTime, Out_time, % A_LoopFileTimeModified, yyyy-MM-dd HH:mm:ss
 	flastwriteobj2[relativePS] := Out_time
 	fsizeobj2[relativePS] := A_LoopFileSize
-	fsizekbobj2[relativePS] := A_LoopFileSizeKB
+	if (A_LoopFileSize = 0)
+		fsizeKBobj2[relativePS] := 0
+	else if (A_LoopFileSize < 1024) && (A_LoopFileSize != 0)
+		fsizeKBobj2[relativePS] := 1
+	else
+		fsizeKBobj2[relativePS] := A_LoopFileSizeKB
 	;fMD5obj2[relativePS] := MD5_File(A_LoopFilePath)
 	Tmp_Str .= relativePS "`n"
 }
@@ -263,9 +284,10 @@ Loop, parse, Tmp_Str, `n, `r
 	{
 		if (fsizeobj1[A_LoopField] = fsizeobj2[A_LoopField])   ; 文件大小相等
 		{
-			if (判断类型 = "最近修改时间") ; 文件大小相同通过最近修改时间来判断为文件是否相同而不计算MD5
+			if (判断类型 = "最近修改时间") ; 文件大小相同, 通过最近修改时间来判断为文件是否相同而不计算MD5
 			{
-				if (flastwriteobj1[A_LoopField] = flastwriteobj2[A_LoopField]) or (folderobj2[A_LoopField] = "folder")
+				; 右侧修改时间较新则不勾选左侧, 判断两者相同
+				if (flastwriteobj1[A_LoopField] <= flastwriteobj2[A_LoopField]) or (folderobj2[A_LoopField] = "folder")
 				{
 					LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeKBobj2[A_LoopField], "是")
 				}
@@ -273,7 +295,7 @@ Loop, parse, Tmp_Str, `n, `r
 				{
 					LV_Add("", A_Index, A_LoopField, flastwriteobj2[A_LoopField], fsizeKBobj2[A_LoopField], "否")
 					Gui, ListView, filelist1
-					LV_Modify(A_Index, "check")    ; 文件大小相同但是最近修改时间不同则勾选左侧(不管右侧是否是较新的文件, 左侧为准)
+					LV_Modify(A_Index, "check")    ; 文件大小相同, 但是最近修改时间左侧新于右侧, 则以左侧为准勾选左侧(左→右)
 				}
 			}
 			else if (判断类型 = "文件md5")  ; 通过md5来判断文件是否相同
@@ -324,6 +346,7 @@ Gui, ListView, filelist2
 	LV_ModifyCol()
 	LV_ModifyCol(1, "Logical")
 	LV_ModifyCol(2, 300)
+	LV_ModifyCol(5, 40)
 }
 
 GuiControl, +redraw, filelist1
@@ -332,6 +355,7 @@ GuiControl, +redraw, filelist2
 CF_ToolTip("对比完成", 3000)
 GuiControl, Enable, gxz
 GuiControl, Enable, gxzy
+GuiControl, Enable, gxzytb
 IH := LV_GetItemHeight(HLV1)
 OnMessage(0x004E, "On_WM_NOTIFY")
 WinActivate, 文件夹同步 ahk_class AutoHotkeyGUI
@@ -356,6 +380,109 @@ if (A_GuiControl = "filelist2") && (A_GuiEvent = "Normal")
 	if RF
 		LV_Modify(RF, "Select Focus Vis")
 }
+if (A_GuiEvent = "I")
+{
+	if InStr(ErrorLevel, "c")
+	{
+		GuiControl, Disable, gxzytb
+		GuiControl, Disable, gxz
+		GuiControl, Disable, gxzy
+	}
+}
+return
+
+showNot:
+Gui, 66: Default
+GuiControl, Disable, gxzytb
+GuiControl, Disable, gxz
+GuiControl, Disable, gxzy
+
+Gui, ListView, filelist2
+rowscounter := LV_GetCount()
+GuiControl, -redraw, filelist2
+Loop % rowscounter
+{
+	LV_GetText(RetrievedText, rowscounter + 1 - A_Index, 5)
+	if (RetrievedText = "是")
+	{
+		LV_Delete(rowscounter + 1 - A_Index)
+		;FileAppend, %B_Index%-%A_Index%`n,%A_Desktop%\123.txt
+	}
+}
+GuiControl, +redraw, filelist2
+
+Gui, ListView, filelist1
+rowscounter := LV_GetCount()
+GuiControl, -redraw, filelist1
+Loop % rowscounter
+{
+	SendMessage, 0x102C, rowscounter - A_Index, 0xF000, SysListView321
+	IsChecked := (ErrorLevel >> 12) - 1
+	if !IsChecked
+		LV_Delete(rowscounter + 1 - A_Index)
+}
+GuiControl, +redraw, filelist1
+Return
+
+singlesave:
+Gui, 66: Default
+Gui, ListView, filelist1
+RowNumber := LV_GetNext("F")
+if RowNumber
+{
+	LV_GetText(Tmp_Str, RowNumber, 2)
+	if (folderobj1[Tmp_Str] = "folder" )
+		FileCreateDir, %folder2%\%Tmp_Str%       ; 新建文件夹
+	else
+	{
+		FileCopy, %folder1%\%Tmp_Str%, %folder2%\%Tmp_Str%, 1   ; 同步文件
+	}
+	LV_Modify(RowNumber, "-check")
+}
+Return
+
+rpview:
+Gui, 66: Default
+
+Gui, ListView, filelist1
+RowNumber := 0  ; 这样使得首次循环从列表的顶部开始搜索.
+Tmp_Str := ""
+Loop
+{
+	RowNumber := LV_GetNext(RowNumber, "C")  ; 在前一次找到的位置后继续搜索.
+	;msgbox % RowNumber
+	if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
+		break
+
+	LV_GetText(Tmp_Value, RowNumber, 2)
+	Tmp_index := Format("{:04}", A_Index)
+	if (folderobj1[Tmp_Value] = "folder" )
+		Tmp_Str .= Tmp_index ". 新建文件夹: " Tmp_Value "`n"
+	else
+	{
+		if folderobj2[Tmp_Value]
+			Tmp_Str .= Tmp_index ". 同步的文件: "  Tmp_Value "`n"
+		else
+			Tmp_Str .= Tmp_index ". 新建的文件: "  Tmp_Value "`n"
+	}
+}
+
+Gui, ListView, filelist2
+RowNumber := 0
+Loop
+{
+	RowNumber := LV_GetNext(RowNumber, "C")  ; 在前一次找到的位置后继续搜索.
+	if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
+		break
+	LV_GetText(Tmp_Value, RowNumber, 2)
+	Tmp_index := Format("{:04}", A_Index)
+	if (folderobj2[Tmp_Value] = "folder" )
+		Tmp_Str .= Tmp_index ". 删除的文件夹: " Tmp_Value "`n"
+	else
+		Tmp_Str .= Tmp_index ". 删除的文件: " Tmp_Value "`n"
+}
+;msgbox % Tmp_Str
+GuiText(Tmp_Str, "文件夹同步操作预览", 500, 20)
 return
 
 save:
@@ -403,50 +530,6 @@ Loop
 		FileRemoveDir, %folder2%\%Tmp_Str%   ; 删除右侧有而左侧没有的文件夹
 }
 CF_ToolTip("同步完成", 3000)
-return
-
-rpview:
-Gui, 66: Default
-
-Gui, ListView, filelist1
-RowNumber := 0  ; 这样使得首次循环从列表的顶部开始搜索.
-Tmp_Str := ""
-Loop
-{
-	RowNumber := LV_GetNext(RowNumber, "C")  ; 在前一次找到的位置后继续搜索.
-	;msgbox % RowNumber
-	if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
-		break
-
-	LV_GetText(Tmp_Value, RowNumber, 2)
-	Tmp_index := Format("{:04}", A_Index)
-	if (folderobj1[Tmp_Value] = "folder" )
-		Tmp_Str .= Tmp_index ". 新建文件夹: " Tmp_Value "`n"
-	else
-	{
-		if folderobj2[Tmp_Value]
-			Tmp_Str .= Tmp_index ". 同步的文件: "  Tmp_Value "`n"
-		else
-			Tmp_Str .= Tmp_index ". 新建的文件: "  Tmp_Value "`n"
-	}
-}
-
-Gui, ListView, filelist2
-RowNumber := 0
-Loop
-{
-	RowNumber := LV_GetNext(RowNumber, "C")  ; 在前一次找到的位置后继续搜索.
-	if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
-		break
-	LV_GetText(Tmp_Value, RowNumber, 2)
-	Tmp_index := Format("{:04}", A_Index)
-	if (folderobj2[Tmp_Value] = "folder" )
-		Tmp_Str .= Tmp_index ". 删除的文件夹: " Tmp_Value "`n"
-	else
-		Tmp_Str .= Tmp_index ". 删除的文件: " Tmp_Value "`n"
-}
-;msgbox % Tmp_Str
-GuiText(Tmp_Str, "文件夹同步操作预览", 500, 20)
 return
 
 delfillefromlist:
