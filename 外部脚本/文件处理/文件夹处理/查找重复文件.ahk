@@ -1,9 +1,13 @@
 ﻿CandySel :=  A_Args[1]
 ;CandySel := "C:\Documents and Settings\Administrator\Desktop\文本碎片小脚本"
-Gui, Add, Text, x10 y10 h25, 查找文件夹:
-Gui, Add, Edit, xp+80 yp w500 h25 vsfolder, % CandySel
-Gui, Add, Button, xp+510 yp-2 w60 h30 gstartsearch, 开始查找
-Gui, Add, ListView, x10 y55 w700 h500 vfilelist Checked hwndHLV AltSubmit, 文件名|相对路径|大小|修改日期|完整路径|md5
+Gui, Add, Text, x10 y15 h25, 查找文件夹:
+Gui, Add, Edit, xp+80 yp-5 w550 h25 vsfolder, % CandySel
+Gui, Add, Button, xp+560 yp-2 w60 h30 gstartsearch, 开始查找
+Gui, Add, Text, x10 yp+40 h25, 指定扩展名:
+Gui, Add, Edit, xp+80 yp-5 w550 h25 vsExt,
+Gui, Add, Text, x10 yp+40 h25, 目标文件夹:
+Gui, Add, Edit, xp+80 yp-5 w550 h25 vtfolder,
+Gui, Add, ListView, x10 yp+40 w700 h500 vfilelist Checked hwndHLV AltSubmit, 文件名|相对路径|大小|修改日期|完整路径|md5
 Gui, Add, Button, xp yp+510 w60 h30 guncheckall, 全不选
 Gui, Add, Button, xp+70 yp w60 h30 gEditfilefromlist, 编辑文件
 Gui, Add, Button, xp+70 yp w60 h30 gopenfilefromlist, 打开文件
@@ -11,24 +15,28 @@ Gui, Add, Button, xp+70 yp w60 h30 gopenfilepfromlist, 打开路径
 
 Gui, Add, Radio, xp+120 yp w70 h30 Checked1 vactionmode, 删除勾选
 Gui, Add, Radio, xp+70 yp w160 h30 , 移动勾选到目标文件夹
-Gui, Add, Button, xp+160 yp w60 h30 grpview, 预览结果
+Gui, Add, Button, xp+170 yp w60 h30 grpview, 预览结果
 Gui, Add, Button, xp+70 yp w60 h30 grundel, 执行
-Gui, Add, Text, x10 yp+40 h25, 目标文件夹:
-Gui, Add, Edit, xp+80 yp w500 h25 vtfolder, 
+gui, Show,, 查找文件夹中的重复文件
+
 if FileExist(CandySel)
 	gosub startsearch
-gui, Show, , 搜索文件夹中的重复文件
 Return
 
 startsearch:
-folderobj := {}, fsizeobj := {}, fMD5obj := {}, md5obj := {}
 gui, Submit, NoHide
-st := A_TickCount
+folderobj := {}, fsizeobj := {}, fMD5obj := {}, md5obj := {}
+ToolTip, % "正在查找重复文件, 请稍候..."
 LV_Delete()
 Loop, Files, %sfolder%\*.*, FR
 {
 	if A_LoopFileSize = 0
 		continue
+	if sExt
+	{
+		if A_LoopFileExt not in %sExt%
+			continue
+	}
 	if !fsizeobj[A_LoopFileSize]
 	{
 		fsizeobj[A_LoopFileSize] := A_LoopFilePath  ; 大小不一致的文件记入大小库中
@@ -78,6 +86,7 @@ Loop, Files, %sfolder%\*.*, FR
 	}
 }
 ;msgbox % "文件遍历完成. 用时: " A_TickCount - st
+ToolTip
 GuiControl, -redraw, filelist
 for nFile in folderobj
 {
@@ -141,7 +150,7 @@ if (actionmode = 2)
 {
 	if !tfolder
 	{
-		msgbox 没有设置目标文件夹, 请设置或勾选删除文件.
+		msgbox 目标文件夹为空, 请设置目标文件夹或选择删除勾选.
 		return
 	}
 	tipStr := " 移动文件: "
@@ -281,4 +290,16 @@ MD5_File( sFile="", cSz=4 ) { ; www.autohotkey.com/forum/viewtopic.php?p=275910#
  Loop % StrLen( Hex:="123456789ABCDEF0" )
   N := NumGet( MD5_CTX,87+A_Index,"Char"), MD5 .= SubStr(Hex,N>>4,1) . SubStr(Hex,N&15,1)
 Return MD5
+}
+
+CF_ToolTip(tipText, delay := 1000)
+{
+	ToolTip
+	ToolTip, % tipText
+	SetTimer, RemoveToolTip, % "-" delay
+return
+
+RemoveToolTip:
+	ToolTip
+return
 }

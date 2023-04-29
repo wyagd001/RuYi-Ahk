@@ -28,7 +28,7 @@ Else
 		UnRAR(A_LoopField, OutDir)
 	}
 }
-ExitApp
+return
 
 ;来源网址: https://www.autohotkey.com/boards/viewtopic.php?t=55680
 ; UnRAR.dll/UnRAR64.dll ahk demo, reads password from UTF-8 encoded "password.txt"
@@ -41,7 +41,7 @@ UnRar(RarFile, DestPath="")
 	static	hModule
 		, UnRAR := A_ScriptDir "\..\..\引用程序\x64\UnRAR.dll"
 		, RarCallBack, Passwords
-		, ERAR := {11:"Not enough memory", 12:"Bad data (broken header/CRC error)", 13:"Bad archive", 14:"Unknown encryption", 15:"Cannot open file", 16:"Cannot create file", 17:"Cannot close file", 18:"Cannot read file", 19:"Cannot write file", 20:"Buffer too small", 21:"Unknown error", 22:"Missing password", 23:"Reference error", 24:"Invalid password"}
+		, ERAR := {11:"内存不足", 12:"Bad data (broken header/CRC error)", 13:"Bad archive", 14:"Unknown encryption", 15:"不能打开文件", 16:"Cannot create file", 17:"Cannot close file", 18:"不能读取文件", 19:"Cannot write file", 20:"Buffer too small", 21:"Unknown error", 22:"缺少密码", 23:"Reference error", 24:"无效的密码"}
 
 	If (A_PtrSize="" || A_PtrSize="4")
 		A_PtrSize := 4, Ptr := "UInt", UnRAR := A_ScriptDir "\..\..\引用程序\x32\UnRAR.dll"
@@ -205,6 +205,7 @@ struct RARHeaderDataEx
 	Handle := DllCall(UnRAR "\RAROpenArchiveEx", Ptr, &RAROpenArchiveDataEx, Ptr)
 	VarSetCapacity(RARHeaderDataEx, 10224 + A_PtrSize*3, 0)
 	PasswordIdx := 1, TriedPasswords := "`n"						; initialize password attempts for current archive
+	haveunrarfile_obj := {}
 
 	while !HeaderResult := DllCall(UnRAR "\RARReadHeaderEx", Ptr, Handle, Ptr, &RARHeaderDataEx)
 	{
@@ -215,8 +216,9 @@ struct RARHeaderDataEx
 		{
 			If !Passwords	
 			{
-				FileRead, src, *P65001 Password.txt	; 1200 unicode or 65001 UTF-8
+				FileRead, src, *P65001 %A_ScriptDir%\..\..\配置文件\解压密码.txt	; 1200 unicode or 65001 UTF-8
 				Passwords := StrSplit(RegExReplace(src, "[`r`n]+", "`n"), "`n")	; Initialise array, skip blank lines
+				;msgbox % Array_ToString(Passwords)
 			}
 			If !TryPassword								; Use Last successful password if available
 				TryPassword := Passwords[PasswordIdx]
@@ -227,7 +229,9 @@ struct RARHeaderDataEx
 
 		if ProcessResult := DllCall(UnRAR "\RARProcessFileW", Ptr, Handle, "Int", 2, Ptr, &DestPath, Ptr, &DestName)	; RAR_SKIP=0, RAR_TEST=1, RAR_EXTRACT=2
 		{
-			if (TryPassword) && (ProcessResult=12 || ProcessResult=24)		; if unsuccessful password (crc / password error)
+			if haveunrarfile_obj[UnPackFileName]
+				continue
+			if (StrLen(TryPassword) > 0) && (ProcessResult=12 || ProcessResult=24)		; if unsuccessful password (crc / password error)
 			{
 				TriedPasswords .= TryPassword "`n"				; save previously tried passwords to avoid duplicates
 				TryPassword := ""						; make password nul to signal that last password failed
@@ -243,17 +247,20 @@ struct RARHeaderDataEx
 				VarSetCapacity(RARHeaderDataEx, 10224 + A_PtrSize*3, 0)
 				continue
 			}
-			GuiControl,,UnRARLog, % UnRARLog " Error #" ProcessResult ": " ERAR[ProcessResult] "`n"
+			;msgbox % TryPassword
+			GuiControl,,UnRARLog, % UnRARLog " 错误号 #" ProcessResult ": " ERAR[ProcessResult] "`n"
 				Break
 		}
 
 		UnRARLog .= "`t(" UnPackSize " bytes)`n"
 		if Flags & 4									; save successful password to file & password list if user provided password
 		{
+			; 使用密码解压成功
+			haveunrarfile_obj[UnPackFileName] := 1
 			UnRARLog .= "Password #" PasswordIdx ": " TryPassword "`n"
 			If Passwords.Length() < PasswordIdx
 			{
-				FileAppend, `n%TryPassword%, Password.txt, UTF-8
+				FileAppend, `n%TryPassword%, %A_ScriptDir%\..\..\配置文件\解压密码.txt, UTF-8
 				Passwords[PasswordIdx] := TryPassword
 			}  
 		}
@@ -280,11 +287,12 @@ RarCallback(Msg, User, P1, P2){		; Msg UCM_CHANGEVOLUME = 0, UCM_PROCESSDATA = 1
 		Progress += P2
 		GuiControl, UnRAR:, Progress, % Progress*400/UnPackSize
 	} else if (Msg=2 || Msg=3){	; P1 = pointer to password buffer, P2 = size of buffer
-		IfEqual, TryPassword	; Ask for password if no password available
+		if (StrLen(TryPassword) = 0)	; Ask for password if no password available
 		{
 			InputBox, TryPassword, Password required for %UnPackFileName%, Please enter password for %UnPackFileName%,,,,,,,,
 			IfNotEqual, ErrorLevel, 0, Return, -1
 		}
+		;msgbox % TryPassword
 		StrPut(TryPassword, P1, P2, Msg=3 ? "utf-16" : "cp0")
 	}
 	return 1
@@ -302,4 +310,18 @@ Local Q, F := VarSetCapacity(Q,520,0)
   DllCall("kernel32\GetFullPathNameW", "WStr",sFile, "UInt",260, "Str",Q, "PtrP",F)
   DllCall("shell32\PathYetAnotherMakeUniqueName","Str",Q, "Str",Q, "Ptr",0, "Ptr",F)
 Return A_IsUnicode ? Q : StrGet(&Q, "UTF-16")
+}
+
+Array_ToString(array, depth=5, indentLevel="")
+{
+   for k,v in Array
+   {
+      list.= indentLevel "[" k "]"
+      if (IsObject(v) && depth>1)
+         list.="`n" Array_ToString(v, depth-1, indentLevel . "    ")
+      Else
+         list.=" => " v
+      list.="`n"
+   }
+   return rtrim(list)
 }
