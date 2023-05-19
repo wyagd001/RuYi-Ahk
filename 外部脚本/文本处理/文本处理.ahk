@@ -7,6 +7,9 @@ if !CandySel
 	DetectHiddenWindows, Off
 }
 
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e982.png"
+
 gui +ReSize +hwndGuiID +Delimiter`n
 gui, font, s11, 宋体
 gui, add, listbox, x5 y5 vcomm w160 h635 gupdateparam, 
@@ -43,8 +46,6 @@ Menu, ContextMenu, Add, 粘贴, RichEdit_Paste
 Menu, ContextMenu, Add, 清除, RichEdit_Del
 Menu, ContextMenu, Add
 Menu, ContextMenu, Add, 全选, RichEdit_SelAll
-Menu, Tray, UseErrorLevel
-Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e982.png"
 OnMessage(0x4a, "Receive_WM_COPYDATA")
 return
 
@@ -239,7 +240,7 @@ else if (comm = "字数统计")
 else if (comm = "行提取")
 {
 	commmode("模式:", "其他选项:",, "enable", "enable")
-	GuiControl,, myedit1, `n提取中文`n`ncsv提取列`n
+	GuiControl,, myedit1, `n提取中文`n`ncsv提取列`n按Tab提取列`n
 	GuiControl,, myedit2, `n ❤❤❤提取中文的连接字符(空格)`n`n1|2|3❤❤❤提取列指定要提取的列号`n
 }
 else if (comm = "按条件提取删除行")
@@ -1020,7 +1021,7 @@ if !myedit1
 myedit2 := SubStr(myedit2, 1, (pos := InStr(myedit2, "❤❤❤")) ? pos - 1 : 3)
 if !myedit2
 	myedit2 := 1
-;MsgBox % myedit1 ", " myedit2 ", " myedit3
+MsgBox % myedit1 ", " myedit2 ", " myedit3
 if zhuanyi
 {
 	myedit3 := StrReplace(myedit3, "\r", "`r")
@@ -1054,6 +1055,19 @@ if (myedit1 = "csv提取列")
 	{
 		linestr := ""
 		Loop Parse, A_LoopField, CSV
+		{
+			If (A_Index ~= "(" myedit2 ")")
+				linestr .= (linestr = "" ? "" : ",") (c := InStr(A_LoopField, ",") ? """" : "") A_LoopField c
+		}
+		newStr .= linestr "`n"
+	}
+}
+if (myedit1 = "按Tab提取列")
+{
+	Loop, Parse, oldtxt, `r, `n
+	{
+		linestr := ""
+		Loop Parse, A_LoopField, `t
 		{
 			If (A_Index ~= "(" myedit2 ")")
 				linestr .= (linestr = "" ? "" : ",") (c := InStr(A_LoopField, ",") ? """" : "") A_LoopField c
@@ -1906,6 +1920,8 @@ SortByColumn(a, b){
     return m > n ? 1 : m < n ? -1 : x > y ? 1 : x < y ? -1 : 0
 }
 
+; https://www.autohotkey.com/boards/viewtopic.php?t=74127
+; p 开始的位置(按组计算), c 提取的数量(按组计算), d 分隔符(按分隔符来分组)
 LineStr(ByRef S, P, C:="", D:="") {   ;  LineStr v0.9d,   by SKAN on D341/D449 @ tiny.cc/linestr
 Local L := StrLen(S),   DL := StrLen(D:=(D ? D : Instr(S,"`r`n") ? "`r`n" : "`n") ),   F, P1, P2
 Return SubStr(S,(P1:=L?(P!=1&&InStr(S,D,,0))?(F:=InStr(S,D,,P>0,Abs(P-1)))?F+DL:P-1<1?1:0:(F:=1)

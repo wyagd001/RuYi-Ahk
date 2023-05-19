@@ -1,7 +1,4 @@
 ﻿; 1045
-;cando_ListHardLinks:
-;msgbox % ListHardLinks(CandySel)
-;return 
 CandySel := A_Args[1]
 SplitPath, CandySel, CandySel_FileName, CandySel_ParentPath, CandySel_Ext, CandySel_FileNameNoExt, CandySel_Drive
 CandySel_Ext := CF_IsFolder(CandySel) ? "Folder" : CandySel_Ext
@@ -125,31 +122,6 @@ Return (DllCall("CreateHardLink", "Str", OutFile, "Str", InFile, "Int",0))
 CreateSymbolicLink(InFile, OutFile, IsDirectoryLink := 0)
 {
 Return (DllCall("CreateSymbolicLink", "Str", OutFile, "Str", InFile, "UInt", IsDirectoryLink))
-}
-
-ListHardLinks(sFile)
-{
-	;static ERROR_MORE_DATA := 234
-	static MAX_PATH := 260
-	buflen := MAX_PATH
-	VarSetCapacity(linkname, buflen)
-	handle := DllCall("FindFirstFileNameW", "WStr", sFile, "UInt", 0, "UInt*", buflen, "WStr", linkname)
-	root := SubStr(sFile, 1, 2)
-	paths := ""
-	try
-	{
-		Loop
-		{
-			paths .= root linkname "`n"
-			
-			buflen := MAX_PATH
-			VarSetCapacity(linkname, buflen)
-			more := DllCall("FindNextFileNameW", "UInt", handle, "UInt*", buflen, "WStr", linkname)
-		} until (!more)
-	} finally
-	DllCall("FindClose", "UInt", handle)
-	
-	return paths
 }
 
 CF_GetDriveFS(sfile){
