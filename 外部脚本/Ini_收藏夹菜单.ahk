@@ -74,15 +74,18 @@ show_obj(obj, menu_name := ""){
 		}
 		Else
 		{
-			Menu, % menu_name, add, % k, MenuHandler
+			Sub_menu := GetStringIndex(v, 2)
+			Menu, % menu_name, add, % Sub_menu, MenuHandler
 		}
 	}
 	if main = 1
-		menu,% menu_name, show
+		menu, % menu_name, show
 }
 
 MenuHandler:
-Candy_Cmd := IniMenuobj[A_thisMenu][A_ThisMenuItem]
+Candy_Cmd := IniMenuobj[A_thisMenu][A_ThisMenuItemPos-2]
+Candy_Cmd := GetStringIndex(Candy_Cmd)
+;msgbox % A_ThisMenuItem " - " Candy_Cmd
 if (RegExMatch(Candy_Cmd, "i)^(HKCU|HKCR|HKCC|HKU|HKLM|HKEY|计算机\\HK|\[HK)"))
 {
 	f_OpenReg(Candy_Cmd)
@@ -110,30 +113,35 @@ SplitPath, CandySel, CandySel_FileName, CandySel_ParentPath, CandySel_Ext, Candy
 FileRead, Tmp_Str, % IniMenuInifile
 if instr(Tmp_Str, CandySel)
 	return
+; 文件
 if fileexist(CandySel)
 {
+	; 文件
 	if !InStr(FileExist(CandySel), "D")
 	{
+		; 程序
 		if (CandySel_Ext = "exe")
-			iniwrite, %CandySel%, %IniMenuInifile%, 程序, % CandySel_FileNameNoExt "．" CandySel_Ext
+			iniwrite, % CandySel "|" CandySel_FileNameNoExt "．" CandySel_Ext, %IniMenuInifile%, 程序, % IniMenuobj["程序"].Count() + 1
 		else
-			iniwrite, %CandySel%, %IniMenuInifile%, 文件, % CandySel_FileNameNoExt "．" CandySel_Ext
+		{
+			iniwrite, % CandySel "|" CandySel_FileNameNoExt "．" CandySel_Ext, %IniMenuInifile%, 文件, % IniMenuobj["文件"].Count() + 1
+		}
 	}
 	else
-		iniwrite, %CandySel%, %IniMenuInifile%, 文件夹, %CandySel_FileNameNoExt%
+		iniwrite, % CandySel "|" CandySel_FileNameNoExt, %IniMenuInifile%, 文件夹, % IniMenuobj["文件夹"].Count() + 1
 }
 else if RegExMatch(CandySel, "i)^(https://|http://)+(.*\.)+.*")
 {
 	domain := StrReplace(CandySel_Drive, "https://", "")
 	domain := StrReplace(domain, "http://", "")
-	iniwrite, %CandySel%, %IniMenuInifile%, 网址, %domain%
+	iniwrite, % CandySel "|" domain, %IniMenuInifile%, 网址, % IniMenuobj["网址"].Count() + 1
 }
 else if (RegExMatch(CandySel, "i)^(HKCU|HKCR|HKCC|HKU|HKLM|HKEY|计算机\\HK|\[HK)"))
 {
-	iniwrite, %CandySel%, %IniMenuInifile%, 注册表, %CandySel_FileName%
+	iniwrite, % CandySel "|" CandySel_FileName, %IniMenuInifile%, 注册表, % IniMenuobj["注册表"].Count() + 1
 }
 else
-	iniwrite, %CandySel%, %IniMenuInifile%, 命令, %CandySel%
+	iniwrite, % CandySel "|" CandySel, %IniMenuInifile%, 命令, % IniMenuobj["命令"].Count() + 1
 return
 
 f_OpenReg(RegPath)
@@ -356,4 +364,11 @@ GetCommandLine2(pid)
 {
 	for process in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process where ProcessId=" pid)
 		Return sCmdLine := process.CommandLine
+}
+
+GetStringIndex(String, Index := 1)
+{
+	arrCandy_Cmd_Str := StrSplit(String, "|", " `t")
+	NewStr := arrCandy_Cmd_Str[Index]
+	return NewStr
 }

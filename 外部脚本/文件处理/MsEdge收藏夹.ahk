@@ -3,6 +3,14 @@
 CandySel := A_Args[1]
 if !CandySel
 	CandySel := A_AppData "\..\Local\Microsoft\Edge\User Data\Default\bookmarks"
+if !FileExist(CandySel)
+{
+	InputBox, CandySel, Edge 收藏夹, 请输入 Edge 浏览器收藏夹文件 bookmarks 的路径,, 640, 140
+	if ErrorLevel
+		ExitApp
+}
+if !FileExist(CandySel)
+	ExitApp
 ATA_settingFile := A_ScriptDir "\..\..\配置文件\如一.ini"
 FileRead, OutputVar, % "*P65001 " CandySel
 ;msgbox % OutputVar "`n" filename

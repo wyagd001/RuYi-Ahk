@@ -1,147 +1,138 @@
-﻿; 1044
-CandySel := A_Args[1]
-if !CandySel
-{
-	DetectHiddenWindows, On
-	ControlGetText, CandySel, Edit1, 获取当前窗口信息_ 
-	DetectHiddenWindows, Off
-	if !CandySel
-		exitapp
-	MultiF := InStr(CandySel, "`r")
-	if MultiF
-	{
-		CandySel_org := CandySel
-		CandySel := SubStr(CandySel, 1, MultiF - 1)   ;  第一行的文件
-	}
-}
-aInCp := File_GetEncoding(CandySel)
-SplitPath, CandySel, CandySel_FileName, , , , CandySel_Drive
-vvaluetocp := {"ANSI(中文简体)": "CP936", "UTF-8 BOM": "UTF-8", "UTF-8 Raw": "UTF-8-Raw", "Unicode": "UTF-16","Unicode 高位在前": "cp1201", "ANSI(日文)": "CP932", "ANSI(韩文)": "CP949", "ANSI(拉丁语 1)": "CP1252"}
-cptovvalue := {"CP936": "ANSI(中文简体)", "UTF-8": "UTF-8 BOM", "UTF-8-Raw": "UTF-8 Raw", "UTF-16": "Unicode", "cp1201": "Unicode 高位在前"}
+﻿; 1316
+CandySel :=  A_Args[1]
+;CandySel := "C:\Documents and Settings\Administrator\Desktop\Gui"
+Gui, Add, Text, x10 y15 h25, 查找文件夹:
+Gui, Add, Edit, xp+80 yp-5 w550 h25 vsfolder, % CandySel
+Gui, Add, Button, xp+560 yp-2 w60 h30 gstartsearch, 开始查找
+Gui, Add, Text, x10 yp+40 h25, 指定扩展名:
+Gui, Add, Edit, xp+80 yp-5 w550 h25 vsExt, % ",txt,ahk,md"
+Gui, Add, ListView, x10 yp+40 w700 h500 vfilelist Checked hwndHLV AltSubmit, 文件名|相对路径|扩展名|文件编码|大小(KB)|修改日期|完整路径
+Gui, Add, Button, xp yp+510 w60 h30 guncheckall, 全不选
+Gui, Add, Button, xp+70 yp w60 h30 gEditfilefromlist, 编辑文件
+Gui, Add, Button, xp+70 yp w60 h30 gopenfilefromlist, 打开文件
+Gui, Add, Button, xp+70 yp w60 h30 gopenfilepfromlist, 打开路径
 
-gui add, text, x5 y5, 原编码:
-gui add, ComboBox, xp+50 yp-3 w110 vvaInCp, ANSI|UTF-8 Raw|UTF-8 BOM|Unicode|Unicode 高位在前|ANSI(日文)|ANSI(韩文)|ANSI(拉丁语 1)
-gui add, text, xp+120 y5, 新编码:
-gui add, ComboBox, xp+50 yp-3 w100 vvOutCp, ANSI|UTF-8 Raw|UTF-8 BOM|Unicode|Unicode 高位在前
-gui add, Button, xp+120 h25 gchange, 转换
-Gui, Add, Radio, xs h20 vMyRadioGroup Checked, 新建文件, 并保留原文件
-Gui, Add, Radio, xs h20, 文件名不变并删除原文件
-GuiControl, ChooseString, vaInCp, % cptovvalue[aInCp]
-if MultiF
-	TC = 批量
-else
-	TC = %CandySel_Drive%\...\%CandySel_FileName%
-gui show,, 文件 %TC% 转码
+Gui, Add, Radio, xp+140 yp w120 h30 Checked1 vOrg_Code, UTF-8(带BOM)
+Gui, Add, Radio, xp+140 yp w120 h30 Checked1, Unicode(UTF-16)
+
+Gui, Add, Button, xp+150 yp w60 h30 grunzhuanma, 转码
+gui, Show,, 列出文件夹中文本文件的编码
+
+if FileExist(CandySel)
+	gosub startsearch
+Return
+
+startsearch:
+gui, Submit, NoHide
+ToolTip, % "正在遍历文本文件编码类型, 请稍候..."
+LV_Delete()
+Loop, Files, %sfolder%\*.*, FR
+{
+	if A_LoopFileSize = 0
+		continue
+	if sExt
+	{
+		if A_LoopFileExt not in %sExt%
+			continue
+	}
+	LV_Add("", A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, sfolder), A_LoopFileName), A_LoopFileExt, File_GetEncoding(A_LoopFileFullPath), A_LoopFileSizeKB+1, A_LoopFileTimeModified, A_LoopFilePath)
+}
+;msgbox % "文件遍历完成. 用时: " A_TickCount - st
+ToolTip
+
+LV_ModifyCol()
+LV_ModifyCol(1, 200)
+LV_ModifyCol(2, 250)
+LV_ModifyCol(3, 60)
+LV_ModifyCol(5, 75)
+
+;FileAppend, % Array_ToString(folderobj) , %A_desktop%\123.txt
 return
 
-change:
-Gui, submit, nohide
-if instr(vaInCp, "Cp")
-	F_vaInCp := vaInCp
-else
-	F_vaInCp := vvaluetocp[vaInCp]
-if (MyRadioGroup = 1)
-{
-	loop, parse, CandySel_org, `n, `r
-	{
-		if A_LoopField
-			File_CpTransform(A_LoopField, F_vaInCp, vvaluetocp[vOutCp])
-	}
-}
-else if if (MyRadioGroup = 2)
-{
-	loop, parse, CandySel_org, `n, `r
-	{
-		if A_LoopField
-			File_CpTransform(A_LoopField, F_vaInCp, vvaluetocp[vOutCp], 0)
-	}
-}
+uncheckall:
+LV_Modify(0, "-check")
 return
+
+Editfilefromlist:
+RF := LV_GetNext("F")
+if RF
+{
+	LV_GetText(Tmp_file, RF, 7)
+}
+run notepad  %Tmp_file%
+return
+
+openfilefromlist:
+RF := LV_GetNext("F")
+if RF
+{
+	LV_GetText(Tmp_file, RF, 7)
+}
+run %Tmp_file%
+return
+
+openfilepfromlist:
+RF := LV_GetNext("F")
+if RF
+{
+	LV_GetText(Tmp_file, RF, 7)
+}
+SplitPath, Tmp_file,, OutDir
+Run, %OutDir%
+;Run, explorer.exe /select`, %Tmp_file%
+return
+
+runzhuanma:
+gui, Submit, NoHide
+
+RowNumber := 0  ; 这样使得首次循环从列表的顶部开始搜索.
+	Loop
+	{
+		RowNumber := LV_GetNext(RowNumber, "C")  ; 在前一次找到的位置后继续搜索.
+		if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
+			break
+		LV_GetText(Tmp_Path, RowNumber, 7)
+		LV_GetText(Tmp_CPcode, RowNumber, 4)
+	}
+out_code := Org_Code=1?"UTF-8":"CP1200"
+if (Tmp_CPcode != out_code)
+	File_CpTransform(Tmp_Path, Tmp_CPcode, out_code, 0)
+Return
 
 GuiClose:
-GuiEscape:
-Gui, Destroy
+Guiescape:
+Gui Destroy
+Gui, GuiText: Destroy
 exitapp
+Return
+
+GuiText(Gtext, Title:="", w:=300, l:=20)
+{
+	global myedit, TextGuiHwnd
+	Gui,GuiText: Destroy
+	Gui,GuiText: Default
+	Gui, +HwndTextGuiHwnd
+	Gui, Add, Edit, Multi readonly w%w% r%l% vmyedit
+	GuiControl,, myedit, %Gtext%
+	gui, Show, AutoSize, % Title
+	return
+
+	GuiTextGuiClose:
+	GuiTextGuiescape:
+	Gui, GuiText: Destroy
+	Return
+}
+
+CF_ToolTip(tipText, delay := 1000)
+{
+	ToolTip
+	ToolTip, % tipText
+	SetTimer, RemoveToolTip, % "-" delay
 return
 
-File_CpTransform(aInFile, aInCp := "", aOutCp := "", aOutNewFile := 1)
-{
-	if (aInCp = "CP1201")
-	{
-		_hFile := FileOpen(aInFile, "r")
-		_hFile.Position := 2
-		_hFile.RawRead(FileR_TFRaw, _hFile.length)
-		aInLen := _hFile.length - 2
-		_hFile.Close()
-	}
-	else
-	{
-		FileEncoding, % aInCp
-		FileRead, FileR_TFC, %aInFile%
-		FileEncoding
-	}
-
-	aSysCp := "CP" DllCall("GetACP")
-	if !aOutCp or (aOutCp = "ansi")
-		aOutCp := aSysCp
-
-	SplitPath, % aInFile, , aOutDir, OutExtension, OutNameNoExt
-	if aOutNewFile
-	{
-		aOutFile := aOutDir "\" OutNameNoExt "(" aInCp "转码" aOutCp ")." OutExtension
-		aOutFile := PathU(aOutFile)
-	}
-	else
-	{
-		FileRecycle, %aInFile%
-		aOutFile := aInFile
-	}
-
-	if (aOutCp != "CP1201")
-	{
-		if (aInCp = "CP1201")
-		{
-			LCMAP_BYTEREV := 0x800
-			cch:=DllCall("LCMapStringW", "UInt", 0, "UInt", LCMAP_BYTEREV, "Str", FileR_TFRaw, "UInt", -1, "Str", 0, "UInt", 0)
-			VarSetCapacity(LE, cch * 2)
-			DllCall("LCMapStringW", "UInt",0, "UInt", LCMAP_BYTEREV, "Str", FileR_TFRaw, "UInt", cch, "Str", LE, "UInt", cch)
-			StrLE := StrGet(&LE, aInLen / 2)
-			FileAppend, %StrLE%, % aOutFile, % aOutCp
-			FileR_TFRaw := StrLE := LE := ""
-			return
-		}
-		else
-		{
-			FileAppend, %FileR_TFC%, % aOutFile, % aOutCp
-			FileR_TFC := ""
-			return
-		}
-	}
-	else if (aOutCp = "CP1201")
-	{
-		if (aInCp = "CP1201")
-		{
-			_hFile := FileOpen(aOutFile, "w")
-			MCode(code, "FEFF")
-			_hFile.RawWrite(code, 2)
-			_hFile.RawWrite(FileR_TFRaw, aInLen)
-			FileR_TFRaw := ""
-			return
-		}
-		else
-		{
-			LCMAP_BYTEREV := 0x800
-			cch:=DllCall("LCMapStringW", "UInt",0, "UInt", LCMAP_BYTEREV, "Str", FileR_TFC, "UInt", -1, "Str", 0, "UInt", 0)
-			VarSetCapacity(BE, cch * 2)
-			DllCall("LCMapStringW", "UInt", 0, "UInt", LCMAP_BYTEREV, "Str", FileR_TFC, "UInt", cch, "Str", BE, "UInt", cch)
-			_hFile := FileOpen(aOutFile, "w")
-			MCode(code, "FEFF")
-			_hFile.RawWrite(code, 2)
-			_hFile.RawWrite(BE, cch * 2-2)
-			FileR_TFC := BE := ""
-			return
-		}
-	}
+RemoveToolTip:
+	ToolTip
+return
 }
 
 /*!
@@ -373,6 +364,90 @@ File_GetEncoding(aFile, aNumBytes = 0, aMinimum = 4)
 	return "CP" DllCall("GetACP")  
 }
 
+File_CpTransform(aInFile, aInCp := "", aOutCp := "", aOutNewFile := 1)
+{
+	if (aInCp = "CP1201")
+	{
+		_hFile := FileOpen(aInFile, "r")
+		_hFile.Position := 2
+		aInLen := _hFile.length - 2
+		_hFile.RawRead(FileR_TFRaw, aInLen)
+		_hFile.Close()
+		;msgbox % aInLen
+	}
+	else
+	{
+		FileEncoding, % aInCp
+		FileRead, FileR_TFC, %aInFile%
+		FileEncoding
+	}
+
+	aSysCp := "CP" DllCall("GetACP")
+	if !aOutCp or (aOutCp = "ansi")
+		aOutCp := aSysCp
+
+	SplitPath, % aInFile, , aOutDir, OutExtension, OutNameNoExt
+	if aOutNewFile
+	{
+		aOutFile := aOutDir "\" OutNameNoExt "(" aInCp "转码" aOutCp ")." OutExtension
+		aOutFile := PathU(aOutFile)
+	}
+	else
+	{
+		FileRecycle, %aInFile%
+		aOutFile := aInFile
+	}
+
+	if (aOutCp != "CP1201")
+	{
+		if (aInCp = "CP1201")
+		{
+			LCMAP_BYTEREV := 0x800   ; 高低位转换
+			cch := DllCall("LCMapStringW", "UInt", 0, "UInt", LCMAP_BYTEREV, "Str", FileR_TFRaw, "UInt", -1, "Str", 0, "UInt", 0)
+			;msgbox % cch  ; 长度与文件的实际长度 不一致
+			VarSetCapacity(LE, cch * 2)
+			DllCall("LCMapStringW", "UInt",0, "UInt", LCMAP_BYTEREV, "Str", FileR_TFRaw, "UInt", cch, "Str", LE, "UInt",  cch)
+			;msgbox % LE
+			StrLE := StrGet(&LE, aInLen / 2)   ; 移除掉多余的长度的乱码
+			;msgbox % StrLE
+			FileAppend, %StrLE%, % aOutFile, % aOutCp
+			FileR_TFRaw := StrLE := LE := ""
+			return
+		}
+		else
+		{
+			FileAppend, %FileR_TFC%, % aOutFile, % aOutCp
+			FileR_TFC := ""
+			return
+		}
+	}
+	else if (aOutCp = "CP1201")
+	{
+		if (aInCp = "CP1201")
+		{
+			_hFile := FileOpen(aOutFile, "w")
+			MCode(code, "FEFF")
+			_hFile.RawWrite(code, 2)
+			_hFile.RawWrite(FileR_TFRaw, aInLen)
+			FileR_TFRaw := ""
+			return
+		}
+		else
+		{
+			LCMAP_BYTEREV := 0x800
+			cch:=DllCall("LCMapStringW", "UInt",0, "UInt", LCMAP_BYTEREV, "Str", FileR_TFC, "UInt", -1, "Str", 0, "UInt", 0)
+			VarSetCapacity(BE, cch * 2)
+			DllCall("LCMapStringW", "UInt", 0, "UInt", LCMAP_BYTEREV, "Str", FileR_TFC, "UInt", cch, "Str", BE, "UInt", cch)
+			_hFile := FileOpen(aOutFile, "w")
+			MCode(code, "FEFF")
+			_hFile.RawWrite(code, 2)
+			_hFile.RawWrite(BE, cch * 2-2)
+			FileR_TFC := BE := ""
+			return
+		}
+	}
+}
+
 MCode(ByRef code, hex) 
 { ; allocate memory and write Machine Code there
 	VarSetCapacity(code, 0) 
@@ -383,7 +458,8 @@ MCode(ByRef code, hex)
 
 PathU(sFile) {                     ; PathU v0.90 by SKAN on D35E/D35F @ tiny.cc/pathu 
 Local Q, F := VarSetCapacity(Q,520,0) 
-  DllCall("kernel32\GetFullPathNameW", "WStr", sFile, "UInt", 260, "Str", Q, "PtrP", F)
-  DllCall("shell32\PathYetAnotherMakeUniqueName", "Str", Q, "Str", Q, "Ptr", 0, "Ptr", F)
+  DllCall("kernel32\GetFullPathNameW", "WStr",sFile, "UInt",260, "Str",Q, "PtrP",F)
+  DllCall("shell32\PathYetAnotherMakeUniqueName","Str",Q, "Str",Q, "Ptr",0, "Ptr",F)
 Return A_IsUnicode ? Q : StrGet(&Q, "UTF-16")
 }
+

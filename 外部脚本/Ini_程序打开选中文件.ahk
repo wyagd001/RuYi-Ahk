@@ -1,4 +1,5 @@
-﻿CandySel := A_Args[1]
+﻿; 1213
+CandySel := A_Args[1]
 IniMenuInifile := A_ScriptDir "\..\配置文件\外部脚本\ini菜单.ini"
 IniMenuobj := ini2obj(IniMenuInifile)
 show_openwith(IniMenuobj["程序"])
@@ -61,7 +62,8 @@ show_openwith(obj, menu_name := ""){
 	Menu, % menu_name, DeleteAll
 	for k,v in obj
 	{
-			Menu, % menu_name, add, % k, Menuopenwith
+		Sub_menu := GetStringIndex(v, 2)
+		Menu, % menu_name, add, % Sub_menu, Menuopenwith
 	}
 	if main = 1
 		menu,% menu_name, show
@@ -69,6 +71,14 @@ show_openwith(obj, menu_name := ""){
 }
 
 Menuopenwith:
-Candy_Cmd := IniMenuobj["程序"][A_ThisMenuItem]
+Candy_Cmd := IniMenuobj["程序"][A_ThisMenuItemPos]
+Candy_Cmd := GetStringIndex(Candy_Cmd)
 run %Candy_Cmd% %CandySel%,, UseErrorLevel
 return
+
+GetStringIndex(String, Index := 1)
+{
+	arrCandy_Cmd_Str := StrSplit(String, "|", " `t")
+	NewStr := arrCandy_Cmd_Str[Index]
+	return NewStr
+}

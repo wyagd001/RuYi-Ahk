@@ -339,6 +339,7 @@ Gui, ListView, filelist1
 	LV_ModifyCol()
 	LV_ModifyCol(1, "Logical")
 	LV_ModifyCol(2, 300)
+	LV_ModifyCol(4, "Logical")
 	LV_ModifyCol(5, 220)
 }
 Gui, ListView, filelist2
@@ -346,6 +347,7 @@ Gui, ListView, filelist2
 	LV_ModifyCol()
 	LV_ModifyCol(1, "Logical")
 	LV_ModifyCol(2, 300)
+	LV_ModifyCol(4, "Logical")
 	LV_ModifyCol(5, 40)
 }
 
@@ -419,7 +421,11 @@ Loop % rowscounter
 	SendMessage, 0x102C, rowscounter - A_Index, 0xF000, SysListView321
 	IsChecked := (ErrorLevel >> 12) - 1
 	if !IsChecked
-		LV_Delete(rowscounter + 1 - A_Index)
+	{
+		LV_GetText(RetrievedText, rowscounter + 1 - A_Index, 2)
+		if (RetrievedText != "空")
+			LV_Delete(rowscounter + 1 - A_Index)
+	}
 }
 GuiControl, +redraw, filelist1
 Return

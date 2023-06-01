@@ -1,8 +1,9 @@
-﻿#SingleInstance force
+﻿; 1308
+#SingleInstance force
 Windo_ET_PasteAll:
 Application := ComObjActive("ket.Application")
-ActiveCell := Application.ActiveCell.Address
-ActiveCell := StrReplace(ActiveCell, "$")
+ActiveCell := Application.ActiveCell.Address   ; $A$1  当前活动单元格
+ActiveCell := StrReplace(ActiveCell, "$")      ; A1
 HasFormula := Application.ActiveSheet.Range(ActiveCell).HasFormula  ; 当前单元格是否有公式
 ActiveCell_NumberFormat := Application.ActiveSheet.Range(ActiveCell).NumberFormat
 if !HasFormula

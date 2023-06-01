@@ -679,8 +679,8 @@ Yes            ;assume Yes on all queries;e,x
 ;MsgBox % h
 	if h
 	{
-		tooltip % h
-    Return 0 
+		;tooltip % h
+		Return 0 
 	}
 
   o7zip__info.OriginalSize   := NumGet(tINDIVIDUALINFO , 0, "UInt")

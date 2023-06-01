@@ -3,6 +3,14 @@
 CandySel := A_Args[1]
 if !CandySel
 	CandySel := A_AppData "\360se6\User Data\Default\a67cb9a4f61518f302b62d86e2814245\360sefav.dat"
+if !FileExist(CandySel)
+{
+	InputBox, CandySel, 360 浏览器收藏夹, 请输入 360 浏览器收藏夹文件 360sefav.dat 的路径,, 640, 140,,, Locale, 10
+	if ErrorLevel
+		return
+}
+if !FileExist(CandySel)
+	return
 ATA_settingFile := A_ScriptDir "\..\..\配置文件\如一.ini"
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\f131.png"
@@ -14,7 +22,6 @@ if (!DB.OpenDB(CandySel))
 uRLobj := dbGetTable(qstr:="")
 ;msgbox % Array_ToString(uRLobj, 5)
 show_obj(uRLobj)
-
 return
 
 dbGetTable(qstr:="")
