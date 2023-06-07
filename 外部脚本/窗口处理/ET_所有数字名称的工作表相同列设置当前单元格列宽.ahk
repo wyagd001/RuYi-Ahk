@@ -2,10 +2,10 @@
 #SingleInstance force
 Windo_ET_PasteAll:
 Application := ComObjActive("ket.Application")
-for Col in Application.Selection.Columns
+for Ocol in Application.Selection.Columns
 {
-	; Col.Column = 15 代表 o 列
-	Col_Address := Application.Columns(Col.Column).Address  ; 得到 $O:$O 
+	; Ocol.Column = 15 代表 o 列
+	Col_Address := Application.Columns(Ocol.Column).Address  ; 得到 $O:$O 
 	Col_Address := StrReplace(Col_Address, "$")
 	StringSplit, OpCol_Address, Col_Address, `:
 
