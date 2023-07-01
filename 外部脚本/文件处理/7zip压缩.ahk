@@ -16,7 +16,7 @@ global sDllPath
 
 ;o7z.opt.Output := "C:\Documents and Settings\Administrator\Desktop"
 o7z.opt.Hide := 1
-o7z.opt.ExcludeFile := ".git"
+o7z.opt.ExcludeFile := ".git"   ; 排除的文件
 
 if !instr(CandySel, "`n")
 {
