@@ -1,4 +1,5 @@
-﻿;~ #SingleInstance off
+﻿;|2.0|2023.07.01|1103
+;~ #SingleInstance off
 ;~ #NoTrayIcon
 ;~ filePath = %1%
 CandySel := A_Args[1]

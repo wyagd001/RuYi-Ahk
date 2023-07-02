@@ -1,4 +1,5 @@
-﻿  ;
+﻿;|2.0|2023.07.01|1093
+  ;
   ; AutoHotkey Version:  1.1 (modified version)
   ; Language:       English
   ; Platform:       Win9x/NT

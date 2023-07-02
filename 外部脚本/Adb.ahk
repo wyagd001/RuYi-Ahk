@@ -1,4 +1,5 @@
-﻿#SingleInstance force
+﻿;|2.0|2023.07.01|1262
+#SingleInstance force
 B_adb := A_ScriptDir "\..\引用程序\adb.exe"
 CandySel := A_Args[1]
 gui +hwndGuiID
@@ -13,7 +14,7 @@ gui, add, ComboBox, xp+140 yp w450 vmyedit2 hwndhcb gupdatecomm,
 gui, add, Text, xp-140 yp+40 w140 vmyparam3, 执行的命令:
 gui, add, Edit, xp+140 yp w450 r2 -WantReturn vmyedit3,
 gui, add, Button, xp+470 yp w60 gruncomm default, 运行
-gui, add, Edit, x175 yp+40 w585 h500 vmyedit4,
+gui, add, Edit, x175 yp+45 w585 h500 vmyedit4,
 gui, add, Button, xp+600 yp w100 gruncommincmd, 使用终端打开
 gosub updatemode
 gui, show, AutoSize, Adb 命令

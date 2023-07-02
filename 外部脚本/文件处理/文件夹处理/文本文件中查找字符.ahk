@@ -1,4 +1,5 @@
-﻿; Script Information ===========================================================
+﻿;|2.0|2023.07.01|1096
+; Script Information ===========================================================
 ; Name:         File String Search
 ; Description:  Search files for a specific string (Inspired by TLM)
 ;               https://autohotkey.com/boards/viewtopic.php?f=6&t=27299 
@@ -52,9 +53,9 @@ ControlHandler:
         
         Loop, Files, % EditDir "\" (EditType ? EditType : "*.*"), FR
         {
-            if A_LoopFileExt in ,txt,ahk,au3,htm
+            if A_LoopFileExt in txt,ahk,au3,htm
             	FileEncoding % File_GetEncoding(A_LoopFileFullPath)
-            FileEncoding % File_GetEncoding(A_LoopFileFullPath)
+            ;FileEncoding % File_GetEncoding(A_LoopFileFullPath)
             Try FileRead, MatchRead, % A_LoopFileFullPath   ;  utf8  编码的问题
 
             IfEqual, SearchStop, 1, Break

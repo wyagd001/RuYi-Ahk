@@ -1,4 +1,5 @@
-﻿CandySel := A_Args[1]
+﻿;|2.0|2023.07.01|多条目
+CandySel := A_Args[1]
 
 DetectHiddenWindows, On
 WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI

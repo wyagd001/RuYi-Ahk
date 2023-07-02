@@ -1,4 +1,5 @@
-﻿;来源网址: http://thinkai.net/page/16
+﻿;|2.0|2023.07.01|1005
+;来源网址: http://thinkai.net/page/16
 ;创建界面
 Gui, Add, Text, x0 y0 w40 h20 , 名称:
 Gui, Add, Edit, x50 y0 w280 h20 vname,

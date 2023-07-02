@@ -1,4 +1,4 @@
-﻿;; 1118
+﻿;|2.0|2023.07.01|1118
 CF_RegWrite("REG_DWORD", "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "HideFileExt", 1)
 
 CF_RegWrite(ValueType, KeyName, ValueName="", Value="")

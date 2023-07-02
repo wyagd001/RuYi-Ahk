@@ -1,5 +1,5 @@
-﻿CandySel := A_Args[1]
-; 1033,1034
+﻿;|2.0|2023.07.01|1033,1034
+CandySel := A_Args[1]
 DetectHiddenWindows, On
 WinGetTitle, h_hwnd, 获取当前窗口信息
 Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")

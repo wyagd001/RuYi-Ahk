@@ -1,4 +1,4 @@
-﻿; 1312
+﻿;|2.0|2023.07.01|1312
 #SingleInstance force
 Windo_ET_PasteAll:
 Application := ComObjActive("ket.Application")

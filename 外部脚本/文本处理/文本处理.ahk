@@ -1,4 +1,5 @@
-﻿#SingleInstance force
+﻿;|2.0|2023.07.01|1242
+#SingleInstance force
 CandySel := A_Args[1]
 if !CandySel
 {
@@ -540,7 +541,7 @@ Else if (myedit1 = "清除数字序号")
 {
 	Loop, Parse, oldtxt, `r, `n
 	{
-		NewStr .= RegExReplace(A_LoopField, "^(\d+)") "`n"
+		NewStr .= RegExReplace(A_LoopField, "^(\s?\d+)") "`n"
 	}
 }
 else

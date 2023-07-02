@@ -1,4 +1,5 @@
-﻿global A_icon := Object("计算机", "{20D04FE0-3AEA-1069-A2D8-08002B30309D}", "回收站", "{645FF040-5081-101B-9F08-00AA002F954E}", "用户的文件", "{59031a47-3f72-44a7-89c5-5595fe6b30ee}", "控制面板", "{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}", "网络", "{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}", "库", "{031E4825-7B94-4dc3-B131-E946B44C8DD5}")
+﻿;|2.0|2023.07.01|1002
+global A_icon := Object("计算机", "{20D04FE0-3AEA-1069-A2D8-08002B30309D}", "回收站", "{645FF040-5081-101B-9F08-00AA002F954E}", "用户的文件", "{59031a47-3f72-44a7-89c5-5595fe6b30ee}", "控制面板", "{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}", "网络", "{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}", "库", "{031E4825-7B94-4dc3-B131-E946B44C8DD5}")
 ;global A_icon2 := Object()
 global A_iconDy := Object("计算机", "vcomputer", "回收站", "vrecycle", "用户的文件", "vdocument", "控制面板", "vcontrol","网络", "vweb", "库", "vlib")
 global A_iconDy2 := Object("计算机", "vcomputer_all", "回收站", "vrecycle_all", "用户的文件", "vdocument_all", "控制面板", "vcontrol_all", "网络", "vweb_all", "库", "vlib_all")

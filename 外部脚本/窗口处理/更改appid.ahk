@@ -1,4 +1,5 @@
-﻿Windy_CurWin_id := A_Args[1]
+﻿;|2.0|2023.07.01|1176
+Windy_CurWin_id := A_Args[1]
 if !Windy_CurWin_id
 {
 	DetectHiddenWindows, On

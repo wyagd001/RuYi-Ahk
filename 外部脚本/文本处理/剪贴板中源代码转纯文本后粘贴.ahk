@@ -1,4 +1,4 @@
-﻿; 1303
+﻿;|2.0|2023.07.01|1305
 Clipboard := UnHTML5(Clipboard)
 send ^v
 return

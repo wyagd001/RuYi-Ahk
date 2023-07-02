@@ -1,4 +1,5 @@
-﻿CandySel :=  A_Args[1]
+﻿;|2.0|2023.07.01|1177,1178
+CandySel :=  A_Args[1]
 CandySel2 :=  A_Args[2]
 if !CandySel2
 	CandySel2 := "*"

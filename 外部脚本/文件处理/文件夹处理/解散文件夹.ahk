@@ -1,4 +1,5 @@
-﻿CandySel :=  A_Args[1]
+﻿;|2.0|2023.07.01|1040
+CandySel :=  A_Args[1]
 SplitPath, CandySel,, CandySel_ParentPath
 ; 1040
 ErrorCount := MoveFilesAndFolders(CandySel "\*.*", CandySel_ParentPath)

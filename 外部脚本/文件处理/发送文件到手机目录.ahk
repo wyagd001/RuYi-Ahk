@@ -1,4 +1,5 @@
-﻿CandySel :=  A_Args[1], phonefolder :=  A_Args[2]
+﻿;|2.0|2023.07.01|1219
+CandySel :=  A_Args[1], phonefolder :=  A_Args[2]
 B_adb := A_ScriptDir "\..\..\引用程序\adb.exe"
 CmdRes := RunCmd(B_adb " devices")
 if !instr(CmdRes, "`t")

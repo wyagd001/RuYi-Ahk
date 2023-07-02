@@ -1,4 +1,4 @@
-﻿; 1303
+﻿;|2.0|2023.07.01|1303
 CandySel := A_Args[1]
 ;CandySel := "C:\Documents and Settings\Administrator\Desktop"
 if !CandySel

@@ -1,4 +1,4 @@
-﻿; 1125
+﻿;|2.0|2023.07.01|1125
 Windy_CurWin_ProcName := A_Args[1]
 if !Windy_CurWin_ProcName or !instr(Windy_CurWin_ProcName, ".exe")
 {

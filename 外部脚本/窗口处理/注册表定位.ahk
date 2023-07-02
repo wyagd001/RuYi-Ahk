@@ -1,4 +1,5 @@
-﻿CandySel := A_Args[1]
+﻿;|2.0|2023.07.01|多条目
+CandySel := A_Args[1]
 
 If WinExist("ahk_class RegEdit_RegEdit")
 {

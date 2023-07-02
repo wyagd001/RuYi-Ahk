@@ -1,4 +1,5 @@
-﻿#SingleInstance force
+﻿;|2.0|2023.07.01|1225
+#SingleInstance force
 #InputLevel 10   ; 优先级设置比如意中的高, 按下相同热键后先触发脚本自身的
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\e8a3.png"

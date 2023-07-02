@@ -1,4 +1,5 @@
-﻿CandySel := A_Args[1]    ; 单个文件
+﻿;|2.0|2023.07.01|1198
+CandySel := A_Args[1]    ; 单个文件
 if !CandySel             ; 多个文件
 {
 	DetectHiddenWindows, On

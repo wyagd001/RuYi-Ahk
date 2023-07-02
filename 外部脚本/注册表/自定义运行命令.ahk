@@ -1,4 +1,5 @@
-﻿#NoEnv
+﻿;|2.0|2023.07.01|1099
+#NoEnv
 SetBatchLines -1
 ListLines Off
 Sys=HKLM

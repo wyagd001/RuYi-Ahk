@@ -1,4 +1,5 @@
-﻿CandySel := Trim(A_Args[1])
+﻿;|2.0|2023.07.01|1201
+CandySel := Trim(A_Args[1])
 Cando_颜色查看:
 	Gui,66: Default
 	Gui, Destroy

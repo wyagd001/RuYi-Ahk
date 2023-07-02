@@ -1,4 +1,5 @@
-﻿CandySel :=  A_Args[1]
+﻿;|2.0|2023.07.01|1175
+CandySel :=  A_Args[1]
 CandySel := trim(CandySel, """")
 ; 格式化分区时产生的分区序列号(卷序列号, 磁盘序列号, VolumeId)
 ; 等同于 DriveGet, OutputVar, Serial, C:

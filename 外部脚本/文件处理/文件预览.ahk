@@ -1,4 +1,5 @@
-﻿#SingleInstance force
+﻿;|2.0|2023.07.01|1070
+#SingleInstance force
 #include <ImagePut>
 ATA_settingFile := A_ScriptDir "\..\..\配置文件\如一.ini"
 ATA_filepath := A_Args[1]

@@ -1,4 +1,5 @@
-﻿CandySel := A_Args[1]
+﻿;|2.0|2023.07.01|1300
+CandySel := A_Args[1]
 
 tmp_Str := FileList := ""
 Loop, Files, %CandySel%\*.*, FR  ; 包含文件

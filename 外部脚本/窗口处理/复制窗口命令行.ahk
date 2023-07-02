@@ -1,4 +1,4 @@
-﻿; 1151
+﻿;|2.0|2023.07.01|1151
 ComObjError(0)
 Windy_CurWin_id := A_Args[1]
 if !Windy_CurWin_id

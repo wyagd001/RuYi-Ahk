@@ -1,4 +1,5 @@
-﻿CandySel := A_Args[1]
+﻿;|2.0|2023.07.01|1174
+CandySel := A_Args[1]
 CandySel := trim(CandySel, """")
 Gui,66: Destroy
 Gui,66: Default

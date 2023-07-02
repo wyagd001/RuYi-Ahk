@@ -1,4 +1,5 @@
-﻿#SingleInstance force
+﻿;|2.0|2023.07.01|1098
+#SingleInstance force
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\f5a9.png"
 CandySel := A_Args[1]

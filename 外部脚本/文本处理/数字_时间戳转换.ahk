@@ -1,4 +1,5 @@
-﻿CandySel := Trim(A_Args[1])
+﻿;|2.0|2023.07.01|1296
+CandySel := Trim(A_Args[1])
 ;CandySel := 1682598190000
 Cando_时间戳转换:
 Gui, 66: Destroy

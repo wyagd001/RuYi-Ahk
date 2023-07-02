@@ -1,5 +1,5 @@
-﻿CandySel := A_Args[1]
-; 1037
+﻿;|2.0|2023.07.01|1037
+CandySel := A_Args[1]
 if (RegExMatch(CandySel, "i)^(HKCU|HKCR|HKCC|HKU|HKLM|HKEY|计算机\\HK|\[HK)"))
 {
 	f_OpenReg(CandySel)

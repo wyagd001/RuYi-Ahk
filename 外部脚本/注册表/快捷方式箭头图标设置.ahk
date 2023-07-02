@@ -1,4 +1,5 @@
-﻿;if !CF_RegWrite("REG_SZ", "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons", "29", "C:\WINDOWS\system32\imageres.dll,197")
+﻿;|2.0|2023.07.01|1006
+;if !CF_RegWrite("REG_SZ", "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons", "29", "C:\WINDOWS\system32\imageres.dll,197")
 ;	msgbox
 	; % CF_RegDelete("HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons", "29")
 

@@ -1,4 +1,4 @@
-﻿;1249, 1250
+﻿;|2.0|2023.07.01|1249,1250
 CandySel :=  A_Args[1]
 CandySel2 :=  A_Args[2]
 if (StrLen(CandySel) < 4)

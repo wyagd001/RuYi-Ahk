@@ -1,4 +1,5 @@
-﻿CandySel := A_Args[1]
+﻿;|2.0|2023.07.01|1197
+CandySel := A_Args[1]
 
 Cando_DllFun:
 Gui,66:Destroy

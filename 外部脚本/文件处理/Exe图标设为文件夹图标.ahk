@@ -1,4 +1,5 @@
-﻿CandySel := A_Args[1]
+﻿;|2.0|2023.07.01|1205,1206
+CandySel := A_Args[1]
 if CF_IsFolder(CandySel)
 	goto 1206
 1205:

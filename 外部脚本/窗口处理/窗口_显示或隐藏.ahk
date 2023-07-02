@@ -1,4 +1,5 @@
-﻿#SingleInstance, Force
+﻿;|2.0|2023.07.01|1199
+#SingleInstance, Force
 DetectHiddenWindows, On
 WinGet, W, List
 Gui +AlwaysOnTop +ToolWindow +LastFound

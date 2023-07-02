@@ -1,4 +1,5 @@
-﻿#SingleInstance force
+﻿;|2.0|2023.07.01|1106
+#SingleInstance force
 CandySel := A_Args[1]
 ; 1106
 Cando_图像文件放进剪贴板:

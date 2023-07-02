@@ -1,4 +1,5 @@
-﻿ATA_settingFile := A_ScriptDir "\..\..\配置文件\如一.ini"
+﻿;|2.0|2023.07.01|多条目
+ATA_settingFile := A_ScriptDir "\..\..\配置文件\如一.ini"
 ATA_filepath := A_Args[1]
 DetectHiddenWindows, On
 WinGetTitle, h_hwnd, 获取当前窗口信息

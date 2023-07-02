@@ -1,4 +1,4 @@
-﻿; 1045
+﻿;|2.0|2023.07.01|1045
 CandySel := A_Args[1]
 SplitPath, CandySel, CandySel_FileName, CandySel_ParentPath, CandySel_Ext, CandySel_FileNameNoExt, CandySel_Drive
 CandySel_Ext := CF_IsFolder(CandySel) ? "Folder" : CandySel_Ext

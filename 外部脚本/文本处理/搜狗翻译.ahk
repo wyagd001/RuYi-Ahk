@@ -1,4 +1,5 @@
-﻿; 来源网址: https://www.autoahk.com/archives/44308
+﻿;|2.0|2023.07.01|1228
+; 来源网址: https://www.autoahk.com/archives/44308
 ; author tmz
 #SingleInstance force
 SoGouTrans.select_word := A_Args[1]

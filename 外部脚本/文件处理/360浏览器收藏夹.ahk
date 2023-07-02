@@ -1,4 +1,5 @@
-﻿; FoxMod : 2014-7-8  注释掉了将 中文转换为 \uXXXX 的一部分代码
+﻿;|2.0|2023.07.01|1222
+; FoxMod : 2014-7-8  注释掉了将 中文转换为 \uXXXX 的一部分代码
 ; https://github.com/cocobelgica/AutoHotkey-JSON.git
 CandySel := A_Args[1]
 if !CandySel

@@ -1,4 +1,5 @@
-﻿;来源网址: https://www.autohotkey.com/boards/viewtopic.php?f=6&t=96765&sid=0fd812781855bbe230c9449de71ce312
+﻿;|2.0|2023.07.01|多条目
+;来源网址: https://www.autohotkey.com/boards/viewtopic.php?f=6&t=96765&sid=0fd812781855bbe230c9449de71ce312
 ; Click the middle button to shrink window - support multiple windows and display contents dynamically.
 ; 鼠标中键点击窗口后微缩——支持多窗口并可动态显示窗口内容。
 

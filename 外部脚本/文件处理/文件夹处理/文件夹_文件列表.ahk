@@ -1,4 +1,4 @@
-﻿; 1297
+﻿;|2.0|2023.07.01|1298
 CandySel := A_Args[1]
 tmp_Str := ""
 Loop, Files, %CandySel%\*.*, FR

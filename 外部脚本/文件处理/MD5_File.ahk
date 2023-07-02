@@ -1,4 +1,5 @@
-﻿CandySel := A_Args[1]
+﻿;|2.0|2023.07.01|1080
+CandySel := A_Args[1]
 msgbox,, % CandySel, % MD5_File(CandySel)
 Return
 ; 1080

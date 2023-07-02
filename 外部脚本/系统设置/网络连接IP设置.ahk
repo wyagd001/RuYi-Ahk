@@ -1,4 +1,5 @@
-﻿/*
+﻿;|2.0|2023.07.01|1094
+/*
 TODO:
 - find a better way to make context sensitive hotkeys for when listbox is selected
 	- didn't work: hotkey ifwinactive ahk_id %controlhwnd%

@@ -1,4 +1,5 @@
-﻿CandySel :=  A_Args[1]
+﻿;|2.0|2023.07.01|1229
+CandySel :=  A_Args[1]
 ;CandySel := "C:\Documents and Settings\Administrator\Desktop\文本碎片小脚本"
 Gui, Add, Text, x10 y15 h25, 查找文件夹:
 Gui, Add, Edit, xp+80 yp-5 w550 h25 vsfolder, % CandySel

@@ -1,4 +1,4 @@
-﻿; 1153
+﻿;|2.0|2023.07.01|1153
 Windy_CurWin_Class := A_Args[1]
 if !Windy_CurWin_Class
 {

@@ -1,4 +1,5 @@
-﻿; 来源网址: https://www.autohotkey.com/boards/viewtopic.php?f=6&t=3216&sid=fda9945d8bfa77fd0593f8e2bee09918&start=60
+﻿;|2.0|2023.07.01|1207
+; 来源网址: https://www.autohotkey.com/boards/viewtopic.php?f=6&t=3216&sid=fda9945d8bfa77fd0593f8e2bee09918&start=60
 ; https://autohotkey.com/board/topic/5278-simple-icon-browser/
 ; https://gist.github.com/AHK-just-me/5518511
 ; Program: Icon Browser

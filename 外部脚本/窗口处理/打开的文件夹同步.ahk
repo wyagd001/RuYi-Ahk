@@ -1,4 +1,5 @@
-﻿folder1 := A_Args[1], folder2 := A_Args[2]
+﻿;|2.0|2023.07.01|1087,多条目
+folder1 := A_Args[1], folder2 := A_Args[2]
 B_Autohotkey := A_ScriptDir "\..\..\引用程序\" (A_PtrSize = 8 ? "AutoHotkeyU64.exe" : "AutoHotkeyU32.exe")
 ; 1088
 OnMessage(0x4a, "Receive_WM_COPYDATA")

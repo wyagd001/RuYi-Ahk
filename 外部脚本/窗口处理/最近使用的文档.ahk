@@ -1,4 +1,4 @@
-﻿; 1121
+﻿;|2.0|2023.07.01|1121
 RecentFolderPath := upDir(A_StartMenu) "\Recent"
 DetectHiddenWindows, On
 WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI

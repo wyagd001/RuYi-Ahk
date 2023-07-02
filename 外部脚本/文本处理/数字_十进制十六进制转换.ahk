@@ -1,4 +1,5 @@
-﻿CandySel := Trim(A_Args[1])
+﻿;|2.0|2023.07.01|1200
+CandySel := Trim(A_Args[1])
 Cando_十进制十六进制转换:
 Gui, 66: Default
 Gui, Destroy

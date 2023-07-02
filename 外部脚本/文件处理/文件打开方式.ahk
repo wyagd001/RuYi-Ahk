@@ -1,4 +1,4 @@
-﻿; 1071
+﻿;|2.0|2023.07.01|1071
 CandySel := A_Args[1]
 CreateOpenWithMenu(CandySel,1,1)
 ;Menu, MyOpenWithMenu, Add, 打开方式, % ":" . CreateOpenWithMenu(CandySel)

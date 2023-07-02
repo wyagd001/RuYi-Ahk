@@ -1,4 +1,4 @@
-﻿; 1076
+﻿;|2.0|2023.07.01|1076
 ControlGet, HWND, Hwnd,, SysListView321, ahk_class WorkerW
 If HWND =
 {

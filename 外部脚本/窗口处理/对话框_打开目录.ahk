@@ -1,4 +1,5 @@
-﻿Windy_CurWin_id := A_Args[1]
+﻿;|2.0|2023.07.01|1226
+Windy_CurWin_id := A_Args[1]
 
 Windo_对话框打开目录:
 IniMenuInifile := A_ScriptDir "\..\..\配置文件\外部脚本\ini菜单.ini"

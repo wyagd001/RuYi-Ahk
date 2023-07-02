@@ -1,21 +1,20 @@
-﻿; 1316
+﻿;|2.0|2023.07.01|1316
 CandySel :=  A_Args[1]
 ;CandySel := "C:\Documents and Settings\Administrator\Desktop\Gui"
 Gui, Add, Text, x10 y15 h25, 查找文件夹:
 Gui, Add, Edit, xp+80 yp-5 w550 h25 vsfolder, % CandySel
 Gui, Add, Button, xp+560 yp-2 w60 h30 gstartsearch, 开始查找
 Gui, Add, Text, x10 yp+40 h25, 指定扩展名:
-Gui, Add, Edit, xp+80 yp-5 w550 h25 vsExt, % ",txt,ahk,md"
+Gui, Add, Edit, xp+80 yp-5 w550 h25 vsExt, % "txt,ahk,md"
+Gui, Add, Button, xp+560 yp w60 h30 grunzhuanma, 执行转码
+gui, add, Text, x10 yp+40 w60 vmyparam1, 输出编码:
+gui, add, ComboBox, xp+80 yp w550 vOut_Code, UTF-8(带BOM)||UTF-8|Unicode(UTF-16)|ANSI
 Gui, Add, ListView, x10 yp+40 w700 h500 vfilelist Checked hwndHLV AltSubmit, 文件名|相对路径|扩展名|文件编码|大小(KB)|修改日期|完整路径
 Gui, Add, Button, xp yp+510 w60 h30 guncheckall, 全不选
 Gui, Add, Button, xp+70 yp w60 h30 gEditfilefromlist, 编辑文件
 Gui, Add, Button, xp+70 yp w60 h30 gopenfilefromlist, 打开文件
 Gui, Add, Button, xp+70 yp w60 h30 gopenfilepfromlist, 打开路径
 
-Gui, Add, Radio, xp+140 yp w120 h30 Checked1 vOrg_Code, UTF-8(带BOM)
-Gui, Add, Radio, xp+140 yp w120 h30 Checked1, Unicode(UTF-16)
-
-Gui, Add, Button, xp+150 yp w60 h30 grunzhuanma, 转码
 gui, Show,, 列出文件夹中文本文件的编码
 
 if FileExist(CandySel)
@@ -86,17 +85,17 @@ runzhuanma:
 gui, Submit, NoHide
 
 RowNumber := 0  ; 这样使得首次循环从列表的顶部开始搜索.
-	Loop
-	{
-		RowNumber := LV_GetNext(RowNumber, "C")  ; 在前一次找到的位置后继续搜索.
-		if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
-			break
-		LV_GetText(Tmp_Path, RowNumber, 7)
-		LV_GetText(Tmp_CPcode, RowNumber, 4)
-	}
-out_code := Org_Code=1?"UTF-8":"CP1200"
-if (Tmp_CPcode != out_code)
-	File_CpTransform(Tmp_Path, Tmp_CPcode, out_code, 0)
+Loop
+{
+	RowNumber := LV_GetNext(RowNumber, "C")  ; 在前一次找到的位置后继续搜索.
+	if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
+		break
+	LV_GetText(Tmp_Path, RowNumber, 7)
+	LV_GetText(Tmp_CPcode, RowNumber, 4)
+
+	if (Tmp_CPcode != out_code)
+		File_CpTransform(Tmp_Path, Tmp_CPcode, out_code, 0)
+}
 Return
 
 GuiClose:

@@ -1,4 +1,5 @@
-﻿#SingleInstance force
+﻿;|2.0|2023.07.01|1038
+#SingleInstance force
 
 if FileExist(A_Args[1]) && InStr(A_Args[1], ".lnk")
 {

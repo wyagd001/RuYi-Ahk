@@ -1,4 +1,5 @@
-﻿#Requires AutoHotkey v1.1.33+
+﻿;|2.0|2023.07.01|1232
+#Requires AutoHotkey v1.1.33+
 ;1232
 CandySel :=  A_Args[1]
 if !CandySel

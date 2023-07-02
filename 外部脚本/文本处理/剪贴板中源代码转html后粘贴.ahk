@@ -1,4 +1,5 @@
-﻿SetClipboardHTML(Clipboard)
+﻿;|2.0|2023.07.01|1306
+SetClipboardHTML(Clipboard)
 Send ^v
 return
 

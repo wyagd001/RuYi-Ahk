@@ -1,4 +1,5 @@
-﻿#SingleInstance force
+﻿;|2.0|2023.07.01|1171,1172
+#SingleInstance force
 #include <ImagePut>
 CandySel := A_Args[1]
 

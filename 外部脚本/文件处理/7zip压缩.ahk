@@ -1,4 +1,4 @@
-﻿;1269
+﻿;|2.0|2023.07.01|1269
 CandySel := A_Args[1]
 if !CandySel
 {

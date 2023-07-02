@@ -1,4 +1,5 @@
-﻿;来源网址: https://www.autohotkey.com/board/topic/63210-modify-system-path-gui
+﻿;|2.0|2023.07.01|1231
+;来源网址: https://www.autohotkey.com/board/topic/63210-modify-system-path-gui
 #SingleInstance, Force
 #NoEnv
 RegRead, UPL, HKCU\Environment, PATH

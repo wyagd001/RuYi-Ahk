@@ -1,4 +1,5 @@
-﻿CandySel := A_Args[1]
+﻿;|2.0|2023.07.01|1297
+CandySel := A_Args[1]
 
 Gui,66: Destroy
 Gui,66: Default

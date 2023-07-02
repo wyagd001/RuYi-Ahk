@@ -1,4 +1,5 @@
-﻿CandySel := A_Args[1]
+﻿;|2.0|2023.07.01|1212
+CandySel := A_Args[1]
 IniMenuInifile := A_ScriptDir "\..\配置文件\外部脚本\ini菜单.ini"
 ATA_settingFile := A_ScriptDir "\..\配置文件\如一.ini"
 IniMenuobj := ini2obj(IniMenuInifile)

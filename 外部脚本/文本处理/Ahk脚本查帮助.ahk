@@ -1,4 +1,4 @@
-﻿; 1110
+﻿;|2.0|2023.07.01|1110
 CandySel := A_Args[1]
 ;WinGet, hGui, ID, 如意百宝箱 ahk_class AutoHotkeyGUI
 /*

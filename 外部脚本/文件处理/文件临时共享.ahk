@@ -1,4 +1,5 @@
-﻿#SingleInstance Force
+﻿;|2.0|2023.07.01|1268
+#SingleInstance Force
 ; 1081
 CandySel := A_Args[1]
 First := 0

@@ -1,4 +1,5 @@
-﻿CandySel :=  A_Args[1]
+﻿;|2.0|2023.07.01|
+CandySel :=  A_Args[1]
 if !CandySel
 	exitapp
 ; 复制文字或图片后,在资源管理器窗口和桌面，

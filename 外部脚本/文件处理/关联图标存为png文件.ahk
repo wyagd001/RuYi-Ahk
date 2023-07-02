@@ -1,4 +1,5 @@
-﻿;方法来自官网，需要gdip支持
+﻿;|2.0|2023.07.01|1208
+;方法来自官网，需要gdip支持
 CandySel := A_Args[1], filetype := A_Args[2]
 SplitPath, CandySel, CandySel_FileName, CandySel_ParentPath, CandySel_Ext, CandySel_FileNameNoExt
 1208:

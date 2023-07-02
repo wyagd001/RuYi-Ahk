@@ -1,4 +1,4 @@
-﻿; 1311
+﻿;|2.0|2023.07.01|1311
 CandySel := A_Args[1]
 ;CandySel := "C:\Documents and Settings\Administrator\Desktop\JumPList\1.txt"
 checkhardlink := ListHardLinks(CandySel)

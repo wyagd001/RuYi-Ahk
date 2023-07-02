@@ -1,4 +1,5 @@
-﻿#SingleInstance force
+﻿;|2.0|2023.07.01|1004
+#SingleInstance force
 if fileexist(A_ScriptDir "\..\临时目录")
 	tmp_folder := A_ScriptDir "\..\临时目录"
 else if fileexist(A_ScriptDir "\..\..\临时目录")

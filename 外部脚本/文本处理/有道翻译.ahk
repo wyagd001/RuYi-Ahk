@@ -1,4 +1,5 @@
-﻿#SingleInstance force
+﻿;|2.0|2023.07.01|1112
+#SingleInstance force
 CandySel := A_Args[1]
 ; 1112
 有道网络翻译:

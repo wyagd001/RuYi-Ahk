@@ -1,4 +1,5 @@
-﻿#NoEnv
+﻿;|2.0|2023.07.01|1271
+#NoEnv
 #SingleInstance force
 ; 1271
 CandySel := A_Args[1]

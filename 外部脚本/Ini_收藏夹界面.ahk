@@ -1,4 +1,4 @@
-﻿; 1317
+﻿;|2.0|2023.07.01|1317
 #Persistent
 #SingleInstance Force
 CandySel := A_Args[1]

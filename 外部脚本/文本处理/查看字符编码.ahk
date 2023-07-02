@@ -1,4 +1,5 @@
-﻿#SingleInstance force
+﻿;|2.0|2023.07.01|1092
+#SingleInstance force
 CandySel := A_Args[1]
 ; 1092
 Cando_字符编码查看:

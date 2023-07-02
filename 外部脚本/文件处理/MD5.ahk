@@ -1,4 +1,5 @@
-﻿#SingleInstance force
+﻿;|2.0|2023.07.01|1101
+#SingleInstance force
 CandySel := A_Args[1]
 CandySel2 := A_Args[2]
 OnMessage(0x4a, "Receive_WM_COPYDATA")

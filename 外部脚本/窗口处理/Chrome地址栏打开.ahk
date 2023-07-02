@@ -1,4 +1,5 @@
-﻿; 参数可变, 多条目
+﻿;|2.0|2023.07.01|多条目
+; 参数可变, 多条目
 CandySel := A_Args[1]
 
 DetectHiddenWindows, On
