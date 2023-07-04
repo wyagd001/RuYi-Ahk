@@ -17,7 +17,7 @@ loop %OutWinidList%
 	WinGet, style, style, ahk_id %id%
 	if !(style & 0xC00000) or !(Style & 0x10000)
 		continue
-	if (id !=Windy_CurWin_id)
+	if (id != Windy_CurWin_id)
 		WinClose, % "ahk_id " id
 }
 exitapp

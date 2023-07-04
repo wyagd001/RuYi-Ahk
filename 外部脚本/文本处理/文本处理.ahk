@@ -31,7 +31,8 @@ t1 := new RichEdit(1, "x170 y120 w450 h475 0x100000 gMessageHandler")
 t2 := new RichEdit(1, "x630 y120 w450 h475 0x100000 gMessageHandler")
 t1.SetEventMask(["SELCHANGE"])   ; 监控控件消息
 t2.SetEventMask(["SELCHANGE"])
-gui, add, Button, x630 yp+485 w110 gcopyresult, 复制到剪贴板
+gui, add, Button, x170 yp+485 w110 gcopyresult, 复制到剪贴板
+gui, add, Button, x630 yp w110 gcopyresult2, 复制到剪贴板
 Gui, Add, StatusBar
 SB_SetParts(170, 470)
 SetTimer 延时加载界面, -800
@@ -77,7 +78,7 @@ Receive_WM_COPYDATA(wParam, lParam)
 GuiControl,, comm, % "查找替换`n`n高亮查找`n提取查找字符所在行`n移除查找字符所在行`n单行正则提取`n单行正则替换`n行提取`nMatch测试"
  . "`n行首尾添加字符`n行首尾删除字符`n行首序号处理`n按数量提取行前后字符`n按数量删除行前后字符`n按数量分割单行`n按分隔符提取"
  . "`n按条件提取删除行`n行倒序排列`n行字顺序颠倒`n字符串反转`n竖排文字`n行排序"
- . "`n字数统计`n查看中文所属字集`n左右同时处理`nBase64加密`nBase64解密`nUnicode码转字符`nURL解码`nHtml转纯文本"
+ . "`n字数统计`n查看中文所属字集`n左右同时处理`nBase64加密`nBase64解密`nUnicode码转字符`nURL编码与解码`nHtml转纯文本"
  . "`n首字母转大写`n英文字母大小写`n中英文添加空格`n英文标点改中文`n中文标点改英文`n全角空格改半角`n半角转全角"
  . "`n阿拉伯数字与中文`n简体与繁体`n中文转拼音`n字符与编码的转换"
 t1.SetText(CandySel)
@@ -91,6 +92,11 @@ guiclose:
 exitapp
 
 copyresult:
+Gui Submit, nohide
+Clipboard := t1.GetText()
+return
+
+copyresult2:
 Gui Submit, nohide
 Clipboard := t2.GetText()
 return
@@ -260,6 +266,13 @@ else if (comm = "中文标点改英文")
 	commmode("修改的标点:")
 	GuiControl,, myedit1, `n，。：；？！（）→`,.:;?!()`n`n
 }
+else if (comm = "URL编码与解码")
+{
+	commmode("转换模式:", "编码:",, "enable", "enable")
+	GuiControl,, myedit1, `n编码`n`n解码`n
+	GuiControl,, myedit2, `nUTF-8`n`n解码`n
+}
+
 else if (comm = "英文字母大小写")
 {
 	commmode("转换模式:",,, "enable")
@@ -1273,9 +1286,17 @@ newStr := Unicode转中文(oldtxt)
 t2.SetText(newStr)
 Return
 
-URL解码:
-newStr := UrlDecode(oldtxt)
-t2.SetText(newStr)
+URL编码与解码:
+if (myedit1 = "解码")
+{
+	newStr := UrlDecode(oldtxt, myedit2)
+	t2.SetText(newStr)
+}
+if (myedit1 = "编码")
+{
+	newStr := UrlEncode(oldtxt, myedit2)
+	t2.SetText(newStr)
+}
 return
 
 英文标点改中文:
@@ -2523,6 +2544,31 @@ RegExMatchAll(ByRef Haystack, NeedleRegEx, SubPat="")
 		startPos := pos + StrLen(match)
 	}
 	return arr.MaxIndex() ? arr : ""
+}
+
+; UrlEncode("伊東エリ", "cp20936")
+; cp936			简体中文 GBK GB2312
+; cp10002		MAC机上的big5编码，
+; cp950			繁体中文 big5
+UrlEncode(Url, Enc = "UTF-8")
+{
+	StrPutVar(Url, Var, Enc)
+	BackUp_FmtInt := A_FormatInteger
+	SetFormat, IntegerFast, H
+	Loop
+	{
+		Code := NumGet(Var, A_Index - 1, "UChar")
+		If (!Code)
+			Break
+		If (Code >= 0x30 && Code <= 0x39 ; 0-9
+		|| Code >= 0x41 && Code <= 0x5A ; A-Z
+		|| Code >= 0x61 && Code <= 0x7A) or (Code = 0x24) or (Code = 0x28) or (Code = 0x29) or (Code = 0x2A) or (Code = 0x2B) or (Code = 0x2C) or (Code = 0x2D) or (Code = 0x2E) or (Code = 0x21) or (Code = 0x28) or (Code = 0x29) or (Code = 0x5F) or (Code = 0xE2) or (Code = 0x80) or (Code = 0x99) ; a-z
+			Res .= Chr(Code)
+		Else
+			Res .= "%" . SubStr(Code + 0x100, -1)
+	}
+	SetFormat, IntegerFast, %BackUp_FmtInt%
+Return, Res
 }
 
 UrlDecode(Uri, Enc = "UTF-8")
