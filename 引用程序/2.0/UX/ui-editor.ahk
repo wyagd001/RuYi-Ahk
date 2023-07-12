@@ -1,5 +1,5 @@
-﻿; This script shows a GUI for setting the default .ahk editor.
-#requires AutoHotkey v2.0-beta.3
+; This script shows a GUI for setting the default .ahk editor.
+#requires AutoHotkey v2.0
 
 #NoTrayIcon
 #SingleInstance Off
@@ -25,15 +25,29 @@ class EditorSelectionGui extends AutoHotkeyUxGui {
         lv.AutoSize(8)
         lv.GetPos(&x, &y, &w, &h)
         x += w
+        y += h
         
-        this.AddText('xm wp y' y + h + this.MarginY, "Command line")
+        this.AddText('xm w' w ' y' y, "Command line")
         this.AddEdit('xm wp r2 -WantReturn vCmd', cmdLine).OnEvent('Change', 'CmdChanged')
+        
+        this.AddText('xm h25 18 w' w)
+        this.AddPicture('x56 Icon-81 w16 yp+4', "imageres.dll")
+        this.AddLink('x76 yp-1', "<a>Editors with AutoHotkey support</a>")
+            .OnEvent('Click', 'ShowHelpEditors')
+        
         this.AddButton('xm w80', "&Browse").OnEvent('Click', 'Browse')
         this.AddButton('Default yp w80 x' x - 160 - this.MarginY, "&OK").OnEvent('Click', 'Confirm')
         this.AddButton('yp w80 x' x - 80, "&Cancel").OnEvent('Click', (c, *) => c.Gui.Hide())
         
         this["Eds"].OnEvent("ItemFocus", "EditorSelected")
         this.CmdChanged()
+    }
+    
+    ShowHelpEditors(*) {
+        if FileExist(chm := ROOT_DIR '\v2\AutoHotkey.chm')
+            Run 'hh.exe "ms-its:' chm '::docs/misc/Editors.htm"'
+        else
+            Run 'https://www.autohotkey.com/docs/v2/misc/Editors.htm'
     }
     
     Browse(*) {
