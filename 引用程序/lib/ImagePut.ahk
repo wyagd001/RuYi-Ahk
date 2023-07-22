@@ -105,6 +105,12 @@ ImagePutScreenshot(image, screenshot := "", alpha := "") {
    return ImagePut("screenshot", image, screenshot, alpha)
 }
 
+; Puts the image into a file mapping and returns a buffer object sharable across processes.
+;   name       -  Global Name             |  string   ->   "Alice"
+ImagePutSharedBuffer(image, name := "") {
+   return ImagePut("SharedBuffer", image, name)
+}
+
 ; Puts the image into a file format and returns a pointer to a stream.
 ;   extension  -  File Encoding           |  string   ->   bmp, gif, jpg, png, tiff
 ;   quality    -  JPEG Quality Level      |  integer  ->   0 - 100
@@ -186,12 +192,12 @@ class ImagePut {
          type := this.ImageType(image)
 
       crop := keywords.crop
-      scale := keywords.scale
+      scale := keywords.scale, upscale := keywords.upscale, downscale := keywords.downscale
       decode := (keywords.decode != "") ? keywords.decode : this.decode
       validate := (keywords.validate != "") ? keywords.validate : this.validate
 
       ; #1 - Stream intermediate.
-      if not decode and not crop and not scale
+      if not decode and not crop and not (scale || upscale || downscale)
          and (type ~= "^(?i:clipboard_png|pdf|url|file|stream|RandomAccessStream|hex|base64)$")
          and (cotype ~= "^(?i:file|stream|RandomAccessStream|hex|base64|uri|explorer|safeArray|formData)$")
          and (p[1] == "") { ; For now, disallow any specification of extensions.
@@ -221,6 +227,8 @@ class ImagePut {
          (validate) && DllCall("gdiplus\GdipImageForceValidation", "ptr", pBitmap)
          (crop) && this.BitmapCrop(pBitmap, crop)
          (scale) && this.BitmapScale(pBitmap, scale)
+         (upscale) && this.BitmapScale(pBitmap, upscale, 1)
+         (downscale) && this.BitmapScale(pBitmap, downscale, -1)
          coimage := this.BitmapToCoimage(cotype, pBitmap, p*)
 
          ; Clean up the pBitmap copy. Export raw pointers if requested.
@@ -326,13 +334,15 @@ class ImagePut {
          if image.HasKey("ptr") && image.HasKey("size")
             return "buffer"
 
+         ; A "window" is an object with an hwnd property.
+         if image.HasKey("hwnd")
+            return "window"
+
          ; A "screenshot" is an array of 4 numbers.
          if (image[1] ~= "^-?\d+$" && image[2] ~= "^-?\d+$" && image[3] ~= "^-?\d+$" && image[4] ~= "^-?\d+$")
             return "screenshot"
 
-         ; A "window" is an object with an hwnd property.
-         if image.HasKey("hwnd")
-            return "window"
+         throw Exception("Image type could not be identified.")
       }
          SysGet MonitorGetCount, MonitorCount ; A non-zero "monitor" number identifies each display uniquely; and 0 refers to the entire virtual screen.
          if (image ~= "^\d+$" && image >= 0 && image <= MonitorGetCount)
@@ -509,6 +519,10 @@ class ImagePut {
       ; BitmapToCoimage("buffer", pBitmap)
       if (cotype = "buffer")
          return this.to_buffer(pBitmap)
+
+      ; BitmapToCoimage("sharedbuffer", pBitmap, p1)
+      if (cotype = "sharedbuffer")
+         return this.to_sharedbuffer(pBitmap, p1)
 
       ; BitmapToCoimage("screenshot", pBitmap, screenshot, alpha)
       if (cotype = "screenshot")
@@ -697,27 +711,31 @@ class ImagePut {
       crop[4] := (crop[4] < 0) ? height - Abs(crop[4]) - Abs(crop[2]) : crop[4]
 
       ; Round to the nearest integer. Reminder: width and height are distances, not coordinates.
-      safe_x := Round(crop[1])
-      safe_y := Round(crop[2])
-      safe_w := Round(crop[1] + crop[3]) - Round(crop[1])
-      safe_h := Round(crop[2] + crop[4]) - Round(crop[2])
-
-      ; Minimum size is 1 x 1. Ensure that coordinates can never exceed the expected Bitmap area.
-      safe_x := (safe_x >= width) ? 0 : safe_x                                      ; Default x is zero.
-      safe_y := (safe_y >= height) ? 0 : safe_y                                     ; Default y is zero.
-      safe_w := (safe_w = 0 || safe_x + safe_w > width) ? width - safe_x : safe_w   ; Default w is max width.
-      safe_h := (safe_h = 0 || safe_y + safe_h > height) ? height - safe_y : safe_h ; Default h is max height.
+      crop[1] := Round(crop[1])
+      crop[2] := Round(crop[2])
+      crop[3] := Round(crop[1] + crop[3]) - Round(crop[1])
+      crop[4] := Round(crop[2] + crop[4]) - Round(crop[2])
 
       ; Avoid cropping if no changes are detected.
-      if (safe_x = 0 && safe_y = 0 && safe_w = width && safe_h = height)
+      if (crop[1] = 0 && crop[2] = 0 && crop[3] == width && crop[4] == height)
+         return pBitmap
+
+      ; Minimum size is 1 x 1. Ensure that coordinates can never exceed the expected Bitmap area.
+      safe_x := (crop[1] >= width)
+      safe_y := (crop[2] >= height)
+      safe_w := (crop[3] <= 0 || crop[1] + crop[3] > width)
+      safe_h := (crop[4] <= 0 || crop[2] + crop[4] > height)
+
+      ; Abort cropping if any of the changes would exceed a safe bound.
+      if (safe_x || safe_y || safe_w || safe_h)
          return pBitmap
 
       ; Clone
       DllCall("gdiplus\GdipCloneBitmapAreaI"
-               ,    "int", safe_x
-               ,    "int", safe_y
-               ,    "int", safe_w
-               ,    "int", safe_h
+               ,    "int", crop[1]
+               ,    "int", crop[2]
+               ,    "int", crop[3]
+               ,    "int", crop[4]
                ,    "int", format
                ,    "ptr", pBitmap
                ,   "ptr*", pBitmapCrop:=0)
@@ -727,7 +745,7 @@ class ImagePut {
       return pBitmap := pBitmapCrop
    }
 
-   BitmapScale(ByRef pBitmap, scale) {
+   BitmapScale(ByRef pBitmap, scale, direction := 0) {
       if not (IsObject(scale) && ((scale[1] ~= "^\d+$") || (scale[2] ~= "^\d+$")) || (scale ~= "^\d+(\.\d+)?$"))
          throw Exception("Invalid scale.")
 
@@ -748,6 +766,14 @@ class ImagePut {
       if (safe_w = width && safe_h = height)
          return pBitmap
 
+      ; Force upscaling.
+      if (direction > 0 and (safe_w < width && safe_h < height))
+         return pBitmap
+
+      ; Force downscaling.
+      if (direction < 0 and (safe_w > width && safe_h > height))
+         return pBitmap
+      
       ; Create a new bitmap and get the graphics context.
       DllCall("gdiplus\GdipCreateBitmapFromScan0"
                , "int", safe_w, "int", safe_h, "int", 0, "int", format, "ptr", 0, "ptr*", pBitmapScale:=0)
@@ -1092,6 +1118,16 @@ class ImagePut {
    from_screenshot(image) {
       ; Thanks tic - https://www.autohotkey.com/boards/viewtopic.php?t=6517
 
+      if !IsObject(image) {
+         try dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
+         hwnd := WinExist(image)
+         VarSetCapacity(rect, 16, 0)
+         DllCall("GetClientRect", "ptr", hwnd, "ptr", &rect)
+         DllCall("ClientToScreen", "ptr", hwnd, "ptr", &rect)
+         try DllCall("SetThreadDpiAwarenessContext", "ptr", dpi, "ptr")
+         image := [NumGet(rect, 0, "int"), NumGet(rect, 4, "int"), NumGet(rect, 8, "int"), NumGet(rect, 12, "int")]
+      }
+
       ; struct BITMAPINFOHEADER - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapinfoheader
       hdc := DllCall("CreateCompatibleDC", "ptr", 0, "ptr")
       VarSetCapacity(bi, 40, 0)              ; sizeof(bi) = 40
@@ -1145,11 +1181,11 @@ class ImagePut {
       }
 
       ; Get the width and height of the client window.
-      dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", DPI_AWARENESS ? -3 : -5, "ptr")
+      try dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", DPI_AWARENESS ? -3 : -5, "ptr")
       DllCall("GetClientRect", "ptr", image, "ptr", &Rect := VarSetCapacity(Rect, 16)) ; sizeof(RECT) = 16
          , width  := NumGet(Rect, 8, "int")
          , height := NumGet(Rect, 12, "int")
-      DllCall("SetThreadDpiAwarenessContext", "ptr", dpi, "ptr")
+      try DllCall("SetThreadDpiAwarenessContext", "ptr", dpi, "ptr")
 
       ; struct BITMAPINFOHEADER - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapinfoheader
       hdc := DllCall("CreateCompatibleDC", "ptr", 0, "ptr")
@@ -1192,11 +1228,11 @@ class ImagePut {
          throw Exception("Could not locate hidden window behind desktop.")
 
       ; Get the width and height of the client window.
-      dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
+      try dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
       DllCall("GetClientRect", "ptr", WorkerW, "ptr", &Rect := VarSetCapacity(Rect, 16)) ; sizeof(RECT) = 16
          , width  := NumGet(Rect, 8, "int")
          , height := NumGet(Rect, 12, "int")
-      DllCall("SetThreadDpiAwarenessContext", "ptr", dpi, "ptr")
+      try DllCall("SetThreadDpiAwarenessContext", "ptr", dpi, "ptr")
 
       ; Get device context of spawned window.
       sdc := DllCall("GetDCEx", "ptr", WorkerW, "ptr", 0, "int", 0x403, "ptr") ; LockWindowUpdate | Cache | Window
@@ -1233,10 +1269,10 @@ class ImagePut {
 
    from_wallpaper() {
       ; Get the width and height of all monitors.
-      dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
+      try dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
       width  := DllCall("GetSystemMetrics", "int", 78, "int")
       height := DllCall("GetSystemMetrics", "int", 79, "int")
-      DllCall("SetThreadDpiAwarenessContext", "ptr", dpi, "ptr")
+      try DllCall("SetThreadDpiAwarenessContext", "ptr", dpi, "ptr")
 
       ; struct BITMAPINFOHEADER - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapinfoheader
       hdc := DllCall("CreateCompatibleDC", "ptr", 0, "ptr")
@@ -1468,7 +1504,7 @@ class ImagePut {
    }
 
    from_monitor(image) {
-      dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
+      try dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
       if (image > 0) {
          SysGet _, Monitor, % image
          x := _Left
@@ -1481,7 +1517,7 @@ class ImagePut {
          w := DllCall("GetSystemMetrics", "int", 78, "int")
          h := DllCall("GetSystemMetrics", "int", 79, "int")
       }
-      DllCall("SetThreadDpiAwarenessContext", "ptr", dpi, "ptr")
+      try DllCall("SetThreadDpiAwarenessContext", "ptr", dpi, "ptr")
       return this.from_screenshot([x,y,w,h])
    }
 
@@ -1947,6 +1983,68 @@ class ImagePut {
       free := Func("DllCall").bind("GlobalFree", "ptr", ptr)
 
       return new ImagePut.BitmapBuffer(ptr, size, width, height, free)
+   }
+
+   open_sharedbuffer(image) {
+      hMap := DllCall("OpenFileMapping", "uint", 0x2, "int", 0, "str", image, "ptr")
+      pMap := DllCall("MapViewOfFile", "ptr", hMap, "uint", 0x2, "uint", 0, "uint", 0, "uptr", 0, "ptr")
+
+      width := NumGet(pMap + 0, "uint")
+      height := NumGet(pMap + 4, "uint")
+      size := 4 * width * height
+      ptr := pMap + 8
+
+      free := DllCall.bind("UnmapViewOfFile", "ptr", pMap)
+      ;   DllCall("UnmapViewOfFile", "ptr", pMap),
+      ;   DllCall("CloseHandle", "ptr", hMap)
+      ;)
+
+      buf := new ImagePut.BitmapBuffer(ptr, size, width, height, free)
+      buf.name := image
+      return buf
+   }
+
+   to_sharedbuffer(pBitmap, name := "Alice") {
+      ; Get Bitmap width and height.
+      DllCall("gdiplus\GdipGetImageWidth", "ptr", pBitmap, "uint*", width:=0)
+      DllCall("gdiplus\GdipGetImageHeight", "ptr", pBitmap, "uint*", height:=0)
+
+      ; Allocate shared memory.
+      size := 4 * width * height
+      hMap := DllCall("CreateFileMapping", "ptr", -1, "ptr", 0, "uint", 0x4, "uint", 0, "uint", size, "str", name, "ptr")
+      pMap := DllCall("MapViewOfFile", "ptr", hMap, "uint", 0x2, "uint", 0, "uint", 0, "uptr", 0, "ptr")
+
+      ; Store width and height in the first 8 bytes.
+      NumPut( width, pMap, 0, "uint")
+      NumPut(height, pMap, 4, "uint")
+      ptr := pMap + 8
+
+      ; Target a pixel buffer.
+      VarSetCapacity(Rect, 16, 0)            ; sizeof(Rect) = 16
+         NumPut(  width, Rect,  8,   "uint") ; Width
+         NumPut( height, Rect, 12,   "uint") ; Height
+      VarSetCapacity(BitmapData, 16+2*A_PtrSize, 0)   ; sizeof(BitmapData) = 24, 32
+         NumPut( 4 * width, BitmapData,  8,    "int") ; Stride
+         NumPut(       ptr, BitmapData, 16,    "ptr") ; Scan0
+      DllCall("gdiplus\GdipBitmapLockBits"
+               ,    "ptr", pBitmap
+               ,    "ptr", &Rect
+               ,   "uint", 5            ; ImageLockMode.UserInputBuffer | ImageLockMode.ReadOnly
+               ,    "int", 0x26200A     ; Format32bppArgb
+               ,    "ptr", &BitmapData)
+
+      ; Write pixels to buffer.
+      DllCall("gdiplus\GdipBitmapUnlockBits", "ptr", pBitmap, "ptr", &BitmapData)
+
+      ; Free the pixels later.
+      free := DllCall.bind("UnmapViewOfFile", "ptr", pMap)
+      ;free := () => (
+      ;   DllCall("UnmapViewOfFile", "ptr", pMap),
+      ;)
+
+      buf := new ImagePut.BitmapBuffer(ptr, size, width, height, free)
+      buf.name := name
+      return buf
    }
 
    class BitmapBuffer {
@@ -2515,10 +2613,10 @@ class ImagePut {
       DllCall("gdiplus\GdipGetImageHeight", "ptr", pBitmap, "uint*", height:=0)
 
       ; Get Screen width and height with DPI awareness.
-      dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
+      try dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
       ScreenWidth := A_ScreenWidth
       ScreenHeight := A_ScreenHeight
-      DllCall("SetThreadDpiAwarenessContext", "ptr", dpi, "ptr")
+      try DllCall("SetThreadDpiAwarenessContext", "ptr", dpi, "ptr")
 
       ; If both dimensions exceed the screen boundaries, compare the aspect ratio of the image
       ; to the aspect ratio of the screen to determine the scale factor. Default scale is 1.
@@ -2548,7 +2646,7 @@ class ImagePut {
 
       DllCall("AdjustWindowRectEx", "ptr", &rect, "uint", style, "uint", 0, "uint", styleEx)
 
-      dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
+      try dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
       hwnd := DllCall("CreateWindowEx"
                ,   "uint", styleEx
                ,    "str", this.WindowClass()       ; lpClassName
@@ -2563,7 +2661,7 @@ class ImagePut {
                ,    "ptr", 0                        ; hInstance
                ,    "ptr", 0                        ; lpParam
                ,    "ptr")
-      DllCall("SetThreadDpiAwarenessContext", "ptr", dpi, "ptr")
+      try DllCall("SetThreadDpiAwarenessContext", "ptr", dpi, "ptr")
 
       ; Tests have shown that changing the system default colors has no effect on F0F0F0.
       ; Must call SetWindowLong with WS_EX_LAYERED immediately before SetLayeredWindowAttributes.
@@ -2571,14 +2669,13 @@ class ImagePut {
       DllCall("SetLayeredWindowAttributes", "ptr", hwnd, "uint", 0xF0F0F0, "uchar", 0, "int", 1)
 
       ; Set itself as the *internal* top level window.
-      __32 := A_PtrSize = 8 ? "Ptr" : "" ; Fixes 32-bit windows
-      DllCall("SetWindowLong" __32, "ptr", hwnd, "int", 0, "ptr", hwnd)
+      DllCall("SetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 0, "ptr", hwnd)
 
       ; A layered child window is only available on Windows 8+.
       hwnd_child := this.show(pBitmap, title, [0, 0, w, h], WS_CHILD | WS_VISIBLE, WS_EX_LAYERED, hwnd)
 
       ; Override the child's internal hwnd with the parent's hwnd.
-      DllCall("SetWindowLong" __32, "ptr", hwnd_child, "int", 0, "ptr", hwnd)
+      DllCall("SetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd_child, "int", 0, "ptr", hwnd)
 
       ; Prevent empty windows from showing.
       DllCall("ShowWindow", "ptr", hwnd, "int", 1)
@@ -2605,10 +2702,10 @@ class ImagePut {
       DllCall("gdiplus\GdipGetImageHeight", "ptr", pBitmap, "uint*", height:=0)
 
       ; Get Screen width and height with DPI awareness.
-      dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
+      try dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
       ScreenWidth := A_ScreenWidth
       ScreenHeight := A_ScreenHeight
-      DllCall("SetThreadDpiAwarenessContext", "ptr", dpi, "ptr")
+      try DllCall("SetThreadDpiAwarenessContext", "ptr", dpi, "ptr")
 
       ; If both dimensions exceed the screen boundaries, compare the aspect ratio of the image
       ; to the aspect ratio of the screen to determine the scale factor. Default scale is 1.
@@ -2688,7 +2785,7 @@ class ImagePut {
          DllCall("gdiplus\GdipDeleteGraphics", "ptr", pGraphics)
       }
 
-      dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
+      try dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
       hwnd := DllCall("CreateWindowEx"
                ,   "uint", styleEx | WS_EX_LAYERED  ; dwExStyle
                ,    "str", this.WindowClass()       ; lpClassName
@@ -2703,7 +2800,7 @@ class ImagePut {
                ,    "ptr", 0                        ; hInstance
                ,    "ptr", 0                        ; lpParam
                ,    "ptr")
-      DllCall("SetThreadDpiAwarenessContext", "ptr", dpi, "ptr")
+      try DllCall("SetThreadDpiAwarenessContext", "ptr", dpi, "ptr")
 
       ; Draw the contents of the device context onto the layered window.
       DllCall("UpdateLayeredWindow"
@@ -2718,8 +2815,7 @@ class ImagePut {
                ,   "uint", 2)                       ; dwFlags
 
       ; Set itself as the *internal* top level window.
-      __32 := A_PtrSize = 8 ? "Ptr" : "" ; Fixes 32-bit windows
-      DllCall("SetWindowLong" __32, "ptr", hwnd, "int", 0, "ptr", hwnd)
+      DllCall("SetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 0, "ptr", hwnd)
 
       ; Check for multiple frames.
       DllCall("gdiplus\GdipImageGetFrameDimensionsCount", "ptr", pBitmap, "uint*", dims:=0)
@@ -2738,10 +2834,10 @@ class ImagePut {
          DllCall("gdiplus\GdipImageForceValidation", "ptr", pBitmapClone)
 
          ; Store data inside window class extra bits (cbWndExtra).
-         DllCall("SetWindowLong" __32, "ptr", hwnd, "int", 1*A_PtrSize, "ptr", pBitmapClone)
-         DllCall("SetWindowLong" __32, "ptr", hwnd, "int", 2*A_PtrSize, "ptr", hdc)
-         DllCall("SetWindowLong" __32, "ptr", hwnd, "int", 3*A_PtrSize, "ptr", Item)
-         DllCall("SetWindowLong" __32, "ptr", hwnd, "int", 4*A_PtrSize, "ptr", pBits)
+         DllCall("SetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 1*A_PtrSize, "ptr", pBitmapClone)
+         DllCall("SetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 2*A_PtrSize, "ptr", hdc)
+         DllCall("SetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 3*A_PtrSize, "ptr", Item)
+         DllCall("SetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 4*A_PtrSize, "ptr", pBits)
 
          ; Preserve GDI+ scope.
          ImagePut.gdiplusStartup()
@@ -2800,7 +2896,6 @@ class ImagePut {
    }
       ; Define window behavior.
       WindowProc(uMsg, wParam, lParam) {
-         __32 := A_PtrSize = 8 ? "Ptr" : "" ; Fixes 32-bit windows
          hwnd := this
          ; Prevent the script from exiting early.
          static void := ObjBindMethod({}, {})
@@ -2811,12 +2906,12 @@ class ImagePut {
 
          ; WM_DESTROY
          if (uMsg = 0x2) {
-            if pBitmap := DllCall("GetWindowLong" __32, "ptr", hwnd, "int", 1*A_PtrSize, "ptr") {
-               hdc := DllCall("GetWindowLong" __32, "ptr", hwnd, "int", 2*A_PtrSize, "ptr")
-               Item := DllCall("GetWindowLong" __32, "ptr", hwnd, "int", 3*A_PtrSize, "ptr")
+            if pBitmap := DllCall("GetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 1*A_PtrSize, "ptr") {
+               hdc := DllCall("GetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 2*A_PtrSize, "ptr")
+               Item := DllCall("GetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 3*A_PtrSize, "ptr")
 
                ; Exit loop.
-               DllCall("SetWindowLong" __32, "ptr", hwnd, "int", 1*A_PtrSize, "ptr", 0)
+               DllCall("SetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 1*A_PtrSize, "ptr", 0)
 
                ; Dispose of all data stored in the window class.
                DllCall("gdiplus\GdipDisposeImage", "ptr", pBitmap)
@@ -2834,13 +2929,13 @@ class ImagePut {
 
          ; WM_LBUTTONDOWN
          if (uMsg = 0x201) {
-            hwnd := DllCall("GetWindowLong" __32, "ptr", hwnd, "int", 0, "ptr") ; internal parent hwnd
+            hwnd := DllCall("GetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 0, "ptr") ; internal parent hwnd
             return DllCall("DefWindowProc", "ptr", hwnd, "uint", 0xA1, "uptr", 2, "ptr", 0, "ptr")
          }
 
          ; WM_RBUTTONUP
          if (uMsg = 0x205) {
-            hwnd := DllCall("GetWindowLong" __32, "ptr", hwnd, "int", 0, "ptr") ; internal parent hwnd
+            hwnd := DllCall("GetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 0, "ptr") ; internal parent hwnd
             DllCall("DestroyWindow", "ptr", hwnd)
             return 0
          }
@@ -2851,10 +2946,10 @@ class ImagePut {
             Critical
 
             ; Get variables.
-            pBitmap := DllCall("GetWindowLong" __32, "ptr", hwnd, "int", 1*A_PtrSize, "ptr")
-            hdc := DllCall("GetWindowLong" __32, "ptr", hwnd, "int", 2*A_PtrSize, "ptr")
-            Item := DllCall("GetWindowLong" __32, "ptr", hwnd, "int", 3*A_PtrSize, "ptr")
-            pBits := DllCall("GetWindowLong" __32, "ptr", hwnd, "int", 4*A_PtrSize, "ptr")
+            pBitmap := DllCall("GetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 1*A_PtrSize, "ptr")
+            hdc := DllCall("GetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 2*A_PtrSize, "ptr")
+            Item := DllCall("GetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 3*A_PtrSize, "ptr")
+            pBits := DllCall("GetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 4*A_PtrSize, "ptr")
 
             ; Exit loop.
             if !pBitmap

@@ -1,18 +1,21 @@
-﻿;|2.0|2023.07.01|1333
+﻿;|2.1|2023.07.12|1333
 CandySel :=  A_Args[1]
 ;CandySel := "C:\Documents and Settings\Administrator\Desktop\新建文件夹"
 Gui, Add, Text, x10 y15 h25, 查找文件夹:
 Gui, Add, Edit, xp+80 yp-5 w550 h25 vsfolder, % CandySel
+;Gui, Add, Button, xp+560 yp w60 h25 gloadfolder, 载入
+
 Gui, Add, Text, x10 yp+40 h25, 指定扩展名:
 Gui, Add, Edit, xp+80 yp-5 w550 h25 vsExt, % "txt,ahk,md"
 Gui, Add, Text, x10 yp+40 h25, 命令类型:
 Gui, Add, ComboBox, xp+80 yp-5 w550 h90 vcommand gupdateparam, 查找替换||文首添加一行|文末添加一行|文首删除一行|文末删除一行|
 Gui, Add, Button, xp+560 yp-2 w60 h25 gruncommand, 执行命令
 
-gui, add, Text, x10 yp+40 w60 vmyparam1, 查找字符:
+gui, add, Text, x10 yp+30 w60 vmyparam1, 查找字符:
 gui, add, ComboBox, xp+80 yp w550 vmyedit1, 
-gui, add, Text, x10 yp+40 w60 vmyparam2, 替换字符:
+gui, add, Text, x10 yp+30 w60 vmyparam2, 替换字符:
 gui, add, ComboBox, xp+80 yp w550 vmyedit2,
+Gui, Add, CheckBox, x10 yp+20 vzhuanyi h30, 对参数中的 \r, \n, \t 进行转义
 
 Gui, Add, ListView, x10 yp+40 w700 h500 vfilelist Checked hwndHLV AltSubmit, 文件名|相对路径|扩展名|大小(KB)|修改时间|替换次数|完整路径
 Gui, Add, Button, xp yp+510 w60 h30 guncheckall, 全不选
@@ -21,8 +24,10 @@ Gui, Add, Button, xp+70 yp w60 h30 gopenfilefromlist, 打开文件
 Gui, Add, Button, xp+70 yp w60 h30 gopenfilepfromlist, 打开路径
 
 gui, Show,, 文件夹中文本文件批量操作
-
 Return
+
+;loadfolder:
+;Return
 
 updateparam:
 Gui Submit, nohide
@@ -91,17 +96,26 @@ Loop, Files, %sfolder%\*.*, FR
 			continue
 	}
 	FileEncoding % File_GetEncoding(A_LoopFileFullPath)
-	Try FileRead, MatchRead, % A_LoopFileFullPath
+	Try FileRead, OMatchRead, % A_LoopFileFullPath
 	if (command = "查找替换")
 	{
-		StringReplace, MatchRead, MatchRead, %myedit1%, %myedit2%, UseErrorLevel
+		if zhuanyi
+		{
+			myedit1 := StrReplace(myedit1, "\r", "`r")
+			myedit1 := StrReplace(myedit1, "\n", "`n")
+			myedit1 := StrReplace(myedit1, "\t", "`t")
+			myedit2 := StrReplace(myedit2, "\r", "`r")
+			myedit2 := StrReplace(myedit2, "\n", "`n")
+			myedit2 := StrReplace(myedit2, "\t", "`t")
+		}
+		StringReplace, MatchRead, OMatchRead, %myedit1%, %myedit2%, UseErrorLevel
 		repalcecount := ErrorLevel
 	}
 	if (command = "文首添加一行")
-		MatchRead := myedit1 "`r`n" MatchRead
+		MatchRead := myedit1 "`r`n" OMatchRead
 	if (command = "文首删除一行")
 	{
-		MatchRead := trim(MatchRead, " `t`n`r")
+		MatchRead := trim(OMatchRead, " `t`n`r")
 		Loop, parse, MatchRead, `n, `r
 		{
 			firstline := A_LoopField
@@ -111,18 +125,20 @@ Loop, Files, %sfolder%\*.*, FR
 		StringReplace, MatchRead, MatchRead, `r`n
 	}
 	if (command = "文末添加一行")
-		MatchRead := MatchRead "`r`n" myedit1
+		MatchRead := OMatchRead "`r`n" myedit1
 	if (command = "文末删除一行")
 	{
-		MatchRead := trim(MatchRead, " `t`n`r")
+		MatchRead := trim(OMatchRead, " `t`n`r")
 		RegExMatch(MatchRead, "`am)^.*\Z", lastline)
 		StringReplace, MatchRead, MatchRead, %lastline%
 		MatchRead := trim(MatchRead, " `t`n`r")
 	}
-
-	MyFileObj := FileOpen(A_LoopFileFullPath, "w")
-	MyFileObj.Write(MatchRead)
-	MyFileObj.Close()
+	if (OMatchRead != MatchRead)
+	{
+		MyFileObj := FileOpen(A_LoopFileFullPath, "w")
+		MyFileObj.Write(MatchRead)
+		MyFileObj.Close()
+	}
 
 	if (command = "查找替换") && repalcecount
 		LV_Add("", A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, sfolder), A_LoopFileName), A_LoopFileExt, A_LoopFileSizeKB+1, A_LoopFileTimeModified, repalcecount, A_LoopFilePath)

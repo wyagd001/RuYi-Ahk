@@ -1,4 +1,4 @@
-﻿;|2.0|2023.07.01|1302
+﻿;|2.1|2023.07.01|1302
 CandySel := A_Args[1]
 if !CandySel
 {
@@ -22,7 +22,7 @@ JEE_ExpGetInterfaces(oWin, isp, isb, isv, ifv2, icm)
 vOutput := JEE_ICMGetColumns(icm, ",",, 1) ; 1 得到的是中文名称例如 名称  ; 0 得到的英文名称例如  System.ItemNameDisplay
 isp := isb := isv := ifv2 := icm := ""
 ColItem_Array := StrSplit(vOutput, ",")   
-;MsgBox % Array_ToString(ColItem_Array)
+;MsgBox % vOutput   ; 例如: 名称,修改日期,类型,大小,创建日期
 
 tmp_str := ""
 Loop, Parse, CandySel, `n, `r
@@ -31,7 +31,7 @@ Loop, Parse, CandySel, `n, `r
 	tmp_fileinfo := ""
 	loop % ColItem_Array.Length()
 	{
-			tmp_fileinfo .= obj[ColItem_Array[A_Index]] "`t"
+		tmp_fileinfo .= obj[ColItem_Array[A_Index]] "`t"
 	}
 	tmp_str .= tmp_fileinfo "`n"
 }
@@ -145,7 +145,6 @@ JEE_ICMGetColumns(icm, vSep="`n", vMode="n", vzh_Name:=0)
 	vOutput := SubStr(vOutput, 1, -StrLen(vSep))
 	return vOutput
 }
-
 
 ; https://learn.microsoft.com/zh-cn/windows/win32/api/shobjidl_core/nf-shobjidl_core-icolumnmanager-getcolumninfo
 ; https://learn.microsoft.com/zh-cn/windows/win32/api/shobjidl_core/ns-shobjidl_core-cm_columninfo
@@ -386,7 +385,7 @@ Static xDetails
     {
         i:=-1,  xDetails:={},  xDetails.SetCapacity(309)
         
-        While ( i++ < 309 )
+        While ( i++ < 328 )
           {
               xDetails[ objDir.GetDetailsOf(0,i) ] := i   ; 获取名称的数组(得到的是中文的名称)
           } 
