@@ -1,4 +1,4 @@
-﻿;|2.0|2023.07.01|1212
+﻿;|2.1|2023.07.22|1212
 CandySel := A_Args[1]
 IniMenuInifile := A_ScriptDir "\..\配置文件\外部脚本\ini菜单.ini"
 ATA_settingFile := A_ScriptDir "\..\配置文件\如一.ini"
@@ -84,7 +84,10 @@ show_obj(obj, menu_name := ""){
 }
 
 MenuHandler:
-Candy_Cmd := IniMenuobj[A_thisMenu][A_ThisMenuItemPos-2]
+if (A_thisMenu != "注册表")
+	Candy_Cmd := IniMenuobj[A_thisMenu][A_ThisMenuItemPos-2]
+else
+	Candy_Cmd := IniMenuobj[A_thisMenu][A_ThisMenuItemPos-3]
 Candy_Cmd := GetStringIndex(Candy_Cmd)
 ;msgbox % A_ThisMenuItem " - " Candy_Cmd
 if (RegExMatch(Candy_Cmd, "i)^(HKCU|HKCR|HKCC|HKU|HKLM|HKEY|计算机\\HK|\[HK)"))

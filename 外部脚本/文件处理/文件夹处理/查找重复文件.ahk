@@ -214,23 +214,6 @@ Gui, GuiText: Destroy
 exitapp
 Return
 
-/*
-!q::
-FileAppend, % Array_ToString(fMD5obj) , %A_desktop%\123.txt
-FileAppend, % Array_ToString(fsizeobj) , %A_desktop%\456.txt
-return
-
-
-FileAppend, % Array_ToString(folderobj) , %A_desktop%\123.txt
-
-/*
-for file, v in folderobj
-{
-	MsgBox 
-}
-	;FileAppend, %file%, %A_desktop%\123.txt
-*/
-
 Array_ToString(array, depth=5, indentLevel="")
 {
    for k,v in Array

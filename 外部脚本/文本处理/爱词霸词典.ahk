@@ -1,30 +1,44 @@
-﻿;|2.0|2023.07.01|1112
+﻿;|2.1|2023.07.24|1378
 #SingleInstance force
 CandySel := A_Args[1]
-有道网络翻译:
-	Youdao_keyword := Trim(CandySel, " `t`r`n")
+爱词霸词典网络翻译:
+	Youdao_keyword := CandySel
+	Youdao_keyword := Trim(Youdao_keyword, " `t`r`n")
 	If !Youdao_keyword                          ;如果粘贴板里面没有内容，则判断是否有窗口定义
-	Return
-	Youdao_译文:=YouDaoApi(Youdao_keyword)
+		Return
+	Youdao_译文 := iciba(Youdao_keyword)
 	;msgbox % Youdao_译文
-	Youdao_基本释义:= json(Youdao_译文, "basic.explains")
-	Youdao_网络释义:= json(Youdao_译文, "web.value")
+	Youdao_基本释义 := json(Youdao_译文, "message.paraphrase")
+	;msgbox % Youdao_基本释义
 	If Youdao_基本释义<>
 	{
-		ToolTip, %Youdao_keyword%:`n基本释义:%Youdao_基本释义%`n网络释义:%Youdao_网络释义%
+		ToolTip, %Youdao_keyword%:`n基本释义:%Youdao_基本释义%`n
 		sleep 1900
-		gosub, soundpaly
+		;gosub, soundpaly
 		sleep, 100
 		ToolTip
+		Youdao_译文 := Youdao_基本释义 := Youdao_keyword := ""
 	}
 else
-MsgBox,,有道网络翻译, 网络错误或查询不到该单词的翻译。, 5
+	MsgBox,, 爱词霸网络翻译, 网络错误或查询不到该单词的翻译。, 5
 return
 
-YouDaoApi(KeyWord)
+iciba(KeyWord)
 {
-	url:="http://fanyi.youdao.com/fanyiapi.do?keyfrom=xxxxxxxx&key=1360116736&type=data&doctype=json&version=1.1&q=" . SkSub_UrlEncode(KeyWord,"utf-8")
+	url:="https://dict.iciba.com/dictionary/word/suggestion?word=" SkSub_UrlEncode(KeyWord,"utf-8")
     Return WinHttp.URLGet(url)
+}
+
+SkSub_UrlEncode(str, enc="UTF-8")       ;From Ahk Forum
+{
+    enc:=trim(enc)
+    If enc=
+        Return str
+   hex := "00", func := "msvcrt\" . (A_IsUnicode ? "swprintf" : "sprintf")
+   VarSetCapacity(buff, size:=StrPut(str, enc)), StrPut(str, &buff, enc)
+   While (code := NumGet(buff, A_Index - 1, "UChar")) && DllCall(func, "Str", hex, "Str", "%%%02X", "UChar", code, "Cdecl")
+   encoded .= hex
+   Return encoded
 }
 
 json(ByRef js, s, v = "")
@@ -65,18 +79,6 @@ json(ByRef js, s, v = "")
 	}
 	Return, j == "false" ? 0 : j == "true" ? 1 : j == "null" or j == "nul"
 		? "" : SubStr(j, 1, 1) == """" ? SubStr(j, 2, -1) : j
-}
-
-SkSub_UrlEncode(str, enc="UTF-8")       ;From Ahk Forum
-{
-    enc:=trim(enc)
-    If enc=
-        Return str
-   hex := "00", func := "msvcrt\" . (A_IsUnicode ? "swprintf" : "sprintf")
-   VarSetCapacity(buff, size:=StrPut(str, enc)), StrPut(str, &buff, enc)
-   While (code := NumGet(buff, A_Index - 1, "UChar")) && DllCall(func, "Str", hex, "Str", "%%%02X", "UChar", code, "Cdecl")
-   encoded .= hex
-   Return encoded
 }
 
 soundpaly:

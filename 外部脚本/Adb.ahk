@@ -18,9 +18,10 @@ gui, add, Edit, x175 yp+45 w585 h500 vmyedit4,
 gui, add, Button, xp+600 yp w100 gruncommincmd, 使用终端打开
 gosub updatemode
 gui, show, AutoSize, Adb 命令
-OnMessage(0x4a, "Receive_WM_COPYDATA")
+;OnMessage(0x4a, "Receive_WM_COPYDATA")
 return
 
+/*
 Receive_WM_COPYDATA(wParam, lParam)
 {
 	Global CandySel
@@ -34,6 +35,7 @@ Receive_WM_COPYDATA(wParam, lParam)
 	}
 	return False
 }
+*/
 
 updatemode:
 GuiControl,, myedit4

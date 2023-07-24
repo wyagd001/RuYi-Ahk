@@ -18,7 +18,8 @@ OnExit, ExitShrink
 SetTimer, Repaint, 100
 
 Windy_CurWin_id := A_Args[1]
-zoom := A_Args[2]
+zoom := A_Args[2]              ; 微缩系数 0.5 一半
+
 if !Windy_CurWin_id
 {
 	DetectHiddenWindows, On
@@ -150,11 +151,6 @@ if !i
 return
 
 /*
-!w::
-for k, v in Windows.Clone()
-MsgBox % k
-return
-
 WM_LBUTTONDOWN(wParam, lParam, msg, hwnd) {
 	static init := OnMessage(0x0201, "WM_LButtonDOWN")
 	PostMessage, 0xA1, 2,,, A

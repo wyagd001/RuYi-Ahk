@@ -1,0 +1,326 @@
+;|2.1|2023.07.21|1372
+; AHKVERSION: V2.0 beat3 U64
+
+Class Tetris
+{
+  current_block := []                                                                 ; 当前形状
+  next_block    := 0                                                                  ; 下一个形状
+  stop_blocks   := []                                                                 ; 停止运动的砖块
+  width         := 10                                                                 ; 游戏界面宽度（格子数）
+  height        := 20                                                                 ; 游戏界面高度（格子数）
+  linewidth     := 1                                                                  ; 网格线宽度
+  blockwidth    := 30                                                                 ; 方框大小
+  width_px      := this.width * this.blockwidth + (1 + this.width) * this.linewidth   ; 游戏区域宽度
+  height_px     := this.height * this.blockwidth + (1 + this.height) * this.linewidth ; 游戏区域高度
+  blocks        := [[[[0,1,1],[1,1,0],[0,0,0]],[[1,0,0],[1,1,0],[0,1,0]]],[[[1,1,0],[0,1,1],[0,0,0]],[[0,1,0],[1,1,0],[1,0,0]]],[[[1,0,0],[1,0,0],[1,0,0],[1,0,0]],[[0,0,0,0],[0,0,0,0],[1,1,1,1],[0,0,0,0]]],[[[0,1,1],[0,1,1]]],[[[1,0,0],[1,1,1],[0,0,0]],[[0,1,1],[0,1,0],[0,1,0]],[[0,0,0],[1,1,1],[0,0,1]],[[0,1,0],[0,1,0],[1,1,0]]],[[[0,0,1],[1,1,1],[0,0,0]],[[0,1,0],[0,1,0],[0,1,1]],[[0,0,0],[1,1,1],[1,0,0]],[[1,1,0],[0,1,0],[0,1,0]]],[[[0,1,0],[1,1,1],[0,0,0]],[[0,1,0],[0,1,1],[0,1,0]],[[0,0,0],[1,1,1],[0,1,0]],[[0,1,0],[1,1,0],[0,1,0]]]]
+  
+  ; 启动入口
+  Startup() {
+    ; 装载gdiplus.ll提高性能
+    this.hGdipModule := DllCall("LoadLibrary", "Str", "gdiplus")
+    ; 启动gdip
+    si := Buffer(A_PtrSize = 8 ? 24 : 16, 0), NumPut("UInt", 1, si, 0)
+    DllCall("gdiplus\GdiplusStartup", "Ptr*", &pToken := 0, "Ptr", si, "Ptr", 0), this.pGdipToken := pToken
+    ; 创建需要用到的画布和笔刷
+    bi := Buffer(40, 0)
+    NumPut("Uint", 40, "Uint", Integer(this.width_px), "Uint", Integer(this.height_px), "ushort", 1, "ushort", 32, "uInt", 0, bi, 0)
+    this.hbm := DllCall("CreateDIBSection", "Ptr", 0, "Ptr", bi, "Uint", 0, "Ptr*", 0, "Ptr", 0, "Uint", 0, "Ptr")
+    this.sdc := DllCall("CreateCompatibleDC", "Ptr", 0, "ptr")
+    DllCall("SelectObject", "Ptr", this.sdc, "Ptr", this.hbm, "ptr")
+    DllCall("gdiplus\GdipCreateFromHDC", "Ptr", this.sdc, "Ptr*", &G := 0), this.Graphics := G
+
+    NumPut("Uint", 40, "Uint", Integer(this.blockwidth * 4), "Uint", Integer(this.blockwidth * 4), "ushort", 1, "ushort", 32, "uInt", 0, bi, 0)
+    this.hbm2 := DllCall("CreateDIBSection", "Ptr", 0, "Ptr", bi, "Uint", 0, "Ptr*", 0, "Ptr", 0, "Uint", 0, "Ptr")
+    this.sdc2 := DllCall("CreateCompatibleDC", "Ptr", 0, "ptr")
+    DllCall("SelectObject", "Ptr", this.sdc2, "Ptr", this.hbm2, "ptr")
+    DllCall("gdiplus\GdipCreateFromHDC", "Ptr", this.sdc2, "Ptr*", &G2 := 0), this.Graphics2 := G2
+
+    DllCall("gdiplus\GdipCreateSolidFill", "UInt", 0xFFDDEDFF, "Ptr*", &pBrush1 := 0), this.pBrush1 := pBrush1
+    DllCall("gdiplus\GdipCreateSolidFill", "UInt", 0xFFFFAAAA, "Ptr*", &pBrush2 := 0), this.pBrush2 := pBrush2 
+    DllCall("gdiplus\GdipCreateSolidFill", "UInt", 0xFFFF5555, "Ptr*", &pBrush3 := 0), this.pBrush3 := pBrush3 
+    DllCall("gdiplus\GdipCreateSolidFill", "UInt", 0xFFF0F0F0, "Ptr*", &pBrush4 := 0), this.pBrush4 := pBrush4 
+    DllCall("gdiplus\GdipCreatePen1", "UInt", 0xFFCCCCCC, "float", this.linewidth, "int", 2, "Ptr*", &pPen := 0), this.pPen := pPen
+    ; 获取第一个砖块
+    this.get_current_block()
+    ; 创建GUi
+    this.CreateMainWindow()
+    ; 绘制游戏界面
+    this.Draw()
+    ; 将网格保存到数组，便于游戏中各种判断
+    this.blank_line := []
+    loop(this.width)
+      this.blank_line.push(0)
+    this.Reset()
+    ; 开始游戏
+    this.timer := ObjBindMethod(this, "move_down")
+    SetTimer(this.timer, 500)
+  }
+
+  Reset(){
+    this.stop_blocks := []
+    loop(this.height)
+      this.stop_blocks.push(this.blank_line.clone())
+  }
+
+
+  ; 绘制游戏主界面
+  Draw(){
+    ; 画底色和网格
+    DllCall("gdiplus\GdipFillRectangle" , "Ptr", this.Graphics, "Ptr", this.pBrush1 , "float", 0, "float", 0, "float", this.width_px, "float", this.height_px)
+    loop(11){
+      x := (A_Index - 1) * (this.blockwidth + this.linewidth)
+      DllCall("gdiplus\GdipDrawLine" , "Ptr", this.Graphics, "Ptr", this.pPen , "float", x, "float", 0, "float", x, "float", this.height_px)
+    }
+    loop(21){
+      y := (A_Index - 1) * (this.blockwidth + this.linewidth)
+      DllCall("gdiplus\GdipDrawLine" , "Ptr", this.Graphics, "Ptr", this.pPen , "float", 0, "float", y, "float", this.width_px, "float", y)
+    }
+    ; 绘制当前砖块
+    for(line in this.current_block){
+      line_num := A_Index - 1
+      for(c in line){
+        if(!c)
+          continue  
+        x := (this.linewidth + this.blockwidth) * (A_Index - 1 + this.current_block_start_col) + this.linewidth
+        y := (this.linewidth + this.blockwidth) * (line_num  + this.current_block_start_row) + this.linewidth
+        w := this.blockwidth
+        DllCall("gdiplus\GdipFillRectangle" , "Ptr", this.Graphics, "Ptr", this.pBrush2 , "float", x, "float", y, "float", w, "float", w)
+    }}
+    ; 绘制已经停止的砖块
+    for(line in this.stop_blocks){
+      line_num := A_Index - 1
+      for(c in line){
+        if(!c)
+          continue
+        x := (this.linewidth + this.blockwidth) * (A_Index - 1) + this.linewidth
+        y := (this.linewidth + this.blockwidth) * (line_num) + this.linewidth
+        w := this.blockwidth
+        DllCall("gdiplus\GdipFillRectangle" , "Ptr", this.Graphics, "Ptr", this.pBrush3 , "float", x, "float", y, "float", w, "float", w)
+    }}
+
+    ; 绘制下一个砖块（提示）
+    DllCall("gdiplus\GdipFillRectangle" , "Ptr", this.Graphics2, "Ptr", this.pBrush4 , "float", 0, "float", 0, "float", this.width_px, "float", this.height_px)
+    for(line in this.next_block){
+      line_num := A_Index
+      for(c in line){
+        if(c == 0)
+          continue
+          x := (A_Index - 1) * (this.blockwidth+1)
+          y := (line_num - 1) * (this.blockwidth + 1)
+          DllCall("gdiplus\GdipFillRectangle" , "Ptr", this.Graphics2, "Ptr", this.pBrush3 , "float", x, "float", y, "float", this.blockwidth, "float", this.blockwidth)
+      }
+    }
+    ; 更新，上面只是在内存中绘制，现在更新到屏幕上
+    this.ddc := DllCall("GetDC", "Ptr", this.win.Hwnd, "ptr")
+    DllCall("gdi32\BitBlt", "Ptr", this.ddc, "int", 5, "int", 5, "int", this.width_px, "int", this.height_px , "Ptr", this.sdc, "int", 0, "int", 0, "Uint", 0x00CC0020)
+    DllCall("gdi32\BitBlt", "Ptr", this.ddc, "int", this.width_px + 10, "int", 150, "int", this.blockwidth * 4, "int", this.blockwidth * 4 , "Ptr", this.sdc2, "int", 0, "int", 0, "Uint", 0x00CC0020)
+  }
+ 
+  ; 创建窗口
+  CreateMainWindow(){
+    this.win := Gui("", title := "俄罗斯方块")
+    this.win.Show(format("w{} h{}", this.width_px * 1.5, this.height_px + 10))
+    this.win.SetFont("S17")
+    this.score_control := this.win.Add("Text", format("x{} y60", this.width_px + 20), "0")
+    this.win.OnEvent("Close", _ExitApp)
+  } 
+
+  ; 从定义好的形状中随机抽取
+  get_block(){
+    x := random(1, this.blocks.length)
+    y := random(1, this.blocks[x].length)
+    return this.blocks[x][y]
+  }
+
+  ; 获取新砖块或者下一个砖块
+  get_current_block(){
+    if(!this.next_block)
+      this.current_block := this.get_block()
+    else 
+      this.current_block := this.next_block
+    this.next_block := this.get_block()
+    this.current_block_start_row := -2
+    this.current_block_start_col := 3
+  }
+
+  ; 砖块向左移动
+  move_left(){
+    if(!this.judge_move_left())
+      return
+    this.current_block_start_col -= 1
+    this.Draw()
+  }
+
+  ; 砖块向右移动
+  move_right(){
+    if(!this.judge_move_right())
+      return
+    this.current_block_start_col += 1
+    this.Draw()
+  }
+
+  ; 砖块向下移动
+  move_down(){
+    if(this.judge_move_down()){
+      this.current_block_start_row += 1
+    } else {
+      this.update_stop_blocks()
+      this.get_current_block()
+      this.judge_lines()
+    }
+    this.Draw()
+  }
+
+  ; 变换（旋转）砖块
+  transform_current_block(){
+    for(line in this.blocks){
+      for(c  in line){
+        ; 因为cur_block是blocks里面抽取的一个元素，所以可以用等号判断，如果是自己重新构造的数组，哪怕一模一样也不相等
+        if(c == this.current_block){ 
+          block_style_list := line
+          i := A_Index
+          break 2
+    }}}
+    i++
+    i := i > block_style_list.length ? 1 : i
+    if(!this.judge_new_block(block_style_list[i]))
+      return
+    this.current_block := block_style_list[i]
+    this.Draw()
+  }
+
+  ; 更新已停止的砖块列表
+  update_stop_blocks(){
+    ; 判断游戏是否失败，并重新开始
+    if(this.current_block_start_row < 0){
+      SetTimer(this.timer, 0)
+      MsgBox("哈哈你挂了！ 分数：" .  this.score_control.Text)
+    this.score_control.Text := 0
+      this.Reset()
+      SetTimer(this.timer, 500)
+      return 
+    }
+    for(line in this.current_block){
+      line_num := A_Index
+      for(c in line){
+        if(c == 0)
+          continue
+        this.stop_blocks[this.current_block_start_row + line_num][this.current_block_start_col + A_Index] := 1
+  }}}
+
+  ; 判断是否继续下落
+  judge_move_down(){
+    for(line in this.current_block){
+      line_num := A_Index
+      for(c in line){
+        if(c == 0)
+          continue
+        x := A_Index + this.current_block_start_col
+        y := line_num + this.current_block_start_row + 1
+        if(y > this.height)
+          return False
+        if( y >= 1 && this.stop_blocks[y][x] == 1)
+          return False
+    }}
+    return True
+  }
+
+  ; 判断是否可以向左移动
+  judge_move_left(){
+    for(line in this.current_block){
+      line_num := A_Index
+      for(c in line){
+        if(c == 0)
+          continue
+        x := A_Index + this.current_block_start_col - 1
+        y := line_num + this.current_block_start_row
+        if(x < 1 || (y >= 1 && this.stop_blocks[y][x] == 1))
+          return False
+    }}
+    return True
+  }
+
+  ; 判断是否可以向右移动
+  judge_move_right(){
+    for(line in this.current_block){
+      line_num := A_Index
+      for(c in line){
+        if(c == 0)
+          continue
+        x := A_Index + this.current_block_start_col + 1
+        y := line_num + this.current_block_start_row
+        if(x > this.width || (y >= 1 && this.stop_blocks[y][x] == 1))
+          return False
+    }}
+    return True
+  }
+
+  ; 判断新砖块是否与边框或已经停止的砖块冲突
+  judge_new_block(block){
+    for(line in block){
+      line_num := A_Index
+      for(c in line){
+        if(c == 0)
+          continue
+        x := A_Index + this.current_block_start_col
+        y := line_num + this.current_block_start_row
+        if(x < 1 || x > this.width || y > this.height || (y >= 1 && this.stop_blocks[y][x] == 1))
+          return False
+    }}
+    return True
+  }
+
+ ; 判断是否可消除
+  judge_lines(){
+    i := 1
+    for(line in this.stop_blocks){
+      line_num := A_Index
+      for(c in line){
+        if(c == 0)
+          continue 2
+      }
+    this.stop_blocks.RemoveAt(line_num)  
+    this.stop_blocks.InsertAt(1, this.blank_line.Clone())
+    this.score_control.text += i
+    i++
+  }}
+
+  Close() {
+    DllCall("gdiplus\GdipDeletePen", "Ptr", this.pPen)
+    DllCall("gdiplus\GdipDeleteBrush", "Ptr", this.pBrush1)
+    DllCall("gdiplus\GdipDeleteBrush", "Ptr", this.pBrush2)
+    DllCall("DeleteObject", "Ptr", this.hbm)
+    DllCall("DeleteObject", "Ptr", this.sdc)
+    DllCall("DeleteObject", "Ptr", this.Graphics)
+    DllCall("DeleteObject", "Ptr", this.hbm2)
+    DllCall("DeleteObject", "Ptr", this.sdc2)
+    DllCall("DeleteObject", "Ptr", this.Graphics2)
+    DllCall("ReleaseDC", "Ptr", 0, "Ptr", this.ddc)
+    DllCall("FreeLibrary", "Ptr", this.hGdipModule)
+    DllCall("gdiplus\GdiplusShutdown", "Ptr", this.pGdipToken)
+  }
+}
+
+t := Tetris()
+t.Startup()
+
+Hotkey("UP", (*) => t.transform_current_block())
+Hotkey("Down", (*) => t.move_down())
+Hotkey("Left", (*) => t.move_left())
+Hotkey("Right", (*) => t.move_right())
+OnExit((*) => t.Close())
+
+printarr(a){
+  s := ""
+  for(line in a){
+    for(c in line){
+      s .= c
+    }
+    s .= '`r'
+  }
+  msgbox s
+}
+
+_ExitApp(*) {
+	ExitApp(0)
+}

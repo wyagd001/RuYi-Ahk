@@ -18,6 +18,8 @@ WindowSpy.ahk||5
 2.0\AutoHotkey64.exe|2.0.4.0|1219
 2.0\chm_config.js||0
 2.0\WindowSpy.ahk||0
+2.0\Lib\Gdip.ahk||308
+2.0\Lib\ImagePut.ahk||176
 2.0\UX\install-ahk2exe.ahk||1
 2.0\UX\install-version.ahk||4
 2.0\UX\install.ahk||38

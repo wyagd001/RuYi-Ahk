@@ -1,4 +1,4 @@
-﻿;|2.1|2023.07.21|13xx
+﻿;|2.1|2023.07.21|多条目
 CandySel := A_Args[1]
 if (CandySel = "/prev")
 	gosub play_prev

@@ -51,7 +51,7 @@ return
 
 延时加载界面:
 GuiControl,, comm, % "查找替换`n`n正则替换`n添加`n属性标签覆盖`n按位置删除"
- . "`n删除数字或字母`n序号`n按符号分割后重排`n英文首字母大写`n逆序`n简体与繁体`n中文转拼音`n修改扩展名"
+ . "`n删除数字或字母`n序号`n按符号分割后重排`n英文首字母大写`n逆序`n简体与繁体`n中文转拼音`n修改扩展名`n半角与全角`nuri编码转中文字符"
 gosub updateparam
 gosub updatesb
 gosub reloadfolder
@@ -103,9 +103,9 @@ else if (comm = "属性标签覆盖")
 }
 else if (comm = "按位置删除")
 {
-	commmode("开始位置", "结束位置:",, "enable", "enable")
-	GuiControl,, myedit1, `n1`n`n2`n
-	GuiControl,, myedit2, `n`n`n1`n2`n
+	commmode("开始位置:", "结束位置:",, "enable", "enable")
+	GuiControl,, myedit1, `n1`n`n2`n-1❤❤❤删除右边倒数第一个字符`n-2❤❤❤删除右边倒数第二个字符
+	GuiControl,, myedit2, `n`n`n1`n2`n-1❤❤❤文件名末尾省略掉1个字符
 }
 else if (comm = "序号")
 {
@@ -138,13 +138,11 @@ else if (comm = "修改扩展名")
 	commmode("原扩展名:", "新扩展名:",, "enable", "enable")
 	GuiControl,, myedit1, `nahk`n`ntxt`nmd
 }
-
-
-
-
-
-
-
+else if (comm = "半角与全角")
+{
+	commmode("转换模式:",,, "enable")
+	GuiControl,, myedit1, `n转半角`n`n转全角
+}
 else if (comm = "URL编码与解码")
 {
 	commmode("转换模式:", "编码:",, "enable", "enable")
@@ -230,9 +228,13 @@ Loop
 	LV_GetText(relpath, RowNumber, 2)
 	LV_GetText(newname, RowNumber, 3)
 
-oldfilep := myfolderpath relpath oldname
-newfilep := PathU(myfolderpath relpath newname)
-FileMove, % oldfilep, % newfilep
+	oldfilep := myfolderpath relpath oldname
+	newfilep := myfolderpath relpath newname
+	if (oldfilep != newfilep)
+	{
+		newfilep := PathU(newfilep)
+		FileMove, % oldfilep, % newfilep
+	}
 }
 Return
 
@@ -242,12 +244,6 @@ Local Q, F := VarSetCapacity(Q,520,0)
   DllCall("shell32\PathYetAnotherMakeUniqueName","Str",Q, "Str",Q, "Ptr",0, "Ptr",F)
 Return A_IsUnicode ? Q : StrGet(&Q, "UTF-16")
 }
-
-
-
-
-
-
 
 查找替换:
 LV_Delete()
@@ -444,6 +440,8 @@ return
 
 按位置删除:
 LV_Delete()
+myedit1 := SubStr(myedit1, 1, (pos := InStr(myedit1, "❤❤❤")) ? pos - 1 : 20)
+myedit2:= SubStr(myedit2, 1, (pos := InStr(myedit1, "❤❤❤")) ? pos - 1 : 20)
 Loop, Files, %myfolderpath%\*.*, FR
 {
 	if fext
@@ -453,9 +451,14 @@ Loop, Files, %myfolderpath%\*.*, FR
 	}
 	A_LoopFileNameNoExt := StrReplace(A_LoopFileName, "." A_LoopFileExt)
 	if myedit2
-		newname := SafeFileName(StrReplace(A_LoopFileNameNoExt, SubStr(A_LoopFileNameNoExt, myedit1, myedit2)))
+		newname := SafeFileName(StrReplace(A_LoopFileNameNoExt, SubStr(A_LoopFileNameNoExt, myedit1, myedit2),,, 1))
 	Else
-		newname := SafeFileName(StrReplace(A_LoopFileNameNoExt, SubStr(A_LoopFileNameNoExt, myedit1)))
+	{
+		if (myedit1 > 0)
+			newname := SafeFileName(StrReplace(A_LoopFileNameNoExt, SubStr(A_LoopFileNameNoExt, myedit1),,, 1))
+		Else
+			newname := SafeFileName(SubStr(A_LoopFileNameNoExt, 1, myedit1))
+	}
 	if newname
 		LV_Add("Check", A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), newname "." A_LoopFileExt)
 }
@@ -640,78 +643,81 @@ return
 LV_Delete()
 Loop, Files, % myfolderpath "\*." (myedit1 ? myedit1 : "*"), FR
 {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Cando_文件名乱码转码:
-	CandySel_FileNameNoExt := UrlDecode(CandySel_FileNameNoExt)
-	CandySel_FileNameNoExt := SafeFileName(CandySel_FileNameNoExt)
-	FileMove, %CandySel%, %CandySel_ParentPath%\%CandySel_FileNameNoExt%.%CandySel_Ext%
-	;msgbox % A_LastError
-return
-
-Unicode码转字符:
-newStr := Unicode转中文(oldtxt)
-t2.SetText(newStr)
+	A_LoopFileNameNoext := StrReplace(A_LoopFileName, "." A_LoopFileExt)
+	LV_Add("Check", A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), A_LoopFileNameNoext "." myedit2)
+}
+LV_ModifyCol()
 Return
 
-URL编码与解码:
-if (myedit1 = "解码")
+半角与全角:
+LV_Delete()
+Loop, Files, %myfolderpath%\*.*, FR
 {
-	newStr := UrlDecode(oldtxt, myedit2)
-	t2.SetText(newStr)
+	if fext
+	{
+		if A_LoopFileExt not in %fext%
+			continue
+	}
+	A_LoopFileNameNoext := StrReplace(A_LoopFileName, "." A_LoopFileExt)
+	if (myedit1 = "转半角")
+		newname := K3_StrQJ2BJ(A_LoopFileNameNoext)
+	Else if (myedit1 = "转全角")
+		newname := K3_StrBJ2QJ(A_LoopFileNameNoext)
+	if (newname != A_LoopFileNameNoext)
+		LV_Add("Check", A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), newname "." A_LoopFileExt)
 }
-if (myedit1 = "编码")
-{
-	newStr := UrlEncode(oldtxt, myedit2)
-	t2.SetText(newStr)
-}
-return
-
-半角转全角:
-K3_StrBJ2QJ(oldtxt, newStr)
-t2.SetText(newStr)
+LV_ModifyCol()
 Return
 
+uri编码转中文字符:
+LV_Delete()
+Loop, Files, %myfolderpath%\*.*, FR
+{
+	if fext
+	{
+		if A_LoopFileExt not in %fext%
+			continue
+	}
+	A_LoopFileNameNoext := StrReplace(A_LoopFileName, "." A_LoopFileExt)
+	if InStr(A_LoopFileNameNoext, "%")
+	{
+		newname := SafeFileName(UrlDecode(A_LoopFileNameNoext))
+		if (newname != A_LoopFileNameNoext)
+			LV_Add("Check", A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), newname "." A_LoopFileExt)
+	}
+}
+LV_ModifyCol()
+return
 
+/*
+HalfShape4FullShape()
+        全角半角字符互相转换函数。需要 AutoHotkey_L Unicode 版本。
+作者: amnesiac
+参数说明:
+        Char        需转换的字符。
+        ToFullShape        为真时转换为全角，否则转换为半角。
+*/
 
+HalfShape4FullShape(Char, ToFullShape = true)
+{
+        if ToFullShape && (Asc(Char) < 256) && Asc(Char)
+                return, Chr(Asc(Char) + 65248)
+        else if !ToFullShape && (Asc(Char) > 65248) && (Asc(Char) < 65504) 
+                return, Chr(Asc(Char) - 65248)
+        else
+                return, Char
+}
 
+K3_StrQJ2BJ(byref srcnr) ; 注意初始化tarnr，新半角转全角，每个字符分析，理论上正常
+{
+    loop, parse, srcnr
+    {
+        tarnr .= HalfShape4FullShape(A_Loopfield, 0)
+    }
+	return tarnr
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-K3_StrBJ2QJ(byref srcnr, byref tarnr) ; 注意初始化tarnr，新半角转全角，每个字符分析，理论上正常
+K3_StrBJ2QJ(byref srcnr) ; 注意初始化tarnr，新半角转全角，每个字符分析，理论上正常
 {
     isSecond := 0
     loop, parse, srcnr
@@ -730,6 +736,7 @@ K3_StrBJ2QJ(byref srcnr, byref tarnr) ; 注意初始化tarnr，新半角转全�
             }
         }
     }
+    return tarnr
 }
 
 K3_CharBJ2QJ(AsciiNum=97) ; 单个字符转换为全角
@@ -737,11 +744,6 @@ K3_CharBJ2QJ(AsciiNum=97) ; 单个字符转换为全角
     static Ascii_33 := "！" , Ascii_34 := "＂" , Ascii_35 := "＃" , Ascii_36 := "＄" , Ascii_37 := "％" , Ascii_38 := "＆" , Ascii_39 := "＇" , Ascii_40 := "（" , Ascii_41 := "）" , Ascii_42 := "＊" , Ascii_43 := "＋" , Ascii_44 := "，" , Ascii_45 := "－" , Ascii_46 := "．" , Ascii_47 := "／" , Ascii_48 := "０" , Ascii_49 := "１" , Ascii_50 := "２" , Ascii_51 := "３" , Ascii_52 := "４" , Ascii_53 := "５" , Ascii_54 := "６" , Ascii_55 := "７" , Ascii_56 := "８" , Ascii_57 := "９" , Ascii_58 := "：" , Ascii_59 := "；" , Ascii_60 := "＜" , Ascii_61 := "＝" , Ascii_62 := "＞" , Ascii_63 := "？" , Ascii_64 := "＠" , Ascii_65 := "Ａ" , Ascii_66 := "Ｂ" , Ascii_67 := "Ｃ" , Ascii_68 := "Ｄ" , Ascii_69 := "Ｅ" , Ascii_70 := "Ｆ" , Ascii_71 := "Ｇ" , Ascii_72 := "Ｈ" , Ascii_73 := "Ｉ" , Ascii_74 := "Ｊ" , Ascii_75 := "Ｋ" , Ascii_76 := "Ｌ" , Ascii_77 := "Ｍ" , Ascii_78 := "Ｎ" , Ascii_79 := "Ｏ" , Ascii_80 := "Ｐ" , Ascii_81 := "Ｑ" , Ascii_82 := "Ｒ" , Ascii_83 := "Ｓ" , Ascii_84 := "Ｔ" , Ascii_85 := "Ｕ" , Ascii_86 := "Ｖ" , Ascii_87 := "Ｗ" , Ascii_88 := "Ｘ" , Ascii_89 := "Ｙ" , Ascii_90 := "Ｚ" , Ascii_91 := "［" , Ascii_92 := "＼" , Ascii_93 := "］" , Ascii_94 := "＾" , Ascii_95 := "＿" , Ascii_96 := "｀" , Ascii_97 := "ａ" , Ascii_98 := "ｂ" , Ascii_99 := "ｃ" , Ascii_100 := "ｄ" , Ascii_101 := "ｅ" , Ascii_102 := "ｆ" , Ascii_103 := "ｇ" , Ascii_104 := "ｈ" , Ascii_105 := "ｉ" , Ascii_106 := "ｊ" , Ascii_107 := "ｋ" , Ascii_108 := "ｌ" , Ascii_109 := "ｍ" , Ascii_110 := "ｎ" , Ascii_111 := "ｏ" , Ascii_112 := "ｐ" , Ascii_113 := "ｑ" , Ascii_114 := "ｒ" , Ascii_115 := "ｓ" , Ascii_116 := "ｔ" , Ascii_117 := "ｕ" , Ascii_118 := "ｖ" , Ascii_119 := "ｗ" , Ascii_120 := "ｘ" , Ascii_121 := "ｙ" , Ascii_122 := "ｚ" , Ascii_123 := "｛" , Ascii_124 := "｜" , Ascii_125 := "｝" , Ascii_126 := "～"
     return, Ascii_%AsciiNum%
 }
-
-
-
-
-
 
 getpinyin(s, sd := 1, szm := 0, fgs := " "){
 	static f := __Pinyin()
@@ -863,30 +865,6 @@ UrlDecode(Uri, Enc = "UTF-8")
    }
    Return, Uri
 }
-
-;==============================================================================
-Unicode转中文(value){
-    i = 0
-    while (i := InStr(value, "\",, i+1)) {    ; \u4E00
-      if !(SubStr(value, i+1, 1) == "u")
-        this.ParseError("\", text, pos - StrLen(SubStr(value, i+1)))
-
-      uffff := Abs("0x" . SubStr(value, i+2, 4))
-      if (A_IsUnicode || uffff < 0x100)
-        value := SubStr(value, 1, i-1) . Chr(uffff) . SubStr(value, i+6)
-    }
-    i:=0
-    while (i := InStr(value, "&",, i+1)) {     ; &#124;
-      if !(SubStr(value, i+1, 1) == "#")
-        this.ParseError("\", text, pos - StrLen(SubStr(value, i+1)))
-      p := InStr(value, ";",, i+1)
-      uffff := Abs(SubStr(value, i+2, p-i-2))
-      if (A_IsUnicode || uffff < 0x100)
-        value := SubStr(value, 1, i-1) . Chr(uffff) . SubStr(value, p+1)
-    }
-  Return,value
-}
-;==============================================================================
 
 Array_ToString(array, depth=5, indentLevel="")
 {
