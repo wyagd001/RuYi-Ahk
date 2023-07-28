@@ -1,10 +1,13 @@
 ﻿OnMessage(0x4a, "Receive_WM_COPYDATA")
 return
 
+/*
+; 测试用
 !q::
 msgbox %A_ScriptDir%
 msgbox % addd(2, 3)
 return
+*/
 
 Receive_WM_COPYDATA(wParam, lParam)
 {
@@ -23,6 +26,10 @@ Receive_WM_COPYDATA(wParam, lParam)
 1209:
 测试标签:
 msgbox, 你好!
+return
+
+1394:
+msgbox % CandySel
 return
 
 addd(x, y)

@@ -1,7 +1,7 @@
 ﻿adb.exe||5880
 AdbWinApi.dll|2.0.0.0|95
 AdbWinUsbApi.dll|2.0.0.1|61
-AutoHotkeyLCN.chm||2571
+AutoHotkeyLCN.chm||2577
 AutoHotkeyLCN.chw||109
 AutoHotkeyU32.exe|1.1.37.1|892
 AutoHotkeyU64.exe|1.1.37.1|1289
@@ -12,7 +12,7 @@ segmdl2.ttf||258
 WindowSpy.ahk||5
 输出excel数据到GUI.ahk||3
 输出excel数据到GUI.exe|1.1.36.2|332
-2.0\AutoHotkey2.0.chm||2528
+2.0\AutoHotkey2.0.chm||2537
 2.0\AutoHotkey2.0.chw||91
 2.0\AutoHotkey32.exe|2.0.4.0|957
 2.0\AutoHotkey64.exe|2.0.4.0|1219
@@ -62,6 +62,7 @@ x32\7-zip.dll|9.20.0.2|623
 x32\7z.dll|22.1.0.0|1207
 x32\7z.exe|22.1.0.0|329
 x32\7zG.exe|22.1.0.0|421
+x32\AudioGenie3.dll|2.0.4.0|538
 x32\AutoHotkey.dll|1.1.33.10|1136
 x32\quricol32.dll|2.0.0.0|225
 x32\Rar.exe|6.1.1.0|556
@@ -74,6 +75,7 @@ x64\7-zip.dll|9.20.0.2|1051
 x64\7z.dll|22.1.0.0|1771
 x64\7z.exe|22.1.0.0|532
 x64\7zG.exe|22.1.0.0|668
+x64\AudioGenie3.dll|2.0.4.0|626
 x64\AutoHotkey.dll|1.1.33.10|1299
 x64\quricol64.dll|2.0.0.0|238
 x64\Rar.exe|6.1.1.0|591

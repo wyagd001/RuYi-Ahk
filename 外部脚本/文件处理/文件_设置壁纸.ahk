@@ -1,4 +1,4 @@
-﻿;|2.0|2023.07.01|1331
+﻿;|2.1|2023.07.28|1331,1399
 /* EXAMPLE
 dw := new IDesktopWallpaper
 dw.GetMonitorDevicePathAt(0, MonitorID)
@@ -8,6 +8,8 @@ MsgBox Wallpaper
 ExitApp
 */
 CandySel := A_Args[1]
+param := A_Args[2]
+
 if !CandySel
 {
 	DetectHiddenWindows, On
@@ -17,8 +19,11 @@ if !CandySel
 		exitapp
 }
 
+if (param = "") or (param = 0) or (param = 1)  ; 第一屏幕
+	param := 0
+
 dw := new IDesktopWallpaper
-dw.GetMonitorDevicePathAt(0, MonitorID)
+dw.GetMonitorDevicePathAt(param, MonitorID)
 dw.SetWallpaper(MonitorID, CandySel)
 sleep 300
 ExitApp

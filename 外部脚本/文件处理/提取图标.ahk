@@ -9,10 +9,7 @@
 ; 只有保存图标组的功能，没有添加保存单个图标的功能
 
 CandySel := A_Args[1]
-1207:
-Cando_DllIcon:
 dllfile := CandySel
-
 Start:
 Gui,66:Destroy
 Gui,66:Default 
@@ -27,7 +24,7 @@ Loop, 500
 {
   if a_index = 1
     Gui, add, Pic, xm y+5 w32 h32 icon%a_index% border altsubmit gIcon vIcon%a_index%, %dllfile%
-  else if a_index in 1,21,41,61,81,101,121,141,161,181,201,221,241,261,281,301
+  else if a_index in 1,21,41,61,81,101,121,141,161,181,201,221,241,261,281,301,321
     Gui, add, Pic, xm y+2 w32 h32 icon%a_index% border altsubmit gIcon vIcon%a_index%, %dllfile%
   else
     Gui, add, Pic, x+2 w32 h32 icon%a_index% border altsubmit gIcon vIcon%a_index%, %dllfile%
@@ -39,9 +36,27 @@ Loop, 500
   }
 }
 Gui, Show,, Icon Browser
-GuiControl,text,File2, %dllfile%
+GuiControl, text, File2, %dllfile%
 GuiControl, Focus, hgo
+OnMessage(0x200, "WM_MOUSEMOVE")
 return
+
+WM_MOUSEMOVE(wParam, lParam)
+{
+  Global outputvarcontrol,disabletool
+  if disabletool = 1
+    return
+  MouseGetPos,,,, OutputVarControl
+  StringTrimLeft, icon, outputvarcontrol, 6
+  CurrentTip = 该图标在 Ahk 中的图标编号为 %icon% 
+  If (tt_TipShown <> CurrentTip)
+  {
+    IfNotInString, outputvarcontrol, Static
+      ToolTip
+    else
+      ToolTip, %currenttip%
+  }
+}
 
 SelectdllFile:
 FileSelectFile, dllFile, 1, %systemroot%\system32\, Open, Icon Files (*.ico; *.dll; *.exe)
