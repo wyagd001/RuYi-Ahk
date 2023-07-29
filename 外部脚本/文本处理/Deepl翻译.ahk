@@ -8,55 +8,36 @@ if !CandySel
 	ControlGetText, CandySel, Edit1, 获取当前窗口信息_ 
 	DetectHiddenWindows, Off
 }
-
-StringCaseSense, On
-text := CandySel
-;text := substr(CandySel, 1, 250)
-;ToolTip % text
-id := 12340000
-WinHTTP := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-loop 1
-{
-   WinHTTP.Open("POST", "https://www2.deepl.com/jsonrpc", true)
-   WinHTTP.SetRequestHeader("content-type", "application/json")
-   WinHTTP.SetRequestHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.84 Safari/537.36 OPR/85.0.4341.75")
-   id++
-   if (Mod(id+3, 13) = 0) or (Mod(id+5, 29) = 0)
-      method = "method" :
-   else
-      method = "method":
-   text .= "i"
-   StrReplace(text, "i",, i_count)
-   i_count++
-   timestamp := A_NowUTC
-   timestamp -= 19700101000000, S
-   timestamp .= A_MSec
-   timestamp := timestamp + i_count - Mod(timestamp, i_count)
-   json = {"jsonrpc": "2.0", %method% "LMT_handle_texts", "id": %id%, "params": {"texts": [{"text": "%text%", "requestAlternatives": 3}], "splitting": "newlines", "lang": {"target_lang": "ZH"}, "timestamp": %timestamp%, "commonJobParams": {"wasSpoken": false}}}
-   WinHTTP.Send(json)
-   WinHTTP.WaitForResponse()
-   gtext := WinHTTP.responsetext
-}
-;msgbox % gtext
-;msgbox % json(gtext, "result.texts.text")
-;msgbox % substr(decodeu(json(gtext, "result.texts.text")), 1)
-fyText := substr(decodeu(json(gtext, "result.texts.text")), 1)
-if (strlen(fyText) > 2)
-{
-	GuiText(fyText, "Deepl 翻译")
-}
-else
-	GuiText(gtext, "Deepl 翻译")
+;MsgBox % CandySel
+fyText := Deepl(CandySel)
+GuiText(fyText, "Deepl 翻译", CandySel, "Deepl")
 return
 
-GuiText(Gtext, Title:="", w:=300, l:=20)
+GuiText(Gtext2, Title:="", Gtext1:="", Label:="", w:=300, l:=20)
 {
-	global myedit, TextGuiHwnd
+	global myedit1, myedit2, TextGuiHwnd
 	Gui,GuiText: Destroy
 	Gui,GuiText: Default
 	Gui, +HwndTextGuiHwnd
-	Gui, Add, Edit, Multi readonly w%w% r%l% vmyedit
-	GuiControl,, myedit, %Gtext%
+	if Gtext1
+	{
+		Gui, Add, Edit, w%w% r%l% -WantReturn vmyedit1
+		if Label
+		{
+			;MsgBox % "Default xp+" w+1 " w100 h1 g" Label
+			Gui, Add, Button, % "Default xp+" w+1 " w100 h1 g" Label, 翻译
+			Gui, Add, Edit, % "xp+10 w" w " r" l " Multi readonly vmyedit2"
+		}
+		else
+			Gui, Add, Edit, % "xp+" w+10 " w" w " r" l " Multi readonly vmyedit2"
+		;MsgBox % "xp+" w+10 " w" w " r" l " Multi readonly vmyedit2"
+		GuiControl,, myedit1, %Gtext1%
+	}
+	else
+	{
+		Gui, Add, Edit, Multi readonly w%w% r%l% vmyedit2
+	}
+	GuiControl,, myedit2, %Gtext2%
 	gui, Show, AutoSize, % Title
 	return
 
@@ -65,6 +46,52 @@ GuiText(Gtext, Title:="", w:=300, l:=20)
 	Gui, GuiText: Destroy
 	ExitApp
 	Return
+}
+
+Deepl:
+Gui, GuiText: Submit, NoHide
+if myedit1
+{
+	fyText := Deepl(Trim(myedit1))
+	GuiControl,, myedit2, %fyText%
+}
+return
+
+Deepl(mytext)
+{
+	RegExReplace(mytext, "[^\x00-\xff]",, zh_Count)
+	if zh_Count
+		target_lang := "EN"
+	else
+		target_lang := "ZH"
+	StringCaseSense, On
+	id := 12340000
+	WinHTTP := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+	WinHTTP.Open("POST", "https://www2.deepl.com/jsonrpc", true)
+	WinHTTP.SetRequestHeader("content-type", "application/json")
+	WinHTTP.SetRequestHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.84 Safari/537.36 OPR/85.0.4341.75")
+	id++
+	if (Mod(id+3, 13) = 0) or (Mod(id+5, 29) = 0)
+		method = "method" :
+	else
+		method = "method":
+	mytext := StrReplace(mytext, """", "'")   ; 双引号转单引号
+	mytext .= "i"
+	StrReplace(mytext, "i",, i_count)
+	i_count++
+	timestamp := A_NowUTC
+	timestamp -= 19700101000000, S
+	timestamp .= A_MSec
+	timestamp := timestamp + i_count - Mod(timestamp, i_count)
+	json = {"jsonrpc": "2.0", %method% "LMT_handle_texts", "id": %id%, "params": {"texts": [{"text": "%mytext%", "requestAlternatives": 3}], "splitting": "newlines", "lang": {"target_lang": "%target_lang%"}, "timestamp": %timestamp%, "commonJobParams": {"wasSpoken": false}}}
+	WinHTTP.Send(json)
+	WinHTTP.WaitForResponse()
+	gtext := WinHTTP.responsetext
+	fyText := substr(decodeu(json(gtext, "result.texts.text")), 1)
+	if (strlen(fyText) > 1)
+		return fyText
+	else
+		return gtext
 }
 
 json(ByRef js, s, v = "")

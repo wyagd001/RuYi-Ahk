@@ -8,7 +8,7 @@ if !CandySel
 }
 if InStr(CandySel, "`n")
 {
-	FileToClipboard(CandySel, 2)
+	FileToClipboard(CandySel)
 }
 Else
 {

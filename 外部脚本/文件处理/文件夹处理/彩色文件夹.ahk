@@ -6,11 +6,14 @@ if (param = "")
 	param := "红色"
 if InStr(FileExist(CandySel), "D")
 {
-	iconPath := GetFullPathName(A_ScriptDir "\..\..\..\脚本图标\彩色文件夹\" param ".ico")
+	if FileExist(param)
+		iconPath := param
+	else
+		iconPath := GetFullPathName(A_ScriptDir "\..\..\..\脚本图标\彩色文件夹\" param ".ico")
 	if FileExist(iconPath)
 		SetFolderIcon(CandySel, iconPath)
+	DllCall("Shell32\SHChangeNotify", "Int", SHCNE_ASSOCCHANGED := 0x8000000, "UInt", 0, "Ptr", 0, "Ptr", 0)
 }
-DllCall("Shell32\SHChangeNotify", "Int", SHCNE_ASSOCCHANGED := 0x8000000, "UInt", 0, "Ptr", 0, "Ptr", 0)
 return
 
 ; 要生效会自动将文件夹的属性设置为只读

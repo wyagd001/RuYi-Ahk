@@ -498,7 +498,7 @@ return
 
 属性标签覆盖:
 myedit1 := SubStr(myedit1, 1, (pos := InStr(myedit1, "❤❤❤")) ? pos - 1 : 30)
-prams_arr1 := getxproprams(myedit1)
+prams_arr1 := getxproprams(myedit1)  ; 最多支持 3 个属性标签
 Loop, Files, %myfolderpath%\*.*, FR
 {
 	if fext
@@ -511,11 +511,11 @@ Loop, Files, %myfolderpath%\*.*, FR
 	xpro_obj1 := Filexpro(A_LoopFilePath,, prams_arr1*)
 	for k,v in prams_arr1
 	{
-		ModeS := StrReplace(ModeS, "\" v "\", xpro_obj1[v])
-		;MsgBox % v " - " xpro_obj1[v]
+		if xpro_obj1[v]
+			ModeS := StrReplace(ModeS, "\" v "\", xpro_obj1[v])
 	}
 	newname := SafeFileName(ModeS)
-	if (newname != A_LoopFileNameNoext)
+	if (newname != A_LoopFileNameNoext) && (ModeS != myedit1)
 	{
 		R_index++
 		LV_Add("Check", R_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), newname "." A_LoopFileExt)
