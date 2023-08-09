@@ -1,6 +1,8 @@
-﻿;|2.0|2023.07.01|1174
+﻿;|2.2|2023.07.01|1174
 CandySel := A_Args[1]
+msgbox % CandySel
 CandySel := trim(CandySel, """")
+
 Gui,66: Destroy
 Gui,66: Default
 gui add, text, x5 y5, 原盘符:
@@ -8,7 +10,7 @@ gui add, ComboBox, xp+50 yp-3 w110 vvaInCp, C:|D:|E:|F:|G:|H:|I:|J:|K:|L:|M:|N:|
 gui add, text, xp+120 y5, 新盘符:
 gui add, ComboBox, xp+50 yp-3 w100 vvOutCp, C:|D:|E:|F:|G:|H:|I:|J:|K:|L:|M:|N:|O:|P:|Q:|R:|S:|T:|U:|V:|W:|X:|Y:|Z:
 gui add, Button, xp+120 h25 gchange, 转换
-GuiControl, ChooseString, vaInCp, % CandySel
+GuiControl, ChooseString, vaInCp, % SubStr(CandySel, 1, 2)
 gui show,, 更改磁盘 %CandySel% 的驱动号
 return
 

@@ -1592,10 +1592,10 @@ If ( VarSetCapacity(xDetails) = 0 )                           ;     Init static 
 	While ( i++ < 329 )
 	{
 		xDetails[ objDir.GetDetailsOf(0,i) ] := i   ; 获取名称的数组(中文系统得到的是中文的名称)
-	} 
+	}
 
 	xDetails.Delete("")
-	}
+}
 
 ; msgbox % objDir.GetDetailsOf(objItm, 11)
 If ( Kind and Kind <> objDir.GetDetailsOf(objItm, 11) )        ;  File isn't desired kind  

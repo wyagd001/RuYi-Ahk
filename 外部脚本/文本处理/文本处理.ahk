@@ -1,4 +1,4 @@
-﻿;|2.0|2023.07.01|1242
+﻿;|2.2|2023.08.08|1242
 #SingleInstance force
 CandySel := A_Args[1]
 if !CandySel
@@ -75,9 +75,9 @@ Receive_WM_COPYDATA(wParam, lParam)
 }
 
 延时加载界面:
-GuiControl,, comm, % "查找替换`n`n高亮查找`n提取查找字符所在行`n移除查找字符所在行`n单行正则提取`n单行正则替换`n行提取`nMatch测试"
- . "`n行首尾添加字符`n行首尾删除字符`n行首序号处理`n按数量提取行前后字符`n按数量删除行前后字符`n按数量分割单行`n按分隔符提取"
- . "`n按条件提取删除行`n行倒序排列`n行字顺序颠倒`n字符串反转`n竖排文字`n行排序"
+GuiControl,, comm, % "查找替换`n`n高亮查找`n提取查找字符所在行`n移除查找字符所在行`n单行正则提取`n单行正则替换`n提取行中内容`nMatch测试"
+ . "`n行首尾添加字符`n行首尾删除字符`n行首序号处理`n按数量提取行首尾字符`n按数量删除行首尾字符`n按数量分割单行`n整体按分隔符提取"
+ . "`n单行按分隔符提取`n按条件提取删除行`n行倒序排列`n行字顺序颠倒`n字符串反转`n竖排文字`n行排序"
  . "`n字数统计`n查看中文所属字集`n左右同时处理`nBase64加密`nBase64解密`nUnicode码转字符`nURL编码与解码`nHtml转纯文本"
  . "`n首字母转大写`n英文字母大小写`n中英文添加空格`n英文标点改中文`n中文标点改英文`n全角空格改半角`n半角转全角"
  . "`n阿拉伯数字与中文`n简体与繁体`n中文转拼音`n字符与编码的转换"
@@ -198,13 +198,13 @@ else if (comm = "移除查找字符所在行")
 {
 	commmode("查找的字符串:",,, "enable")
 }
-else if (comm = "按数量提取行前后字符")
+else if (comm = "按数量提取行首尾字符")
 {
 	commmode("提取位置:", "提取的数量:",, "enable", "enable")
 	GuiControl,, myedit1, `n行首`n`n行尾`n
 	GuiControl,, myedit2, `n1`n`n
 }
-else if (comm = "按数量删除行前后字符")
+else if (comm = "按数量删除行首尾字符")
 {
 	commmode("删除位置:", "删除的数量:",, "enable", "enable")
 	GuiControl,, myedit1, `n行首`n`n行尾`n
@@ -221,7 +221,13 @@ else if (comm = "按数量分割单行")
 	commmode("数量:", "前缀:", "后缀:", "enable", "enable", "enable")
 	GuiControl,, myedit1, `n`n`n1❤❤❤删除开头空白字符`n
 }
-else if (comm = "按分隔符提取")
+else if (comm = "整体按分隔符提取")
+{
+	commmode("位置:", "数量:", "分隔符:", "enable", "enable", "enable")
+	GuiControl,, myedit1, `n1❤❤❤第1组开始`n`n2❤❤❤第2组开始`n
+	GuiControl,, myedit2, `n1❤❤❤提取1组`n`n2❤❤❤提取2组`n
+}
+else if (comm = "单行按分隔符提取")
 {
 	commmode("位置:", "数量:", "分隔符:", "enable", "enable", "enable")
 	GuiControl,, myedit1, `n1❤❤❤第1组开始`n`n2❤❤❤第2组开始`n
@@ -244,7 +250,7 @@ else if (comm = "字数统计")
 	commmode("查找的字符串:", "换行符类型",, "enable", "enable")
 	GuiControl,, myedit2, `n``r``n`n`n``r`n``n
 }
-else if (comm = "行提取")
+else if (comm = "提取行中内容")
 {
 	commmode("模式:", "其他选项:",, "enable", "enable")
 	GuiControl,, myedit1, `n提取中文`n`ncsv提取列`n按Tab提取列`n
@@ -595,7 +601,7 @@ myedit1 := SubStr(myedit1, 1, (pos := InStr(myedit1, "❤❤❤")) ? pos - 1 : 5
 Loop, Parse, oldtxt, `r, `n
 {
    Tmp_Array := RegExMatchAll(A_LoopField, myedit1, myedit2)
-   MsgBox % Array_ToString(Tmp_Array)
+   ;MsgBox % Array_ToString(Tmp_Array)
    if Tmp_Array
    {
       Loop % Tmp_Array.MaxIndex()
@@ -714,7 +720,7 @@ Loop, Parse, oldtxt, `r, `n
 t2.SetText(newStr)
 return
 
-按数量提取行前后字符:
+按数量提取行首尾字符:
 RegExReplace(oldtxt, ".",, ZF_Count)
 Ahk_count := strLen(oldtxt)
 if (ZF_Count = Ahk_count)
@@ -746,7 +752,7 @@ Loop, Parse, oldtxt, `r, `n
 t2.SetText(newStr)
 return
 
-按数量删除行前后字符:
+按数量删除行首尾字符:
 RegExReplace(oldtxt, ".",, ZF_Count)
 Ahk_count := strLen(oldtxt)
 if (ZF_Count = Ahk_count)
@@ -1026,7 +1032,7 @@ else
 t2.SetText(newStr)
 return
 
-按分隔符提取:
+整体按分隔符提取:
 ;oldtxt := StrReplace(oldtxt, "`r", "`r`n")
 myedit1 := SubStr(myedit1, 1, (pos := InStr(myedit1, "❤❤❤")) ? pos - 1 : 3)
 ;MsgBox % myedit1 ", " pos
@@ -1035,18 +1041,62 @@ if !myedit1
 myedit2 := SubStr(myedit2, 1, (pos := InStr(myedit2, "❤❤❤")) ? pos - 1 : 3)
 if !myedit2
 	myedit2 := 1
-MsgBox % myedit1 ", " myedit2 ", " myedit3
+;MsgBox % myedit1 ", " myedit2 ", " myedit3
 if zhuanyi
 {
 	myedit3 := StrReplace(myedit3, "\r", "`r")
 	myedit3 := StrReplace(myedit3, "\t", "`t")
 	myedit3 := StrReplace(myedit3, "\n", "`r")
 }
-newStr := LineStr(oldtxt, myedit1, myedit2, myedit3)
+
+/*
+; 默认为换行符分隔, 然后提取第几行
+H := "Line_1`r`nLine_2`r`nLine_3`r`nLine_4`r`nLine_5`r`nLine_6`r`nLine_7`r`nLine_8`r`nLine_9"
+
+MsgBox,,Example 1, % "Extract first line`n`n" .                      LineStr(H, 1, 1)
+MsgBox,,Example 2, % "Extract first two lines`n`n" .                 LineStr(H, 1, 2)
+MsgBox,,Example 3, % "Extract line 5`n`n" .                          LineStr(H, 5, 1)   
+MsgBox,,Example 4, % "Extract all from fifth line `n`n" .            LineStr(H, 5)
+MsgBox,,Example 5, % "Extract 3 lines from fifth line`n`n" .         LineStr(H, 5, 3)
+MsgBox,,Example 6, % "Extract last line`n`n" .                       LineStr(H, 0)             
+MsgBox,,Example 7, % "Extract last 2 lines`n`n" .                    LineStr(H, -1)
+MsgBox,,Example 8, % "Extract 2 lines preceding last line`n`n" .     LineStr(H, -2,2)        
+MsgBox,,Example 9, % "Extract all lines except first and last`n`n" . LineStr(H, 2,-1)
+*/
+newStr .= LineStr(oldtxt, myedit1, myedit2, myedit3)
+/*
+Loop, Parse, oldtxt, `r, `n
+{
+	newStr .= LineStr(A_LoopField, myedit1, myedit2, myedit3) "`n"
+}
+*/
 t2.SetText(newStr)
 Return
 
-行提取:
+单行按分隔符提取:
+;oldtxt := StrReplace(oldtxt, "`r", "`r`n")
+myedit1 := SubStr(myedit1, 1, (pos := InStr(myedit1, "❤❤❤")) ? pos - 1 : 3)
+;MsgBox % myedit1 ", " pos
+if !myedit1
+	myedit1 := 1
+myedit2 := SubStr(myedit2, 1, (pos := InStr(myedit2, "❤❤❤")) ? pos - 1 : 3)
+if !myedit2
+	myedit2 := 1
+;MsgBox % myedit1 ", " myedit2 ", " myedit3
+if zhuanyi
+{
+	myedit3 := StrReplace(myedit3, "\r", "`r")
+	myedit3 := StrReplace(myedit3, "\t", "`t")
+	myedit3 := StrReplace(myedit3, "\n", "`r")
+}
+Loop, Parse, oldtxt, `r, `n
+{
+	newStr .= LineStr(A_LoopField, myedit1, myedit2, myedit3) "`n"
+}
+t2.SetText(newStr)
+Return
+
+提取行中内容:
 myedit2 := SubStr(myedit2, 1, (pos := InStr(myedit2, "❤❤❤")) ? pos - 1 : 20)
 if zhuanyi
 {

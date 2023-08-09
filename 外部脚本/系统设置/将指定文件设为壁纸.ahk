@@ -1,12 +1,18 @@
-﻿;|2.0|2023.07.01|1332
+﻿;|2.2|2023.08.01|1332
 Random, rand, 1, 5
 imgpath := A_ScriptDir . "\..\..\临时目录\BZ_" rand ".jpg"
 imgpath := GetFullPathName(imgpath)
+if !fileexist(imgpath)
+{
+	Random, rand, 1, 5
+	imgpath := A_ScriptDir . "\临时目录\BZ_" rand ".jpg"
+}
 ;msgbox %  imgpath
 
 ; 多显示器情况下会导致所有显示器使用相同的壁纸
 ;DllCall("SystemParametersInfo", UINT, 20, UINT, uiParam, STR, imgpath, UINT, 2)  ; 重启或注销后失效
-setWallpapers(imgpath)  ; 重启后不会失效
+if fileexist(imgpath)
+	setWallpapers(imgpath)  ; 重启后不会失效
 return
 
 setWallpapers(sFile){  

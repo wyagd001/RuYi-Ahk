@@ -1,0 +1,182 @@
+<html lang="zh">
+<head>
+<title>如意网页动作列表</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+<script type="text/javascript">
+function post(url, params) {
+var temp = document.createElement("form");
+temp.action = url;
+temp.method = "post";
+temp.style.display = "none";
+for (var x in params) {
+var opt = document.createElement("textarea");
+opt.name = x;
+opt.value = params[x];
+temp.appendChild(opt);
+}
+document.body.appendChild(temp);
+temp.submit();
+return temp;
+}
+</script>
+
+</head>
+<body>
+<h1>如意网页动作列表</h1>
+<table>
+    <tr>
+        <th style="width:40px">编号</th>
+        <th>名称</th>
+        <th>动作描说明</th>
+    </tr>
+    <tr>
+        <td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1001,ccdd:1001})">1001</a></td>
+        <td>电脑图标</td>
+        <td>设置我的电脑中显示的图标(视频, 图片等六个文件夹..)</td>
+    </tr>
+
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1002,ccdd:'桌面图标'})">1002</a></td><td>桌面图标</td><td>设置桌面中显示的图标(此电脑, 回收站, 网络..)</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1003,ccdd:1003})">1003</a></td><td>导航栏</td><td>资源管理器左侧导航栏中项目的设置(收藏夹, 库, 快速启动..)</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1004,ccdd:1004})">1004</a><td>打开方式</td><td>查看扩展名的打开方式, 更改图标</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1005,ccdd:1005})">1005</a><td>电脑桌面图标</td><td>我的电脑和桌面添加自定义的链接图标</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1006,ccdd:1006})">1006</a><td>快捷方式</td><td>设置快捷方式的小箭头图标和快捷方式字样</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1013,ccdd:1013})">1013</a><td>程序和功能</td><td>打开系统的程序管理删除界面</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1014,ccdd:1014})">1014</a><td>计算机管理</td><td>打开计算机管理(任务计划, 事件查看, 共享文件夹, 用户和组, 设备管理器, 磁盘管理, 服务管理)</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1015,ccdd:1015})">1015</a><td>服务管理</td><td>打开服务管理</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1016,ccdd:1016})">1016</a><td>任务管理器</td><td>打开任务管理器</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1017,ccdd:1017})">1017</a><td>记事本</td><td>打开系统记事本</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1019,ccdd:1019})">1019</a><td>计算器</td><td>打开计算器</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1020,ccdd:1020})">1020</a><td>主策略</td><td>打开本地组策略编辑器</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1021,ccdd:1021})">1021</a><td>启动配置</td><td>打开系统配置(msconfig, 启动, 引导)</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1022,ccdd:1022})">1022</a><td>注册表</td><td>打开注册表</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1023,ccdd:1023})">1023</a><td>系统信息</td><td>打开系统信息</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1024,ccdd:1024})">1024</a><td>事件查看</td><td>打开系统事件查看器</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1025,ccdd:1025})">1025</a><td>系统属性</td><td>打开系统属性</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1026,ccdd:1026})">1026</a><td>cmd</td><td>打开 CMD</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1027,ccdd:1027})">1027</a><td>安全策略</td><td>打开安全策略</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1028,ccdd:1028})">1028</a><td>磁盘清理</td><td>打开磁盘清理</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1029,ccdd:1029})">1029</a><td>任务管理</td><td>打开系统任务计划程序</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1043,ccdd:1043})">1043</a><td>百度</td><td>打开百度的网页</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1054,ccdd:1054})">1054</a><td>我的电脑</td><td>使用资源管理器以新窗口方式打开我的电脑</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1055,ccdd:1055})">1055</a><td>回收站</td><td>使用资源管理器以新窗口方式打开回收站</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1056,ccdd:1056})">1056</a><td>桌面</td><td>使用资源管理器以新窗口方式打开桌面</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1057,ccdd:1057})">1057</a><td>我的文档</td><td>使用资源管理器以新窗口方式打开我的文档</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1058,ccdd:1058})">1058</a><td>网络</td><td>使用资源管理器以新窗口方式打开网络</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1059,ccdd:1059})">1059</a><td>网络适配器</td><td>使用资源管理器以新窗口方式打开网络适配器</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1060,ccdd:1060})">1060</a><td>上帝模式</td><td>使用资源管理器以新窗口方式打开上帝模式文件夹</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1074,ccdd:1074})">1074</a><td>画图</td><td>打开系统自带画图程序</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1076,ccdd:1076})">1076</a><td>隐藏图标</td><td>隐藏或恢复桌面图标</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1078,ccdd:1078})">1078</a><td>1h后关机</td><td>1 小时后强制关机</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1079,ccdd:1079})">1079</a><td>取消关机</td><td>取消强制关机</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1089,ccdd:1089})">1089</a><td>同步如意</td><td>左侧文件夹同步到右侧(左→右)</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1094,ccdd:1094})">1094</a><td>IP设置</td><td>网络适配器的IP设置</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1099,ccdd:1099})">1099</a><td>自定义运行</td><td>自定义注册表中注册的exe文件</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1113,ccdd:1113})">1113</a><td>网络适配器</td><td>使用资源管理器以新窗口方式打开网络适配器</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1114,ccdd:1114})">1114</a><td>环境变量</td><td>打开系统环境变量的设置界面</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1115,ccdd:1115})">1115</a><td>显示隐藏</td><td>资源管理器显示隐藏文件</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1116,ccdd:1116})">1116</a><td>隐藏文件</td><td>资源管理器隐藏文件</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1117,ccdd:1117})">1117</a><td>显示扩展名</td><td>资源管理器显示文件的扩展名</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1118,ccdd:1118})">1118</a><td>隐藏扩展名</td><td>资源管理器隐藏文件的扩展名</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1122,ccdd:1122})">1122</a><td>无线调试</td><td>开启手机无线adb调试</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1123,ccdd:1123})">1123</a><td>开启黑域</td><td>开启手机黑域</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1124,ccdd:1124})">1124</a><td>重启桌面</td><td>强制关闭所有资源管理器后重新打开</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1147,ccdd:1147})">1147</a><td>控制面板</td><td>打开控制面板</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1148,ccdd:1148})">1148</a><td>库</td><td>打开库</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1150,ccdd:1150})">1150</a><td>PowerShell</td><td>打开 PowerShell</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1157,ccdd:1157})">1157</a><td>如意目录</td><td>打开脚本所在目录</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1158,ccdd:1158})">1158</a><td>AppData</td><td>打开 AppData 目录</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1159,ccdd:1159})">1159</a><td>Rencent</td><td>打开 Rencent 目录</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1168,ccdd:1168})">1168</a><td>关闭显示器</td><td>关闭显示器屏幕(黑屏)</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1172,ccdd:1172})">1172</a><td>截取屏幕</td><td>截取显示器屏幕并存入脚本所在目录的截图目录中</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1192,ccdd:1192})">1192</a><td>动作管理</td><td>动作管理</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1193,ccdd:1193})">1193</a><td>最多运行</td><td>最多运行动作的子面板</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1194,ccdd:1194})">1194</a><td>最多运行</td><td>最多运行动作的菜单</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1195,ccdd:1195})">1195</a><td>最近运行</td><td>最近运行动作的子面板</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1196,ccdd:1196})">1196</a><td>最近运行</td><td>最近运行动作的菜单</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1199,ccdd:1199})">1199</a><td>窗口列表</td><td>列出系统中的所有窗口, 可以隐藏和显示</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1209,ccdd:1209})">1209</a><td>测试</td><td>测试插件脚本里的例子</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1217,ccdd:1217})">1217</a><td>到手机</td><td>同步电脑文件夹到手机文件夹(参数指定文件夹)</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1218,ccdd:1218})">1218</a><td>连接手机</td><td>使用adb连接到手机</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1222,ccdd:1222})">1222</a><td>360收藏夹</td><td>将360浏览器的收藏夹显示为菜单(只支持一级文件夹, 参数 CandySel 请替换为收藏夹文件的路径)</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1223,ccdd:1223})">1223</a><td>Chrome收藏夹</td><td>将Chrome浏览器的收藏夹显示为菜单(只支持两级文件夹, 参数 CandySel 请替换为收藏夹文件的路径)</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1224,ccdd:1224})">1224</a><td>Edge收藏夹</td><td>将Edge浏览器的收藏夹显示为菜单(只支持两级文件夹, 参数 CandySel 请替换为收藏夹文件的路径)</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1227,ccdd:1227})">1227</a><td>系统属性</td><td>打开系统属性界面(高级系统设置)</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1231,ccdd:1231})">1231</a><td>环境变量</td><td>环境变量编辑备份脚本</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1233,ccdd:1233})">1233</a><td>搜索动作</td><td>搜索和运行动作的界面</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1240,ccdd:1240})">1240</a><td>测试动作</td><td>对话框显示动作中变量</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1262,ccdd:1262})">1262</a><td>Adb 命令</td><td>使用界面执行预设的 Adb 命令</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1263,ccdd:1263})">1263</a><td>面板管理</td><td>管理如意中的面板</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1264,ccdd:1264})">1264</a><td>热字串管理</td><td>管理如意的热字串</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1272,ccdd:1272})">1272</a><td>安全和维护</td><td>打开系统安全和维护界面</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1273,ccdd:1273})">1273</a><td>性能监视器</td><td>打开系统性能监视器</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1274,ccdd:1274})">1274</a><td>资源监视器</td><td>打开系统资源监视器</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1275,ccdd:1275})">1275</a><td>磁盘管理</td><td>打开系统磁盘管理工具</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1276,ccdd:1276})">1276</a><td>共享管理</td><td>打开系统共享文件夹管理器</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1277,ccdd:1277})">1277</a><td>用户和组</td><td>打开本机用户和组</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1278,ccdd:1278})">1278</a><td>屏幕键盘</td><td>打开系统的屏幕键盘</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1279,ccdd:1279})">1279</a><td>电源选项</td><td>打开系统的电源选项</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1280,ccdd:1280})">1280</a><td>声音与音频</td><td>打开系统的声音与音频设置</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1281,ccdd:1281})">1281</a><td>设备管理</td><td>打开系统的设备管理器</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1282,ccdd:1282})">1282</a><td>设备管理</td><td>打开系统的设备管理器</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1283,ccdd:1283})">1283</a><td>Internet</td><td>打开系统的 Internet 选项</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1284,ccdd:1284})">1284</a><td>用户账户</td><td>打开系统用户账户对话框</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1285,ccdd:1285})">1285</a><td>音量合成</td><td>打开系统音量合成器</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1286,ccdd:1286})">1286</a><td>文件选项</td><td>打开系统文件夹选项</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1287,ccdd:1287})">1287</a><td>文件夹选项</td><td>打开系统文件夹选项</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1288,ccdd:1288})">1288</a><td>字体设置</td><td>打开字体文件夹</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1289,ccdd:1289})">1289</a><td>字体设置</td><td>打开控制面板字体文件夹</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1290,ccdd:1290})">1290</a><td>功能管理</td><td>打开启用或关闭 Windows 功能对话框</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1291,ccdd:1291})">1291</a><td>管理工具</td><td>打开控制面板管理工具文件夹</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1292,ccdd:1292})">1292</a><td>日期时间</td><td>打开控制面板日期和时间设置</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1293,ccdd:1293})">1293</a><td>鼠标属性</td><td>打开控制面板鼠标属性</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1294,ccdd:1294})">1294</a><td>区域和语言</td><td>打开控制面板区域和语言选项</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1295,ccdd:1295})">1295</a><td>任务栏设置</td><td>打开任务栏设置</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1313,ccdd:1313})">1313</a><td>如意托盘</td><td>点击如意托盘图标显示的面板(窗口为桌面, 未选中状态剪贴板获取为空)</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1317,ccdd:1317})">1317</a><td>Ini_Fav</td><td>Ini 文件显示为Gui面板(作为收藏夹使用)</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1321,ccdd:1321})">1321</a><td>Ahk 帮助</td><td>Autohotkey 帮助文件</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1322,ccdd:1322})">1322</a><td>Ahk Spy</td><td>Autohotkey Spy</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1327,ccdd:1327})">1327</a><td>Bing壁纸</td><td>将Bing背景图片设置为桌面壁纸</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1328,ccdd:1328})">1328</a><td>壁纸路径</td><td>获取桌面壁纸的文件路径</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1329,ccdd:1329})">1329</a><td>整点敲钟</td><td>整点半点敲钟</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1330,ccdd:1330})">1330</a><td>节日提醒</td><td>节日提醒</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1332,ccdd:1332})">1332</a><td>随机壁纸</td><td>将下载Bing背景图片的随机缓存文件设置为桌面壁纸</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1334,ccdd:1334})">1334</a><td>重启以太网</td><td>禁用以太网后重新启用(Win7 中显示为本地连接)</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1335,ccdd:1335})">1335</a><td>重启以太网</td><td>禁用以太网后重新启用(Win7 中显示为本地连接)</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1342,ccdd:1342})">1342</a><td>添加到菜单</td><td>添加指定的如意的动作到资源管理器选中文件的右键菜单中</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1343,ccdd:1343})">1343</a><td>退出如意</td><td>退出如意</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1345,ccdd:1345})">1345</a><td>写字板</td><td>打开系统写字板</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1346,ccdd:1346})">1346</a><td>wmplayer</td><td>打开系统 wmplayer</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1347,ccdd:1347})">1347</a><td>截图工具</td><td>打开系统截图工具</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1348,ccdd:1348})">1348</a><td>字符映射表</td><td>打开系统字符映射表</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1349,ccdd:1349})">1349</a><td>放大镜</td><td>打开系统放大镜</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1353,ccdd:1353})">1353</a><td>静音切换</td><td>系统静音切换</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1354,ccdd:1354})">1354</a><td>静音</td><td>系统静音</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1355,ccdd:1355})">1355</a><td>取消静音</td><td>系统取消静音</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1356,ccdd:1356})">1356</a><td>关机</td><td>关机</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1357,ccdd:1357})">1357</a><td>强制关机</td><td>强制关机</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1358,ccdd:1358})">1358</a><td>重启</td><td>重启</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1359,ccdd:1359})">1359</a><td>强制重启</td><td>强制重启</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1360,ccdd:1360})">1360</a><td>截取屏幕</td><td>截取显示器屏幕并保存到脚本指定的路径(网页控制使用)</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1361,ccdd:1361})">1361</a><td>显示桌面</td><td>最小化所有窗口(显示桌面)</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1362,ccdd:1362})">1362</a><td>清空回收站</td><td>清空回收站</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1363,ccdd:1363})">1363</a><td>上一首</td><td>播放器上一首(foobar2000, wmplayer, ttplayer, Winamp)</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1364,ccdd:1364})">1364</a><td>暂停</td><td>播放器暂停(foobar2000, wmplayer, ttplayer, Winamp)</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1365,ccdd:1365})">1365</a><td>下一首</td><td>播放器下一首(foobar2000, wmplayer, ttplayer, Winamp)</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1366,ccdd:1366})">1366</a><td>退出</td><td>播放器退出(foobar2000, wmplayer, ttplayer, Winamp)</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1367,ccdd:1367})">1367</a><td>24点</td><td>4 个随机数字(1-10) 计算 24 点</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1368,ccdd:1368})">1368</a><td>俄罗斯方块</td><td>游戏: 俄罗斯方块</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1369,ccdd:1369})">1369</a><td>数独</td><td>游戏: 数独</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1370,ccdd:1370})">1370</a><td>2048</td><td>游戏: 2048</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1371,ccdd:1371})">1371</a><td>贪吃蛇</td><td>游戏: 贪吃蛇</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1372,ccdd:1372})">1372</a><td>俄罗斯方块</td><td>游戏: 俄罗斯方块</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1373,ccdd:1373})">1373</a><td>鼠标残影</td><td>工具: 鼠标残影</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1374,ccdd:1374})">1374</a><td>点击特效</td><td>工具: 鼠标点击视觉特效</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1375,ccdd:1375})">1375</a><td>鼠标尾巴</td><td>工具: 鼠标尾巴</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1376,ccdd:1376})">1376</a><td>画十字</td><td>工具: 画十字(启动后快捷键 Alt+q)</td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1395,ccdd:1395})">1395</a><td>Ahk Spy</td><td>第三方的 Autohotkey Spy</td></tr>
+
+</table>
+
+</body>
+</html>

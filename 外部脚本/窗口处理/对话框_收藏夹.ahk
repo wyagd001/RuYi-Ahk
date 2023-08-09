@@ -55,7 +55,8 @@ show_obj(IniMenuobj["对话框"])
 return
 
 MenuHandler:
-dpath := IniMenuobj["对话框"][A_ThisMenuItem]
+;msgbox % IniMenuobj["对话框"][A_ThisMenuItemPos]
+dpath := GetStringIndex(IniMenuobj["对话框"][A_ThisMenuItemPos])
 gosub Cando_Dialogsetpath
 return
 
@@ -190,7 +191,7 @@ show_obj(obj, menu_name := ""){
 	Menu, % menu_name, DeleteAll
 	for k,v in obj
 	{
-			Menu, % menu_name, add, % k, MenuHandler
+			Menu, % menu_name, add, % GetStringIndex(v, 2), MenuHandler
 	}
 	if main = 1
 		menu,% menu_name, show
@@ -864,4 +865,11 @@ return
 RemoveToolTip:
 	ToolTip
 return
+}
+
+GetStringIndex(String, Index := 1)
+{
+	arrCandy_Cmd_Str := StrSplit(String, "|", " `t")
+	NewStr := arrCandy_Cmd_Str[Index]
+	return NewStr
 }

@@ -11,7 +11,7 @@ ChooseFile := CandySel
 ;_______________________________
 ;Add Gui Element
 Gui, Add, Edit, x12 y9 w410 h20 ReadOnly vfile_dir, 
-Gui, Add, Button, x320 y39 w100 h20, 浏览
+Gui, Add, Button, x320 y39 w100 h20 gButtonBrowse, 浏览
 Gui, Add, Text, x12 y69 w120 h30, 参与创作的艺术家
 Gui, Add, Text, x12 y99 w120 h30, 唱片集
 Gui, Add, Text, x12 y129 w120 h30, #
@@ -29,8 +29,8 @@ Gui, Add, Edit, x132 y249 w290 h20 vComments,
 Gui, Add, Button, x142 y389 w100 h30 gButtonSave, 保存
 Gui, Add, pic, x12 y279 w90 h90 vAlb_art,
 Gui, Add, GroupBox, x12 y279 w110 h100, 专辑封面
-Gui, Add, Button, x132 y289 w110 h20, 添加专辑封面
-Gui, Add, Button, x132 y319 w110 h20, 移除专辑封面
+Gui, Add, Button, x132 y289 w110 h20 gButtonAddAlbumArt, 添加专辑封面
+Gui, Add, Button, x132 y319 w110 h20 gButtonRemoveAlbumArt, 移除专辑封面
 Gui, Add, Text, x132 y344 w150 h30 vcovertype, 0/0 没有封面
 
 ; Multiple cover navigation Symbols
@@ -54,7 +54,7 @@ return
 
 ;################################################   OPEN FILE #################################################
 ButtonBrowse: ;Prompt User For Opening the file
-FileSelectFile, ChooseFile,,, Select Your Music File(s) (Do Not Add Video Files for Tagging), All Supported Type (*.mp3;*.mp2;*.mp1;*.ogg;*.oga;*.wav;*.aif;*.aiff;*.aifc;*.flac;*.wma;*.wmv;*.wmp;*.asf;*.aac;*.mp4;*.m4a;*.m4b;*.m4p;*.wv;*.wvc;*.ape;*.mpc;*.mpp;*.mp+;*.ac3;*.spx;*.tta;*.opus;)
+FileSelectFile, ChooseFile,,, 请选择音频文件(不要选择视频文件), 支持的文件类型(*.mp3;*.mp2;*.mp1;*.ogg;*.oga;*.wav;*.aif;*.aiff;*.aifc;*.flac;*.wma;*.wmv;*.wmp;*.asf;*.aac;*.mp4;*.m4a;*.m4b;*.m4p;*.wv;*.wvc;*.ape;*.mpc;*.mpp;*.mp+;*.ac3;*.spx;*.tta;*.opus;)
 
 if Choosefile=  ; IF no file is selected
 {
@@ -166,7 +166,7 @@ if covertypeinfo=	;If Not in MP3
 
 if covertypeinfo=	;If not in FLAC, check for mp4
 {
-	Covertypeinfo= No Description
+	Covertypeinfo= 没有描述信息
 	coverSize := DllCall("AudioGenie3\MP4GetPictureSizeW", uint, 1) 
 	Picnum := DllCall("AudioGenie3\MP4GetPictureCountW", uint, 1)
 
@@ -399,7 +399,7 @@ if covertypeinfo=
 	coverSize := DllCall("AudioGenie3\FLACGetPictureSizeW", uint, Updown) 
 	if covertypeinfo=
 	{
-		Covertypeinfo = No Description
+		Covertypeinfo = 没有描述信息
 		coverSize := DllCall("AudioGenie3\MP4GetPictureSizeW", uint, Updown) 
 		if coverSize =
 		{

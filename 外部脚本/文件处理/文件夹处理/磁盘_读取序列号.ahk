@@ -1,4 +1,4 @@
-﻿;|2.0|2023.07.01|1175
+﻿;|2.2|2023.07.01|1175
 CandySel :=  A_Args[1]
 CandySel := trim(CandySel, """")
 ; 格式化分区时产生的分区序列号(卷序列号, 磁盘序列号, VolumeId)
@@ -12,18 +12,18 @@ Tmp_Val := CF_GetDriveFS(CandySel)
 if (Tmp_Val="NTFS")  ; NTFS格式
 {
 	Tmp_Str := SubStr(Tmp_Str, 145, 16)
-	msgbox % Format("{:16X}", _byteswap_uint64("0x" Tmp_Str))
+	msgbox,, %hVolume% 的序列号, % Format("{:16X}", _byteswap_uint64("0x" Tmp_Str))
 }
 else if (Tmp_Val="FAT32")
 {
   ;msgbox % Tmp_Str
 	Tmp_Str := SubStr(Tmp_Str, 135, 8)
-	msgbox % Format("{:08X}", _byteswap_uint32("0x" Tmp_Str))
+	msgbox,, %hVolume% 的序列号, % Format("{:08X}", _byteswap_uint32("0x" Tmp_Str))
 }
 else
 {
 	DriveGet, Tmp_Val, Serial, hVolume
-	msgbox % Tmp_Val
+	msgbox,, %hVolume% 的序列号, % Tmp_Val
 }
 return
 

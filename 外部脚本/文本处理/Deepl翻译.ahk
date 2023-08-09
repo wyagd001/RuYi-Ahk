@@ -1,4 +1,4 @@
-﻿;|2.1|2023.07.28|1398
+﻿;|2.2|2023.08.09|1398
 ;来源网址: https://www.autohotkey.com/boards/viewtopic.php?t=102925
 #SingleInstance force
 CandySel := A_Args[1]
@@ -76,6 +76,8 @@ Deepl(mytext)
 	else
 		method = "method":
 	mytext := StrReplace(mytext, """", "'")   ; 双引号转单引号
+	mytext := StrReplace(mytext, "`r`n", "`n")   ; 换行转为空格
+	mytext := StrReplace(mytext, "`n", " ")
 	mytext .= "i"
 	StrReplace(mytext, "i",, i_count)
 	i_count++
@@ -87,7 +89,8 @@ Deepl(mytext)
 	WinHTTP.Send(json)
 	WinHTTP.WaitForResponse()
 	gtext := WinHTTP.responsetext
-	fyText := substr(decodeu(json(gtext, "result.texts.text")), 1)
+	deshuangyinhao := StrReplace(json(gtext, "result.texts.text"), "\""", "\u0022")
+	fyText := substr(decodeu(deshuangyinhao), 1)
 	if (strlen(fyText) > 1)
 		return fyText
 	else
@@ -148,15 +151,19 @@ ustr := StrReplace(ustr, ">", "")
         if RegExMatch(ustr,"^\s*\\u([A-Fa-f0-9]{2})([A-Fa-f0-9]{2})(.*)",m)
         {
             word_u := Chr("0x"  m1 m2), ustr := m3, word_a := ""
+						FileAppend("m1 " m1 "-m2 " m2 "-m3 " m3 "`nout" out "`n")
 					;msgbox % m1 "-" m2 "-" m3
 					;msgbox % word_a " - " word_u
             out .= word_u
         }
         else if RegExMatch(ustr, "^([(\x20-\x5B)|(\x5D-\x7E)]*)(.*)",n)
         {
+						FileAppend("n1 " n1 "-n2 " n2 "`nout" out "`n")
             ustr := n2
             out .= n1
         }
+				else
+					continue
 				;msgbox % out
     }
     return out

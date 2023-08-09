@@ -1,4 +1,4 @@
-﻿;|2.1|2023.07.08|1317
+﻿;|2.2|2023.08.04|1317
 #Persistent
 #SingleInstance Force
 CandySel := A_Args[1]
@@ -336,7 +336,6 @@ Loop 4
     SetPixelColor("D8D8D8", hDividerLine%A_Index%)
 SelectMenu("MenuItem1")
 OnMessage(0x200, "WM_MOUSEMOVE")
-MsgNum := DllCall("RegisterWindowMessage", "Str", "GeeNeeYes")
 Return
 
 MenuClick:
@@ -354,9 +353,8 @@ Candy_Cmd := GetStringIndex(Candy_Cmd)
 ;MsgBox % Candy_Cmd
 if (TmpArr[1] = "如意动作")
 {
-	DetectHiddenWindows, On
-	Settitlematchmode, 2
-	PostMessage, MsgNum, Candy_Cmd, 0,, 如一 ahk_class AutoHotkey
+	ExecSendToRuyi("", Candy_Cmd)
+	;MsgBox % Candy_Cmd
 	Return
 }
 
@@ -925,4 +923,25 @@ FileExt_GetIcon(File)
 		; Because we used ":" and not ":*", the icon will be automatically
 		; freed when the program exits or if the menu or item is deleted.
 	}
+}
+
+ExecSendToRuyi(ByRef StringToSend := "", wParam := 0, Title := "如一 ahk_class AutoHotkey", Msg := 0x4a) {
+	VarSetCapacity(CopyDataStruct, 3*A_PtrSize, 0)
+	SizeInBytes := (StrLen(StringToSend) + 1) * (A_IsUnicode ? 2 : 1)
+	NumPut(SizeInBytes, CopyDataStruct, A_PtrSize)
+	NumPut(&StringToSend, CopyDataStruct, 2*A_PtrSize)
+
+	DetectHiddenWindows, On
+	if Title is integer
+	{
+		SendMessage, Msg, wParam, &CopyDataStruct,, ahk_id %Title%
+		;msgbox % ErrorLevel  "qq"
+	}
+	else if Title is not integer
+	{
+		SetTitleMatchMode 2
+		sendMessage, Msg, wParam, &CopyDataStruct,, %Title%
+	}
+	DetectHiddenWindows, Off
+return ErrorLevel
 }

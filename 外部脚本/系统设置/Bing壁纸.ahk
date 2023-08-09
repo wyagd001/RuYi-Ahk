@@ -1,24 +1,52 @@
-﻿;|2.0|2023.07.01|1327
+﻿;|2.2|2023.07.30|1327
 ;来源网址: https://blog.csdn.net/liuyukuan/article/details/73656922
-Winhttp := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-Winhttp.Open("GET", "https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1",true)
-Winhttp.Send()
-Winhttp.WaitForResponse()
-r := Winhttp.ResponseText
-RegExMatch(r, "O)urlbase"":""(.*?)""", Match)
-path := Match.Value(1)
-;RegExMatch(path, "\d*$", fname)
-;fname := fname . ".jpg"
-url := "https://cn.bing.com" . path . "_1920x1080.jpg"
-Random, rand, 1, 6
-imgpath := A_ScriptDir . "\..\..\临时目录\BZ_" rand ".jpg"
-imgpath := GetFullPathName(imgpath)
-URLDownloadToFile, % url, % imgpath
-;imgpath := A_ScriptDir . "\" . fname
-; 多显示器情况下会导致所有显示器使用相同的壁纸
+
+Today := SubStr(A_Now, 1, 8)
+TodayWallpaper := 0
+Loop, Files, %A_ScriptDir%\..\..\临时目录\*.jpg, F
+{
+	if !InStr(A_LoopFileName, "BZ_")
+		continue
+	FMT := SubStr(A_LoopFileTimeModified, 1, 8)
+	
+	if (FMT = Today)
+	{
+		TodayWallpaper := 1
+		ToolTip, 今天已经下载过 Bing 壁纸了. 
+		break
+	}
+}
+if TodayWallpaper
+{
+	Sleep 3000
+	ExitApp
+}
+BingWallpapers(imgpath)
 ;DllCall("SystemParametersInfo", UINT, 20, UINT, uiParam, STR, imgpath, UINT, 2)  ; 重启或注销后失效
+; 多显示器情况下会导致所有显示器使用相同的壁纸
 setWallpapers(imgpath)  ; 重启后不会失效
 return
+
+BingWallpapers(ByRef imgpath := "")
+{
+	Winhttp := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+	Winhttp.Open("GET", "https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1",true)
+	Winhttp.Send()
+	Winhttp.WaitForResponse()
+	r := Winhttp.ResponseText
+	RegExMatch(r, "O)urlbase"":""(.*?)""", Match)
+	path := Match.Value(1)
+	;RegExMatch(path, "\d*$", fname)
+	url := "https://cn.bing.com" . path . "_1920x1080.jpg"
+	if !imgpath
+	{
+		Random, rand, 1, 6
+		imgpath := A_ScriptDir . "\..\..\临时目录\BZ_" rand ".jpg"
+	}
+	imgpath := GetFullPathName(imgpath)
+	URLDownloadToFile, % url, % imgpath
+		return ErrorLevel
+}
 
 setWallpapers(sFile){  
 ; https://autohotkey.com/board/topic/15533-setwallpaper/  
