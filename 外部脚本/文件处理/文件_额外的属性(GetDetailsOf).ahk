@@ -1,5 +1,6 @@
 ﻿;|2.2|2023.07.30|1402
 CandySel := A_Args[1]
+;CandySel := A_ScriptFullPath
 if !CandySel
 {
 	DetectHiddenWindows, On
@@ -15,8 +16,11 @@ if !CandySel
 	}
 }
 
+Gui,66: Destroy
+Gui,66: Default
+
 Props := GetFullDetails(CandySel)
-Gui, Add, ListView, w600 r20, 序号|名称|值
+Gui, Add, ListView, w600 r20 glvgio, 序号|名称|值
 For Each, Prop In Props
    LV_Add("", Each, Prop.N, Prop.V)
 LV_ModifyCol()
@@ -24,8 +28,34 @@ LV_ModifyCol(1, "Logical")
 Gui, Show,, 文件属性
 Return
 
-GuiClose:
-ExitApp
+66GuiClose:
+66Guiescape:
+Gui,66: Destroy
+exitapp
+Return
+
+lvgio:
+if (A_GuiEvent = "DoubleClick") or (A_GuiEvent = "R")
+{
+	LV_GetText(CopyV2, A_EventInfo, 2)
+	LV_GetText(CopyV3, A_EventInfo, 3)
+	CopyV := CopyV2 "`t" CopyV3
+	clipboard := CopyV
+	CF_ToolTip("已经复制焦点行到剪贴板(双击或右键).", 3000)
+}
+return
+
+CF_ToolTip(tipText, delay := 1000)
+{
+	ToolTip
+	ToolTip, % tipText
+	SetTimer, RemoveToolTip, % "-" delay
+return
+
+RemoveToolTip:
+	ToolTip
+return
+}
 
 GetFullDetails(FilePath)
 {

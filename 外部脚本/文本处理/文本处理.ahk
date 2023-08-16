@@ -1,4 +1,4 @@
-﻿;|2.2|2023.08.08|1242
+﻿;|2.2|2023.08.11|1242
 #SingleInstance force
 CandySel := A_Args[1]
 if !CandySel
@@ -22,7 +22,8 @@ gui, add, Text, xp-140 yp+40 w140 vmyparam3, 参数3:
 gui, add, Edit, xp+140 yp w450 vmyedit3,
 gui, add, Button, xp+470 y5 w60 gruncomm default, 运行
 gui, add, Button, xp+70 yp w60 gright2left, 右到左
-gui, add, Text, xp-70 yp+35 w100, 处理对象:
+gui, add, Button, xp+70 yp w80 gswapleftandright, 左右交换
+gui, add, Text, xp-140 yp+35 w100, 处理对象:
 Gui, Add, Radio, xp+100 yp-4 h25 Checked vMyTextType, 所有
 Gui, Add, Radio, xp+60 yp h25, 选中
 Gui, Add, CheckBox, xp-160 yp+20 vzhuanyi h30 gswitchmode, 对参数中的 \r, \n, \t 进行转义
@@ -33,6 +34,7 @@ t1.SetEventMask(["SELCHANGE"])   ; 监控控件消息
 t2.SetEventMask(["SELCHANGE"])
 gui, add, Button, x170 yp+485 w110 gcopyresult, 复制到剪贴板
 gui, add, Button, x630 yp w110 gcopyresult2, 复制到剪贴板
+gui, add, Button, xp+120 yp w120 gresotrelastnewtxt, 恢复上次的文本
 Gui, Add, StatusBar
 SB_SetParts(170, 470)
 SetTimer 延时加载界面, -800
@@ -142,9 +144,23 @@ return
 
 right2left:
 Gui Submit, nohide
-newtxt := t2.GetText()
+newtxt := backup_newtxt := t2.GetText()
 t1.SetText(newtxt)
 t2.SetText()
+return
+
+swapleftandright:
+Gui Submit, nohide
+oldtxt := t1.GetText()
+newtxt := t2.GetText()
+t1.SetText(newtxt)
+t2.SetText(oldtxt)
+oldtxt := newtxt := ""
+return
+
+resotrelastnewtxt:
+if backup_newtxt
+t2.SetText(backup_newtxt)
 return
 
 MessageHandler:
@@ -213,7 +229,7 @@ else if (comm = "按数量删除行首尾字符")
 else if (comm = "左右同时处理")
 {
 	commmode("处理方式:", "合并时的连接字符:",, "enable", "enable")
-	GuiControl,, myedit1, `n左右对比`n`n左右合并(行首)`n左右合并(行尾)`n合并剪贴板(行首)`n合并剪贴板(行尾)`n
+	GuiControl,, myedit1, `n左右对比`n`n左右合并(行首)`n左右合并(行尾)`n合并剪贴板(行首)`n合并剪贴板(行尾)`n提取两边都有的行`n提取右边有而左边没有的行`n
 	GuiControl,, myedit2, `n`n`n `n	`n_`n
 }
 else if (comm = "按数量分割单行")
@@ -1192,12 +1208,67 @@ if (myedit1 = "左右对比")
 	}
 	Return
 }
+Else if (myedit1 = "提取两边都有的行")
+{
+	Fline_array1 := {}
+	Loop, Parse, oldtxt, `r, `n
+	{
+		if StrLen(A_LoopField) && Trim(A_LoopField, " `t")
+		{
+			if !Fline_array1[A_LoopField]
+			{
+				Fline_array1[A_LoopField] := 1
+			}
+		}
+	}
+	newtxt := backup_newtxt := t2.GetText()
+	newStr := ""
+	Loop, Parse, newtxt, `r, `n
+	{
+		if StrLen(A_LoopField) && Trim(A_LoopField, " `t")
+		{
+			if (Fline_array1[A_LoopField] = 1)
+				newStr .= A_LoopField "`n"
+		}
+	}
+	Fline_array1 := {}
+	t2.SetText(newStr)
+	return
+}
+Else if (myedit1 = "提取右边有而左边没有的行")
+{
+	Fline_array1 := {}
+	Loop, Parse, oldtxt, `r, `n
+	{
+		if StrLen(A_LoopField) && Trim(A_LoopField, " `t")
+		{
+			if !Fline_array1[A_LoopField]
+			{
+				Fline_array1[A_LoopField] := 1
+			}
+		}
+	}
+	newtxt := backup_newtxt := t2.GetText()
+	newStr := ""
+	Loop, Parse, newtxt, `r, `n
+	{
+		if StrLen(A_LoopField) && Trim(A_LoopField, " `t")
+		{
+			if !Fline_array1[A_LoopField]
+				newStr .= A_LoopField "`n"
+		}
+	}
+	Fline_array1 := {}
+	t2.SetText(newStr)
+	return
+}
+
 newtxt_Arr := []
 if InStr(myedit1, "剪贴板")
 	Loop_Str := clipboard
 Else
 {
-	newtxt := t2.GetText()
+	newtxt := backup_newtxt := t2.GetText()
 	Loop_Str := newtxt
 }
 Loop, Parse, Loop_Str, `r, `n
@@ -3046,8 +3117,8 @@ GetStrLen(str,ByRef obj:="") {
 compare(compmode := 2)
 {
 	global t1, t2, GuiID, c:= [], t1Arr := [], t2Arr := []
-	t1text:=t1.GetText(), t1.SetText(t1text)
-	t2text:=t2.GetText(), t2.SetText(t2text)
+	t1text := t1.GetText(), t1.SetText(t1text)
+	t2text := t2.GetText(), t2.SetText(t2text)
 	;t1.WordWrap("on"), t2.WordWrap("on")
 	ToolTip, 正在比较文本，请等待...
 	StartTime:=A_TickCount

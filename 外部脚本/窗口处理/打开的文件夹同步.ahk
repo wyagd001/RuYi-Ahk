@@ -203,7 +203,10 @@ if folder1
 Loop, Files, %folder1%\*.*, DFR
 {
 	if A_LoopFileAttrib contains H,R,S
-		continue
+	{
+		if !InStr(A_LoopFileAttrib, "D")    ; 只跳过文件, 文件夹不跳过只读属性
+			continue
+	}
 	relativePS := StrReplace(A_LoopFilePath, folder1 "\")
 	if relativePS contains %忽略路径%
 		Continue
@@ -235,7 +238,10 @@ if folder2
 Loop, Files, %folder2%\*.*, DFR
 {
 	if A_LoopFileAttrib contains H,R,S
-		continue
+	{
+		if !InStr(A_LoopFileAttrib, "D")    ; 只跳过文件, 文件夹不跳过只读属性
+			continue
+	}
 	relativePS := StrReplace(A_LoopFilePath, folder2 "\")
 	if relativePS contains %忽略路径%
 		Continue

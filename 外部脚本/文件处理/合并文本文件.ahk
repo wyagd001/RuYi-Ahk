@@ -1,4 +1,4 @@
-﻿;|2.0|2023.07.01|1067
+﻿;|2.2|2023.08.10|1067
 CandySel := A_Args[1]
 if !CandySel
 {
@@ -33,8 +33,9 @@ Loop, parse, FileList, `n
 		Tmp_Str = %Tmp_Str%%FileR_TFC%`r`n
 	}
 }
+Tmp_Str := Rtrim(Tmp_Str, "`r`n")
 FileAppend, %Tmp_Str%, %OutDir%\合并.txt
-Tmp_Str := FileR_TFC := ""
+Tmp_Str := FileR_TFC := FileList := ""
 Return
 
 /*!

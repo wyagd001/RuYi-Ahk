@@ -1,21 +1,81 @@
-﻿;|2.0|2023.07.01|1070
+﻿;|2.2|2023.08.15|1070,1423
 #SingleInstance force
 #include <ImagePut>
 ATA_settingFile := A_ScriptDir "\..\..\配置文件\如一.ini"
 ATA_filepath := A_Args[1]
+if(A_Cursor="IBeam") or IsRenaming()
+{
+	send {space}
+	return
+}
+
 PrewFile:
-SplitPath, ATA_filepath,,, Prew_File_Ext
-if(Prew_File_Ext = "")
+Prew_File := ATA_filepath
+SplitPath, Prew_File,,, Prew_File_Ext
+Prew_Cmd := ""
+if CF_IsFolder(Prew_File)
+	Prew_Cmd := "文件夹"
+else if (Prew_File = "::{645FF040-5081-101B-9F08-00AA002F954E}")
+	Prew_Cmd := "回收站"
+else if (Prew_File_Ext = "")
 	Prew_File_Ext := "txt"
-Prew_Cmd := SkSub_Regex_IniRead(ATA_settingFile, "FilePrew", "i)(^|\|)" Prew_File_Ext "($|\|)")
-;msgbox % Prew_Cmd " - " Prew_File_Ext " - " ATA_filepath
+if !Prew_Cmd
+	Prew_Cmd := SkSub_Regex_IniRead(ATA_settingFile, "FilePrew", "i)(^|\|)" Prew_File_Ext "($|\|)")
+;msgbox % Prew_Cmd " - " Prew_File_Ext " - " Prew_File
 if Prew_Cmd && (Prew_Cmd != "error")
 {
-	GUI, PreWWin:Default
+	Gui, PreWWin: Destroy
+	GUI, PreWWin: Default
+	GUI, PreWWin: +hwndh_PrewGui
+	GroupAdd, MyPreWWinGroup, ahk_id %h_PrewGui%
 	If IsLabel("Cando_" . Prew_Cmd . "_prew")
 		Gosub % "Cando_" .  Prew_Cmd . "_prew"
 }
 return
+
+#ifWinActive, ahk_group MyPreWWinGroup
+$Space::
+gosub PreWWinGuiClose
+;msgbox 123123
+return
+
+F2::
+ControlGet, Tmp_V, Selected,, Edit1
+if !Tmp_V
+{
+	try {
+		GUI, PreWWin:Default
+		Tmp_id := TV_GetSelection()
+		TV_GetText(Tmp_V, Tmp_id)
+		SplitPath, Tmp_V, , , , Tmp_V
+	}
+}
+if !Tmp_V
+return
+SplitPath, Prew_File,, Prew_File_ParentPath, Prew_File_Ext
+TargetFile := PathU(Prew_File_ParentPath "\" Tmp_V "." Prew_File_Ext)
+FileMove, % Prew_File, % TargetFile
+return
+
+del::
+MsgBox,4,删除提示,确定要把文件放入回收站吗？`n`n%Prew_File%
+IfMsgBox Yes
+	FileRecycle,%Prew_File%
+return
+
+F5::
+run, %Prew_File%
+return
+
+F6::
+if !notepad2
+{
+	IniRead, notepad2, %ATA_settingFile%, 其他程序, notepad2
+	notepad2 := notepad2 ? notepad2 : "notepad.exe"
+}
+run, % notepad2 " " Prew_File
+return
+#ifWinActive
 
 PreWWinGuiEscape:
 PreWWinGuiClose:
@@ -25,30 +85,32 @@ Gui, PreWWin:Destroy
 exitapp
 
 PreWWinGuiSize:
-GuiControl, Move, displayArea, % "x0 y0 w" A_GuiWidth " h" (A_GuiHeight-28)
+GuiControl, Move, displayArea, % "x0 y0 w" A_GuiWidth " h" (A_GuiHeight - 20 - DDLH)
+GuiControl, Move, PV_CodePage, % "x5 y" (A_GuiHeight - 20 - DDLH)
 GuiControl, Move, WMP,x0 y0 w%A_GuiWidth% h%A_GuiHeight%
 return
 
 Cando_text_prew:
-File_Encode := File_GetEncoding(ATA_filepath)
-FileGetSize, File_Size, % ATA_filepath
+File_Encode := File_GetEncoding(Prew_File)
+org_File_Encode := File_Encode
+FileGetSize, File_Size, % Prew_File
 FileEncoding, % File_Encode
 if (File_Size > 102400) && ((File_Encode = "CP936") or (File_Encode = "UTF-8-RAW"))
 {
-	FileReadLine, LineVar, % ATA_filepath, 1
+	FileReadLine, LineVar, % Prew_File, 1
 		MsgBox, 36, 选择源文件的编码ANSI/UTF-8, 文件第一行内容: %LineVar%`n当前使用编码为: %File_Encode%`n文本正常显示点击"是"，否则点击"否"。, 2
 	IfMsgBox, No
 	{
-		File_Encode := (File_Encode = "CP936") ? "UTF-8" : "CP936"
+		File_Encode := (File_Encode = "CP936") ? "UTF-8-RAW" : "CP936"
 		FileEncoding, % File_Encode
 	}
 	IfMsgBox, yes
-		File_Encode := (File_Encode = "CP936") ? "CP936" : "UTF-8"
+		File_Encode := (File_Encode = "CP936") ? "CP936" : "UTF-8-RAW"
 }
 
-if TF_CountLines(ATA_filepath)>100
+if TF_CountLines(Prew_File)>100
 {
-	Loop, Read, % ATA_filepath
+	Loop, Read, % Prew_File
 	{
 		FileR_TFC .= A_LoopReadLine "`n"
 		if a_index >100
@@ -56,25 +118,53 @@ if TF_CountLines(ATA_filepath)>100
 	}
 }
 else
-	FileRead, FileR_TFC, %ATA_filepath%
+	FileRead, FileR_TFC, %Prew_File%
 FileEncoding
 Gui, +ReSize +MinSize800x540
-Gui, Add, Edit, w800 Multi ReadOnly vdisplayArea,
-Gui,PreWWin:Show, w800 h540 Center, % ATA_filepath " - 文件预览"
+Gui, Add, Edit, w800 Multi ReadOnly vdisplayArea Section,
+if (org_File_Encode = "CP936") or (org_File_Encode = "UTF-8-RAW")
+{
+	Gui, Add, DropDownList, xs+15 vPV_CodePage gswitchCodePage, 切换编码||UTF-8|CP936
+	DDLH := 25
+}
+else
+	DDLH := 0
+Gui, Add, StatusBar,, % "快捷键: 1. 选中文字后按 F2 以选中文字重命名文件. 2. Del 删除文件. 3. F5 运行. 4. F6 编辑. 当前编码: " File_Encode
+Gui,PreWWin:Show, w800 h540 Center, % Prew_File " - 文件预览"
 GuiControl,, displayArea, %FileR_TFC%
 ;GuiControl, Move, displayArea, x0 y0 w800 h510
-FileR_TFC := File_Encode := File_Size := ""
+FileR_TFC := File_Size := ""
 return
+
+switchCodePage:
+GUI, PreWWin: Submit, NoHide
+if (File_Encode = "CP936") && (PV_CodePage = "UTF-8")
+{
+	FileEncoding, % PV_CodePage
+}
+else if (File_Encode = "UTF-8-RAW") && (PV_CodePage = "CP936")
+{
+	FileEncoding, % PV_CodePage
+}
+Loop, Read, % Prew_File
+{
+	FileR_TFC .= A_LoopReadLine "`n"
+	if a_index >100
+	break
+}
+GuiControl,, displayArea, %FileR_TFC%
+FileR_TFC := ""
+Return
 
 Cando_music_prew:
 Gui, +LastFound +Resize
 Gui, Add, ActiveX, x0 y0 w0 h0 vWMP, WMPLayer.OCX
-WMP.Url := ATA_filepath
-Gui, PreWWin:Show, w500 h300 Center,% ATA_filepath " - 文件预览"
+WMP.Url := Prew_File
+Gui, PreWWin:Show, w500 h300 Center,% Prew_File " - 文件预览"
 return
 
 Cando_pic_prew:
-hwnd := ImagePutWindow(ATA_filepath, ATA_filepath " - 文件预览")
+hwnd := ImagePutWindow(Prew_File, Prew_File " - 文件预览")
 loop 
 {
 if WinExist("ahk_id" hwnd)
@@ -88,7 +178,7 @@ return
 
 Cando_html_prew:
 gosub, IE_Open
-WB.Navigate(ATA_filepath)
+WB.Navigate(Prew_File)
 return
 
 IE_Open:
@@ -101,7 +191,7 @@ pipa := ComObjQuery(WB, IOleInPlaceActiveObject_Interface)
 TranslateAccelerator := NumGet(NumGet(pipa+0) + 5*A_PtrSize)
 OnMessage(0x0100, "WM_KeyPress") ; WM_KEYDOWN 
 OnMessage(0x0101, "WM_KeyPress") ; WM_KEYUP   
-Gui, PreWWin:Show ,,% ATA_filepath " - 文件预览"
+Gui, PreWWin:Show ,,% Prew_File " - 文件预览"
 return
 
 class WB_events
@@ -163,15 +253,15 @@ return
 
 autoopenpdf:
 WinWaitActive,ahk_class #32770,,1000
-ControlSetText, edit1, %ATA_filepath%, ahk_class #32770
+ControlSetText, edit1, %Prew_File%, ahk_class #32770
 sleep,100
 send {enter}
 return
 
 Cando_md_html_prew:
-File_Encode := File_GetEncoding(ATA_filepath)
+File_Encode := File_GetEncoding(Prew_File)
 FileEncoding, % File_Encode
-Fileread, Tmp_val, % ATA_filepath
+Fileread, Tmp_val, % Prew_File
 FileEncoding
 gosub, IE_Open
 WB.Navigate("http://editor.md.ipandao.com/examples/simple.html")
@@ -194,11 +284,11 @@ Tmp_val := ""
 return
 
 Cando_wps_prew:
-Tmp_Str := xd2txlib.ExtractText(ATA_filepath)
+Tmp_Str := xd2txlib.ExtractText(Prew_File)
 Gui, +ReSize +MinSize800x540
 Gui, Add, Edit, w800 h520 Multi ReadOnly vdisplayArea
 GuiControl,, displayArea, %Tmp_Str%
-Gui,PreWWin:Show, w800 h540 Center, % ATA_filepath " - 文件预览"
+Gui,PreWWin:Show, w800 h540 Center, % Prew_File " - 文件预览"
 sendmessage, 0xB1, -1, -1, Edit1, 文件预览
 Tmp_Str := ""
 return
@@ -206,9 +296,9 @@ return
 Cando_xls_prew:
 IniRead, AutoHotkeyU32, %ATA_settingFile%, 其他程序, AutoHotkeyU32, %A_Space%
 if fileexist(AutoHotkeyU32)
-run, "%AutoHotkeyU32%" "%A_ScriptDir%\输出excel数据到GUI.ahk" "%ATA_filepath%"
+run, "%AutoHotkeyU32%" "%A_ScriptDir%\输出excel数据到GUI.ahk" "%Prew_File%"
 else
-run, "%A_ScriptDir%\..\..\引用程序\AutoHotkeyU32.exe" "%A_ScriptDir%\输出excel数据到GUI.ahk" "%ATA_filepath%"
+run, "%A_ScriptDir%\..\..\引用程序\AutoHotkeyU32.exe" "%A_ScriptDir%\输出excel数据到GUI.ahk" "%Prew_File%"
 exitapp
 
 Cando_rar_prew:
@@ -220,11 +310,11 @@ Cando_rar_prew:
 		exitapp
 	}
 	; 提取整行
-	Tmp_Str := cmdSilenceReturn("for /f ""skip=12 tokens=* delims=-"" `%a in ('^;""" 7z """ ""l"" " """" ATA_filepath """') do @echo `%a")
+	Tmp_Str := cmdSilenceReturn("for /f ""skip=12 tokens=* delims=-"" `%a in ('^;""" 7z """ ""l"" " """" Prew_File """') do @echo `%a")
 	if FileExist(winrar)
 	{
 		包_注释文件 := A_Temp "\123_" A_Now ".txt"
-		RunWait, %comspec% /c ""%winrar%" cw "%ATA_filepath%" "%包_注释文件%"",,hide
+		RunWait, %comspec% /c ""%winrar%" cw "%Prew_File%" "%包_注释文件%"",,hide
 		FileRead, 包_注释, %包_注释文件%
 	}
 	;msgbox % Tmp_Str
@@ -255,7 +345,7 @@ if 包_注释
 	Gui, Add, Edit, r5 w800 h100 readonly, %包_注释%
 Gui, Add, button, gtree2text, 显示文本
 AddBranchesToTree(Tmp_Val)
-Gui,PreWWin: Show, AutoSize Center, % ATA_filepath " - 文件预览"
+Gui,PreWWin: Show, AutoSize Center, % Prew_File " - 文件预览"
 ;GuiControl,, displayArea, %Tmp_Val%
 Tmp_Str := Tmp_FileName := Tmp_Lines := 包_注释 := ""
 return
@@ -263,8 +353,8 @@ return
 tree2text:
 GUI,66:Destroy
 Gui,66:Default 
-Gui, Add, Edit, w600 h300 ReadOnly, %ATA_filepath%`n%Tmp_Val%
-Gui show, AutoSize Center, % ATA_filepath " - 文件预览"
+Gui, Add, Edit, w600 h300 ReadOnly, %Prew_File%`n%Tmp_Val%
+Gui show, AutoSize Center, % Prew_File " - 文件预览"
 return
 
 cmdSilenceReturn(command){
@@ -2183,4 +2273,181 @@ ExtractText(file)
   i:=DllCall(this.xd2txlibdll "\ExtractText", "Str", file, "int", 0, "int*", fileText)
   return StrGet( fileText, i / 2 )
 }
+}
+
+IsRenaming()
+{
+	Vista7 := 1
+	If(Vista7)
+	 ControlGetFocus focussed, A ; 获取到的控件为 Edit1
+  Else
+    focussed:=XPGetFocussed()
+	If(WinActive("ahk_class CabinetWClass")) ;Explorer
+	{
+		If(strStartsWith(focussed,"Edit"))
+		{
+			If(Vista7)
+			{
+				; Win 10 中有可能是 DirectUIHWND2 或 DirectUIHWND3
+				ControlGetPos , X, Y, Width, Height,DirectUIHWND3, A
+				if !X
+					ControlGetPos , X, Y, Width, Height,DirectUIHWND2, A
+			}
+			Else
+				ControlGetPos , X, Y, Width, Height, SysListView321, A
+			ControlGetPos , X1, Y1, Width1, Height1, %focussed%, A
+			If(IsInArea(X1, Y1, X, Y, Width, Height) && IsInArea(X1+Width1, Y1, X, Y, Width, Height) && IsInArea(X1,Y1+Height1, X, Y, Width, Height) && IsInArea(X1+Width1,Y1+Height1, X, Y, Width, Height))
+				Return true
+		}
+	}
+	Else If (WinActive("ahk_class Progman") or WinActive("ahk_class WorkerW")) ;Desktop
+	{
+		If(focussed="Edit1")
+			Return true
+	}
+	Else If((x:=IsDialog())) ;FileDialogs
+	{
+		If(strStartsWith(focussed,"Edit1"))
+		{
+			;figure out If the the edit control is inside the DirectUIHWND2 or SysListView321
+			If(x=1 && Vista7) ;New Dialogs
+				ControlGetPos , X, Y, Width, Height, DirectUIHWND2, A
+			Else ;Old Dialogs
+				ControlGetPos , X, Y, Width, Height, SysListView321, A
+			ControlGetPos , X1, Y1, Width1, Height1, %focussed%, A
+			If(IsInArea(X1, Y1, X, Y, Width, Height)&&IsInArea(X1+Width1, Y1, X, Y, Width, Height)&&IsInArea(X1, Y1+Height1, X, Y, Width, Height)&&IsInArea(X1+Width1, Y1+Height1, X, Y, Width, Height))
+				Return true
+		}
+	}
+	Else If (WinActive("ahk_class EVERYTHING")) ; EVERYTHING
+	{
+		If(focussed="Edit1")
+		{
+			;tooltip 123
+			Return true
+		}
+	}
+	Return false
+}
+
+XPGetFocussed()
+{
+  WinGet ctrlList, ControlList, A
+  ctrlHwnd:=GetFocusedControl()
+  ; Built an array indexing the control names by their hwnd
+  Loop Parse, ctrlList, `n
+  {
+    ControlGet hwnd, Hwnd, , %A_LoopField%, A
+    hwnd += 0   ; Convert from hexa to decimal
+    If(hwnd=ctrlHwnd)
+    {
+      Return A_LoopField
+    }
+  }
+}
+
+strStartsWith(string,start)
+{
+	x:=(strlen(start)<=strlen(string)&&Substr(string,1,strlen(start))=start)
+	Return x
+}
+
+IsInArea(px,py,x,y,w,h)
+{
+	Return (px>x&&py>y&&px<x+w&&py<y+h)
+}
+
+IsDialog(window=0)
+{
+	result:=0
+	If(window)
+		window := "ahk_id " window
+	Else
+		window:="A"
+	WinGetClass, wc, %window%
+	If(wc = "#32770")
+	{
+		;Check for new FileOpen dialog
+		ControlGet, hwnd, Hwnd, , DirectUIHWND3, %window%
+		If(hwnd)
+		{
+			ControlGet, hwnd, Hwnd, , SysTreeView321, %window%
+			If(hwnd)
+			{
+				ControlGet, hwnd, Hwnd, , Edit1, %window%
+				If(hwnd)
+				{
+					ControlGet, hwnd, Hwnd, , Button2, %window%
+					If(hwnd)
+					{
+						ControlGet, hwnd, Hwnd, , ComboBox2, %window%
+						If(hwnd)
+						{
+						ControlGet, hwnd, Hwnd, , ToolBarWindow323, %window%
+						If(hwnd)
+							result := 1
+						}
+					}
+				}
+			}
+		}
+		;Check for old FileOpen dialog
+		If(!result)
+		{
+			ControlGet, hwnd, Hwnd, , ToolbarWindow321, %window%          ;工具栏
+			If(hwnd)
+			{
+				ControlGet, hwnd, Hwnd, , SysListView321, %window%        ;文件列表
+				If(hwnd)
+				{
+					ControlGet, hwnd, Hwnd, , ComboBox3, %window%         ;文件类型下拉选择框
+					If(hwnd)
+					{
+						ControlGet, hwnd, Hwnd, , Button3, %window%       ;取消按钮
+						If(hwnd)
+						{
+							;ControlGet, hwnd, Hwnd , , SysHeader321 , %window%    ;详细视图的列标题
+							ControlGet, hwnd, Hwnd, , ToolBarWindow322, %window%  ;左侧导航栏
+							If(hwnd)
+								result := 2
+						}
+					}
+				}
+			}
+		}
+	}
+	Return result
+}
+
+GetFocusedControl()
+{
+   guiThreadInfoSize := 4+4+A_PtrSize*6+16
+   VarSetCapacity(guiThreadInfo, guiThreadInfoSize, 0)
+   ;addr := &guiThreadInfo
+   ;DllCall("RtlFillMemory", "ptr", addr, "UInt", 1, "UChar", guiThreadInfoSize)   ; Below 0xFF, one call only is needed
+   If not DllCall("GetGUIThreadInfo"
+         , "UInt", 0   ; Foreground thread
+         , "ptr", &guiThreadInfo)
+   {
+      ErrorLevel := A_LastError   ; Failure
+      Return 0
+   }
+   focusedHwnd := NumGet(guiThreadInfo,8+A_PtrSize, "Ptr") ;focusedHwnd := *(addr + 12) + (*(addr + 13) << 8) +  (*(addr + 14) << 16) + (*(addr + 15) << 24)
+   Return focusedHwnd
+}
+
+CF_IsFolder(sfile){
+	if InStr(FileExist(sfile), "D")
+	|| (sfile = """::{20D04FE0-3AEA-1069-A2D8-08002B30309D}""")
+	|| SubStr(sfile, 1, 2) = "\\"
+		return 1
+	else
+		return 0
+}
+
+PathU(sFile) {                     ; PathU v0.90 by SKAN on D35E/D35F @ tiny.cc/pathu 
+Local Q, F := VarSetCapacity(Q,520,0) 
+  DllCall("kernel32\GetFullPathNameW", "WStr",sFile, "UInt",260, "Str",Q, "PtrP",F)
+  DllCall("shell32\PathYetAnotherMakeUniqueName","Str",Q, "Str",Q, "Ptr",0, "Ptr",F)
+Return A_IsUnicode ? Q : StrGet(&Q, "UTF-16")
 }

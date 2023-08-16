@@ -1,4 +1,4 @@
-﻿;|2.0|2023.07.01|1121
+﻿;|2.2|2023.08.14|1121
 RecentFolderPath := upDir(A_StartMenu) "\Recent"
 DetectHiddenWindows, On
 WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI
@@ -222,10 +222,11 @@ LnkFolderMenu(FolderPath, SpecifyExt:="*", MenuName:="", ShowIcon:=1, ShowOpenFo
 
 Run(a) {
 	global Windy_CurWin_Fullpath
+	FileGetShortcut, % a, OutTarget
 	if getkeystate("Shift") && Windy_CurWin_Fullpath
-		run "%Windy_CurWin_Fullpath%" "%a%"
+		run "%Windy_CurWin_Fullpath%" "%OutTarget%"
 	else
-		run, %a%
+		run, %OutTargeta%
 }
 
 FolderMenu_AddIcon(menuitem,submenu)

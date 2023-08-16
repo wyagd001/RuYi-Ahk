@@ -1,6 +1,6 @@
 ﻿;|2.2|2023.07.01|1174
 CandySel := A_Args[1]
-msgbox % CandySel
+;msgbox % CandySel
 CandySel := trim(CandySel, """")
 
 Gui,66: Destroy
@@ -15,7 +15,7 @@ gui show,, 更改磁盘 %CandySel% 的驱动号
 return
 
 change:
-Gui,66:Default 
+Gui,66: Default 
 gui, submit, nohide
 if FileExist(vOutCp)
 {

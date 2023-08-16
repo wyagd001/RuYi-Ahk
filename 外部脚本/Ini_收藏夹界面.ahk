@@ -9,7 +9,7 @@ SetWorkingDir %A_ScriptDir%
 Menu, Tray, Icon, Shell32.dll, 174
 
 Window := {Width: 550, Height: 425, Title: "Ini_Fav"}  ; Version: "0.2"
-Navigation := {Label: ["文件", "文件夹", "程序", "命令", "网址", "注册表", "对话框", "如意动作", "桌面", "桌面2"]}
+Navigation := {Label: ["文件", "文件夹", "程序", "命令", "命令2", "网址", "注册表", "对话框", "如意动作", "桌面", "桌面2"]}
 
 Gui +LastFound -Resize +HwndhGui
 Gui Color, FFFFFF
@@ -156,7 +156,38 @@ loop 24
 }
 Gui Font
 
-Gui Tab, 5  ; Skipped
+Gui Tab, 5
+Gui Font, W560, Segoe UI
+loop 48
+{
+	if a_index < 25
+		Continue
+	Btn_IconFile := GetStringIndex(IniMenuobj["命令"][a_index])
+	Btn_IconFile := RegExReplace(Btn_IconFile, "(.*\.exe).*", "$1")
+	if !InStr(Btn_IconFile, "exe")
+		Btn_IconFile := "C:\Windows\system32\imageres.dll@2"
+	Btn_Name := SubStr(GetStringIndex(IniMenuobj["命令"][a_index], 2), 1, 4)
+	if !Btn_Name
+		break
+	if a_index = 25
+	{
+		Gui Add, Button, x116 y50 w70 h70 BackgroundWhite hwndhBtn v命令_%a_index%_btn grunbtn, % Btn_Name
+		ILButton(hBtn, Btn_IconFile "@0", 32, 32, 2, ",5,,,")
+	}
+	else if a_index in 31,37,43
+	{
+		Gui Add, Button, x116 y+m w70 h70 BackgroundWhite hwndhBtn v命令_%a_index%_btn grunbtn, % Btn_Name
+		ILButton(hBtn, Btn_IconFile "@0", 32, 32, 2, ",5,,,")
+	}
+	else
+	{
+		Gui Add, Button, xp+70 yp w70 h70 BackgroundWhite hwndhBtn v命令_%a_index%_btn grunbtn, % Btn_Name
+		ILButton(hBtn, Btn_IconFile "@0", 32, 32, 2, ",5,,,")
+	}
+}
+Gui Font
+
+Gui Tab, 6  ; Skipped
 Gui Font, W560, Segoe UI
 loop 24
 {
@@ -182,7 +213,7 @@ loop 24
 }
 Gui Font
 
-Gui Tab, 6
+Gui Tab, 7
 loop 24
 {
 	Btn_IconFile := "regedit.exe@0"
@@ -206,7 +237,7 @@ loop 24
 	}
 }
 
-Gui Tab, 7
+Gui Tab, 8
 loop 24
 {
 	Btn_IconFile := "C:\Windows\system32\imageres.dll@3"
@@ -230,7 +261,7 @@ loop 24
 	}
 }
 
-Gui Tab, 8
+Gui Tab, 9
 gui, Font, s12, Segoe MDL2 Assets
 loop 24
 {
@@ -262,7 +293,7 @@ loop 24
 	}
 }
 
-Gui Tab, 9
+Gui Tab, 10
 IniMenuobj["桌面"] := {}
 Loop, Files, %A_Desktop%\*.lnk, F
 {
@@ -294,7 +325,7 @@ Loop, Files, %A_Desktop%\*.lnk, F
 	}
 }
 
-Gui Tab, 10
+Gui Tab, 11
 Loop, Files, %A_Desktop%\*.lnk, F
 {
 	if a_index < 25

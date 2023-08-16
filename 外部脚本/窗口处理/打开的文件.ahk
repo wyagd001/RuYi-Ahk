@@ -1,4 +1,4 @@
-﻿;|2.0|2023.07.01|1061
+﻿;|2.2|2023.08.12|1061
 ComObjError(0)
 DetectHiddenWindows, On
 WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI
@@ -26,12 +26,14 @@ IfInString, Windy_CurWin_Title, :\
 	; 编辑器文件修改后标题开头带“*”
 	RegExMatch(Windy_CurWin_Title, "i)^\*?\K.*\..*(?= [-*] )", FileFullPath)
 	FileFullPath := Trim(FileFullPath, " *[]")
+	;msgbox % FileFullPath "$$1"
 	If FileFullPath
 		goto OpenFileFullPath
 }
 
 ; Word、Excel、WPS、et、Scite程序
 FileFullPath := getDocumentPath(Windy_CurWin_Fullpath)
+;msgbox % FileFullPath "$$2"
 if FileFullPath
 	goto OpenFileFullPath
 
@@ -108,7 +110,7 @@ else
 Return
 
 getDocumentPath(_ProcessPath)  
-{  
+{
 	SplitPath, _ProcessPath, , , , Process_NameNoExt  
 	value := Process_NameNoExt  
 	If IsLabel( "Case_" . value)  
@@ -151,6 +153,10 @@ getDocumentPath(_ProcessPath)
 	Case_SciTE:
 	Application := ComObjActive("SciTE4AHK.Application")
 	Return Application.CurrentFile
+	Case_Photoshop:
+	Application := ComObjActive("Photoshop.Application")
+	ActiveDocument:= Application.ActiveDocument
+	try Return ActiveDocument.FullName
 }
 
 WMI_Query(pid)
@@ -168,10 +174,10 @@ File_OpenAndSelect(sFullPath)
 {
 	SplitPath sFullPath, , sPath
 	FolderPidl := DllCall("shell32\ILCreateFromPath", "Str", sPath)
-	; QtTabBar 使用 explorer /select, %sFullPath%, explorer %sFullPath% 会打开新窗口
-	;run %sPath%  ; 用标签页打开目录后, 选择才能快速结束,否则下面的SHOpenFolderAndSelectItems可能会卡住(安装了QtTabBar的话)
 	sleep 200
 	DllCall("shell32\SHParseDisplayName", "str", sFullPath, "Ptr", 0, "Ptr*", ItemPidl, "Uint", 0, "Uint*", 0)
+	; 安装 QtTabBar 后, 使用 explorer /select, %sFullPath%, explorer %sFullPath% 会打开新窗口
+	run %sPath%  ; 使用 Run 命令后, 选择才能快速结束,否则下面的 SHOpenFolderAndSelectItems 可能会卡住(安装了 QtTabBar)
 	DllCall("shell32\SHOpenFolderAndSelectItems", "Ptr", FolderPidl, "UInt", 1, "Ptr*", ItemPidl, "Int", 0)
 	CoTaskMemFree(FolderPidl)
 	CoTaskMemFree(ItemPidl)

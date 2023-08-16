@@ -1,4 +1,4 @@
-﻿;|2.0|2023.07.01|1096
+﻿;|2.2|2023.08.16|1096
 ; Script Information ===========================================================
 ; Name:         File String Search
 ; Description:  Search files for a specific string (Inspired by TLM)
@@ -74,7 +74,7 @@ ControlHandler:
             LV_ModifyCol(2, "AutoHdr")
             SB_SetText("`t`t搜索 " A_Index . " 个文件, (" LV_GetCount() "个匹配)", 2)
         }
-        
+        LV_ModifyCol(1, "Logical")
         SearchStop := 0
         
         GuiControl, Disable, ButtonStop

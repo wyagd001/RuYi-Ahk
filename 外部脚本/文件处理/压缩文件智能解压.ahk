@@ -53,6 +53,8 @@ Return
 	Return
 	}
 	RunWait, %comspec% /c ""%7Z%" l "%S_File%"`>"%包_列表%"",,hide
+	;FileRead, OutputVar, % 包_列表
+	;msgbox % OutputVar
 	loop, read, %包_列表%
 	{
 		; 合计项老版 7z 不显示日期, 新版需要添加额外的条件
