@@ -151,14 +151,14 @@ ustr := StrReplace(ustr, ">", "")
         if RegExMatch(ustr,"^\s*\\u([A-Fa-f0-9]{2})([A-Fa-f0-9]{2})(.*)",m)
         {
             word_u := Chr("0x"  m1 m2), ustr := m3, word_a := ""
-						FileAppend("m1 " m1 "-m2 " m2 "-m3 " m3 "`nout" out "`n")
+						;FileAppend("m1 " m1 "-m2 " m2 "-m3 " m3 "`nout" out "`n")
 					;msgbox % m1 "-" m2 "-" m3
 					;msgbox % word_a " - " word_u
             out .= word_u
         }
         else if RegExMatch(ustr, "^([(\x20-\x5B)|(\x5D-\x7E)]*)(.*)",n)
         {
-						FileAppend("n1 " n1 "-n2 " n2 "`nout" out "`n")
+						;FileAppend("n1 " n1 "-n2 " n2 "`nout" out "`n")
             ustr := n2
             out .= n1
         }
