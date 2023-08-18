@@ -1,4 +1,6 @@
 ﻿;|2.0|2023.07.01|1335
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\f385.ico"
 Adapters := GetAdaptersAddresses()
 for k, v in Adapters
 {

@@ -1,6 +1,8 @@
 ﻿;|2.0|2023.07.01|1222
 ; FoxMod : 2014-7-8  注释掉了将 中文转换为 \uXXXX 的一部分代码
 ; https://github.com/cocobelgica/AutoHotkey-JSON.git
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e734.ico"
 CandySel := A_Args[1]
 if !CandySel
 	CandySel := A_AppData "\360se6\User Data\Default\a67cb9a4f61518f302b62d86e2814245\360sefav.dat"
@@ -14,7 +16,7 @@ if !FileExist(CandySel)
 	return
 ATA_settingFile := A_ScriptDir "\..\..\配置文件\如一.ini"
 Menu, Tray, UseErrorLevel
-Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\f131.png"
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\f131.ico"
 global DB := new SQLiteDB
 if (!DB.OpenDB(CandySel))
 {

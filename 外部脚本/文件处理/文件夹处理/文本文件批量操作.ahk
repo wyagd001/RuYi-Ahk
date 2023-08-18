@@ -1,4 +1,6 @@
 ﻿;|2.1|2023.07.12|1333
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\f17f.ico"
 CandySel :=  A_Args[1]
 ;CandySel := "C:\Documents and Settings\Administrator\Desktop\新建文件夹"
 Gui, Add, Text, x10 y15 h25, 查找文件夹:

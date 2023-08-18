@@ -11,10 +11,12 @@
 #NoEnv
 #SingleInstance, Force
 #Persistent
-;#NoTrayIcon
 #MaxThreads 255
 #MaxThreadsPerHotkey 255
 #MaxHotkeysPerInterval 500
+;#NoTrayIcon
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\eb82.ico"
 CoordMode Mouse, Screen
 SetBatchLines, -1
 SetWinDelay, -1

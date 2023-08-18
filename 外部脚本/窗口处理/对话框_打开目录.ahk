@@ -13,7 +13,8 @@ for k,v in IniMenuobj["对话框"]
 Menu DialogMenu, Add, 收藏的文件夹, :JumpToFavFolder
 Menu DialogMenu, Add
 
-Menu DialogMenu, Add, 跳转到打开的文件夹, nul
+Menu DialogMenu, Add, ▼▼跳转到打开的文件夹▼▼, nul
+Menu, DialogMenu, Disable, ▼▼跳转到打开的文件夹▼▼
 Menu DialogMenu, Add
 for k, v in AllOpenFolder
 {

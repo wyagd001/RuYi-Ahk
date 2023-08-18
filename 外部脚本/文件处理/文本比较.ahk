@@ -1,7 +1,7 @@
 ﻿;|2.0|2023.07.01|1098
 #SingleInstance force
 Menu, Tray, UseErrorLevel
-Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\f5a9.png"
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\f5a9.ico"
 CandySel := A_Args[1]
 textfile2 := A_Args[2]
 OnMessage(0x4a, "Receive_WM_COPYDATA")

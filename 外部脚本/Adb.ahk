@@ -1,5 +1,7 @@
 ﻿;|2.0|2023.07.01|1262
 #SingleInstance force
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\脚本图标\如意\e8e8.ico"
 B_adb := A_ScriptDir "\..\引用程序\adb.exe"
 CandySel := A_Args[1]
 gui +hwndGuiID

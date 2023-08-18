@@ -1,5 +1,8 @@
 ﻿;|2.2|2023.08.11|1242
 #SingleInstance force
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e982.ico"
+
 CandySel := A_Args[1]
 if !CandySel
 {
@@ -7,9 +10,6 @@ if !CandySel
 	ControlGetText, CandySel, Edit1, 获取当前窗口信息_ 
 	DetectHiddenWindows, Off
 }
-
-Menu, Tray, UseErrorLevel
-Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e982.png"
 
 gui +ReSize +hwndGuiID +Delimiter`n
 gui, font, s11, 宋体

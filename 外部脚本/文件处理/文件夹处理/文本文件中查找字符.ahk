@@ -27,7 +27,6 @@ SetBatchLines, -1 ; The speed at which the lines of the script are executed
 SetWinDelay, -1 ; The delay to occur after modifying a window
 SetControlDelay, -1 ; The delay to occur after modifying a control
 OnExit("OnUnload") ; Run a subroutine or function when exiting the script
-
 return ; End automatic execution
 ; ==============================================================================
 
@@ -141,6 +140,8 @@ OnLoad() {
     Global ; Assume-global mode
     run_iniFile = %A_ScriptDir%\文本文件中查找字符.ini
     Static Init := OnLoad() ; Call function
+		Menu, Tray, UseErrorLevel
+		Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\ede4.ico"
     EditDir = %1%
     if !EditDir
       IniRead, EditDir, %run_iniFile%, 文件中查找字符, 路径, %A_Space%

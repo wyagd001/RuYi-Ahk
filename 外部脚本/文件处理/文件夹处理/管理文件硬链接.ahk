@@ -1,4 +1,6 @@
 ﻿;|2.0|2023.07.01|1310
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\f32a.ico"
 CandySel := A_Args[1]
 ;CandySel := "C:\Users\Administrator\Desktop"
 if !CandySel

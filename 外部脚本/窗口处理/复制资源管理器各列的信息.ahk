@@ -1,4 +1,6 @@
 ﻿;|2.1|2023.07.01|1302
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e16d.ico"
 CandySel := A_Args[1]
 if !CandySel
 {

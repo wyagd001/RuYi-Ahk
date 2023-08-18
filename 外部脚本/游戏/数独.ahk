@@ -1,6 +1,8 @@
 ﻿;|2.1|2023.07.21|1369
 #NoEnv
 #singleinstance off
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e75f.ico"
 SendMode input
 SetTitleMatchMode, 1
 SetBatchLines, -1

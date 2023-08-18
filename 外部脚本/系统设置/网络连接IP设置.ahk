@@ -10,7 +10,8 @@ TODO:
 */
 
 #NoEnv
-
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\ec27.ico"
 ; Gotta be admin to change adapter settings. Snippet from the docs (in Variables)
 ; or shajul's, I don't know anymore: http://www.autohotkey.com/board/topic/46526-run-as-administrator-xpvista7-a-isadmin-params-lib/
 ; TODO: not working if compiled?

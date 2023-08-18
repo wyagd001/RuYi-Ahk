@@ -1,5 +1,7 @@
 ﻿;|2.1|2023.07.12|1352
 #SingleInstance force
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\f17f.ico"
 modified := 0
 CandySel := A_Args[1]
 if !CandySel
@@ -15,7 +17,7 @@ if (StrLen(myfolderpath) < 4)
 ;CandySel := "C:\Documents and Settings\Administrator\Desktop\测试"
 
 Menu, Tray, UseErrorLevel
-Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\f17f.png"
+Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\f17f.ico"
 
 gui +ReSize +hwndGuiID +Delimiter`n
 gui, font, s11, 宋体

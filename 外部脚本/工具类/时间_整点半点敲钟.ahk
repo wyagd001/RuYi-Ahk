@@ -1,4 +1,6 @@
 ﻿;|2.0|2023.07.01|1329
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\f738.ico"
 JA_JowAlert()
 
 JA_JowAlert(){

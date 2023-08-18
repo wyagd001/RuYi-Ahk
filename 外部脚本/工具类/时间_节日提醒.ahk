@@ -5,6 +5,8 @@
 ;MsgBox,% Date_GetLunarDate(20180215)
 ;MsgBox,% Date_GetLunarDate(A_Now)
 ;MsgBox,% Date_GetLunarDate(A_Now-1*1000000)  
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\f739.ico"
 
 JCTF:
 	today := SubStr(A_Now, 1, 8)

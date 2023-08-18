@@ -1,4 +1,12 @@
 ﻿;|2.0|2023.07.01|1309
+#SingleInstance force 
+#NoEnv
+SetBatchLines -1
+;~ SetTitleMatchMode,3
+ComObjError(false)  
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\f32a.ico"
+
 CandySel := A_Args[1]
 if !CandySel
 {
@@ -9,11 +17,7 @@ if !CandySel
 
 ScriptName = Symlink
 Version = 1.0 
-#SingleInstance force 
-#NoEnv
-SetBatchLines -1
-;~ SetTitleMatchMode,3
-ComObjError(false)  
+
 SymLink:={}
 SymFilter:={}
 LinkCountAll:=0

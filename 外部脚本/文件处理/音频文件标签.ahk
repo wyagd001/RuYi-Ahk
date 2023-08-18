@@ -1,5 +1,7 @@
 ﻿;|2.1|2023.07.28|1397
 #SingleInstance force
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\ec4f.ico"
 CandySel := A_Args[1]
 ChooseFile := CandySel
 

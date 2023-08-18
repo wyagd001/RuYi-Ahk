@@ -1,5 +1,9 @@
 ﻿;|2.1|2023.07.21|1367
 #SingleInstance
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e75f.ico"
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e94d.ico"
 Gui, Add, Text, x5 y5, 请输入 4 个数字:
 Gui, Add, Edit, xp+120 yp  w60 h25 vnum1, 
 Gui, Add, Edit, xp+70 yp w60 h25 vnum2,

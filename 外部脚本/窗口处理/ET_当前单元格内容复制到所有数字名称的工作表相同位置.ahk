@@ -1,5 +1,7 @@
 ﻿;|2.0|2023.07.01|1308
 #SingleInstance force
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e77f.ico"
 Windo_ET_PasteAll:
 Application := ComObjActive("ket.Application")
 ActiveCell := Application.ActiveCell.Address   ; $A$1  当前活动单元格

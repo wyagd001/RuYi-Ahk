@@ -6,6 +6,8 @@
 ;#Include <LayeredWindow>  ;Layered window class
 ;***************************************************************************************************
 #SingleInstance, Force
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\f128.ico"
 SetBatchLines, -1
 CoordMode, Mouse, Screen
 OnExit, GuiClose

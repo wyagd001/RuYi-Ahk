@@ -25,7 +25,7 @@ if !instr(CandySel, "`n")
 }
 Else
 {
-		loop, parse, CandySel, `n, `r
+	loop, parse, CandySel, `n, `r
 	{
 		SplitPath, CandySel,, OutDir,, OutFileNameNoExt
 		break

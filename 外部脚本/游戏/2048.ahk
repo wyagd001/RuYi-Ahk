@@ -1,5 +1,7 @@
 ;|2.1|2023.07.21|1370
 ;来源网址: https://www.autoahk.com/archives/39931
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\f147.ico"
 Grid := [], s := 16, w := h := S * 4.5
 Gui, font, s%s%
 Gui, add, text, y1

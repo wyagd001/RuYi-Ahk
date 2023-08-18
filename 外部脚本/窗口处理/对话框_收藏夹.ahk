@@ -1,6 +1,8 @@
 ﻿;|2.0|2023.07.01|1239
 ; 对话框跳转使用 Folder Menu 就足够了, 这里只是展示 TV 定位的函数
 ; 注意 64 位主程序对 64 位程序打开的对话框有效, 对 32 位程序打开的对话框无效
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e734.ico"
 DialogFav:
 Windy_CurWin_id := A_Args[1]
 if !Windy_CurWin_id
@@ -35,7 +37,7 @@ if !hTreeView
 Gui DialogTv:Destroy
 Gui DialogTv:New
 Gui DialogTv:Default 
-Gui, Add, Picture, x0 y0 w24 h24 vhpic gDialogCandyMenu, %A_ScriptDir%\..\..\脚本图标\如意\e1ce.png
+Gui, Add, Picture, x0 y0 w24 h24 vhpic gDialogCandyMenu, %A_ScriptDir%\..\..\脚本图标\如意\e1ce.ico
 Gui, Add, Edit, x+0 yp+0 w300 h25 vdpath
 Gui, Add, button,  x+0 yp+0 w30 h25 Default gsetpath, Go!
 Gui, Add, button,  x+0 yp+0 w30 h25 gDialogTvGuiEscape, X

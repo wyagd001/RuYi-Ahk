@@ -2,7 +2,8 @@
 
 #NoEnv
 SetBatchLines, -1
-
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e961.ico"
 ; Class ImageButton by just me
 ; https://www.autohotkey.com/boards/viewtopic.php?t=1103
 ; #Include Class_ImageButton.ahk

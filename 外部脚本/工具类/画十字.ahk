@@ -32,8 +32,7 @@ Gdip_SetSmoothingMode(G2, 4)
 global pPen := Gdip_CreatePen("0xFFFF0000", 2)
 
 Menu, Tray, NoStandard
-Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e948.png"
-
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e948.ico"
 Menu, Tray, Add, 画十字, TM_ModeC
 Menu, Tray, Add, 画横线, TM_ModeH
 Menu, Tray, Add, 画竖线, TM_ModeV

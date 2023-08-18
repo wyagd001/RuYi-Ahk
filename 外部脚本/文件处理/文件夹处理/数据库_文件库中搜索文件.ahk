@@ -2,7 +2,7 @@
 #SingleInstance force
 #InputLevel 10   ; 优先级设置比如意中的高, 按下相同热键后先触发脚本自身的
 Menu, Tray, UseErrorLevel
-Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\e8a3.png"
+Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\e8a3.ico"
 
 dbpath := A_ScriptDir "\..\..\..\配置文件\folder.db"
 IniRead, notepad2, %A_ScriptDir%\..\..\..\配置文件\如一.ini, 其他程序, notepad2, F:\Program Files\Editor\Notepad2\Notepad2.exe

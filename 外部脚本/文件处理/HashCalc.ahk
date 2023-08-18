@@ -22,6 +22,8 @@
 #NoEnv
 #SingleInstance Force
 SetBatchLines, -1
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e928.ico"
 
 global name        := "HashCalc"
 global version     := "v0.9"

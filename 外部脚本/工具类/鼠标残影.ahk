@@ -3,7 +3,8 @@
 #NoEnv
 ;~ #Persistent
 ;~ #NoTrayIcon
-
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e8b0.ico"
     ;~ 曙飙曳影 v0.1
         ;~ --  自定义鼠标跟随文字或图形
 

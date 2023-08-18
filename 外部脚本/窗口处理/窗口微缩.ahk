@@ -8,7 +8,7 @@
 SetBatchLines -1
 CoordMode, Mouse, Screen
 Menu, Tray, UseErrorLevel
-Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e97b.png"
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e97b.ico"
 SysGet, SM_CXSIZEFRAME, 32
 SysGet, SM_CYSIZEFRAME, 33
 SM_CXSIZEFRAME:=SM_CXSIZEFRAME="" ? 0 : SM_CXSIZEFRAME

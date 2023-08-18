@@ -1,5 +1,7 @@
 ﻿;|2.0|2023.07.01|1199
 #SingleInstance, Force
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\f5ed.ico"
 DetectHiddenWindows, On
 WinGet, W, List
 Gui +AlwaysOnTop +ToolWindow +LastFound

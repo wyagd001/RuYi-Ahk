@@ -1,5 +1,7 @@
 ﻿;|2.0|2023.07.01|1099
 #NoEnv
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e768.ico"
 SetBatchLines -1
 ListLines Off
 Sys=HKLM

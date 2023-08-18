@@ -1,6 +1,8 @@
 ﻿;|2.2|2023.08.06|1002
 ;HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu
 ;HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\EE3F.ico"
 global A_icon := Object("计算机", "{20D04FE0-3AEA-1069-A2D8-08002B30309D}", "回收站", "{645FF040-5081-101B-9F08-00AA002F954E}", "用户的文件", "{59031a47-3f72-44a7-89c5-5595fe6b30ee}", "控制面板", "{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}", "网络", "{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}", "库", "{031E4825-7B94-4dc3-B131-E946B44C8DD5}")
 
 ; key - 变量  对应关系1, 对应关系2, 对应关系3, 对应关系4

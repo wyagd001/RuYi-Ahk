@@ -1,4 +1,6 @@
 ﻿;|2.0|2023.07.01|1334
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\f384.ico"
 ;来源网址: https://www.autohotkey.com/boards/viewtopic.php?t=65822
 /*
 	Restart "Local area connection" without admin privileges

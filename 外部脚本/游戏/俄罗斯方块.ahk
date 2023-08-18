@@ -1,5 +1,8 @@
 ﻿;|2.1|2023.07.21|1368
 #SingleInstance,Force
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\ecaa.ico"
+
 global wb,Settings:=new XML("Settings"),Close:="}"
 SetBatchLines,-1
 Defaults()

@@ -10,6 +10,8 @@
 ;	RestartExplorer()
 
 #SingleInstance force
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\E8AD.ico"
 SetRegView, 64
 global A_icon := Object("默认", A_WinDir "\System32\imageres.dll,154", "透明", A_WinDir "\System32\imageres.dll,197", "经典", A_WinDir "\System32\shell32.dll,29", "大图标", A_WinDir "\System32\shell32.dll,263")
 global Arr_sel := [A_WinDir "\System32\imageres.dll,154", A_WinDir "\System32\imageres.dll,197", A_WinDir "\System32\shell32.dll,29", A_WinDir "\System32\shell32.dll,263"]

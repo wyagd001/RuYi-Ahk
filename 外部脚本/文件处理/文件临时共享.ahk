@@ -1,6 +1,7 @@
 ﻿;|2.0|2023.07.01|1268
 #SingleInstance Force
-; 1081
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\f103.ico"
 CandySel := A_Args[1]
 First := 0
 global HttpServer_File := CandySel

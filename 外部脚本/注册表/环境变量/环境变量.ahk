@@ -2,6 +2,8 @@
 ;来源网址: https://www.autohotkey.com/board/topic/63210-modify-system-path-gui
 #SingleInstance, Force
 #NoEnv
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\ef58.ico"
 RegRead, UPL, HKCU\Environment, PATH
 RegRead, SPL, HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment, PATH
 firstUPL := UPL

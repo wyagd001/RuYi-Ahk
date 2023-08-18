@@ -15,6 +15,8 @@
 */
 #NoEnv
 #SingleInstance, Force
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\eb9f.ico"
 SetWorkingDir, %A_ScriptDir%
 SetBatchLines, -1
 Process, Priority, , High
