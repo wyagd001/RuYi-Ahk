@@ -1,6 +1,7 @@
 ﻿;|2.0|2023.07.01|1231
 ;来源网址: https://www.autohotkey.com/board/topic/63210-modify-system-path-gui
 #SingleInstance, Force
+SetWorkingDir %A_ScriptDir%
 #NoEnv
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\ef58.ico"
@@ -144,7 +145,6 @@ if (A_GuiControl = "sysRestore")
 }
 return
 
-
 jreg:
 if (A_GuiControl = "userjump")
 	f_OpenReg("HKCU\Environment")
@@ -241,6 +241,7 @@ if (firstUPL != UPL)
 		{
 			firstUPL := UPL
 			RefreshEnvironment()
+			SettingChange()
 			MsgBox, 0, SysEnv -- 成功!, 修改用户 PATH 变量成功!
 		}
 		Else
@@ -259,6 +260,7 @@ if (firstSPL != SPL)
 		{
 			firstSPL := SPL
 			RefreshEnvironment()
+			SettingChange()
 			MsgBox, 0, SysEnv -- 成功!, 修改系统 PATH 变量成功!
 		}
 		Else
@@ -325,6 +327,9 @@ ExpEnv(str)
 ;   Any command prompts currently open will not have their environment variables changed.
 ;      - Please use the RefreshEnv.cmd batch script found at:
 ;        https://github.com/chocolatey-archive/chocolatey/blob/master/src/redirects/RefreshEnv.cmd
+
+; Add your binaries to the user PATH
+;Env_UserAdd("PATH", "C:\bin")
 Env_UserAdd(name, value, type := "", location := ""){
    value    := (value ~= "^\.\.\\") ? GetFullPathName(value) : value
    location := (location == "")     ? "HKCU\Environment"     : location
@@ -348,6 +353,8 @@ Env_SystemAdd(name, value, type := ""){
    return (A_IsAdmin) ? Env_UserAdd(name, value, type, "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment") : -3
 }
 
+; Remove a directory from user PATH
+;Env_UserSub("PATH", "C:\bin")
 Env_UserSub(name, value, type := "", location := ""){
    value    := (value ~= "^\.\.\\") ? GetFullPathName(value) : value
    location := (location == "")     ? "HKCU\Environment"     : location
@@ -380,6 +387,8 @@ Env_SystemSub(name, value, type := ""){
    return (A_IsAdmin) ? Env_UserSub(name, value, type, "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment") : -3
 }
 
+; Create a new Environment Variable
+;Env_UserNew("ANSWER", "42")
 Env_UserNew(name, value := "", type := "", location := ""){
    type := (type) ? type : (value ~= "%") ? "REG_EXPAND_SZ" : "REG_SZ"
    RegWrite % type, % (location == "") ? "HKCU\Environment" : location, % name, % value
@@ -393,6 +402,7 @@ Env_SystemNew(name, value := "", type := ""){
 }
 
 ; Value does nothing except let me easily change between functions.
+; Delete an Environment Variable
 Env_UserDel(name, value := "", location := ""){
    RegDelete % (location == "") ? "HKCU\Environment" : location, % name
    SettingChange()
@@ -404,6 +414,7 @@ Env_SystemDel(name, value := ""){
    return (A_IsAdmin) ? Env_UserDel(name, value, "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment") : -3
 }
 
+; Read an existing Environment Variable
 Env_UserRead(name, value := "", location := ""){
    RegRead registry, % (location == "") ? "HKCU\Environment" : location, % name
    if (value != "") {
@@ -420,6 +431,7 @@ Env_SystemRead(name, value := ""){
 }
 
 ; Value does nothing except let me easily change between functions.
+; Sort System PATH in alphabetical order
 Env_UserSort(name, value := "", location := ""){
    RegRead registry, % (location == "") ? "HKCU\Environment" : location, % name
    Sort registry, % "D;"
@@ -433,6 +445,7 @@ Env_SystemSort(name, value := ""){
 }
 
 ; Value does nothing except let me easily change between functions.
+; Remove pesky duplicate entries in your system PATH
 Env_UserRemoveDuplicates(name, value := "", location := ""){
    RegRead registry, % (location == "") ? "HKCU\Environment" : location, % name
    Sort registry, % "U D;"

@@ -55,9 +55,7 @@ global GUIFlag :={}, thisWin := 1, UsrTxt, UsrPic, TransC:="F0F0F0"
     , PicH := -1            ;   其中一个设置 -1 则以另一个为比例缩放
 ;~ ************************** 设置结束 **************************
 
-if FileExist(DFIcon)
-    Menu, Tray, Icon , % DFIcon
-else if A_IsCompiled
+if A_IsCompiled
     Menu, Tray, Icon , % thisFileName ".exe"
 
 Menu, Tray, Tip, % exeName " - " exeVer (exeVerSub?"(" exeVerSub ")":)

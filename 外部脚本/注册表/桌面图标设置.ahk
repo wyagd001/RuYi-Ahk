@@ -1,9 +1,17 @@
 ﻿;|2.2|2023.08.06|1002
-;HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu
-;HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel
+; HKEY_CURRENT_USER 不同用户加载的配置文件是不同
+; 例如 管理员加载的是 C:\Users\Administrator\NTUSER.DAT 另一个账户加载的是 C:\Users\张华\NTUSER.DAT
+; 以管理员权限运行时不会对当前普通用户的配置进行更改
+; HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu
+; HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\EE3F.ico"
-global A_icon := Object("计算机", "{20D04FE0-3AEA-1069-A2D8-08002B30309D}", "回收站", "{645FF040-5081-101B-9F08-00AA002F954E}", "用户的文件", "{59031a47-3f72-44a7-89c5-5595fe6b30ee}", "控制面板", "{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}", "网络", "{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}", "库", "{031E4825-7B94-4dc3-B131-E946B44C8DD5}")
+global A_icon := Object("计算机",     "{20D04FE0-3AEA-1069-A2D8-08002B30309D}"
+                       , "回收站",     "{645FF040-5081-101B-9F08-00AA002F954E}"
+                      , "用户的文件",  "{59031a47-3f72-44a7-89c5-5595fe6b30ee}"
+                      , "控制面板",    "{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}"
+                      , "网络",        "{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}"
+                      , "库",          "{031E4825-7B94-4dc3-B131-E946B44C8DD5}")
 
 ; key - 变量  对应关系1, 对应关系2, 对应关系3, 对应关系4
 global A_iconDy := Object("计算机", "vcomputer", "回收站", "vrecycle", "用户的文件", "vdocument", "控制面板", "vcontrol","网络", "vweb", "库", "vlib")
@@ -21,7 +29,7 @@ Gui, Add, Button, xp+80 yp w70 h30 gGuiApply, 应用
 
 Gui, Add, Tab, x-4 y1 w530 h320, 常规|其他
 Gui, Tab, 常规
-Gui, Add, GroupBox, x10 y30 w500 h135, 当前用户
+Gui, Add, GroupBox, x10 y30 w500 h135, 当前用户(%A_username%)
 Gui, Add, CheckBox, % "x20 yp+30 w80 h20 vvcomputer Checked0", 计算机
 Gui, Add, Text, % "xp+80 yp+3 w80 h20 vvcomputer_value",
 Gui, Add, CheckBox, % "xp+90 yp-3 w80 h20 vvrecycle  Checked0", 回收站
@@ -36,7 +44,7 @@ Gui, Add, Text, % "xp+80 yp+3 w80 h20 vvweb_value",
 
 Gui, Add, Link, % "xp+90 yp-3 w310 h35 gdelusersetting", 当前用户中存在值时, 优先使用. <a>删除当前用户中的所有值</a>
 
-Gui, Add, GroupBox, x10 y175 w500 h140, 所有用户
+Gui, Add, GroupBox, x10 y175 w500 h140, 所有用户(非管理员权限不能更改)
 Gui, Add, CheckBox, % "xp+10 yp+30 w80 h20 vvcomputer_all Checked0", 计算机
 Gui, Add, Text, % "xp+80 yp+3 w80 h20 vvcomputer_all_value",0
 Gui, Add, CheckBox, % "xp+90 yp-3 w80 h20 vvrecycle_all Checked0", 回收站
@@ -47,8 +55,16 @@ Gui, Add, CheckBox, % "xp+90 yp-3 w80 h20 vvcontrol_all Checked0", 控制面板
 Gui, Add, Text, % "xp+80 yp+3 w80 h20 vvcontrol_all_value",
 Gui, Add, CheckBox, % "x20 yp+30 w80 h20 vvweb_all Checked0", 网络
 Gui, Add, Text, % "xp+80 yp+3 w80 h20 vvweb_all_value",
-
-Gui, Add, Link, % "xp+90 yp-3 w310 h35 gdelallusersetting", 当前用户和所有用户两者都不存在值时, 默认显示图标. <a>删除所有用户中的所有值</a>
+Gui, Add, Link, % "xp+90 yp-3 w310 h35 vvdel_all_value gdelallusersetting", 当前用户和所有用户两者都不存在值时, 默认显示图标. <a>删除所有用户中的所有值</a>
+if !(A_isadmin)
+{
+	GuiControl, Disable, vcomputer_all
+	GuiControl, Disable, vrecycle_all
+	GuiControl, Disable, vdocument_all
+	GuiControl, Disable, vcontrol_all
+	GuiControl, Disable, vweb_all
+	GuiControl, Disable, vdel_all_value
+}
 
 Gui, Tab, 其他
 Gui, Add, GroupBox, x10 y30 w500 h120, 当前用户(需要导航栏勾选库才能生效)

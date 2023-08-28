@@ -1,4 +1,4 @@
-﻿;|2.2|2023.08.16|1096
+﻿;|2.3|2023.08.23|1096
 ; Script Information ===========================================================
 ; Name:         File String Search
 ; Description:  Search files for a specific string (Inspired by TLM)
@@ -98,9 +98,9 @@ Return
 OpenFile:
 LV_GetText(FileFullPath, LV_GetNext("F"), 2)
 If Fileexist(FileFullPath)
-Run,"%notepad2%"  "%FileFullPath%"
+	Run, "%notepad2%" "%FileFullPath%"
 else
-msgbox,未选中或文件不存在。
+	msgbox, 未选中或文件不存在。
 Return
 
 LV1x:
@@ -148,7 +148,7 @@ OnLoad() {
     IniRead, SEditDir, %run_iniFile%, 文件中查找字符, 固定查找目录, %A_Space%
     IniRead, EditType, %run_iniFile%, 文件中查找字符, 类型, %A_Space%
     IniRead, EditString, %run_iniFile%, 文件中查找字符, 字符, %A_Space%
-    IniRead, notepad2, %run_iniFile%, otherProgram, notepad2, F:\Program Files\Editor\Notepad2\Notepad2.exe
+    IniRead, notepad2, %A_ScriptDir%\..\..\..\配置文件\如一.ini, 其他程序, notepad2, F:\Program Files\Editor\Notepad2\Notepad2.exe
 
     SearchStop := 0
 }
@@ -192,7 +192,7 @@ GuiCreate() {
     Gui, Add, Button, w80 h24 default vButtonSearch gControlHandler, 搜索   
     Gui, Add, Button, x+10 w80 h24 vButtonStop gControlHandler Disabled, 停止
     Gui, Add, Button, x+10 w100 h24 vOpenFileFullPath gOpenFileFullPath Disabled, 打开文件位置
-    Gui, Add, Button, x+10 w100 h24 vOpenFile gOpenFile Disabled, 打开文件  
+    Gui, Add, Button, x+10 w100 h24 vOpenFile gOpenFile Disabled, 编辑文件  
     
     Gui, Add, StatusBar,,
     SB_SetParts(120)

@@ -1,5 +1,7 @@
-﻿;|2.0|2023.07.01|1153
+﻿;|2.3|2023.08.27|1439
 Windy_CurWin_Class := A_Args[1]
+IniRead, notepad2, %A_ScriptDir%\..\..\配置文件\如一.ini, 其他程序, notepad2
+
 if !Windy_CurWin_Class
 {
 	DetectHiddenWindows, On
@@ -11,18 +13,32 @@ if !Windy_CurWin_Class
 		WinGetClass, Windy_CurWin_Class, A
 }
 
-sURL := GetActiveBrowserURL(Windy_CurWin_Class)
-if inStr(sURL, "baidu.com")
-{
-	RegExMatch(sURL, "wo?r?d=([^&]*)", sword)
-	run, % A_ScriptDir "\..\..\引用程序\AnyToAhk.exe" " https://cn.bing.com/search?q=" sword1,, UseErrorLevel
-}
-if inStr(sURL, "bing.com")
-{
-	RegExMatch(sURL, "q=([^&]*)", sword)
-	run, % A_ScriptDir "\..\..\引用程序\AnyToAhk.exe" " https://www.baidu.com/s?wd=" sword1,, UseErrorLevel
-}
+Windo_记事本打开浏览器打开的文件:
+surl := GetActiveBrowserURL(Windy_CurWin_Class, 0)
+surl := StrReplace(surl, "file:///")
+htmfile := UrlDecode(surl)
+shtmfile := StrReplace(htmfile, "/" , "\")
+;msgbox % shtmfile
+if FileExist(shtmfile)
+run, % notepad2 " " shtmfile
 return
+
+UrlDecode(Url, Enc = "UTF-8")
+{
+	Pos := 1
+	Loop
+	{
+		Pos := RegExMatch(Url, "i)(?:%[\da-f]{2})+", Code, Pos++)
+		If (Pos = 0)
+			Break
+		VarSetCapacity(Var, StrLen(Code) // 3, 0)
+		StringTrimLeft, Code, Code, 1
+		Loop, Parse, Code, `%
+			NumPut("0x" . A_LoopField, Var, A_Index - 1, "UChar")
+		StringReplace, Url, Url, `%%Code%, % StrGet(&Var, Enc), All
+	}
+Return, Url
+}
 
 ; https://autohotkey.com/boards/viewtopic.php?f=6&t=3702
 GetActiveBrowserURL(sClass, WithProtocol:=1) {

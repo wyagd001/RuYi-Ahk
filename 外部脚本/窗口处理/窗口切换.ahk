@@ -1,24 +1,30 @@
-﻿;|2.0|2023.07.01|1326
-Windy_CurWin_id := A_Args[1]
-if !Windy_CurWin_id
+﻿;|2.0|2023.07.01|1xxx
+;Windy_CurWin_id := A_Args[1]
+Windy_CurWin_id := 0
+TBT_Arr := GetTaskBarButton(1)
+if (Windy_CurWin_id = 0)
 {
-	DetectHiddenWindows, On
-	WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI
-	Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")
+	for k,title in TBT_Arr
+	{
+		Tmp_T := RegExReplace(title, "\s-\s\d .*$")
+		menu, TBW, Add, % Tmp_T, qiehuan
+	}
+	menu, TBW, Show
 }
-WinGetTitle, Windy_CurWin_Title, Ahk_ID %Windy_CurWin_id% 
-
-DetectHiddenWindows, Off
-
-for k, title in GetTaskBarButton()
+else
 {
-	Tmp_T := RegExReplace(title, "\s-\s\d .*$")
-	if (Tmp_T != Windy_CurWin_Title)
-		WinClose, % Tmp_T
+	Tmp_T := RegExReplace(TBT_Arr[Windy_CurWin_id], "\s-\s\d .*$")
+	WinActivate, % Tmp_T
+	;MsgBox % Tmp_T
 }
-exitapp
+Return
 
-; 任务栏设置中 合并任务栏按钮 选项不能选择 始终合并按钮, 因为这会导致无法获取到窗口标题信息
+qiehuan:
+WinActivate, % A_ThisMenuItem
+;MsgBox % A_ThisMenuItem
+Return
+
+; 任务栏设置中不能选择  始终合并按钮
 GetTaskBarButton(running := 1, TBBindex := 1)
 {
 	ControlGet, hwnd, hwnd,, MSTaskListWClass%TBBindex%, ahk_class Shell_TrayWnd
@@ -29,11 +35,13 @@ GetTaskBarButton(running := 1, TBBindex := 1)
 		Tmp_T := accTaskBar.accName(child)
 		if !Tmp_T
 			continue
-		If running && ((tmp:=Acc_Location(accTaskBar, child).w) > 50)
+		;If running && ((tmp:=Acc_Location(accTaskBar, child).w) > 50)
+		If running && InStr(Tmp_T, "个运行窗口")   ; 会得到一个多余的项目  360安全浏览器 - 1 个运行窗口
 		{
-			; 7-161 - 有弹出菜单 - 哔哩哔哩 (゜-゜)つロ 干杯~-bilibili - 360安全浏览器 14.1 - 1 个运行窗口
-			;msgbox % child " - " tmp " - " Acc_State(accTaskBar, child) " - " accTaskBar.accName(child)
-			TBT.Push(Tmp_T)
+			; 7 - 有弹出菜单 - 哔哩哔哩 (゜-゜)つロ 干杯~-bilibili - 360安全浏览器 14.1 - 1 个运行窗口
+			;msgbox % child " - " Acc_State(accTaskBar, child) " - " accTaskBar.accName(child)
+			if !InStr(Acc_State2(accTaskBar, child), "不可见")
+				TBT.Push(Tmp_T)
 		}
 		If !running
 			TBT.Push(Tmp_T)
@@ -65,6 +73,18 @@ Acc_GetStateText(nState)
 	Return	sState
 }
 
+Acc_GetStateTextEx(nState) {
+	static states := [ 0x0,0x1,0x10,0x100,0x10000,0x100000,0x1000000,0x2,0x20,0x200,0x2000
+	                 , 0x20000,0x200000,0x2000000,0x20000000,0x4,0x40,0x400,0x4000,0x40000
+	                 , 0x400000,0x40000000,0x8,0x80,0x800,0x8000,0x80000,0x800000 ]
+	for i, n in states
+	{
+		if (nState & n)
+			out .= Acc_GetStateText(n) ","
+	}
+	return RTrim(out, ",")
+}
+
 Acc_Children(Acc) {
 	if ComObjType(Acc,"Name") != "IAccessible"
 		ErrorLevel := "Invalid IAccessible Object"
@@ -91,6 +111,10 @@ Acc_Location(Acc, ChildId=0, byref Position="") { ; adapted from Sean's code
 
 Acc_State(Acc, ChildId=0) {
 	try return ComObjType(Acc,"Name")="IAccessible"?Acc_GetStateText(Acc.accState(ChildId)):"invalid object"
+}
+
+Acc_State2(Acc, ChildId=0) {
+	try return ComObjType(Acc,"Name")="IAccessible"?Acc_GetStateTextEx(Acc.accState(ChildId)):"invalid object"
 }
 
 Acc_ObjectFromWindow(hWnd, idObject = -4)

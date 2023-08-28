@@ -1,44 +1,35 @@
-﻿;|2.0|2023.07.01|1201
+﻿;|2.3|2023.08.25|1201
 CandySel := Trim(A_Args[1])
 Cando_颜色查看:
-	Gui,66: Default
-	Gui, Destroy
-	Gui,+Lastfound +AlwaysOnTop
-	IfInString, CandySel,`,
-	{
-		IfInString, CandySel, rgb
-			RegExMatch(CandySel, "i)rgb\(?(\s*\d+\s*),(\s*\d+\s*),(\s*\d+\s*)\)", m)
-		else
-			RegExMatch(CandySel, "i)(\s*\d+\s*),(\s*\d+\s*),(\s*\d+\s*)", m)
-		SetFormat, Integer, % (BackUp_FmtInt := A_FormatInteger) = "D" ? "H" : BackUp_FmtInt 
-		StringReplace, Color_Hex, CandySel, %m%, %	RegExReplace(RegExReplace(m1+0 m2+0 m3+0,"0x(.)(?=$|0x)", "0$1"), "0x") 
-		SetFormat, Integer, %BackUp_FmtInt%
-		Color_RGB := CandySel
-	}
+Gui,66: Default
+Gui, Destroy
+Gui,+Lastfound +AlwaysOnTop
+IfInString, CandySel,`,
+{
+	IfInString, CandySel, rgb
+		RegExMatch(CandySel, "i)rgb\(?(\s*\d+\s*),(\s*\d+\s*),(\s*\d+\s*)\)", m)
 	else
-	{
-		RegExMatch(CandySel, "([a-fA-F\d]){6}", Color_Hex)
-		Color_RGB := Hex2RGB(Color_Hex)
-		Color_RGB := "RGB(" Color_RGB ")"
-	}
+		RegExMatch(CandySel, "i)(\s*\d+\s*),(\s*\d+\s*),(\s*\d+\s*)", m)
+	SetFormat, Integer, % (BackUp_FmtInt := A_FormatInteger) = "D" ? "H" : BackUp_FmtInt 
+	StringReplace, Color_Hex, CandySel, %m%, % RegExReplace(RegExReplace(m1+0 m2+0 m3+0,"0x(.)(?=$|0x)", "0$1"), "0x") 
+	SetFormat, Integer, %BackUp_FmtInt%
+	Color_RGB := CandySel
+}
+else
+{
+	RegExMatch(CandySel, "([a-fA-F\d]){6}", Color_Hex)
+	Color_RGB := Hex2RGB(Color_Hex)
+	Color_RGB := "RGB(" Color_RGB ")"
+}
 
-	Gui, add, text, x7, 颜色代码(Hex):
-	Gui, Add, edit, x+10 readonly w120, %Color_Hex%
-	Gui, add, text, x7, 颜色代码(RGB):
-	Gui, Add, edit, x+10 readonly w120, %Color_RGB%
-	Gui, add, text, x7, 颜色:
-	Gui, Add, Progress, x+10 c%Color_Hex% w170 h170, 100
-	Gui, Show, w230 h230, 颜色查看
-Return
-
-Cando_ColorPicker:
-	if RegExMatch(CandySel, "([a-fA-F\d]){6}", mCol)
-		Run,% A_ScriptDir "\Bin\ColorPicker.exe " . mCol . "ff"
-
-	else if RegExMatch(CandySel, "\((?P<col1>25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\,(?P<col2>25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\,(?P<col3>25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\)",mCol){
-		mCol := A_ScriptDir "\Bin\ColorPicker.exe " . (color_dec2hex(mColcol1)color_dec2hex(mColcol2)color_dec2hex(mColcol3)) . "ff"
-		Run, % mCol
-	}
+Gui, add, text, x7, 颜色代码(Hex):
+Gui, Add, edit, x+10 w120 vcolor_hex, %Color_Hex%
+gui, add, button, x+120 default gchangcolor, Ok
+Gui, add, text, x7, 颜色代码(RGB):
+Gui, Add, edit, x+10 readonly w120 vColor_RGB, %Color_RGB%
+Gui, add, text, x7, 颜色:
+Gui, Add, Progress, x+10 c%Color_Hex% w170 h170 vprobar, 100
+Gui, Show, w230 h230, 颜色查看
 Return
 
 66GuiClose:
@@ -46,6 +37,15 @@ Return
 Gui,66: Destroy
 exitapp
 Return
+
+changcolor:
+Gui,66: Default
+Gui Submit, nohide
+Color_RGB := Hex2RGB(Color_Hex)
+Color_RGB := "RGB(" Color_RGB ")"
+GuiControl,, Color_RGB, %Color_RGB%
+GuiControl, +c%Color_Hex%, probar
+return
 
 Hex2RGB(_hexRGB, _delimiter="")
 {
@@ -79,16 +79,4 @@ RGB2Hex(_decimalRGB, _delimiter="")
 	StringTrimLeft hexRGB, color, 3
 	SetFormat Integer, %BackUp_FmtInt%
 	Return hexRGB
-}
-
-;十进制转换为十六进制的函数，参数为10进制数整数.
-color_dec2hex(d)
-{
-SetFormat, integer, hex
-h :=d+0
-SetFormat, integer, dec ;恢复至正常的10进制计算习惯
-h := substr(h,3)  ; 去掉十六进制前面的 0x
-h :="0" . h
-h := substr(h,-1)
-return h
 }

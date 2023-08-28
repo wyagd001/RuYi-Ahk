@@ -1,82 +1,46 @@
-﻿;|2.0|2023.07.01|1109
+﻿;|2.3|2023.08.19|1424
+#SingleInstance force
 CandySel := A_Args[1]
-if !CandySel
-{
-	DetectHiddenWindows, On
-	ControlGetText, CandySel, Edit1, 获取当前窗口信息_ 
-	DetectHiddenWindows, Off
-	if !CandySel
-		exitapp
-}
-CandySel2 := A_Args[2]
-;msgbox % CandySel " - " CandySel2
-;Return
+IniRead, notepad2, %A_ScriptDir%\..\..\配置文件\如一.ini, 其他程序, notepad2
 
-if CandySel2
-	goto SendToFolder
-;msgbox % CandySel
-; 1109
-Cando_CopyToOpenedFolder:
+if (CandySel = "")
+	exitapp
+SplitPath, CandySel, OutFileName,, OutExtension, OutNameNoExt
+
 AllOpenFolder := GetAllWindowOpenFolder()
-Menu SendToOpenedFolder, Add, 发送到打开的文件夹, nul
-Menu SendToOpenedFolder, Add
-for k, v in AllOpenFolder
+for k,v in AllOpenFolder
 {
-	Menu SendToOpenedFolder, add, %v%, Cando_SendToFolder
-}
-Menu SendToOpenedFolder, Show
-Menu, SendToOpenedFolder, DeleteAll
-return
-
-nul:
-return
-
-Cando_SendToFolder:
-if !instr(CandySel, "`n")   ; 单文件
-{
-	SplitPath, CandySel, CandySel_FileName
-	TargetFile := PathU(A_ThisMenuItem "\" CandySel_FileName)
-	if GetKeyState("Shift")
-		FileMove %CandySel%, %TargetFile%
-	else
-		FileCopy %CandySel%, %TargetFile%
-}
-else
-{
-	Loop, Parse, CandySel, `n,`r
+	Tmp_Fp := v "\" OutNameNoExt
+	Tmp_Fp := StrReplace(Tmp_Fp, "\\", "\")
+	if FileExist(Tmp_Fp "*.*")
 	{
-		SplitPath, A_LoopField, Tmp_FileName
-		TargetFile := PathU(A_ThisMenuItem "\" Tmp_FileName)
-		if GetKeyState("Shift")
-			FileMove %A_LoopField%, %TargetFile%
-		else
-			FileCopy %A_LoopField%, %TargetFile%
+		if FileExist(Tmp_Fp "." OutExtension) && (Tmp_Fp (OutExtension?".":"") OutExtension != CandySel)
+		{
+			CandySel2 := Tmp_Fp (OutExtension?".":"") OutExtension
+			break
+		}
+		Loop, Files, % Tmp_Fp "*.*", F
+		{
+			if InStr(A_LoopFileName, OutNameNoExt) && (A_LoopFileName != OutFileName)
+			{
+				CandySel2 := v "\" A_LoopFileName
+				CandySel2 := StrReplace(Md5FilePath2, "\\", "\")
+				break 2
+			}
+		}
 	}
 }
-Return
+AllOpenFolder := ""
 
-SendToFolder:
-if !instr(CandySel, "`n")
+Run %notepad2% %CandySel%,, UseErrorLevel
+if (ErrorLevel = "ERROR")
 {
-	SplitPath, CandySel, CandySel_FileName
-	TargetFile := PathU(CandySel2 "\" CandySel_FileName)
-	if GetKeyState("Shift")
-		FileMove %CandySel%, %TargetFile%
-	else
-		FileCopy %CandySel%, %TargetFile%
+	MsgBox 请检查编辑器路径: %notepad2%
+	return
 }
-else
-{
-	Loop, Parse, CandySel, `n,`r
-	{
-		SplitPath, A_LoopField, Tmp_FileName
-		TargetFile := PathU(CandySel2 "\" Tmp_FileName)
-		if GetKeyState("Shift")
-			FileMove %A_LoopField%, %TargetFile%
-		else
-			FileCopy %A_LoopField%, %TargetFile%
-	}
-}
+Sleep 300
+if CandySel2
+	Run %notepad2% %CandySel2%
 Return
 
 GetAllWindowOpenFolder()
@@ -170,7 +134,7 @@ RegExMatchAll(ByRef Haystack, NeedleRegEx, SubPat="")
 
 RunScript(script, WaitResult:="false")
 {
-	static test_ahk := A_AhkPath,
+	static test_ahk := A_AhkPath
 	shell := ComObjCreate("WScript.Shell")
 	BackUp_WorkingDir:= A_WorkingDir
 	SetWorkingDir %A_ScriptDir%
@@ -182,12 +146,4 @@ RunScript(script, WaitResult:="false")
 		return exec.StdOut.ReadAll()
 	else 
 return
-}
-
-PathU(Filename) { ;  PathU v0.91 by SKAN on D35E/D68M @ tiny.cc/pathu
-Local OutFile
-  VarSetCapacity(OutFile, 520)
-  DllCall("Kernel32\GetFullPathNameW", "WStr",Filename, "UInt",260, "Str",OutFile, "Ptr",0)
-  DllCall("Shell32\PathYetAnotherMakeUniqueName", "Str",OutFile, "Str",Outfile, "Ptr",0, "Ptr",0)
-Return A_IsUnicode ? OutFile : StrGet(&OutFile, "UTF-16")
 }

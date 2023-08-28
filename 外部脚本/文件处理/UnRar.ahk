@@ -306,11 +306,12 @@ toHex( ByRef V, ByRef H, dataSz:=0 )
 		H  .=  SubStr(Hex, (*++P >> 4), 1) . SubStr(Hex, (*P & 15), 1)
 }
 
-PathU(sFile) {                     ; PathU v0.90 by SKAN on D35E/D35F @ tiny.cc/pathu 
-Local Q, F := VarSetCapacity(Q,520,0) 
-  DllCall("kernel32\GetFullPathNameW", "WStr",sFile, "UInt",260, "Str",Q, "PtrP",F)
-  DllCall("shell32\PathYetAnotherMakeUniqueName","Str",Q, "Str",Q, "Ptr",0, "Ptr",F)
-Return A_IsUnicode ? Q : StrGet(&Q, "UTF-16")
+PathU(Filename) { ;  PathU v0.91 by SKAN on D35E/D68M @ tiny.cc/pathu
+Local OutFile
+  VarSetCapacity(OutFile, 520)
+  DllCall("Kernel32\GetFullPathNameW", "WStr",Filename, "UInt",260, "Str",OutFile, "Ptr",0)
+  DllCall("Shell32\PathYetAnotherMakeUniqueName", "Str",OutFile, "Str",Outfile, "Ptr",0, "Ptr",0)
+Return A_IsUnicode ? OutFile : StrGet(&OutFile, "UTF-16")
 }
 
 Array_ToString(array, depth=5, indentLevel="")

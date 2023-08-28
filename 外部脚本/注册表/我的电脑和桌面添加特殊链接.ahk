@@ -1,5 +1,7 @@
 ﻿;|2.0|2023.07.01|1005
 ;来源网址: http://thinkai.net/page/16
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\E703.ico"
 ;创建界面
 Gui, Add, Text, x0 y0 w40 h20 , 名称:
 Gui, Add, Edit, x50 y0 w280 h20 vname,
@@ -49,7 +51,6 @@ if (menu_name and menu_cmd) ;已经填写
 	GuiControl, , menu_cmd,
 }
 Return
-
 
 apply:
 gui, submit, nohide
@@ -142,7 +143,6 @@ Else
 if main = 1
     menu,% menu_name, show
 }
-
 
 MenuHandler:
 return

@@ -1,4 +1,5 @@
 ﻿;|2.1|2023.07.26|1115
+; 管理员权限运行时, 无法修改当前普通用户的配置
 CF_RegWrite("REG_DWORD", "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "Hidden", 1)
 CF_RegWrite("REG_DWORD", "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "ShowSuperHidden", 1)
 RefreshExplorer()

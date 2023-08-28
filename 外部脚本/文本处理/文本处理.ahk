@@ -1,4 +1,4 @@
-﻿;|2.2|2023.08.11|1242
+﻿;|2.3|2023.08.24|1242
 #SingleInstance force
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e982.ico"
@@ -320,6 +320,16 @@ else if (comm = "中文转拼音")
 {
 	commmode("转换模式:",,, "enable")
 	GuiControl,, myedit1, `n有声调`n`n无声调`n首字母
+}
+else if (comm = "Base64解密")
+{
+	commmode("解码后的编码:",,, "enable")
+	GuiControl,, myedit1, `nUTF-8`n`nUTF-16`n
+}
+else if (comm = "Base64加密")
+{
+	commmode("加密使用的编码:")
+	GuiControl,, myedit1, `nUTF-8`n`n
 }
 else if (comm = "字符与编码的转换")
 {
@@ -1365,7 +1375,7 @@ Base64解密:
 oldtxt := StrReplace(oldtxt, "`r")
 oldtxt := StrReplace(oldtxt, "`n")
 Base64Decode(oldtxt, bin)
-newStr := StrGet(&bin, "UTF-8")
+newStr := StrGet(&bin, myedit1)
 t2.SetText(newStr)
 Return
 

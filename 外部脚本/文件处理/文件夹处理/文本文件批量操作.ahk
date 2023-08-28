@@ -1,4 +1,4 @@
-﻿;|2.1|2023.07.12|1333
+﻿;|2.3|2023.08.25|1333
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\f17f.ico"
 CandySel :=  A_Args[1]
@@ -7,17 +7,17 @@ Gui, Add, Text, x10 y15 h25, 查找文件夹:
 Gui, Add, Edit, xp+80 yp-5 w550 h25 vsfolder, % CandySel
 ;Gui, Add, Button, xp+560 yp w60 h25 gloadfolder, 载入
 
-Gui, Add, Text, x10 yp+40 h25, 指定扩展名:
-Gui, Add, Edit, xp+80 yp-5 w550 h25 vsExt, % "txt,ahk,md"
-Gui, Add, Text, x10 yp+40 h25, 命令类型:
+Gui, Add, Text, x10 yp+40, 指定扩展名:
+Gui, Add, Edit, xp+80 yp-2 w550 vsExt, % "txt,ahk,md"
+Gui, Add, Text, x10 yp+32, 命令类型:
 Gui, Add, ComboBox, xp+80 yp-5 w550 h90 vcommand gupdateparam, 查找替换||文首添加一行|文末添加一行|文首删除一行|文末删除一行|
-Gui, Add, Button, xp+560 yp-2 w60 h25 gruncommand, 执行命令
+Gui, Add, Button, xp+560 yp-2 w60 gruncommand, 执行命令
 
-gui, add, Text, x10 yp+30 w60 vmyparam1, 查找字符:
-gui, add, ComboBox, xp+80 yp w550 vmyedit1, 
-gui, add, Text, x10 yp+30 w60 vmyparam2, 替换字符:
-gui, add, ComboBox, xp+80 yp w550 vmyedit2,
-Gui, Add, CheckBox, x10 yp+20 vzhuanyi h30, 对参数中的 \r, \n, \t 进行转义
+gui, add, Text, x10 yp+38 w60 vmyparam1, 查找字符:
+gui, add, Edit, xp+80 yp-3 w550 vmyedit1 r3, 
+gui, add, Text, x10 yp+60 w60 vmyparam2, 替换字符:
+gui, add, Edit, xp+80 yp w550 vmyedit2 r3,
+Gui, Add, CheckBox, x10 yp+60 vzhuanyi h30, 对参数中的 \r, \n, \t 进行转义
 
 Gui, Add, ListView, x10 yp+40 w700 h500 vfilelist Checked hwndHLV AltSubmit, 文件名|相对路径|扩展名|大小(KB)|修改时间|替换次数|完整路径
 Gui, Add, Button, xp yp+510 w60 h30 guncheckall, 全不选
@@ -88,6 +88,19 @@ return
 runcommand:
 gui, Submit, NoHide
 LV_Delete()
+
+myedit1 := StrReplace(myedit1, "`n", "`r`n")
+myedit2 := StrReplace(myedit2, "`n", "`r`n")
+if zhuanyi
+{
+	myedit1 := StrReplace(myedit1, "\r", "`r")
+	myedit1 := StrReplace(myedit1, "\n", "`n")
+	myedit1 := StrReplace(myedit1, "\t", "`t")
+	myedit2 := StrReplace(myedit2, "\r", "`r")
+	myedit2 := StrReplace(myedit2, "\n", "`n")
+	myedit2 := StrReplace(myedit2, "\t", "`t")
+}
+
 Loop, Files, %sfolder%\*.*, FR
 {
 	if A_LoopFileSize = 0
@@ -101,21 +114,14 @@ Loop, Files, %sfolder%\*.*, FR
 	Try FileRead, OMatchRead, % A_LoopFileFullPath
 	if (command = "查找替换")
 	{
-		if zhuanyi
-		{
-			myedit1 := StrReplace(myedit1, "\r", "`r")
-			myedit1 := StrReplace(myedit1, "\n", "`n")
-			myedit1 := StrReplace(myedit1, "\t", "`t")
-			myedit2 := StrReplace(myedit2, "\r", "`r")
-			myedit2 := StrReplace(myedit2, "\n", "`n")
-			myedit2 := StrReplace(myedit2, "\t", "`t")
-		}
 		StringReplace, MatchRead, OMatchRead, %myedit1%, %myedit2%, UseErrorLevel
 		repalcecount := ErrorLevel
+		;if instr(OMatchRead, myedit1)
+			;msgbox
 	}
-	if (command = "文首添加一行")
+	else if (command = "文首添加一行")
 		MatchRead := myedit1 "`r`n" OMatchRead
-	if (command = "文首删除一行")
+	else if (command = "文首删除一行")
 	{
 		MatchRead := trim(OMatchRead, " `t`n`r")
 		Loop, parse, MatchRead, `n, `r
@@ -126,9 +132,9 @@ Loop, Files, %sfolder%\*.*, FR
 		StringReplace, MatchRead, MatchRead, %firstline%
 		StringReplace, MatchRead, MatchRead, `r`n
 	}
-	if (command = "文末添加一行")
+	else if (command = "文末添加一行")
 		MatchRead := OMatchRead "`r`n" myedit1
-	if (command = "文末删除一行")
+	else if (command = "文末删除一行")
 	{
 		MatchRead := trim(OMatchRead, " `t`n`r")
 		RegExMatch(MatchRead, "`am)^.*\Z", lastline)
@@ -512,10 +518,10 @@ MCode(ByRef code, hex)
 		NumPut("0x" . SubStr(hex, 2*A_Index-1, 2), code, A_Index-1, "Char")
 }
 
-PathU(sFile) {                     ; PathU v0.90 by SKAN on D35E/D35F @ tiny.cc/pathu 
-Local Q, F := VarSetCapacity(Q,520,0) 
-  DllCall("kernel32\GetFullPathNameW", "WStr",sFile, "UInt",260, "Str",Q, "PtrP",F)
-  DllCall("shell32\PathYetAnotherMakeUniqueName","Str",Q, "Str",Q, "Ptr",0, "Ptr",F)
-Return A_IsUnicode ? Q : StrGet(&Q, "UTF-16")
+PathU(Filename) { ;  PathU v0.91 by SKAN on D35E/D68M @ tiny.cc/pathu
+Local OutFile
+  VarSetCapacity(OutFile, 520)
+  DllCall("Kernel32\GetFullPathNameW", "WStr",Filename, "UInt",260, "Str",OutFile, "Ptr",0)
+  DllCall("Shell32\PathYetAnotherMakeUniqueName", "Str",OutFile, "Str",Outfile, "Ptr",0, "Ptr",0)
+Return A_IsUnicode ? OutFile : StrGet(&OutFile, "UTF-16")
 }
-

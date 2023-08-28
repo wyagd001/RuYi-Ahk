@@ -58,11 +58,10 @@ else
 }
 
 Alnk_text := CF_RegRead("HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer", "link")
-if (Alnk_text = "1e000000")
+if (Alnk_text = "00000000")
+	A_iconSt["带快捷方式字样"] := 1    ; 勾选取消快捷方式字样, 已经设置了不带后缀文字
+else
 	A_iconSt["带快捷方式字样"] := 0
-else if (Alnk_text = "00000000")
-	A_iconSt["带快捷方式字样"] := 1
-
 
 gui, +HwndMyGuiHwnd
 Gui, Add, GroupBox, x10 y10 w470 h140, 快捷方式小箭头图标设置(重启桌面生效)

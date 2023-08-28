@@ -11,8 +11,8 @@
 CandySel := A_Args[1]
 dllfile := CandySel
 Start:
-Gui,66:Destroy
-Gui,66:Default 
+Gui, 66: Destroy
+Gui, 66: Default 
 SetBatchLines, -1
 Gui, Margin, 5, 5
 Gui, color, white
@@ -20,7 +20,7 @@ Gui, font, s8, Tahoma
 Gui, Add, ComboBox, w600 vFile2 -Multi Limit, wmploc.dll|imageres.dll|netshell.dll|SHELL32.dll
 Gui, Add, Button, x+5 h20 gSelect2 +Default vhgo, &Go
 Gui, Add, Button, x+5 h20 gSelectdllFile, ...
-Loop, 500
+Loop, 0
 {
   if a_index = 1
     Gui, add, Pic, xm y+5 w32 h32 icon%a_index% border altsubmit gIcon vIcon%a_index%, %dllfile%

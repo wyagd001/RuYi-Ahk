@@ -47,7 +47,7 @@ Gui, Add, CheckBox, % "xp+10 yp+30 w120 h20 vv3d Checked" A_iconSt["3d"], 3D 对
 Gui, Add, GroupBox, x10 y165 w500 h120, 32位程序打开对话框
 Gui, Add, CheckBox, % "xp+10 yp+30 w120 h20 vv3d_32 Checked" A_iconSt2["3d"], 3D 对象
 
-gui, show, , 此电脑中文件夹图标的显示/隐藏
+gui, show, , 此电脑中文件夹图标的显示/隐藏(保存设置需要管理员权限)
 return
 
 GuiEscape:

@@ -1,5 +1,8 @@
 ﻿;|2.0|2023.07.01|1173
 #SingleInstance force
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\ed14.ico"
+
 CandySel := A_Args[1]
 ; 1173
 Cando_生成二维码:

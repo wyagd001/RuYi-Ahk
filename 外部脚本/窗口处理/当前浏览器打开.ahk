@@ -40,7 +40,7 @@ If Default_Browser
 br := 0
 if InStr(InUse_Browser, Windy_CurWin_ProcName)   ;当前窗口在使用的浏览器列表当中
 {
-	If(Windy_CurWin_ProcName = "chrome.exe" or Windy_CurWin_ProcName = "firefox.exe")
+	If (Windy_CurWin_ProcName = "chrome.exe" or Windy_CurWin_ProcName = "firefox.exe" or Windy_CurWin_ProcName = "360se.exe" or  Windy_CurWin_ProcName = "msedge.exe")
 	{
 			pid := GetCommandLine2(OutPID)
 			run, %pid% "%ATA_filepath%"
@@ -66,7 +66,7 @@ if !br
 		If (errorlevel<>0)    ;  使用的浏览器列表当中的浏览器进程是否存在
 		{
 			NewPID = %ErrorLevel%
-			If(BCtrApp = "chrome.exe" or BCtrApp = "firefox.exe")
+			If (BCtrApp = "chrome.exe" or BCtrApp = "firefox.exe" or BCtrApp = "360se.exe" or BCtrApp = "msedge.exe")
 			{
 				pid := GetCommandLine2(NewPID)
 				;pid := GetCommandLine(NewPID)

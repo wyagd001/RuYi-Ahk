@@ -1,4 +1,6 @@
 ﻿;|2.0|2023.07.01|1003
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\E71D.ico"
 global A_icon := Object("收藏夹", "{323CA680-C24D-4099-B94D-446DD2D7249E}", "库", "{031E4825-7B94-4dc3-B131-E946B44C8DD5}", "家庭组", "{B4FB3F98-C1EA-428d-A78A-D1F5659CBA93}", "网络", "{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}", "OneDrive", "{018D5C66-4533-4307-9B53-224DE2ED1FE6}", "快速访问", "{679f85cb-0220-4080-b29b-5540cc05aab6}")
 global A_iconev := Object("收藏夹", "a0900100", "库", "b080010d", "家庭组", "b084010c", "网络", "b0040064", "OneDrive", "f080004d", "快速访问", "a0100000")
 global A_icondv := Object("收藏夹", "a9400100", "库", "b090010d", "家庭组", "b094010c", "网络", "b0940064", "OneDrive", "f090004d", "快速访问", "a0600000")
