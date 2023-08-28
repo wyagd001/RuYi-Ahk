@@ -20,7 +20,7 @@ Gui, font, s8, Tahoma
 Gui, Add, ComboBox, w600 vFile2 -Multi Limit, wmploc.dll|imageres.dll|netshell.dll|SHELL32.dll
 Gui, Add, Button, x+5 h20 gSelect2 +Default vhgo, &Go
 Gui, Add, Button, x+5 h20 gSelectdllFile, ...
-Loop, 0
+Loop, 500
 {
   if a_index = 1
     Gui, add, Pic, xm y+5 w32 h32 icon%a_index% border altsubmit gIcon vIcon%a_index%, %dllfile%
