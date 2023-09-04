@@ -1,42 +1,73 @@
-﻿;|2.0|2023.07.01|1326
-Windy_CurWin_id := A_Args[1]
-if !Windy_CurWin_id
+﻿;|2.3|2023.08.30|1448,1449
+CandySel := A_Args[1]
+TBT_Obj := GetTaskBarButton(1)
+;CandySel := "menu"
+
+if (CandySel = "menu")
 {
-	DetectHiddenWindows, On
-	WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI
-	Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")
+	for k,v in TBT_Obj
+	{
+		;msgbox % v.title
+		Tmp_T := RegExReplace(v.title, "\s-\s\d .*$")
+		menu, TBW, Add, % Tmp_T, qiehuan
+	}
+	menu, TBW, Show
 }
-WinGetTitle, Windy_CurWin_Title, Ahk_ID %Windy_CurWin_id% 
+else
+	activeWin(CandySel)
+return
 
-DetectHiddenWindows, Off
-
-for k, title in GetTaskBarButton()
+activeWin(num)
 {
-	Tmp_T := RegExReplace(title, "\s-\s\d .*$")
-	if (Tmp_T != Windy_CurWin_Title)
-		WinClose, % Tmp_T
+	global TBT_Obj
+	Tmp_T := RegExReplace(TBT_Obj[num].title, "\s-\s\d .*$")
+	if WinExist(Tmp_T)
+		WinActivate, % Tmp_T
+	;ToolTip % TBT_Obj[num].title "-" Tmp_T
+	;sleep 5000
+	Return
 }
-exitapp
 
-; 任务栏设置中 合并任务栏按钮 选项不能选择 始终合并按钮, 因为这会导致无法获取到窗口标题信息
+qiehuan:
+WinActivate, % A_ThisMenuItem
+Return
+
+; 任务栏设置中不能选择  始终合并按钮
 GetTaskBarButton(running := 1, TBBindex := 1)
 {
 	ControlGet, hwnd, hwnd,, MSTaskListWClass%TBBindex%, ahk_class Shell_TrayWnd
 	accTaskBar := Acc_ObjectFromWindow(hwnd)
-	TBT := []
+	TBT := {}
+	T_index := 0
+	;msgbox % Acc_Children(accTaskBar).count()
 	For Each, Child In Acc_Children(accTaskBar)
 	{
 		Tmp_T := accTaskBar.accName(child)
+		;msgbox % Each " - " Child
 		if !Tmp_T
 			continue
-		If running && ((tmp:=Acc_Location(accTaskBar, child).w) > 50)
+		;If running && ((tmp:=Acc_Location(accTaskBar, child).w) > 50)
+		If running && InStr(Tmp_T, "个运行窗口")   ; 会得到一个多余的项目  360安全浏览器 - 1 个运行窗口
 		{
-			; 7-161 - 有弹出菜单 - 哔哩哔哩 (゜-゜)つロ 干杯~-bilibili - 360安全浏览器 14.1 - 1 个运行窗口
-			;msgbox % child " - " tmp " - " Acc_State(accTaskBar, child) " - " accTaskBar.accName(child)
-			TBT.Push(Tmp_T)
+			; 7 - 有弹出菜单 - 哔哩哔哩 (゜-゜)つロ 干杯~-bilibili - 360安全浏览器 14.1 - 1 个运行窗口
+			;msgbox % child " - " Acc_State(accTaskBar, child) " - " accTaskBar.accName(child)
+			if !InStr(Acc_StateEx(accTaskBar, child), "不可见")
+			{
+				T_index ++
+				TBT[T_index] := {}
+				TBT[T_index]["x"] := Acc_Location(accTaskBar, child).x
+				TBT[T_index]["y"] := Acc_Location(accTaskBar, child).y
+				TBT[T_index]["title"] := Tmp_T
+			}
 		}
-		If !running
-			TBT.Push(Tmp_T)
+		If !running  && (tmp:=Acc_Location(accTaskBar, child).w) > 20
+		{
+			T_index ++
+			TBT[T_index] := {}
+			TBT[T_index]["x"] := Acc_Location(accTaskBar, child).x
+			TBT[T_index]["y"] := Acc_Location(accTaskBar, child).y
+			TBT[T_index]["title"] := Tmp_T
+		}
 	}
 	return TBT
 }
@@ -64,6 +95,18 @@ Acc_GetStateText(nState)
 	Return	sState
 }
 
+Acc_GetStateTextEx(nState) {
+	static states := [ 0x0,0x1,0x10,0x100,0x10000,0x100000,0x1000000,0x2,0x20,0x200,0x2000
+	                 , 0x20000,0x200000,0x2000000,0x20000000,0x4,0x40,0x400,0x4000,0x40000
+	                 , 0x400000,0x40000000,0x8,0x80,0x800,0x8000,0x80000,0x800000 ]
+	for i, n in states
+	{
+		if (nState & n)
+			out .= Acc_GetStateText(n) ","
+	}
+	return RTrim(out, ",")
+}
+
 Acc_Children(Acc) {
 	if ComObjType(Acc,"Name") != "IAccessible"
 		ErrorLevel := "Invalid IAccessible Object"
@@ -71,10 +114,7 @@ Acc_Children(Acc) {
 		Acc_Init(), cChildren:=Acc.accChildCount, Children:=[]
 		if DllCall("oleacc\AccessibleChildren", "Ptr",ComObjValue(Acc), "Int",0, "Int",cChildren, "Ptr",VarSetCapacity(varChildren,cChildren*(8+2*A_PtrSize),0)*0+&varChildren, "Int*",cChildren)=0 {
 			Loop %cChildren%
-			{
 				i:=(A_Index-1)*(A_PtrSize*2+8)+8, child:=NumGet(varChildren,i), Children.Insert(NumGet(varChildren,i-8)=9?Acc_Query(child):child), NumGet(varChildren,i-8)=9?ObjRelease(child):
-				;MsgBox % NumGet(varChildren,i-8)
-			}
 			return Children.MaxIndex()?Children:
 		} else
 			ErrorLevel := "AccessibleChildren DllCall Failed"
@@ -93,6 +133,10 @@ Acc_Location(Acc, ChildId=0, byref Position="") { ; adapted from Sean's code
 
 Acc_State(Acc, ChildId=0) {
 	try return ComObjType(Acc,"Name")="IAccessible"?Acc_GetStateText(Acc.accState(ChildId)):"invalid object"
+}
+
+Acc_StateEx(Acc, ChildId=0) {
+	try return ComObjType(Acc,"Name")="IAccessible"?Acc_GetStateTextEx(Acc.accState(ChildId)):"invalid object"
 }
 
 Acc_ObjectFromWindow(hWnd, idObject = -4)

@@ -1,37 +1,39 @@
-﻿q::
+﻿;|2.3|2023.08.29|1442,1443
+CandySel := A_Args[1]
+param := A_Args[2]
+if !param
+	param := "文件夹"
+if (param="文件夹")
+	gosub 新建文件夹
+else
+	gosub 新建文本文档
 return
 
 新建文件夹:
-IfWinActive, ahk_group Prew_Group
+if WinActive("ahk_class TTOTAL_CMD")
 {
-	if WinActive("ahk_class TTOTAL_CMD")
-	{
-		ActPath := TC_CurrTPath()
-		TextTranslated := TranslateMUI("shell32.dll", 16888)  ; "新建文件夹"
-		newFolder := PathU(ActPath "\" TextTranslated)
-		FileCreateDir % newFolder
-		TC_SendMsg(540)
-	}
-	Else If !IsRenaming()   ; win 7 以上系统自带的新建文件夹的快捷键
-		Send ^+n
+	ActPath := TC_CurrTPath()
+	TextTranslated := TranslateMUI("shell32.dll", 16888)  ; "新建文件夹"
+	newFolder := PathU(ActPath "\" TextTranslated)
+	FileCreateDir % newFolder
+	TC_SendMsg(540)
 }
+Else If !IsRenaming()   ; win 7 以上系统自带的新建文件夹的快捷键
+	Send ^+n
 Return
 
 新建文本文档:
-IfWinActive, ahk_group Prew_Group
+if WinActive("ahk_class TTOTAL_CMD")
 {
-	if WinActive("ahk_class TTOTAL_CMD")
-	{
-		ActPath := TC_CurrTPath()
-		TextTranslated := TranslateMUI("shell32.dll", 16888)  ; "新建文件夹"
-		newFolder := PathU(ActPath "\" TextTranslated)
-		FileCreateDir % newFolder
-		TC_SendMsg(540)
-		Return
-	}
-	if !IsRenaming()
-		CreateNewTextFile()
+	ActPath := TC_CurrTPath()
+	TextTranslated := TranslateMUI("notepad.exe",470)  ; "新建文本文档"
+	newTextFile := PathU(ActPath "\" TextTranslated ".txt")
+	FileAppend, , %newTextFile%, UTF-8
+	TC_SendMsg(540)
+	Return
 }
+if !IsRenaming()
+	CreateNewTextFile(CandySel)
 return
 
 ; Explorer Windows Manipulations - Sean
@@ -82,10 +84,8 @@ IsRenaming()
 		If(strStartsWith(focussed, "Edit1"))
 		{
 			;figure out If the the edit control is inside the DirectUIHWND2 or SysListView321
-			If(x=1 && Vista7) ;New Dialogs
+			If(x=1) ;New Dialogs
 				ControlGetPos , X, Y, Width, Height, DirectUIHWND2, A
-			Else ;Old Dialogs
-				ControlGetPos , X, Y, Width, Height, SysListView321, A
 			ControlGetPos , X1, Y1, Width1, Height1, %focussed%, A
 			If(IsInArea(X1, Y1, X, Y, Width, Height)&&IsInArea(X1+Width1, Y1, X, Y, Width, Height)&&IsInArea(X1, Y1+Height1, X, Y, Width, Height)&&IsInArea(X1+Width1, Y1+Height1, X, Y, Width, Height))
 				Return true
@@ -123,7 +123,7 @@ IsDialog(window=0)
 	WinGetClass, wc, %window%
 	If(wc = "#32770")
 	{
-		;Check for new FileOpen dialog
+		; Check for new FileOpen dialog  新式文件打开对话课
 		ControlGet, hwnd, Hwnd, , DirectUIHWND3, %window%
 		If(hwnd)
 		{
@@ -147,23 +147,23 @@ IsDialog(window=0)
 				}
 			}
 		}
-		;Check for old FileOpen dialog
+		; Check for old FileOpen dialog  
 		If(!result)
 		{
-			ControlGet, hwnd, Hwnd, , ToolbarWindow321, %window%          ;工具栏
+			ControlGet, hwnd, Hwnd, , ToolbarWindow321, %window%          ; 工具栏
 			If(hwnd)
 			{
-				ControlGet, hwnd, Hwnd, , SysListView321, %window%        ;文件列表
+				ControlGet, hwnd, Hwnd, , SysListView321, %window%        ; 文件列表
 				If(hwnd)
 				{
-					ControlGet, hwnd, Hwnd, , ComboBox3, %window%         ;文件类型下拉选择框
+					ControlGet, hwnd, Hwnd, , ComboBox3, %window%         ; 文件类型下拉选择框
 					If(hwnd)
 					{
-						ControlGet, hwnd, Hwnd, , Button3, %window%       ;取消按钮
+						ControlGet, hwnd, Hwnd, , Button3, %window%       ; 取消按钮
 						If(hwnd)
 						{
-							;ControlGet, hwnd, Hwnd , , SysHeader321 , %window%    ;详细视图的列标题
-							ControlGet, hwnd, Hwnd, , ToolBarWindow322, %window%  ;左侧导航栏
+							;ControlGet, hwnd, Hwnd , , SysHeader321 , %window%    ; 详细视图的列标题
+							ControlGet, hwnd, Hwnd, , ToolBarWindow322, %window%  ; 左侧导航栏
 							If(hwnd)
 								result := 2
 						}
@@ -320,22 +320,19 @@ SetFocusToFileView()
 	Return
 }
 
-CreateNewTextFile(CurrentFolder)
+CreateNewTextFile(CurrentFolder:="")
 {
 	; This is done manually, by creating a text file with the translated name, which is then focussed
 	SetFocusToFileView()
-	TextTranslated := TranslateMUI("notepad.exe",470) ; "New Textfile"
+	TextTranslated := TranslateMUI("notepad.exe", 470) ; "New Textfile"
 	if (CurrentFolder = "")
+		CurrentFolder := GetCurrentFolder()
 		CurrentFolder := GetCurrentFolder()
 	If (CurrentFolder = 0)
 		Return
-	Testpath := CurrentFolder "\" TextTranslated "." txt
-	i:=1 ;Find free filename
-	while FileExist(TestPath)
-	{
-		i++
-		Testpath:=CurrentFolder "\" TextTranslated " (" i ")." txt
-	}
+	Testpath := CurrentFolder "\" TextTranslated ".txt"
+	Testpath := PathU(Testpath)
+	;msgbox % Testpath
 	FileAppend,, %TestPath%, UTF-8	;Create file and then select it and rename it
 	If ErrorLevel
 	{
@@ -343,9 +340,9 @@ CreateNewTextFile(CurrentFolder)
 	Return
 	}
 	RefreshExplorer()
-	Sleep 500
+	Sleep 200
 	SelectFiles(TestPath)
-	Sleep 50
+	Sleep 100
 	Send {F2}
 	Return
 }
@@ -354,24 +351,28 @@ GetCurrentFolder()
 {
 	global newfolder
 	newfolder =
-	If WinActive("ahk_group ccc")
+
+	isdg := IsDialog()
+	If (isdg = 0)
+		Return ShellFolder(, 1)
+	Else If (isdg = 1) ; No Support for old dialogs for now
 	{
-		isdg := IsDialog()
-		If (isdg = 0)
-			Return ShellFolder(, 1)
-		Else If (isdg = 1) ; No Support for old dialogs for now
+		loop 5
 		{
-			ControlGetText, text, ToolBarWindow322, A
+			ControlGetText, text, ToolBarWindow32%A_index%, A
 			dgpath := SubStr(text, InStr(text, " "))
 			dgpath = %dgpath%
-			Return dgpath
+			if instr(dgpath, ":\")
+				break
 		}
-		Else If (isdg = 2)
-		{
-			newfolder = types2
-			Return 0
-		}
+		Return dgpath
 	}
+	Else If (isdg = 2)
+	{
+		newfolder = types2
+		Return 0
+	}
+
 	Return 0
 }
 

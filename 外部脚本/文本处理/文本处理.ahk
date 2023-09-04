@@ -77,7 +77,7 @@ Receive_WM_COPYDATA(wParam, lParam)
 }
 
 延时加载界面:
-GuiControl,, comm, % "查找替换`n`n高亮查找`n提取查找字符所在行`n移除查找字符所在行`n单行正则提取`n单行正则替换`n提取行中内容`nMatch测试"
+GuiControl,, comm, % "查找替换`n`n查找并高亮`n提取查找字符所在行`n移除查找字符所在行`n单行正则提取`n单行正则替换`n提取行中内容`nMatch测试"
  . "`n行首尾添加字符`n行首尾删除字符`n行首序号处理`n按数量提取行首尾字符`n按数量删除行首尾字符`n按数量分割单行`n整体按分隔符提取"
  . "`n单行按分隔符提取`n按条件提取删除行`n行倒序排列`n行字顺序颠倒`n字符串反转`n竖排文字`n行排序"
  . "`n字数统计`n查看中文所属字集`n左右同时处理`nBase64加密`nBase64解密`nUnicode码转字符`nURL编码与解码`nHtml转纯文本"
@@ -202,7 +202,7 @@ else if (comm = "Match测试")
 	GuiControl,, myedit2, `n1`n`n
 	GuiControl,, myedit3, 5
 }
-else if (comm = "高亮查找")
+else if (comm = "查找并高亮")
 {
 	commmode("查找的字符串:",,, "enable")
 }
@@ -650,7 +650,7 @@ Loop, Parse, oldtxt, `r, `n
 t2.SetText(newStr)
 return
 
-高亮查找:
+查找并高亮:
 if !myedit1
 	return
 oldtxt := t1.GetText()

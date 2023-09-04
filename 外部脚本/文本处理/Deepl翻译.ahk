@@ -10,14 +10,14 @@ if !CandySel
 }
 ;MsgBox % CandySel
 fyText := Deepl(CandySel)
-GuiText(fyText, "Deepl 翻译", CandySel, "Deepl")
+GuiText2(fyText, "Deepl 翻译", CandySel, "Deepl")
 return
 
-GuiText(Gtext2, Title:="", Gtext1:="", Label:="", w:=300, l:=20)
+GuiText2(Gtext2, Title:="", Gtext1:="", Label:="", w:=300, l:=20)
 {
 	global myedit1, myedit2, TextGuiHwnd
-	Gui,GuiText: Destroy
-	Gui,GuiText: Default
+	Gui,GuiText2: Destroy
+	Gui,GuiText2: Default
 	Gui, +HwndTextGuiHwnd
 	if Gtext1
 	{
@@ -41,9 +41,9 @@ GuiText(Gtext2, Title:="", Gtext1:="", Label:="", w:=300, l:=20)
 	gui, Show, AutoSize, % Title
 	return
 
-	GuiTextGuiClose:
-	GuiTextGuiescape:
-	Gui, GuiText: Destroy
+	GuiText2GuiClose:
+	GuiText2Guiescape:
+	Gui, GuiText2: Destroy
 	ExitApp
 	Return
 }

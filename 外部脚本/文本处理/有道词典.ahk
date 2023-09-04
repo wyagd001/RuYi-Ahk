@@ -8,12 +8,12 @@ CandySel := A_Args[1]
 	If !Youdao_keyword                          ;如果粘贴板里面没有内容，则判断是否有窗口定义
 		Return
 	fyText := YouDaoFanyi(Youdao_keyword)
-GuiText(fyText, "有道翻译", Youdao_keyword, "Youdao")
+GuiText2(fyText, "有道翻译", Youdao_keyword, "Youdao")
 gosub soundpaly
 return
 
 Youdao:
-Gui, GuiText: Submit, NoHide
+Gui, GuiText2: Submit, NoHide
 if myedit1
 {
 	Youdao_keyword := myedit1
@@ -67,18 +67,17 @@ EncodeDecodeURI(str, encode := true, component := true)
 	Return JS[ (encode ? "en" : "de") . "codeURI" . (component ? "Component" : "") ](str)
 }
 
-GuiText(Gtext2, Title:="", Gtext1:="", Label:="", w:=300, l:=20)
+GuiText2(Gtext2, Title:="", Gtext1:="", Label:="", w:=300, l:=20)
 {
 	global myedit1, myedit2, TextGuiHwnd
-	Gui,GuiText: Destroy
-	Gui,GuiText: Default
+	Gui,GuiText2: Destroy
+	Gui,GuiText2: Default
 	Gui, +HwndTextGuiHwnd
 	if Gtext1
 	{
 		Gui, Add, Edit, w%w% r%l% -WantReturn vmyedit1
 		if Label
 		{
-			;MsgBox % "Default xp+" w+1 " w100 h1 g" Label
 			Gui, Add, Button, % "Default xp+" w+1 " w100 h1 g" Label, 翻译
 			Gui, Add, Edit, % "xp+10 w" w " r" l " Multi readonly vmyedit2"
 		}
@@ -95,9 +94,9 @@ GuiText(Gtext2, Title:="", Gtext1:="", Label:="", w:=300, l:=20)
 	gui, Show, AutoSize, % Title
 	return
 
-	GuiTextGuiClose:
-	GuiTextGuiescape:
-	Gui, GuiText: Destroy
+	GuiText2GuiClose:
+	GuiText2Guiescape:
+	Gui, GuiText2: Destroy
 	ExitApp
 	Return
 }

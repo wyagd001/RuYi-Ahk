@@ -7,12 +7,12 @@ Bing词典网络翻译:
 	If !Bing_keyword                          ;如果粘贴板里面没有内容，则判断是否有窗口定义
 		Return
 fyText := BingFanyi(Bing_keyword)
-GuiText(fyText, "Bing 翻译", Bing_keyword, "Bing")
+GuiText2(fyText, "Bing 翻译", Bing_keyword, "Bing")
 gosub soundpaly
 return
 
 Bing:
-Gui, GuiText: Submit, NoHide
+Gui, GuiText2: Submit, NoHide
 if myedit1
 {
 	Bing_keyword := myedit1
@@ -57,11 +57,11 @@ EncodeDecodeURI(str, encode := true, component := true)
 	Return JS[ (encode ? "en" : "de") . "codeURI" . (component ? "Component" : "") ](str)
 }
 
-GuiText(Gtext2, Title:="", Gtext1:="", Label:="", w:=300, l:=20)
+GuiText2(Gtext2, Title:="", Gtext1:="", Label:="", w:=300, l:=20)
 {
 	global myedit1, myedit2, TextGuiHwnd
-	Gui,GuiText: Destroy
-	Gui,GuiText: Default
+	Gui,GuiText2: Destroy
+	Gui,GuiText2: Default
 	Gui, +HwndTextGuiHwnd
 	if Gtext1
 	{
@@ -85,9 +85,9 @@ GuiText(Gtext2, Title:="", Gtext1:="", Label:="", w:=300, l:=20)
 	gui, Show, AutoSize, % Title
 	return
 
-	GuiTextGuiClose:
-	GuiTextGuiescape:
-	Gui, GuiText: Destroy
+	GuiText2GuiClose:
+	GuiText2Guiescape:
+	Gui, GuiText2: Destroy
 	ExitApp
 	Return
 }

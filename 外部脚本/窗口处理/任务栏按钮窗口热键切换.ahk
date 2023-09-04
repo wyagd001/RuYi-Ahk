@@ -1,35 +1,82 @@
-﻿;|2.0|2023.07.01|1xxx
-;Windy_CurWin_id := A_Args[1]
-Windy_CurWin_id := 0
-TBT_Arr := GetTaskBarButton(1)
-if (Windy_CurWin_id = 0)
+﻿;|2.3|2023.08.30|1446,1447
+#SingleInstance Force
+CandySel := A_Args[1]
+return
+
+$LWin::
+TBT_Obj := GetTaskBarButton(CandySel)
+if (LastCount = TBT_Obj.Count())
 {
-	for k,title in TBT_Arr
-	{
-		Tmp_T := RegExReplace(title, "\s-\s\d .*$")
-		menu, TBW, Add, % Tmp_T, qiehuan
-	}
-	menu, TBW, Show
+	sleep 300
+	return
+}
+gui,1: default
+gui, +DPIScale
+gui, Destroy
+gui, +owner
+Gui, Margin, 0, 0
+gui, Font, s20 CRed, Consolas
+Gui, Color, FFFFFF
+Gui, +E0x20  ; 使窗口透明,  使鼠标穿透
+gui, -Border
+
+loop % TBT_Obj.Count()
+{
+	;msgbox % TBT_Obj[A_Index]["x"] "-" TBT_Obj[A_Index]["y"]
+	gui, add, text, % "x" TBT_Obj[A_Index]["x"] " y2", %A_index%
+}
+
+Gui, +LastFound  -Caption +ToolWindow
+gui, show, w1440 h50 x0 y850, 透明窗口
+WinTrans := 50
+WinSet, Transparent, %WinTrans%
+WinSet, AlwaysOnTop, On, 透明窗口
+LastCount := TBT_Obj.Count()
+return
+
+$LWin Up::
+gui, Destroy
+LastCount := 0
+if !hasactive
+{
+	send {LWin}
 }
 else
-{
-	Tmp_T := RegExReplace(TBT_Arr[Windy_CurWin_id], "\s-\s\d .*$")
-	WinActivate, % Tmp_T
-	;MsgBox % Tmp_T
-}
+	hasactive := 0
 Return
 
-qiehuan:
-WinActivate, % A_ThisMenuItem
-;MsgBox % A_ThisMenuItem
-Return
+#IfWinExist 透明窗口 ahk_class AutoHotkeyGUI  
+1::activeWin(1)
+2::activeWin(2)
+3::activeWin(3)
+4::activeWin(4)
+5::activeWin(5)
+6::activeWin(6)
+7::activeWin(7)
+8::activeWin(8)
+9::activeWin(9)
+#If
+
+activeWin(num)
+{
+	global TBT_Obj, hasactive
+	Tmp_T := RegExReplace(TBT_Obj[num].title, "\s-\s\d .*$")
+	if WinExist(Tmp_T)
+		WinActivate, % Tmp_T
+	else
+		Send #%num%
+	hasactive := 1
+	;ToolTip % TBT_Obj[num].title "-" num
+	Return
+}
 
 ; 任务栏设置中不能选择  始终合并按钮
 GetTaskBarButton(running := 1, TBBindex := 1)
 {
 	ControlGet, hwnd, hwnd,, MSTaskListWClass%TBBindex%, ahk_class Shell_TrayWnd
 	accTaskBar := Acc_ObjectFromWindow(hwnd)
-	TBT := []
+	TBT := {}
+	T_index := 0
 	For Each, Child In Acc_Children(accTaskBar)
 	{
 		Tmp_T := accTaskBar.accName(child)
@@ -41,14 +88,25 @@ GetTaskBarButton(running := 1, TBBindex := 1)
 			; 7 - 有弹出菜单 - 哔哩哔哩 (゜-゜)つロ 干杯~-bilibili - 360安全浏览器 14.1 - 1 个运行窗口
 			;msgbox % child " - " Acc_State(accTaskBar, child) " - " accTaskBar.accName(child)
 			if !InStr(Acc_State2(accTaskBar, child), "不可见")
-				TBT.Push(Tmp_T)
+			{
+				T_index ++
+				TBT[T_index] := {}
+				TBT[T_index]["x"] := Acc_Location(accTaskBar, child).x
+				TBT[T_index]["y"] := Acc_Location(accTaskBar, child).y
+				TBT[T_index]["title"] := Tmp_T
+			}
 		}
-		If !running
-			TBT.Push(Tmp_T)
+		If !running  && (tmp:=Acc_Location(accTaskBar, child).w) > 20
+		{
+			T_index ++
+			TBT[T_index] := {}
+			TBT[T_index]["x"] := Acc_Location(accTaskBar, child).x
+			TBT[T_index]["y"] := Acc_Location(accTaskBar, child).y
+			TBT[T_index]["title"] := Tmp_T
+		}
 	}
 	return TBT
 }
-
 
 Acc_Init() {
 	Static	h

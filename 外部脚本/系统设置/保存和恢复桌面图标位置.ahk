@@ -5,6 +5,8 @@ if !CandySel
 {
 	mydesktopiconpos := DeskIcons()
 	FileDelete, % A_ScriptDir "\..\..\临时目录\mdip\" SubStr(A_Now, 1, 8) ".mdip"
+	if !FileExist(A_ScriptDir "\..\..\临时目录\mdip")
+		FileCreateDir, % A_ScriptDir "\..\..\临时目录\mdip"
 	FileAppend, %mydesktopiconpos%, % A_ScriptDir "\..\..\临时目录\mdip\" SubStr(A_Now, 1, 8) ".mdip", UTF-16
 	Var := A_Now
 	EnvAdd, Var, -7, days
