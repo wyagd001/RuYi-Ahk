@@ -1,7 +1,7 @@
-﻿; Run this script to download and install an additional AutoHotkey version.
+; Run this script to download and install an additional AutoHotkey version.
 ; Specify the version as a single command line parameter.  If omitted or
 ; incomplete like "1.1" or "2.0", the latest version will be downloaded.
-#requires AutoHotkey v2.0-beta.6
+#requires AutoHotkey v2.0
 
 #include install.ahk
 
@@ -33,7 +33,7 @@ InstallAutoHotkey(version) {
         if req.status != 200
             throw Error(req.status ' - ' req.statusText, -1)
         currentVersion := req.responseText
-        if VerCompare(currentVersion, baseVersion) < 0 || VerCompare(currentVersion, Round(baseVersion + 1)) >= 0
+        if !(currentVersion ~= '^\Q' baseVersion '\E\b')
             abort "An error occurred while trying to identify the latest available version. The downloaded version.txt was invalid.", currentVersion
         version := currentVersion
     }

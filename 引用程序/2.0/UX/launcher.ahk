@@ -62,7 +62,7 @@ Main() {
 GetLaunchParameters(ScriptPath, interactive:=false) {
     code := FileRead(ScriptPath, 'UTF-8')
     require := prefer := rule := exe := ""
-    if RegExMatch(code, 'im)^[ `t]*#Requires[ `t]+AutoHotkey[ `t]+([^;`r`n]*)(?:[ `t]*;[ `t]*prefer[ `t]+([^;`r`n\.]+))?', &m) {
+    if RegExMatch(code, 'im)^[ `t]*#Requires[ `t]+AutoHotkey[ `t]+([^;`r`n]*?)[ `t]*(?:;[ `t]*prefer[ `t]+([^;`r`n\.]+))?(?:$|;)', &m) {
         trace "![Launcher] " m.0
         require := RegExReplace(m.1, '[^\s,]\K\s+(?!$)', ",")
         prefer := RegExReplace(m.2, '[^\s,]\K\s+(?!$)', ",")

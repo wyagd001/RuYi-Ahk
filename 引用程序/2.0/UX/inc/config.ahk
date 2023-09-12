@@ -1,4 +1,4 @@
-﻿
+
 ; CONFIG_FILE_PATH := A_MyDocuments "\AutoHotkey\AutoHotkey.ini"
 CONFIG_KEY := 'HKCU\Software\AutoHotkey'
 

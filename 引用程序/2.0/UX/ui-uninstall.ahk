@@ -1,7 +1,7 @@
-﻿; This script shows a GUI for uninstalling AutoHotkey or specific versions.
+; This script shows a GUI for uninstalling AutoHotkey or specific versions.
 #include inc\bounce-v1.ahk
 /* v1 stops here */
-#requires AutoHotkey v2.0-beta.6
+#requires AutoHotkey v2.0
 
 #include inc\ui-base.ahk
 #include install.ahk

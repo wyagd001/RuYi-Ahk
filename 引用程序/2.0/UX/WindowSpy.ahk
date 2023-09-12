@@ -1,8 +1,8 @@
-﻿; 
+; 
 ; Window Spy for AHKv2
 ;
 
-#Requires AutoHotkey v2.0-beta
+#Requires AutoHotkey v2.0
 
 #NoTrayIcon
 #SingleInstance Ignore
@@ -16,9 +16,14 @@ WinSpyGui()
 WinSpyGui() {
     Global oGui
     
+    try TraySetIcon "inc\spy.ico"
+    DllCall("shell32\SetCurrentProcessExplicitAppUserModelID", "wstr", "AutoHotkey.WindowSpy")
+    
     oGui := Gui("AlwaysOnTop Resize MinSize +DPIScale","Window Spy for AHKv2")
     oGui.OnEvent("Close",WinSpyClose)
     oGui.OnEvent("Size",WinSpySize)
+    
+    oGui.SetFont('s9', "Segoe UI")
     
     oGui.Add("Text",,"Window Title, Class and Process:")
     oGui.Add("Checkbox","yp xp+200 w120 Right vCtrl_FollowMouse","Follow Mouse").Value := 1

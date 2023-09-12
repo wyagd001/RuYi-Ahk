@@ -1,8 +1,8 @@
-﻿; Dash: AutoHotkey's "main menu".
+; Dash: AutoHotkey's "main menu".
 ; Run the script to show the GUI.
 #include inc\bounce-v1.ahk
 /* v1 stops here */
-#requires AutoHotkey v2.0-beta.3
+#requires AutoHotkey v2.0
 
 #NoTrayIcon
 #SingleInstance Force
@@ -12,11 +12,13 @@
 #include ui-editor.ahk
 #include ui-newscript.ahk
 
+DashRegKey := 'HKCU\Software\AutoHotkey\Dash'
+
 class AutoHotkeyDashGui extends AutoHotkeyUxGui {
     __new() {
-        super.__new("AutoHotkey")
+        super.__new("AutoHotkey Dash")
         
-        lv := this.AddListMenu('vLV LV0x40 w300', ["Name", "Desc"])
+        lv := this.AddListMenu('vLV LV0x40 w250', ["Name", "Desc"])
         lv.OnEvent("Click", "ItemClicked")
         lv.OnEvent("ItemFocus", "ItemFocused")
         lv.OnNotify(-155, "KeyPressed")
@@ -35,7 +37,7 @@ class AutoHotkeyDashGui extends AutoHotkeyUxGui {
             , "Compile", "Open Ahk2Exe - convert .ahk to .exe")
         lv.Add("Icon" addIcon("imageres.dll", -99)
             , "Help files (F1)")
-        lv.Add("Icon" addIcon("shell32.dll", -281)
+        lv.Add("Icon" addIcon(A_ScriptDir '\inc\spy.ico', 1)
             , "Window spy")
         lv.Add("Icon" addIcon("imageres.dll", -116)
             , "Launch settings", "Configure how .ahk files are opened")
@@ -47,9 +49,45 @@ class AutoHotkeyDashGui extends AutoHotkeyUxGui {
         ; lv.Add(, "Downloads", "Get related tools")
         
         lv.AutoSize()
-        lv.GetPos(,, &w, &h)
-        this.Show("Hide w" (w + this.MarginX*2) " h" (h + this.MarginY*2))
-        ; this.AddPicture("Icon-114 w16 h16 y" 18+h, "imageres.dll")
+        lv.GetPos(,,, &h)
+        
+        if !RegRead(DashRegKey, 'SuppressIntro', false) {
+            this.SetFont('s12')
+            this.AddText('yp x+m', "Welcome!")
+            this.SetFont('s9')
+            this.AddText('xp', "This is the Dash. It provides access to tools, settings and help files.")
+            this.AddText('xp', "To learn how to use AutoHotkey, refer to:")
+            this.AddLink('xp', "
+            (
+            `s   • <a href="Program.htm">Using the Program</a>
+                • <a href="howto/WriteHotkeys.htm">How to Write Hotkeys</a>
+                • <a href="howto/SendKeys.htm">How to Send Keystrokes</a>
+                • <a href="howto/RunPrograms.htm">How to Run Programs</a>
+                • <a href="howto/ManageWindows.htm">How to Manage Windows</a>
+                • <a href="index.htm#Quick_Reference">Quick Reference</a>
+            )").OnEvent('Click', 'LinkClicked')
+            
+            checkBox := this.AddCheckbox('Checked', "Show this info next time")
+            checkBox.GetPos(,,, &hc)
+            checkBox.Move(, h - hc)
+            checkBox.OnEvent('Click', 'SetIntroPref')
+        }
+        
+        this.Show("Hide h" (h + this.MarginY*2))
+    }
+    
+    LinkClicked(ctrl, id, href) {
+        if FileExist(chm := ROOT_DIR '\v2\AutoHotkey.chm')
+            Run 'hh.exe "ms-its:' chm '::docs/' href '"'
+        else
+            Run 'https://www.autohotkey.com/docs/v2/' href
+    }
+    
+    SetIntroPref(checkBox, *) {
+        if checkBox.Value { ; Show intro
+            try RegDelete(DashRegKey, 'SuppressIntro')
+        } else
+            RegWrite(true, 'REG_DWORD', DashRegKey, 'SuppressIntro')
     }
     
     KeyPressed(lv, lParam) {
@@ -101,37 +139,27 @@ class AutoHotkeyDashGui extends AutoHotkeyUxGui {
 }
 
 ShowHelpFile() {
-    main := Map(), main.CaseSense := "off"
+    SetWorkingDir ROOT_DIR
+    main := Map(), sub := Map()
     other := Map(), other.CaseSense := "off"
-    Loop Files ROOT_DIR "\*.chm", "FR" {
+    hashes := ReadHashes('UX\installed-files.csv', item => item.Path ~= 'i)\.chm$')
+    Loop Files "*.chm", "FR" {
         SplitPath A_LoopFilePath,, &dir,, &name
-        if SubStr(dir, -3) = '\v2' && (DllCall('GetFileAttributes', 'str', dir) & 0x400)
-            continue ; Skip symbolic link
-        dir := SubStr(dir, StrLen(ROOT_DIR) + 2)
-        if dir ~= '^\d\.\d'
-            dir := "v" dir
         if name = "AutoHotkey" {
-            if dir = "" { ; Guess version
-                dir := "Unknown version"
-                Loop Files ROOT_DIR "\AutoHotkey*.exe" {
-                    try {
-                        info := GetExeInfo(A_LoopFilePath)
-                        if (info.Description ~= '^AutoHotkey(?! Launcher)') {
-                            dir := "v" info.Version
-                            break
-                        }
-                    }
-                }
-            }
-            main[A_LoopFilePath] := dir
+            if !(f := hashes.Get(A_LoopFilePath, false))
+                continue
+            v := GetMajor(f.Version)
+            if !(cur := main.Get(v, false)) || VerCompare(cur.Version, f.Version) < 0
+                main[v] := f
+            sub[f.Version] := f
         }
         else
-            other[A_LoopFilePath] := name (dir != "" ? " (" dir ")" : "")
+            other[A_LoopFilePath] := name (dir != "" && name != dir ? " (" dir ")" : "")
     }
     
-    if main.Count = 1 && other.Count = 0 {
-        for f in main { ; Don't bother showing online options in this case.
-            Run f
+    if sub.Count = 1 && other.Count = 0 {
+        for , f in main { ; Don't bother showing online options in this case.
+            Run f.Path
             return
         }   
     }
@@ -141,14 +169,22 @@ ShowHelpFile() {
         m.Add "Offline help", (*) => 0
         m.Disable "1&"
     }
-    for f, t in main
-        m.Add RegExReplace(t, 'v(?=\d)', "v&"), openIt.Bind(f)
+    for , f in main {
+        m.Add "v&" f.Version, openIt.Bind(f.Path)
+        sub.Delete(f.Version)
+    }
+    if sub.Count {
+        subm := Menu()
+        for , f in sub
+            subm.Insert "1&", "v" f.Version, openIt.Bind(f.Path)
+        m.Add "More", subm
+    }
     
     m.Add "Online help", (*) => 0
     m.Disable "Online help"
     prefix := main.Count ? "v" : "v&"
-    m.Add prefix "1.1", (*) => Run("https://autohotkey.com/docs/")
-    m.Add prefix "2.0", (*) => Run("https://lexikos.github.io/v2/docs/AutoHotkey.htm")
+    m.Add prefix "1.1", (*) => Run("https://www.autohotkey.com/docs/v1/")
+    m.Add prefix "2.0", (*) => Run("https://www.autohotkey.com/docs/v2/")
     
     if other.Count {
         m.Add "Other files", (*) => 0

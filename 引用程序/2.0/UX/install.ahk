@@ -945,6 +945,9 @@ class Installation {
         if ConfigRead('Launcher\v1', 'UTF8', '') = ''
             && InStr(RegRead('HKCR\' this.ScriptProgId '\Shell\Open\Command',, ''), '/cp65001 ')
             ConfigWrite(true, 'Launcher\v1', 'UTF8')
+        
+        if FileExist('Compiler\Ahk2Exe.exe')
+            this.CreateCompilerShortcut
     
         ; Record these for Uninstall
         add 'AutoHotkey{1}.exe', '', 'A32', 'U32', 'U64', 'A32_UIA', 'U32_UIA', 'U64_UIA'

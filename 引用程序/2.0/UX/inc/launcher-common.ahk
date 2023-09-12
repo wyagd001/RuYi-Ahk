@@ -1,4 +1,4 @@
-﻿
+
 #include common.ahk
 
 GetExeInfo(exe) {

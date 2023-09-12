@@ -1,4 +1,4 @@
-﻿GetGitHubReleaseAssetURL(repo, ext:='.zip', release:='latest') {
+GetGitHubReleaseAssetURL(repo, ext:='.zip', release:='latest') {
     req := ComObject('Msxml2.XMLHTTP')
     req.open('GET', 'https://api.github.com/repos/' repo '/releases/' release, false)
     req.send()

@@ -1,4 +1,4 @@
-﻿A_AllowMainWindow := true
+A_AllowMainWindow := true
 if A_AhkPath != A_ScriptDir '\AutoHotkeyUX.exe' {
     ; Standalone, compiled or test mode: locate InstallDir via registry
     DirExist(ROOT_DIR := RegRead('HKCU\SOFTWARE\AutoHotkey', 'InstallDir', ""))
