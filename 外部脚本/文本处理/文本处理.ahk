@@ -1,4 +1,4 @@
-﻿;|2.3|2023.08.24|1242
+﻿;|2.3|2023.09.14|1242
 #SingleInstance force
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e982.ico"
@@ -551,9 +551,9 @@ Return
 行首尾添加字符:
 Loop, Parse, oldtxt, `r, `n
 {
-	newStr .= myedit1 A_LoopField myedit2 "`n"
+	NewStr .= myedit1 A_LoopField myedit2 "`n"
 }
-t2.SetText(newStr)
+t2.SetText(NewStr)
 return
 
 行首序号处理:
@@ -577,9 +577,9 @@ if InStr(myedit1, "12345")
 	Loop, Parse, oldtxt, `r, `n
 	{
 		if xhw
-			newStr .= myedit2 Format("{:" xhw "}", b_index+A_index) myedit3 A_LoopField "`n"
+			NewStr .= myedit2 Format("{:" xhw "}", b_index+A_index) myedit3 A_LoopField "`n"
 		Else
-			newStr .= myedit2 b_index+A_index myedit3 A_LoopField "`n"
+			NewStr .= myedit2 b_index+A_index myedit3 A_LoopField "`n"
 	}
 }
 Else if (myedit1 = "清除数字序号")
@@ -595,29 +595,41 @@ else
 	{
 		;msgbox % A_LoopField
 		tmp_str := xuhaoObj[myedit1][A_index]
-		newStr .= myedit2 (tmp_str?tmp_str:A_index) myedit3 A_LoopField "`n"
+		NewStr .= myedit2 (tmp_str?tmp_str:A_index) myedit3 A_LoopField "`n"
 	}
 }
-t2.SetText(newStr)
+t2.SetText(NewStr)
 return
 
 查找替换:
 if zhuanyi
 {
+	myedit1 := StrReplace(myedit1, "\\r", "☆★")
+	myedit1 := StrReplace(myedit1, "\\t", "★☆")
 	myedit1 := StrReplace(myedit1, "\r", "`r")
 	myedit1 := StrReplace(myedit1, "\t", "`t")
+	myedit1 := StrReplace(myedit1, "☆★", "\r")
+	myedit1 := StrReplace(myedit1, "★☆", "\t")
+
 	myedit2 := StrReplace(myedit2, "\r", "`r")
 	myedit2 := StrReplace(myedit2, "\n", "`n")
 	myedit2 := StrReplace(myedit2, "\t", "`t")
-	newStr := StrReplace(oldtxt, myedit1, myedit2)
+	NewStr := StrReplace(oldtxt, myedit1, myedit2)
 }
 Else if regex
 {
+	;MsgBox % myedit2 "前面是换行1"
+	if InStr(myedit2, "``")
+	{
+		myedit2 := StrReplace(myedit2, "``r", "`r")
+		myedit2 := StrReplace(myedit2, "``n", "`n")
+		myedit2 := StrReplace(myedit2, "``t", "`t")
+	}
 	NewStr := RegExReplace(oldtxt, myedit1, myedit2)
 }
 Else
-	newStr := StrReplace(oldtxt, myedit1, myedit2)
-t2.SetText(newStr)
+	NewStr := StrReplace(oldtxt, myedit1, myedit2)
+t2.SetText(NewStr)
 return
 
 单行正则提取:
@@ -632,22 +644,28 @@ Loop, Parse, oldtxt, `r, `n
    {
       Loop % Tmp_Array.MaxIndex()
          linestr .= Tmp_Array[A_Index] " "
-      newStr .= linestr "`n", linestr := ""
+      NewStr .= linestr "`n", linestr := ""
       ;MsgBox % newStr
    }
 }
-t2.SetText(newStr)
+t2.SetText(NewStr)
 return
 
 单行正则替换:
 Line_Str := ""
 myedit2 := SubStr(myedit2, 1, (pos := InStr(myedit2, "❤❤❤")) ? pos - 1 : 50)
+if InStr(myedit2, "``")
+{
+	myedit2 := StrReplace(myedit2, "``r", "`r")
+	myedit2 := StrReplace(myedit2, "``n", "`n")
+	myedit2 := StrReplace(myedit2, "``t", "`t")
+}
 Loop, Parse, oldtxt, `r, `n
 {
 	Line_Str := RegExReplace(A_LoopField, myedit1, myedit2)
-	newStr .= Line_Str "`n"
+	NewStr .= Line_Str "`n"
 }
-t2.SetText(newStr)
+t2.SetText(NewStr)
 return
 
 查找并高亮:
@@ -718,15 +736,15 @@ Loop, Parse, oldtxt, `r, `n
 	if regex
 	{
 		if RegExMatch(A_LoopField, myedit1)
-			newStr .= A_LoopField "`n"
+			NewStr .= A_LoopField "`n"
 	}
 	Else
 	{
 		if instr(A_LoopField, myedit1)
-			newStr .= A_LoopField "`n"
+			NewStr .= A_LoopField "`n"
 	}
 }
-t2.SetText(newStr)
+t2.SetText(NewStr)
 return
 
 移除查找字符所在行:
@@ -735,15 +753,15 @@ Loop, Parse, oldtxt, `r, `n
 	if regex
 	{
 		if !RegExMatch(A_LoopField, myedit1)
-			newStr .= A_LoopField "`n"
+			NewStr .= A_LoopField "`n"
 	}
 	Else
 	{
 		if !instr(A_LoopField, myedit1)
-			newStr .= A_LoopField "`n"
+			NewStr .= A_LoopField "`n"
 	}
 }
-t2.SetText(newStr)
+t2.SetText(NewStr)
 return
 
 按数量提取行首尾字符:
@@ -762,9 +780,9 @@ Loop, Parse, oldtxt, `r, `n
 	if !KZZF
 	{
 		if (myedit1="行首")
-			newStr .= SubStr(A_LoopField, 1, myedit2) "`n"
+			NewStr .= SubStr(A_LoopField, 1, myedit2) "`n"
 		Else if (myedit1="行尾")
-			newStr .= SubStr(A_LoopField, -myedit2+1) "`n"
+			NewStr .= SubStr(A_LoopField, -myedit2+1) "`n"
 	}
 	else
 	{
@@ -772,10 +790,10 @@ Loop, Parse, oldtxt, `r, `n
 			RegExMatch(A_LoopField, "^.{0," myedit2 "}", match)
 		Else if (myedit1="行尾")
 			RegExMatch(A_LoopField, ".{0," myedit2 "}$", match)
-		newStr .= match "`n"
+		NewStr .= match "`n"
 	}
 }
-t2.SetText(newStr)
+t2.SetText(NewStr)
 return
 
 按数量删除行首尾字符:
@@ -794,9 +812,9 @@ Loop, Parse, oldtxt, `r, `n
 	if !KZZF
 	{
 		if (myedit1="行首")
-			newStr .= SubStr(A_LoopField, myedit2+1) "`n"
+			NewStr .= SubStr(A_LoopField, myedit2+1) "`n"
 		Else if (myedit1="行尾")
-			newStr .= SubStr(A_LoopField, 1, strlen(A_LoopField) - myedit2) "`n"
+			NewStr .= SubStr(A_LoopField, 1, strlen(A_LoopField) - myedit2) "`n"
 	}
 	else
 	{
@@ -804,10 +822,10 @@ Loop, Parse, oldtxt, `r, `n
 			RegExMatch(A_LoopField, "^.{0," myedit2 "}", match)
 		Else if (myedit1="行尾")
 			RegExMatch(A_LoopField, ".{0," myedit2 "}$", match)
-		newStr .= StrReplace(A_LoopField, match) "`n"
+		NewStr .= StrReplace(A_LoopField, match) "`n"
 	}
 }
-t2.SetText(newStr)
+t2.SetText(NewStr)
 return
 
 字数统计:
@@ -844,7 +862,7 @@ newstr .= "Ahk字符长度: " Ahk_count "`n" "总字符数: " zh_Count + As_coun
  . "英文字母: " En_count + eng_count "	小写: "eng_count "	大写: "En_count "`n"
  . "连续ASCII字符: " E_word_count "	单词(粗略): " En_word_count "`n数字(0-9): " Int_count "`n"
  . "查找的字符[ " myedit1_org " ]出现次数: " Sk_count
-t2.SetText(newStr)
+t2.SetText(NewStr)
 return
 
 按条件提取删除行:
@@ -855,23 +873,23 @@ if (myedit1 = "按行号提取")
 		if (myedit2 = "奇数")
 		{
 			if (mod(A_index, 2) = 1)
-				newStr .= A_LoopField "`n"
+				NewStr .= A_LoopField "`n"
 			else
-				newStr .= "`n"
+				NewStr .= "`n"
 		}
 		else if (myedit2 = "偶数")
 		{
 			if (mod(A_index, 2) = 0)
-				newStr .= A_LoopField "`n"
+				NewStr .= A_LoopField "`n"
 			else
-				newStr .= "`n"
+				NewStr .= "`n"
 		}
 		else
 		{
 			if A_Index in %myedit2%
-				newStr .= A_LoopField "`n"
+				NewStr .= A_LoopField "`n"
 			else
-				newStr .= "`n"
+				NewStr .= "`n"
 		}
 	}
 }

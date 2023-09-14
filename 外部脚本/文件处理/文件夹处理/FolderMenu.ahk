@@ -183,15 +183,22 @@ FolderMenu(FolderPath, SpecifyExt:="*", MenuName:="", ShowIcon:=1, ShowOpenFolde
 	return MenuName
 }
 
-Run(a) {
-if getkeystate("Shift")
+Run(a)
 {
-	IniRead, notepad2, %A_ScriptDir%\..\..\..\配置文件\如一.ini, 其他程序, notepad2
-	notepad2 := (notepad2 && notepad2 != "error" ) ? notepad2 : "notepad.exe"
-	run "%notepad2%" "%a%"
-}
-else
-	run, %a%
+	if getkeystate("Shift")
+	{
+		IniRead, notepad2, %A_ScriptDir%\..\..\..\配置文件\如一.ini, 其他程序, notepad2, Notepad.exe
+		if InStr(notepad2, "%A_ScriptDir%")
+		{
+			RY_Dir := Deref("%A_ScriptDir%")
+			RY_Dir := SubStr(RY_Dir, 1, InStr(RY_Dir, "\", 0, 0, 3) - 1)
+			notepad2 := StrReplace(notepad2, "%A_ScriptDir%", RY_Dir)
+			;msgbox % notepad2
+		}
+		run "%notepad2%" "%a%"
+	}
+	else
+		run, %a%
 }
 
 FolderMenu_AddIcon(menuitem,submenu)
@@ -209,4 +216,29 @@ FolderMenu_AddIcon(menuitem,submenu)
 		; Because we used ":" and not ":*", the icon will be automatically
 		; freed when the program exits or if the menu or item is deleted.
 	}
+}
+
+Deref(String)
+{
+    spo := 1
+    out := ""
+    while (fpo:=RegexMatch(String, "(%(.*?)%)|``(.)", m, spo))
+    {
+        out .= SubStr(String, spo, fpo-spo)
+        spo := fpo + StrLen(m)
+        if (m1)
+            out .= %m2%
+        else switch (m3)
+        {
+            case "a": out .= "`a"
+            case "b": out .= "`b"
+            case "f": out .= "`f"
+            case "n": out .= "`n"
+            case "r": out .= "`r"
+            case "t": out .= "`t"
+            case "v": out .= "`v"
+            default: out .= m3
+        }
+    }
+    return out SubStr(String, spo)
 }

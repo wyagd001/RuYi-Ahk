@@ -1,4 +1,4 @@
-﻿;|2.2|2023.08.15|1070,1423
+﻿;|2.3|2023.09.13|1070,1423
 #SingleInstance force
 #include <ImagePut>
 ATA_settingFile := A_ScriptDir "\..\..\配置文件\如一.ini"
@@ -69,8 +69,13 @@ return
 F6::
 if !notepad2
 {
-	IniRead, notepad2, %ATA_settingFile%, 其他程序, notepad2
-	notepad2 := notepad2 ? notepad2 : "notepad.exe"
+	IniRead, notepad2, %ATA_settingFile%, 其他程序, notepad2, Notepad.exe
+	if InStr(notepad2, "%A_ScriptDir%")
+	{
+		RY_Dir := Deref("%A_ScriptDir%")
+		RY_Dir := SubStr(RY_Dir, 1, InStr(RY_Dir, "\", 0, 0, 2) - 1)
+		notepad2 := StrReplace(notepad2, "%A_ScriptDir%", RY_Dir)
+	}
 }
 run, % notepad2 " " Prew_File
 return
@@ -2450,4 +2455,29 @@ Local OutFile
   DllCall("Kernel32\GetFullPathNameW", "WStr",Filename, "UInt",260, "Str",OutFile, "Ptr",0)
   DllCall("Shell32\PathYetAnotherMakeUniqueName", "Str",OutFile, "Str",Outfile, "Ptr",0, "Ptr",0)
 Return A_IsUnicode ? OutFile : StrGet(&OutFile, "UTF-16")
+}
+
+Deref(String)
+{
+    spo := 1
+    out := ""
+    while (fpo:=RegexMatch(String, "(%(.*?)%)|``(.)", m, spo))
+    {
+        out .= SubStr(String, spo, fpo-spo)
+        spo := fpo + StrLen(m)
+        if (m1)
+            out .= %m2%
+        else switch (m3)
+        {
+            case "a": out .= "`a"
+            case "b": out .= "`b"
+            case "f": out .= "`f"
+            case "n": out .= "`n"
+            case "r": out .= "`r"
+            case "t": out .= "`t"
+            case "v": out .= "`v"
+            default: out .= m3
+        }
+    }
+    return out SubStr(String, spo)
 }

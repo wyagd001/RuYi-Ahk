@@ -1,5 +1,12 @@
-﻿;|2.0|2023.07.01|多条目
+﻿;|2.3|2023.09.13|多条目
 CandySel := A_Args[1]
+if InStr(CandySel, "%A_ScriptDir%")
+{
+	RY_Dir := Deref("%A_ScriptDir%")
+	RY_Dir := SubStr(RY_Dir, 1, InStr(RY_Dir, "\", 0, 0, 2) - 1)
+	CandySel := StrReplace(CandySel, "%A_ScriptDir%", RY_Dir)
+	;msgbox % CandySel
+}
 DetectHiddenWindows, On
 WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI
 Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")
@@ -79,4 +86,29 @@ WMI_Query(pid)
 	else
 		sResult := 0 
 	Return   sResult
+}
+
+Deref(String)
+{
+    spo := 1
+    out := ""
+    while (fpo:=RegexMatch(String, "(%(.*?)%)|``(.)", m, spo))
+    {
+        out .= SubStr(String, spo, fpo-spo)
+        spo := fpo + StrLen(m)
+        if (m1)
+            out .= %m2%
+        else switch (m3)
+        {
+            case "a": out .= "`a"
+            case "b": out .= "`b"
+            case "f": out .= "`f"
+            case "n": out .= "`n"
+            case "r": out .= "`r"
+            case "t": out .= "`t"
+            case "v": out .= "`v"
+            default: out .= m3
+        }
+    }
+    return out SubStr(String, spo)
 }

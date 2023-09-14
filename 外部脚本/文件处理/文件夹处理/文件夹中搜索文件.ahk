@@ -1,4 +1,4 @@
-﻿;|2.0|2023.07.01|1093
+﻿;|2.3|2023.09.13|1093
   ;
   ; AutoHotkey Version:  1.1 (modified version)
   ; Language:       English
@@ -20,7 +20,13 @@ CandySel :=  A_Args[1]
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 SetBatchLines, -1   ; Never sleep
-IniRead, notepad2, %A_ScriptDir%\..\..\..\配置文件\如一.ini, 其他程序, notepad2, F:\Program Files\Editor\Notepad2\Notepad2.exe
+IniRead, notepad2, %A_ScriptDir%\..\..\..\配置文件\如一.ini, 其他程序, notepad2, Notepad.exe
+if InStr(notepad2, "%A_ScriptDir%")
+{
+	RY_Dir := Deref("%A_ScriptDir%")
+	RY_Dir := SubStr(RY_Dir, 1, InStr(RY_Dir, "\", 0, 0, 3) - 1)
+	notepad2 := StrReplace(notepad2, "%A_ScriptDir%", RY_Dir)
+}
 
   WM_NOTIFY               := 0x004E
   LVN_FIRST               := -100
@@ -531,4 +537,29 @@ Return
      ; StrPut returns char count, but VarSetCapacity needs bytes.        
     ; Copy or convert the string.
     return StrPut(string, &var, encoding)
+}
+
+Deref(String)
+{
+    spo := 1
+    out := ""
+    while (fpo:=RegexMatch(String, "(%(.*?)%)|``(.)", m, spo))
+    {
+        out .= SubStr(String, spo, fpo-spo)
+        spo := fpo + StrLen(m)
+        if (m1)
+            out .= %m2%
+        else switch (m3)
+        {
+            case "a": out .= "`a"
+            case "b": out .= "`b"
+            case "f": out .= "`f"
+            case "n": out .= "`n"
+            case "r": out .= "`r"
+            case "t": out .= "`t"
+            case "v": out .= "`v"
+            default: out .= m3
+        }
+    }
+    return out SubStr(String, spo)
 }

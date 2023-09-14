@@ -1,4 +1,4 @@
-﻿;|2.3|2023.08.23|1096
+﻿;|2.3|2023.09.13|1096
 ; Script Information ===========================================================
 ; Name:         File String Search
 ; Description:  Search files for a specific string (Inspired by TLM)
@@ -121,9 +121,7 @@ if A_GuiEvent = DoubleClick
   if Ext in %Extensions%
     {
     try
-    ;run, notepad "%c2%"
 		run, "%notepad2%" "%c2%"
-       ;- open with notepad or other editors
     }
   }
 return
@@ -148,8 +146,14 @@ OnLoad() {
     IniRead, SEditDir, %run_iniFile%, 文件中查找字符, 固定查找目录, %A_Space%
     IniRead, EditType, %run_iniFile%, 文件中查找字符, 类型, %A_Space%
     IniRead, EditString, %run_iniFile%, 文件中查找字符, 字符, %A_Space%
-    IniRead, notepad2, %A_ScriptDir%\..\..\..\配置文件\如一.ini, 其他程序, notepad2, F:\Program Files\Editor\Notepad2\Notepad2.exe
-
+    IniRead, notepad2, %A_ScriptDir%\..\..\..\配置文件\如一.ini, 其他程序, notepad2, Notepad.exe
+    if InStr(notepad2, "%A_ScriptDir%")
+		{
+			RY_Dir := Deref("%A_ScriptDir%")
+			RY_Dir := SubStr(RY_Dir, 1, InStr(RY_Dir, "\", 0, 0, 3) - 1)
+   		notepad2 := StrReplace(notepad2, "%A_ScriptDir%", RY_Dir)
+   		;msgbox % notepad2
+		}
     SearchStop := 0
 }
 
@@ -446,4 +450,29 @@ File_GetEncoding(aFile, aNumBytes = 0, aMinimum = 4)
 	; 未符合上面条件的返回系统默认 ansi 内码
 	; 简体中文系统默认返回的是 CP936, 非中文系统的内码显示中文会乱码,如果要显示中文可直接改为"CP936"
 	return "CP" DllCall("GetACP")  
+}
+
+Deref(String)
+{
+    spo := 1
+    out := ""
+    while (fpo:=RegexMatch(String, "(%(.*?)%)|``(.)", m, spo))
+    {
+        out .= SubStr(String, spo, fpo-spo)
+        spo := fpo + StrLen(m)
+        if (m1)
+            out .= %m2%
+        else switch (m3)
+        {
+            case "a": out .= "`a"
+            case "b": out .= "`b"
+            case "f": out .= "`f"
+            case "n": out .= "`n"
+            case "r": out .= "`r"
+            case "t": out .= "`t"
+            case "v": out .= "`v"
+            default: out .= m3
+        }
+    }
+    return out SubStr(String, spo)
 }

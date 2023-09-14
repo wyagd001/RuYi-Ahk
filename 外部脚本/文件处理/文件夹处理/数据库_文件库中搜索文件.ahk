@@ -5,7 +5,13 @@ Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\e8a3.ico"
 
 dbpath := A_ScriptDir "\..\..\..\配置文件\folder.db"
-IniRead, notepad2, %A_ScriptDir%\..\..\..\配置文件\如一.ini, 其他程序, notepad2, F:\Program Files\Editor\Notepad2\Notepad2.exe
+IniRead, notepad2, %A_ScriptDir%\..\..\..\配置文件\如一.ini, 其他程序, notepad2, Notepad.exe
+if InStr(notepad2, "%A_ScriptDir%")
+{
+	RY_Dir := Deref("%A_ScriptDir%")
+	RY_Dir := SubStr(RY_Dir, 1, InStr(RY_Dir, "\", 0, 0, 3) - 1)
+	notepad2 := StrReplace(notepad2, "%A_ScriptDir%", RY_Dir)
+}
 IniRead, flibfolder1, %A_ScriptDir%\..\..\..\配置文件\如一.ini, 外部脚本, 文件库文件夹一, G:\Music
 IniRead, flibfolder2, %A_ScriptDir%\..\..\..\配置文件\如一.ini, 外部脚本, 文件库文件夹二, G:\资料\脚本收集
 if fileexist(A_Args[1])  ; 参数为文件时设置 CandySel
@@ -1882,4 +1888,29 @@ SQLiteDB_RegExp(Context, ArgC, Values) {
       Result := RegExMatch(StrGet(AddrH, "UTF-8"), StrGet(AddrN, "UTF-8"))
    }
    DllCall(This.base._SQLiteDLL "\sqlite3_result_int", "Ptr", Context, "Int", !!Result, "Cdecl") ; 0 = false, 1 = trus
+}
+
+Deref(String)
+{
+    spo := 1
+    out := ""
+    while (fpo:=RegexMatch(String, "(%(.*?)%)|``(.)", m, spo))
+    {
+        out .= SubStr(String, spo, fpo-spo)
+        spo := fpo + StrLen(m)
+        if (m1)
+            out .= %m2%
+        else switch (m3)
+        {
+            case "a": out .= "`a"
+            case "b": out .= "`b"
+            case "f": out .= "`f"
+            case "n": out .= "`n"
+            case "r": out .= "`r"
+            case "t": out .= "`t"
+            case "v": out .= "`v"
+            default: out .= m3
+        }
+    }
+    return out SubStr(String, spo)
 }

@@ -1,6 +1,12 @@
-﻿;|2.3|2023.08.27|1439
+﻿;|2.3|2023.09.13|1439
 Windy_CurWin_Class := A_Args[1]
-IniRead, notepad2, %A_ScriptDir%\..\..\配置文件\如一.ini, 其他程序, notepad2
+IniRead, notepad2, %A_ScriptDir%\..\..\配置文件\如一.ini, 其他程序, notepad2, Notepad.exe
+if InStr(notepad2, "%A_ScriptDir%")
+{
+	RY_Dir := Deref("%A_ScriptDir%")
+	RY_Dir := SubStr(RY_Dir, 1, InStr(RY_Dir, "\", 0, 0, 2) - 1)
+	notepad2 := StrReplace(notepad2, "%A_ScriptDir%", RY_Dir)
+}
 
 if !Windy_CurWin_Class
 {
@@ -202,4 +208,29 @@ GetSelText(returntype := 1, ByRef _isFile := "", ByRef _ClipAll := "", waittime 
 	sleep 200
 	clipmonitor := 1
 	return ClipSel
+}
+
+Deref(String)
+{
+    spo := 1
+    out := ""
+    while (fpo:=RegexMatch(String, "(%(.*?)%)|``(.)", m, spo))
+    {
+        out .= SubStr(String, spo, fpo-spo)
+        spo := fpo + StrLen(m)
+        if (m1)
+            out .= %m2%
+        else switch (m3)
+        {
+            case "a": out .= "`a"
+            case "b": out .= "`b"
+            case "f": out .= "`f"
+            case "n": out .= "`n"
+            case "r": out .= "`r"
+            case "t": out .= "`t"
+            case "v": out .= "`v"
+            default: out .= m3
+        }
+    }
+    return out SubStr(String, spo)
 }
