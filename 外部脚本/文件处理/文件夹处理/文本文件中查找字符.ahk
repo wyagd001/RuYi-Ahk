@@ -1,4 +1,4 @@
-﻿;|2.3|2023.09.13|1096
+﻿;|2.4|2023.09.20|1096
 ; Script Information ===========================================================
 ; Name:         File String Search
 ; Description:  Search files for a specific string (Inspired by TLM)
@@ -92,7 +92,7 @@ LV_GetText(FileFullPath, LV_GetNext("F"), 2)
 If Fileexist(FileFullPath)
 	CF_OpenFolder(FileFullPath)
 else
-	msgbox,未选中或文件不存在。
+	msgbox, 未选中或文件不存在。
 Return
 
 OpenFile:
@@ -145,6 +145,7 @@ OnLoad() {
       IniRead, EditDir, %run_iniFile%, 文件中查找字符, 路径, %A_Space%
     IniRead, SEditDir, %run_iniFile%, 文件中查找字符, 固定查找目录, %A_Space%
     IniRead, EditType, %run_iniFile%, 文件中查找字符, 类型, %A_Space%
+    IniRead, SEditType, %run_iniFile%, 文件中查找字符, 固定类型, %A_Space%
     IniRead, EditString, %run_iniFile%, 文件中查找字符, 字符, %A_Space%
     IniRead, notepad2, %A_ScriptDir%\..\..\..\配置文件\如一.ini, 其他程序, notepad2, Notepad.exe
     if InStr(notepad2, "%A_ScriptDir%")
@@ -162,8 +163,9 @@ OnUnload(ExitReason, ExitCode) {
     
     Gui, Submit, NoHide
     if EditDir <>
-    IniWrite, % EditDir, %run_iniFile%, 文件中查找字符, 路径
-    IniWrite, % EditType, %run_iniFile%, 文件中查找字符, 类型
+			IniWrite, % EditDir, %run_iniFile%, 文件中查找字符, 路径
+		if EditType <>
+      IniWrite, % EditType, %run_iniFile%, 文件中查找字符, 类型
     IniWrite, % EditString, %run_iniFile%, 文件中查找字符, 字符
 }
 
@@ -171,9 +173,13 @@ GuiCreate() {
     Global ; Assume-global mode
     Static Init := GuiCreate() ; Call function
     If SEditDir not contains  %EditDir%
-    EditDirList := EditDir "|" SEditDir
+       EditDirList := EditDir "|" SEditDir
     else
-    EditDirList := SEditDir
+       EditDirList := SEditDir
+    If SEditType not contains  %EditType%
+       EditTypeList := EditType "|" SEditType
+    else
+       EditTypeList := SEditType
     Gui, +LastFound -Resize +HWNDhGui1
     Gui, Margin, 8, 8
     Gui, Add, Tab3, vTab, 查找|搜索结果
@@ -183,10 +189,11 @@ GuiCreate() {
     Gui, Add, ComBoBox, y+10 w416 vEditDir, % EditDirList
     Gui, Add, Button, x+10 yp w34 hp vButtonDir gControlHandler, ...
     Gui, Add, Text, xs y+20 w460 BackgroundTrans, 文件类型:
-    Gui, Add, Edit, y+10 w460 vEditType, % EditType
+    Gui, Add, ComBoBox, y+10 w460 vEditType, % EditTypeList
     Gui, Add, Text, xs y+20 w460 BackgroundTrans, 字符:
     Gui, Add, Edit, y+10 w460 vEditString, % EditString
-    GuiControl,choose,EditDir,% EditDir
+    GuiControl, choose, EditDir, % EditDir
+    GuiControl, choose, EditType, % EditType
     Gui, Add, CheckBox, xs y+10 h20 vfullword,全字符匹配(单词边界)
 
     Gui, Tab, 2

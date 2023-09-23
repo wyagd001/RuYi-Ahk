@@ -41,6 +41,7 @@ CMDLine:= WMI_Query(Windy_CurWin_Pid)
 RegExMatch(CMDLine, "i).*exe.*?\s+(.*)", ff_)
 StringReplace, FileFullPath, ff_1, `",, All
 startzimu := RegExMatch(FileFullPath, "i)^[a-z]")
+; C:\Documents and Settings\Administrator\Desktop\Ahk\如意百宝箱\外部脚本\文件处理\文件夹处理\文本文件中查找字符.ahk D:\资料\autohotkey 帮助\v2\docs\lib
 if !startzimu
 {
 	RegExMatch(FileFullPath, "i)([a-z]:\\.*\.\S*)", fff_)
@@ -85,6 +86,8 @@ Return
 OpenFileFullPath:
 ; QQ 影音  文件路径末尾带“*”号
 FileFullPath := Trim(FileFullPath, "`*")
+;msgbox % FileFullPath
+
 If Fileexist(FileFullPath)
 {
 	File_OpenAndSelect(FileFullPath)

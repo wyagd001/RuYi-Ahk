@@ -300,9 +300,9 @@ return
 Cando_xls_prew:
 IniRead, AutoHotkeyU32, %ATA_settingFile%, 其他程序, AutoHotkeyU32, %A_Space%
 if fileexist(AutoHotkeyU32)
-run, "%AutoHotkeyU32%" "%A_ScriptDir%\输出excel数据到GUI.ahk" "%Prew_File%"
+	run, "%AutoHotkeyU32%" "%A_ScriptDir%\..\..\引用程序\输出excel数据到GUI.ahk" "%Prew_File%"
 else
-run, "%A_ScriptDir%\..\..\引用程序\AutoHotkeyU32.exe" "%A_ScriptDir%\输出excel数据到GUI.ahk" "%Prew_File%"
+	run, "%A_ScriptDir%\..\..\引用程序\AutoHotkeyU32.exe" "%A_ScriptDir%\引用程序\输出excel数据到GUI.ahk" "%Prew_File%"
 exitapp
 
 Cando_rar_prew:

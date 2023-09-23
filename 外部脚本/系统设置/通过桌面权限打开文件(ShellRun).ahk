@@ -1,5 +1,7 @@
-﻿;|2.3|2023.08.24|1432
+﻿;|2.4|2023.09.18|1432
 CandySel := A_Args[1]
+CandySel2 := A_Args[2]
+
 if !CandySel
 {
 	DetectHiddenWindows, On
@@ -9,7 +11,10 @@ if !CandySel
 		exitapp
 }
 
-ShellRun(CandySel)
+if CandySel2
+ ShellRun(CandySel, CandySel2)
+else
+ ShellRun(CandySel)
 return
 
 ;来源网址: https://www.autohotkey.com/boards/viewtopic.php?t=102099

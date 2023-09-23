@@ -1,7 +1,6 @@
 ﻿;|2.2|2023.08.04|1317
 #Persistent
 #SingleInstance Force
-CandySel := A_Args[1]
 IniMenuInifile := A_ScriptDir "\..\配置文件\外部脚本\ini菜单.ini"
 ATA_settingFile := A_ScriptDir "\..\配置文件\如一.ini"
 IniMenuobj := ini2obj(IniMenuInifile)
@@ -377,7 +376,8 @@ GuiClose:
 	ExitApp
 
 runbtn:
-TmpArr := StrSplit(A_GuiControl, "_")
+TmpArr := StrSplit(A_GuiControl, "_")   ; 文件_6_btn
+;msgbox % A_GuiControl
 Candy_Cmd := IniMenuobj[TmpArr[1]][TmpArr[2]]
 ;MsgBox % Candy_Cmd  " - " TmpArr[1] " - " TmpArr[2]
 Candy_Cmd := GetStringIndex(Candy_Cmd)
@@ -677,39 +677,6 @@ obj2ini(obj, file){
 	}
 Return 1
 }
-
-AddSelToMenu:
-if !CandySel
-	return
-SplitPath, CandySel, CandySel_FileName, CandySel_ParentPath, CandySel_Ext, CandySel_FileNameNoExt, CandySel_Drive
-FileRead, Tmp_Str, % IniMenuInifile
-if instr(Tmp_Str, CandySel)
-	return
-if fileexist(CandySel)
-{
-	if !InStr(FileExist(CandySel), "D")
-	{
-		if (CandySel_Ext = "exe")
-			iniwrite, %CandySel%, %IniMenuInifile%, 程序, % CandySel_FileNameNoExt "．" CandySel_Ext
-		else
-			iniwrite, %CandySel%, %IniMenuInifile%, 文件, % CandySel_FileNameNoExt "．" CandySel_Ext
-	}
-	else
-		iniwrite, %CandySel%, %IniMenuInifile%, 文件夹, %CandySel_FileNameNoExt%
-}
-else if RegExMatch(CandySel, "i)^(https://|http://)+(.*\.)+.*")
-{
-	domain := StrReplace(CandySel_Drive, "https://", "")
-	domain := StrReplace(domain, "http://", "")
-	iniwrite, %CandySel%, %IniMenuInifile%, 网址, %domain%
-}
-else if (RegExMatch(CandySel, "i)^(HKCU|HKCR|HKCC|HKU|HKLM|HKEY|计算机\\HK|\[HK)"))
-{
-	iniwrite, %CandySel%, %IniMenuInifile%, 注册表, %CandySel_FileName%
-}
-else
-	iniwrite, %CandySel%, %IniMenuInifile%, 命令, %CandySel%
-return
 
 f_OpenReg(RegPath)
 {

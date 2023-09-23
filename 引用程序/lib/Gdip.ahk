@@ -503,8 +503,11 @@ Gdip_BitmapFromHWND(hwnd, clientOnly:=0) {
       Width := NumGet(rc, 8, "int")
       Height := NumGet(rc, 12, "int")
       thisFlag := 1
-   } Else GetWindowRect(hwnd, Width, Height)
-
+   } Else{
+      ;GetWindowRect(hwnd, Width, Height)
+      WinGetPos, , , nW, nH, ahk_id %hwnd%
+      Width := nW, Height := nH
+   }
    hbm := CreateDIBSection(Width, Height)
    hdc := CreateCompatibleDC()
    obm := SelectObject(hdc, hbm)

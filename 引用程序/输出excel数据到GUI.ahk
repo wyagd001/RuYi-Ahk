@@ -62,7 +62,6 @@ while !rs.EOF ;有效Sheet
 		rs.MoveNext()
 		continue
 	}
-	
  
 	table_info[t_name] := []
 	for field in q.Fields  ;获取按顺序排列的字段
