@@ -59,4 +59,5 @@ Loop, Parse, CandySel, `n, `r
 Clipboard := newStr
 WinActivate, ahk_id %Windy_CurWin_id%
 Send ^v
+newStr := CandySel := ""
 return

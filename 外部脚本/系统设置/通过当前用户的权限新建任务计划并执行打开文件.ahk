@@ -1,5 +1,6 @@
 ﻿;|2.3|2023.08.24|1431
 CandySel := A_Args[1]
+CandySel2 := A_Args[2]
 if !CandySel
 {
 	DetectHiddenWindows, On
@@ -9,11 +10,14 @@ if !CandySel
 		exitapp
 }
 
-TaskUser(CandySel)
+if CandySel2
+	TaskUser(CandySel, CandySel2)
+else
+	TaskUser(CandySel)
 return
 
 ;来源网址: https://www.autohotkey.com/boards/viewtopic.php?f=76&t=102099&sid=534fb169b1592e1f5891eff35eeb4f73&start=20
-TaskUser(hfile)
+TaskUser(hfile, prams:="")
 {
 	;This will add a task schedule as a standard user and run the program when Ahk is running as a admin.
 
@@ -38,10 +42,10 @@ TaskUser(hfile)
 	UserID = %Mechine%%last%
 	
 	; this creates the task
-	RunWait, %A_WinDir%\System32\schtasks.exe /CREATE /TN %Title% /TR %Path%\%Target% /sc ONCE /RU %UserID% /st 00:00 ,,hide
+	Run, %A_WinDir%\System32\schtasks.exe /CREATE /TN %Title% /TR "\"%Path%\%Target%\" \"%prams%\"" /sc ONCE /RU %UserID% /st 00:00 ,,hide
 	
 	; This will Run the task
-	RunWait, %A_WinDir%\System32\schtasks.exe /Run /TN %Title% ,,hide
+	Run, %A_WinDir%\System32\schtasks.exe /Run /TN %Title% ,,hide
 	
 	;This will remove the task
 	Run, %A_WinDir%\System32\schtasks.exe /Delete /TN %Title% /f ,,hide

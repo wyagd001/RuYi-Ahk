@@ -1,4 +1,4 @@
-﻿;|2.3|2023.09.13|1093
+﻿;|2.4|2023.10.02|1093
   ;
   ; AutoHotkey Version:  1.1 (modified version)
   ; Language:       English
@@ -68,10 +68,11 @@ if InStr(notepad2, "%A_ScriptDir%")
 
   ; Create some buttons:
   Gui, Add, Button, Default vBtnLoadFolder gButtonLoadFolder, &选择文件夹
-  Gui, Add, Button, x+15 gopenfolder, 打开目录(&D)
-  Gui, Add, Button, x+15 gopenfile, 打开文件(&F)
+  Gui, Add, Button, x+15 gopenfolder, 打开目录(&F)
+  Gui, Add, Button, x+15 gopenfile, 打开文件(&O)
   Gui, Add, Button, x+15 geditfile, 编辑文件(记事本)(&E)
   Gui, Add, Button, x+15 gporse, 属性(&R)
+  Gui, Add, Button, x+15 gdelfile, 删除(&D)
 
   ; Create the ListView with two columns, Name and Size:
   Gui, Add, ListView, Grid xm r20 w700 NoSort vMyListView Hwndg_hMyListView  +0x1140 +LV0x014000, 文件名|所在目录|修改时间|大小(KB)|类型
@@ -475,8 +476,8 @@ OnGetDispInfo(pnmv)
   #IfWinActive
 
 slectrowfolder:
-  FocusedRowNumber := LV_GetNext(0, "F")
- if not FocusedRowNumber
+FocusedRowNumber := LV_GetNext(0, "F")
+if not FocusedRowNumber
  Return
 LV_GetText(varvalue, FocusedRowNumber, 2)
 LV_GetText(varvalue1, FocusedRowNumber, 1)
@@ -511,8 +512,13 @@ porse:
 gosub,slectrowfolder
 varvalue:=varvalue . "\" . varvalue1
 Run,properties %varvalue%
-
 Return
+
+DelFile:
+gosub,slectrowfolder
+varvalue:=varvalue . "\" . varvalue1
+FileRecycle %varvalue%
+return
 
   ;;;;;;;;;;;;;;;;;;; Helper Functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

@@ -52,7 +52,7 @@ ControlHandler:
         
         Loop, Files, % EditDir "\" (EditType ? EditType : "*.*"), FR
         {
-            if A_LoopFileExt in txt,ahk,au3,htm
+            if A_LoopFileExt in txt,ahk,au3,htm,json
             	FileEncoding % File_GetEncoding(A_LoopFileFullPath)
             ;FileEncoding % File_GetEncoding(A_LoopFileFullPath)
             Try FileRead, MatchRead, % A_LoopFileFullPath   ;  utf8  编码的问题

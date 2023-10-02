@@ -1,4 +1,4 @@
-﻿;|2.2|2023.08.12|1229
+﻿;|2.4|2023.10.01|1229
 CandySel :=  A_Args[1]
 ;CandySel := "C:\Documents and Settings\Administrator\Desktop\文本碎片小脚本"
 Menu, Tray, UseErrorLevel
@@ -32,60 +32,64 @@ gui, Submit, NoHide
 folderobj := {}, fsizeobj := {}, fMD5obj := {}, md5obj := {}
 ToolTip, % "正在查找重复文件, 请稍候..."
 LV_Delete()
-Loop, Files, %sfolder%\*.*, FR
+Loop, parse, sfolder, |;
 {
-	if A_LoopFileSize = 0
-		continue
-	if sExt
+	;msgbox % A_LoopField
+	Loop, Files, %A_LoopField%\*.*, FR
 	{
-		if A_LoopFileExt not in %sExt%
+		if A_LoopFileSize = 0
 			continue
-	}
-	if !fsizeobj[A_LoopFileSize]
-	{
-		fsizeobj[A_LoopFileSize] := A_LoopFilePath  ; 大小不一致的文件记入大小库中
-		continue
-	}
-
-	if fsizeobj[A_LoopFileSize]    ; 大小有重复的情况
-	{
-		currfileMD5 := MD5_File(A_LoopFilePath)
-		sprefilepath := fsizeobj[A_LoopFileSize]
-		;FileAppend, % A_LoopFilePath " - " prefilepath "`n", %A_desktop%\123.txt
-		if !fMD5obj[sprefilepath]               ; 前一个文件还没有计算过 Md5
+		if sExt
 		{
-			prefileMD5 := MD5_File(sprefilepath)
-			fMD5obj[sprefilepath] := prefileMD5
-			md5obj[prefileMD5] := sprefilepath
+			if A_LoopFileExt not in %sExt%
+				continue
 		}
-		if md5obj[currfileMD5]                ; 已经存在相同的 md5
+		if !fsizeobj[A_LoopFileSize]
 		{
-			folderobj[A_LoopFilePath] := {}
-			folderobj[A_LoopFilePath]["fname"] := A_LoopFileName
-			folderobj[A_LoopFilePath]["relPath"] := StrReplace(StrReplace(A_LoopFilePath, sfolder), A_LoopFileName)
-			folderobj[A_LoopFilePath]["fTMod"] := A_LoopFileTimeModified
-			folderobj[A_LoopFilePath]["fsize"] := A_LoopFileSize
-			folderobj[A_LoopFilePath]["fmd5"] := currfileMD5
+			fsizeobj[A_LoopFileSize] := A_LoopFilePath  ; 将文件的大小记入大小库中
+			continue
+		}
 
-			mprefilepath := md5obj[currfileMD5]
+		if fsizeobj[A_LoopFileSize]    ; 大小有重复的情况
+		{
+			currfileMD5 := MD5_File(A_LoopFilePath)
+			sprefilepath := fsizeobj[A_LoopFileSize]
 			;FileAppend, % A_LoopFilePath " - " prefilepath "`n", %A_desktop%\123.txt
-			if !folderobj[mprefilepath]          ; 前一个文件还没有入过重复库
+			if !fMD5obj[sprefilepath]               ; 前一个文件还没有计算过 Md5
 			{
-				FileGetTime, fTMod, % mprefilepath, M
-				SplitPath, mprefilepath, fname
-				folderobj[mprefilepath] := {}
-				folderobj[mprefilepath]["fname"] := fname
-				folderobj[mprefilepath]["relPath"] := StrReplace(StrReplace(mprefilepath, sfolder), fname)
-				folderobj[mprefilepath]["fTMod"] := fTMod
-				folderobj[mprefilepath]["fsize"] := A_LoopFileSize
-				folderobj[mprefilepath]["fmd5"] := currfileMD5
-				folderobj[mprefilepath]["unchecked"] := "1"
+				prefileMD5 := MD5_File(sprefilepath)
+				fMD5obj[sprefilepath] := prefileMD5
+				md5obj[prefileMD5] := sprefilepath
 			}
-		}
-		else                                  ; 不存在相同的 md5
-		{
-			MD5obj[currfileMD5] := A_LoopFilePath
-			fMD5obj[A_LoopFilePath] := currfileMD5
+			if md5obj[currfileMD5]                ; 已经存在相同的 md5
+			{
+				folderobj[A_LoopFilePath] := {}
+				folderobj[A_LoopFilePath]["fname"] := A_LoopFileName
+				folderobj[A_LoopFilePath]["relPath"] := StrReplace(StrReplace(A_LoopFilePath, sfolder), A_LoopFileName)
+				folderobj[A_LoopFilePath]["fTMod"] := A_LoopFileTimeModified
+				folderobj[A_LoopFilePath]["fsize"] := A_LoopFileSize
+				folderobj[A_LoopFilePath]["fmd5"] := currfileMD5
+
+				mprefilepath := md5obj[currfileMD5]
+				;FileAppend, % A_LoopFilePath " - " prefilepath "`n", %A_desktop%\123.txt
+				if !folderobj[mprefilepath]          ; 前一个文件还没有入过重复库
+				{
+					FileGetTime, fTMod, % mprefilepath, M
+					SplitPath, mprefilepath, fname
+					folderobj[mprefilepath] := {}
+					folderobj[mprefilepath]["fname"] := fname
+					folderobj[mprefilepath]["relPath"] := StrReplace(StrReplace(mprefilepath, sfolder), fname)
+					folderobj[mprefilepath]["fTMod"] := fTMod
+					folderobj[mprefilepath]["fsize"] := A_LoopFileSize
+					folderobj[mprefilepath]["fmd5"] := currfileMD5
+					folderobj[mprefilepath]["unchecked"] := "1"
+				}
+			}
+			else                                  ; 不存在相同的 md5
+			{
+				MD5obj[currfileMD5] := A_LoopFilePath
+				fMD5obj[A_LoopFilePath] := currfileMD5
+			}
 		}
 	}
 }

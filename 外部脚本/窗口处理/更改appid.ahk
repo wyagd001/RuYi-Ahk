@@ -11,7 +11,7 @@ if !Windy_CurWin_id
 setwinappid(Windy_CurWin_id, "My_Custom_Group")
 return
 
-setwinappid(winhwnd,appid)
+setwinappid(winhwnd, appid)
 {
 VarSetCapacity(IID_IPropertyStore, 16)
 DllCall("ole32.dll\CLSIDFromString", "wstr", "{886d8eeb-8cf2-4446-8d02-cdba1dbdcf99}", "ptr", &IID_IPropertyStore)

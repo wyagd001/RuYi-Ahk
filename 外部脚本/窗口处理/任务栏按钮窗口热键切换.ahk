@@ -1,6 +1,9 @@
-﻿;|2.3|2023.08.30|1446,1447
+﻿;|2.4|2023.09.28|1446,1447
 #SingleInstance Force
 CandySel := A_Args[1]
+SysGet, Output_Monitor, MonitorWorkArea
+Monitor_w := Output_MonitorRight - Output_MonitorLeft
+Monitor_y := Output_MonitorBottom - Output_MonitorTop - 20
 return
 
 $LWin::
@@ -27,19 +30,19 @@ loop % TBT_Obj.Count()
 }
 
 Gui, +LastFound  -Caption +ToolWindow
-gui, show, w1440 h50 x0 y850, 透明窗口
-WinTrans := 50
+gui, show, % "x0 h50 y" Monitor_y " w" Monitor_w , 透明窗口
+WinTrans := 85
 WinSet, Transparent, %WinTrans%
 WinSet, AlwaysOnTop, On, 透明窗口
 LastCount := TBT_Obj.Count()
 return
 
-$LWin Up::
+LWin Up::
 gui, Destroy
 LastCount := 0
 if !hasactive
 {
-	send {LWin}
+	send {RWin}
 }
 else
 	hasactive := 0

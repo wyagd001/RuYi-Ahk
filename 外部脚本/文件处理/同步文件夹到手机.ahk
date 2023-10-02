@@ -1,4 +1,4 @@
-﻿;|2.0|2023.07.01|1217
+﻿;|2.4|2023.09.28|1217
 #SingleInstance force
 folder1 :=  A_Args[1], folder2 :=  A_Args[2]
 B_adb := A_ScriptDir "\..\..\引用程序\adb.exe"
@@ -362,7 +362,7 @@ Loop
 		Tmp_Str .= Tmp_index ". 删除的文件: " Tmp_Value "`n"
 }
 ;msgbox % Tmp_Str
-GuiText(Tmp_Str, 500, 20)
+GuiText(Tmp_Str, "文件夹同步到手机-操作预览", 500, 20)
 return
 
 delfillefromlist:
@@ -413,7 +413,7 @@ if RF
 }
 return
 
-GuiText(Gtext, w:=300, l:=20)
+GuiText(Gtext, Title:="", w:=300, l:=20)
 {
 	global myedit, TextGuiHwnd
 	Gui,GuiText: Destroy
@@ -421,7 +421,7 @@ GuiText(Gtext, w:=300, l:=20)
 	Gui, +HwndTextGuiHwnd
 	Gui, Add, Edit, Multi readonly w%w% r%l% vmyedit
 	GuiControl,, myedit, %Gtext%
-	gui, Show, AutoSize
+	gui, Show, AutoSize, % Title
 	return
 
 	GuiTextGuiClose:

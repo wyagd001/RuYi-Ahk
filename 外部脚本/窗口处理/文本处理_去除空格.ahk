@@ -1,4 +1,4 @@
-﻿;|2.4|2023.09.20|1505
+﻿;|2.4|2023.10.02|1515
 CandySel := A_Args[1]
 Windy_CurWin_Id := A_Args[2]
 
@@ -15,7 +15,7 @@ if !CandySel
 	DetectHiddenWindows, Off
 }
 
-去除空白行:
+去除空格:
 if !CandySel
 {
 	WinActivate, ahk_id %Windy_CurWin_id%
@@ -25,13 +25,7 @@ if !CandySel
 	sleep 20
 	CandySel := Clipboard
 }
-newStr := ""
-Loop, Parse, CandySel, `n, `r
-{
-	if A_LoopField or (StrLen(A_LoopField) != 0)
-		newStr .= A_LoopField "`r`n"
-}
-Clipboard := newStr
+Clipboard := StrReplace(CandySel, A_Space)
 WinActivate, ahk_id %Windy_CurWin_id%
 Send ^v
 newStr := CandySel := ""

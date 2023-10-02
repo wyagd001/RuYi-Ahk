@@ -84,7 +84,8 @@ TranslateMUI(resDll, resID)
 	VarSetCapacity(buf, 256)
 	hDll := DllCall("LoadLibrary", "str", resDll, "Ptr")
 	Result := DllCall("LoadString", "uint", hDll, "uint", resID, "uint", &buf, "int", 128)
-	VarSetCapacity(buf, -1)
+	;msgbox % StrGet(&buf, Result)
+	VarSetCapacity(buf, -1)  ; 去除多余的 00
 	Return buf
 }
 

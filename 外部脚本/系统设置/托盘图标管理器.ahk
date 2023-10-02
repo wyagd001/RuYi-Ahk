@@ -122,7 +122,7 @@ TrayIcon_GetInfo(sExeName := "")
 	{
 		idxTB := TrayIcon_GetTrayBar(sTray)
 		WinGet, pidTaskbar, PID, ahk_class %sTray%
-
+		;msgbox % idxTB
 		SetDebugPrivilege()   ;  增加 debug 权限
 		hProc := DllCall("OpenProcess", UInt, 0x38, Int, 0, UInt, pidTaskbar)
 ;msgbox % hProc " - " ErrorLevel " - " A_LastError   ; 标准用户下以管理员权限下运行, OpenProcess 报错  5  拒绝访问。 需要增加 debug 权限
