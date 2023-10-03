@@ -1,4 +1,4 @@
-﻿;|2.4|2023.09.15|1317
+﻿;|2.4|2023.10.03|1516
 #Persistent
 #SingleInstance Force
 CandySel := A_Args[1]
@@ -275,7 +275,7 @@ Gui, 98:+Owner1
 Gui, 1:+Disabled
 Gui, 98:Default
 Gui, Submit, NoHide
-if !R_index && !R_Path
+if !R_index && !R_Name && !R_Path
 	R_index := IniMenuobj[Comb].Count()+1
 Gui, Add, Text, x20 y20 w50 h20, 编号：
 Gui, Add, Text, x20 y50 w60 h20, 名称：
@@ -289,13 +289,22 @@ Gui, Show,, Ini_收藏夹 项目编辑
 Return
 
 98ButtonOK:
-Gui, 98:Submit, NoHide
+Gui, 98:Submit
+Gui, 98:Destroy
+Gui, 1:Default
+Gui, 1:-Disabled
+Gui, Submit, NoHide
+IniMenuobj[Comb][R_index] := R_Path "|" R_Name
+obj2ini(IniMenuobj, IniMenuInifile)
+RefreshData(Comb)
+R_index := R_Name := R_Path := ""
 return
 
 98GuiEscape:
 98GuiClose:
 Gui, 1:-Disabled
-Gui, Destroy
+Gui, 98:Destroy
+R_index := R_Name := R_Path := ""
 Return
 
 opensetfile:
