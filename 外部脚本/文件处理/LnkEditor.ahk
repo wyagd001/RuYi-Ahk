@@ -1,4 +1,4 @@
-﻿;|2.0|2023.07.01|1038
+﻿;|2.4|2023.10.07|1038
 #SingleInstance force
 
 if FileExist(A_Args[1]) && InStr(A_Args[1], ".lnk")
@@ -292,7 +292,7 @@ if (FavKey = "发送到")
 if (FavKey = "快速启动栏")
 	LnkFolder := A_AppData "\Microsoft\Internet Explorer\Quick Launch"
 if (FavKey = "脚本收藏夹")
-	LnkFolder := CF_GetParentPath(A_ScriptDir) "\Favorites"
+	LnkFolder := CF_GetParentPath(CF_GetParentPath(A_ScriptDir)) "\Lnk"
 LoadFolder(LnkFolder)
 SetGuiValue()
 return
@@ -391,7 +391,7 @@ CF_FileIsReadOnly(sfile){
 CF_IsFolder(sfile){
 	if InStr(FileExist(sfile), "D")
 	|| (sfile = """::{20D04FE0-3AEA-1069-A2D8-08002B30309D}""")
-	|| SubStr(sfile, 1, 2) = "\\"
+	;|| (SubStr(sfile, 1, 2) = "\\")   ; 局域网共享文件夹 如 \\Win11\Soft
 		return 1
 	else
 		return 0

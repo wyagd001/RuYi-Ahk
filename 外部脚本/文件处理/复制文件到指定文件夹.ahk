@@ -1,4 +1,4 @@
-﻿;|2.0|2023.07.01|1086
+﻿;|2.4|2023.10.07|1086
 CandySel := A_Args[1]
 if !CandySel
 {
@@ -15,7 +15,7 @@ TargetFolder := A_Args[2]
 Cando_CutTo:
 if(GetKeyState("Shift"))
 	Mode_OpenFolder:=1
-Menu, %TargetFolder%, add, % (Mode_OpenFolder?"打开 ":"移动到 ") TargetFolder, Cando_CutToFolder
+Menu, %TargetFolder%, add, % (Mode_OpenFolder?"打开 ":"复制到 ") TargetFolder, Cando_CutToFolder
 Loop, %TargetFolder%\*.*, 2, 1 ; Folders only
 {
 	if A_LoopFileAttrib contains H,R,S  ; Skip any file that is either H (Hidden), R (Read-only), or S (System). Note: No spaces in "H,R,S".
@@ -31,7 +31,7 @@ Loop, %TargetFolder%\*.*, 2, 1 ; Folders only
 	}
 	if filecount
 	{
-		Menu, %A_LoopFileLongPath%, add, % (Mode_OpenFolder?"打开 ":"移动到 ") A_LoopFileName, Cando_CutToFolder
+		Menu, %A_LoopFileLongPath%, add, % (Mode_OpenFolder?"打开 ":"复制到 ") A_LoopFileName, Cando_CutToFolder
 		Menu, %ParentFolderDirectory%, add, %A_LoopFileName%, :%A_LoopFileLongPath%
 	}
 	else

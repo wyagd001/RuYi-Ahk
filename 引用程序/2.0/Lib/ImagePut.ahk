@@ -242,8 +242,8 @@ class ImagePut {
       return coimage
    }
 
-   static get(name, p*) {
-      return ObjHasOwnProp(this, name) ? this.name : ""
+   static get(self, name) {
+      return ObjHasOwnProp(self, name) ? self.%name% : ""
    }
 
    static inputs := [
@@ -279,7 +279,7 @@ class ImagePut {
    static DontVerifyImageType(&image, &keywords := "") {
 
       ; Sentinel value: Returns the empty string for unknown properties.
-      keywords := {base: {__get: this.get}}
+      keywords := {base: {__get: (self, name, *) => this.get(self, name)}}
 
       ; Try ImageType.
       if !IsObject(image)
@@ -288,7 +288,7 @@ class ImagePut {
       ; Goto ImageType.
       if ObjHasOwnProp(image, "image") {
          keywords := image
-         keywords.base := {__get: this.get}
+         keywords.base := {__get: (self, name, *) => this.get(self, name)}
          image := image.image
          throw Error("Must catch this error with ImageType.")
       }
@@ -297,7 +297,7 @@ class ImagePut {
       for type in this.inputs
          if ObjHasOwnProp(image, type) {
             keywords := image
-            keywords.base := {__get: this.get}
+            keywords.base := {__get: (self, name, *) => this.get(self, name)}
             image := image.%type%
             return type
          }
@@ -437,7 +437,7 @@ class ImagePut {
    static ToBitmap(type, image, k := "") {
 
       ; Sentinel value: Returns the empty string for unknown properties.
-      (!k) && k := {base: {__get: this.get}}
+      (!k) && k := {__get: (self, name, *) => this.get(self, name)}
 
       if (type = "clipboard_png")
          return this.from_clipboard_png()
@@ -614,7 +614,7 @@ class ImagePut {
    static ToStream(type, image, k := "") {
 
       ; Sentinel value: Returns the empty string for unknown properties.
-      (!k) && k := {base: {__get: this.get}}
+      (!k) && k := {__get: (self, name, *) => this.get(self, name)}
 
       if (type = "clipboard_png")
          return this.get_clipboard_png()
@@ -1118,7 +1118,8 @@ class ImagePut {
    static from_screenshot(image) {
       ; Thanks tic - https://www.autohotkey.com/boards/viewtopic.php?t=6517
 
-      if !IsObject(image) {
+      ; Allow the image to be a window handle.
+      if !IsObject(image) and WinExist(image) {
          try dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
          WinGetClientPos &x, &y, &w, &h, image
          try DllCall("SetThreadDpiAwarenessContext", "ptr", dpi, "ptr")
@@ -1126,7 +1127,19 @@ class ImagePut {
       }
 
 
-      
+
+
+      ; Adjust coordinates relative to specified window.
+      if image.Has(5) and WinExist(image[5]) {
+         try dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
+         WinGetClientPos &xr, &yr,,, image[5]
+         try DllCall("SetThreadDpiAwarenessContext", "ptr", dpi, "ptr")
+         image[1] += xr
+         image[2] += yr
+      }
+
+
+
 
       ; struct BITMAPINFOHEADER - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapinfoheader
       hdc := DllCall("CreateCompatibleDC", "ptr", 0, "ptr")
@@ -1840,7 +1853,7 @@ class ImagePut {
          s64 := StrLen(RTrim(b64, "=")) * 3 // 4
          code := DllCall("GlobalAlloc", "uint", 0, "uptr", s64, "ptr")
          DllCall("crypt32\CryptStringToBinary", "str", b64, "uint", 0, "uint", 0x1, "ptr", code, "uint*", s64, "ptr", 0, "ptr", 0)
-         DllCall("VirtualProtect", "ptr", code, "ptr", s64, "uint", 0x40, "uint*", &op:=0)
+         DllCall("VirtualProtect", "ptr", code, "ptr", s64, "uint", 0x40, "uint*", 0)
       }
 
       ; Sample the top-left pixel and set all matching pixels to be transparent.
@@ -2072,7 +2085,7 @@ class ImagePut {
       }
 
       __Item[x, y] {
-         get => Format("0x{:X}", NumGet(this.ptr + 4*(y*this.width + x), "uint"))
+         get => Format("0x{:08X}", NumGet(this.ptr + 4*(y*this.width + x), "uint"))
          set => ((value >> 24) || value |= 0xFF000000,
                   NumPut("uint", value, this.ptr + 4*(y*this.width + x)),
                   value)
@@ -2091,7 +2104,7 @@ class ImagePut {
                   return False
 
                ; yield statements
-               c := Format("0x{:X}", NumGet(this, start, "uint"))
+               c := Format("0x{:08X}", NumGet(this, start, "uint"))
 
                ; do block
                start += 4
@@ -2109,7 +2122,7 @@ class ImagePut {
 
                ; yield statements
                i := start // 4
-               c := Format("0x{:X}", NumGet(this, start, "uint"))
+               c := Format("0x{:08X}", NumGet(this, start, "uint"))
 
                ; do block
                start += 4
@@ -2129,7 +2142,7 @@ class ImagePut {
                i := start // 4
                x := mod(i, this.width)
                y := i // this.width
-               c := Format("0x{:X}", NumGet(this, start, "uint"))
+               c := Format("0x{:08X}", NumGet(this, start, "uint"))
 
                ; do block
                start += 4
@@ -2149,7 +2162,7 @@ class ImagePut {
                i := start // 4
                x := mod(i, this.width)
                y := i // this.width
-               c := Format("0x{:X}", NumGet(this, start, "uint"))
+               c := Format("0x{:08X}", NumGet(this, start, "uint"))
                r := c >> 16 & 0xFF
                g := c >>  8 & 0xFF
                b := c       & 0xFF
@@ -2172,7 +2185,7 @@ class ImagePut {
                i := start // 4
                x := mod(i, this.width)
                y := i // this.width
-               c := Format("0x{:X}", NumGet(this, start, "uint"))
+               c := Format("0x{:08X}", NumGet(this, start, "uint"))
                r := c >> 16 & 0xFF
                g := c >>  8 & 0xFF
                b := c       & 0xFF
@@ -2275,12 +2288,29 @@ class ImagePut {
          return filepath
       }
 
-      Base64Put(b64) {
+      Base64Code(b64) {
+         static codes := Map()
+
+         if codes.has(b64)
+            return codes[b64]
+
          s64 := StrLen(RTrim(b64, "=")) * 3 // 4
          code := DllCall("GlobalAlloc", "uint", 0, "uptr", s64, "ptr")
          DllCall("crypt32\CryptStringToBinary", "str", b64, "uint", 0, "uint", 0x1, "ptr", code, "uint*", s64, "ptr", 0, "ptr", 0)
-         DllCall("VirtualProtect", "ptr", code, "ptr", s64, "uint", 0x40, "uint*", &op:=0)
-         return code
+         DllCall("VirtualProtect", "ptr", code, "ptr", s64, "uint", 0x40, "uint*", 0)
+
+         return codes[b64] := code
+      }
+
+      AVX2() {
+         ; This is just plain old AVX, not a check for AVX2 (which is neexed for pixelsearch1y)
+         ; Also see: https://store.steampowered.com/hwsurvey/steam-hardware-software-survey-welcome-to-steam
+         ; C source code - https://godbolt.org/z/n8fxxdsfs
+         code := this.Base64Code((A_PtrSize == 4)
+            ? "VYnli0UIi1UQi00UO0UMcws5EHUCiQiDwATr8F3D" ; not implemented
+            : "U0UxwLgBAAAARInBD6IPuuEbcxkPuuEccxNEicEPAdBI99CoBg+UwA+2wOsCMcBbww==")
+
+         return DllCall(code, "int")
       }
 
       CPUID() {
@@ -2294,11 +2324,12 @@ class ImagePut {
             s64 := StrLen(RTrim(b64, "=")) * 3 // 4
             code := DllCall("GlobalAlloc", "uint", 0, "uptr", s64, "ptr")
             DllCall("crypt32\CryptStringToBinary", "str", b64, "uint", 0, "uint", 0x1, "ptr", code, "uint*", s64, "ptr", 0, "ptr", 0)
-            DllCall("VirtualProtect", "ptr", code, "ptr", s64, "uint", 0x40, "uint*", &op:=0)
+            DllCall("VirtualProtect", "ptr", code, "ptr", s64, "uint", 0x40, "uint*", 0)
 
             ; Set eax flag to 1 to retrieve supported CPU features.
             ; See this for CPU features: https://wiki.osdev.org/CPUID
-            ; Also see page 591: https://www.amd.com/system/files/TechDocs/24594.pdf
+            ; Also see: Appendix D.2 - CPUID Feature Flags Related to Instruction Support
+            ; On page 1861 - https://www.amd.com/content/dam/amd/en/documents/processor-tech-docs/programmer-references/40332.pdf
             DllCall(code, "uint*", &a := 1, "uint*", &b := 0, "uint*", &c := 0, "uint*", &d := 0, "cdecl")
 
             ; Free memory.
@@ -2324,8 +2355,7 @@ class ImagePut {
 
       ColorKey(key := "sentinel", value := 0x00000000) {
          ; C source code - https://godbolt.org/z/eaG9fax9v
-         static code := 0
-         (code) || code := this.Base64Put((A_PtrSize == 4)
+         code := this.Base64Code((A_PtrSize == 4)
             ? "VYnli0UIi1UQi00UO0UMcws5EHUCiQiDwATr8F3D"
             : "SDnRcw5EOQF1A0SJCUiDwQTr7cM=")
 
@@ -2338,8 +2368,7 @@ class ImagePut {
 
       SetAlpha(alpha := 0xFF) {
          ; C source code - https://godbolt.org/z/aWf73jTqc
-         static code := 0
-         (code) || code := this.Base64Put((A_PtrSize == 4)
+         code := this.Base64Code((A_PtrSize == 4)
             ? "VYnli0UIilUQO0UMcwiIUAODwATr813D"
             : "SDnRcwpEiEEDSIPBBOvxww==")
 
@@ -2349,8 +2378,7 @@ class ImagePut {
 
       TransColor(color := "sentinel", alpha := 0x00) {
          ; C source code - https://godbolt.org/z/z3a8WcM5M
-         static code := 0
-         (code) || code := this.Base64Put((A_PtrSize == 4)
+         code := this.Base64Code((A_PtrSize == 4)
             ? "VYnli0UIilUUO0UMcxWLTRAzCIHh////AHUDiFADg8AE6+Zdww=="
             : "SDnRcxaLAUQxwKn///8AdQREiEkDSIPBBOvlww==")
 
@@ -2361,35 +2389,108 @@ class ImagePut {
          DllCall(code, "ptr", this.ptr, "ptr", this.ptr + this.size, "uint", color, "uchar", alpha, "cdecl")
       }
 
+      ; Option 1: PixelSearch, single color with no variation.
+      ; Option 2: PixelSearch, single color with single variation.
+      ; Option 3: PixelSearch, single color with multiple variation.
+      ; Option 4: PixelSearch, range of colors.
+      ; Option 5: PixelSearch, multiple colors with no variation.
+      ; Option 6: PixelSearch, multiple colors with single variation.
+      ; Option 7: PixelSearch, multiple colors with multiple variation.
+
       PixelSearch(color, variation := 0) {
-         ; C source code - https://godbolt.org/z/o7EPo8xPr
-         static PixelSearch := 0
-         (PixelSearch) || PixelSearch := this.Base64Put((A_PtrSize == 4)
-            ? "VYnli1UMi00Qi0UIOdBzCTkIdAeDwATr84nQXcM="
-            : "SInISDnQcwtEOQB0CUiDwATr8EiJ0MM=")
 
-         ; C source code - https://godbolt.org/z/4K38sq8hY
-         static PixelSearch2 := 0
-         (PixelSearch2) || PixelSearch2 := this.Base64Put((A_PtrSize == 4)
-            ? "VYnlVlNRikUQilUcik0gil0ki3UIiEX3ikUUiEX2ikUYiEX1O3UMcyiKRgI4RfdyGzpF9nIWikYBOEX1cg440HIKigY4wXIEONhzBYPGBOvTWonwW15dww=="
-            : "VlNEilQkOESKXCRAilwkSECKdCRQSInISDnQcyuKSAJBOMhyHUQ4yXIYikgBQTjKchBEONlyC4oIOMtyBUA48XMGSIPABOvQW17D")
+         if not IsObject(color) {
 
-         ; Lift color to 32-bits if first 8 bits are zero.
-         (color >> 24) || color |= 0xFF000000
+            ; Lift color to 32-bits if first 8 bits are zero.
+            (color >> 24) || color |= 0xFF000000
 
-         ; PixelSearch, single color, no variation
-         if !IsObject(variation) && (variation == 0)
-            byte := DllCall(PixelSearch, "ptr", this.ptr, "ptr", this.ptr + this.size, "uint", color, "cdecl ptr")
+            if not IsObject(variation)
+               if (variation == 0)
+                  option := 1
+               else
+                  option := 2
+            else if (variation.length == 3)
+                  option := 3
+            else if (variation.length == 6)
+                  option := 4
+            else throw Error("Invalid variation parameter.")
+         }
+         else
+            if not IsObject(variation)
+               if (variation == 0)
+                  option := 5
+               else
+                  option := 6
+            else if (variation.length == 3)
+                  option := 7
+            else throw Error("Invalid variation parameter.")
 
-         ; PixelSearch, single color, and variation
-         else if !IsObject(variation) && (variation != 0) {
+         ; ----------------------- Machine code generated with MCode4GCC using gcc 13.2.0 -----------------------
+
+         ; C source code - https://godbolt.org/z/zr71creqn
+         pixelsearch1 := this.Base64Code((A_PtrSize == 4)
+            ? "VYnlVotNEItVDFOLRQhmD27RjVr0Zg9wygA52HMbDxAAZg92wWYP1/CF9nUMg8AQ6+g5CHQHg8AEOdBy9VteXcM="
+            : "ZkEPbtBIichIjUr0Zg9wygBIOchzIA8QAGYPdsFmRA/XyEWFyXUPSIPAEOvkRDkAdAlIg8AESDnQcvLD")
+
+         ; C source code - https://godbolt.org/z/65Yvsvs1G
+         pixelsearch2 := this.Base64Code((A_PtrSize == 4)
+            ? "VWYPduSJ5VdWU4Pk8IPsEIpFFItdEItNGItVHIt1DIt9IIhEJA6KRSSIXCQPD7bbiEwkDcHjEA+2yYhEJAsPtkUgweEIiFQkDA+2"
+            . "0gnYweIICcgPtk0kDQAAAP8J0Q+2VRRmD27oi0UIZg9wzQDB4hAJ0Y1W9GYPbvFmD3DWADnQczkPEAAPEBgPEDhmD97BZg/e2mYP"
+            . "dMFmD3TfD1TDZg92xGYP18iFyXURg8AQ68+KUAI4VCQPcwmDwAQ58HLw6yM6VCQOcvGKUAE4VCQNcug6VCQMcuKKEIn5ONFy2jpU"
+            . "JAty1I1l9FteX13D"
+            : "QVZBVUFUVVdWU0SLbCRgi0QkaESLdCRwRItUJHhEie6Jx0UPtu0PtsBBweUIRIn1RQ+29kWJ1EWJw0UPtsBEicvB4AhBweAQRQ+2"
+            . "0kUPtslFCfBECdBBweEQRQnoRAnIQYHIAAAA/2YPbuhIichmQQ9uyEiNSvRmD3DBAGYPcM0AZg927Ug5yHM8DxAgDyjQDyjcZg/e"
+            . "1GYP3tlmD3TQZg903A9U02YPdtVmRA/XwkWFwHUSSIPAEOvLikgCQTjLcwtIg8AESDnQcu/rHTjZcvGKSAFAOM5y6UA4+XLkighA"
+            . "OM1y3UQ44XLYW15fXUFcQV1BXsM=")
+
+         ; C source code - https://godbolt.org/z/GaEE4r3aW
+         pixelsearch3 := this.Base64Code((A_PtrSize == 4)
+            ? "VTHSieVXVlOD5PCD7BCLfQyNR/SJRCQEi0UUKdAPhBkBAACD+AF0PoP4AnQhg/gDvgMAAAAPTHQkDIl0JAyLdRBmD25klghmD3Dc"
+            . "AOsIx0QkDAIAAACLXRBmD25skwRmD3DVAOsIx0QkDAEAAACLdRBmD240lo0clolcJAhmD3DOAIP4AXR0g/gCi0UIdD6LTCQEOchz"
+            . "Lg8QAGYPdsFmD9fYDxAAidlmD3bCZg/X2A8QAAnLZg92w2YP1/AJ83V0g8AQ68qDwgPpS////4139Dnwcx8PEABmD3bBZg/XyA8Q"
+            . "AGYPdsJmD9fYCct1RoPAEOvdg8IC6R3///+LRQiNX/Q52HMUDxAAZg92wWYP1/CF9nUgg8AQ6+hC6fn+//+LTCQIiwyROQh0FEI5"
+            . "VCQMf+6DwAQ5+HMGMdLr74n4jWX0W15fXcM="
+            : "QVVBVFVXVlO9AwAAAEmJykiJ0THSSI1x9ESJyCnQD4QEAQAAg/gBSGPadC6D+AJ0FWZBD25smAiD+ANED03dZg9w3QDrBkG7AgAA"
+            . "AGZBD25smARmD3DVAOsGQbsBAAAAZkEPbgyYSY08mGYPcMkAg/gBdHOD+AJMidB0Xkg58HMxDxAADyjhZg924GZED9fsDyjiZg92"
+            . "4GYPdsNmD9fcZkQP1+BECetECeN1c0iDwBDryoPCA+lf////DxAADyjhZg924GYPdsJmRA/X5GYP19hECeN1SUiDwBBIOfBy24PC"
+            . "Auky////TInQSDnwcxUPEABmD3bBZg/X2IXbdSFIg8AQ6+b/wukO////SP/Ci3SX/DkwdBVBOdN/8EiDwARIOchzBzHS6+5Iichb"
+            . "Xl9dQVxBXcM=")
+
+         ; C source code - https://godbolt.org/z/oE5Knfc7W
+         pixelsearch4 := this.Base64Code((A_PtrSize == 4)
+            ? "VTHAZg925InlV1ZTg+Twg+xAi1UYKcIPhFMCAACD+gF0YIP6AnQzi10Qg/oDuQMAAAAPTflmD25sgwiLXRRmD3D9AA8pfCQwZg9u"
+            . "fIMIZg9w3wAPKVwkEOsFvwIAAACLXRBmD25sgwSLXRRmD258gwRmD3DdAGYPcM8ADylMJCDrBb8BAAAAi10QjQyFAAAAAAHLiVwk"
+            . "DItdEGYPbiwLi10UZg9uPAuNNAtmD3DNAIl0JAiLdQhmD3DvAIP6AQ+ECwEAAItNDIPpDIP6Ag+EnAAAADnOD4OMAAAADxAGDyjw"
+            . "DyjQZg/e9WYP3tFmD3TwZg900Q9U1g8o8GYPdtRmD97zZg9082YP19oPKFQkIGYP3tBmD3TQD1TWDyh0JDBmD3bUZg/e8GYPdHQk"
+            . "MGYP19IPKFQkEIlUJARmD97QZg900A9U1mYPdtRmD9fSiRQki1QkBAnaCxQkD4XLAAAAg8YQ6Wz///+DwAPpo/7//2YPdv85znNQ"
+            . "DxAWDyjyDyjCZg/e9WYP3sFmD3TyZg90wQ9Uxg8odCQgZg92x2YP3vJmD3TyZg/X2A8owmYP3sNmD3TDD1TGZg92x2YP19AJ2nVo"
+            . "g8YQ66yDwALpQ/7//4tVDGYPdvaD6gw51nMtDxAWDxAGDxA+Zg/e1WYP3sFmD3TBZg901w9UwmYPdsZmD9fIhcl1JYPGEOvPQOkC"
+            . "/v//OFoCczr/RCQwg8IEg8AEi0wkMDnPf+mDxgQ7dQxzRIpGATHJil4CiUwkMItUJAyIRCQgigaIRCQQi0QkCOvQOlgCcsGKTCQg"
+            . "OEoBcrg6SAFys4pMJBA4CnKrOghyp+sDi3UMjWX0ifBbXl9dww=="
+            : "QVRVV1ZTSIPsUA8pNCQPKXwkEEQPKUQkIEQPKUwkMEQPKVQkQL8DAAAAZg9220mJ00iJyzHSSY1z9IuMJKAAAAAp0Q+EMgIAAIP5"
+            . "AUhjwnRGg/kCdCFmQQ9ufIAIZkEPbnSBCIP5A0QPTddmD3DvAGYPcP4A6wZBugIAAABmQQ9uZIAEZkEPbnSBBGYPcNQAZg9w9gDr"
+            . "BkG6AQAAAGZBD24kgGYPcMwAZkEPbiSBSInYZg9w5ACD+QEPhCIBAACD+QIPhKsAAABIOfAPg5oAAAAPEABEDyjIRA8owGZED97M"
+            . "ZkQP3sFmRA90yGZED3TBRQ9UwUQPKMhmRA92w2ZED97KZkQPdMpmRQ/X4EQPKMBmRA/exmZED3TARQ9UwUQPKMhmRA92w2ZED97N"
+            . "ZkQPdM1mQQ/XyEQPKMBmRA/ex0QJ4WZBD3TAQQ9UwWYPdsNmD9foCel0C8HiAkhj0unfAAAASIPAEOld////g8ID6cf+//9mRQ92"
+            . "wEg58HNcRA8QCEUPKNFBDyjBZkQP3tRmD97BZkUPdNFmD3TBQQ9UwkUPKNFmQQ92wGZED97WZg/X6EEPKMFmD97CZkUPdMpmD3TC"
+            . "QQ9UwWZBD3bAZg/XyAnpdYRIg8AQ65+DwgLpWf7//2ZFD3bJSDnwczlEDxAARQ8o0EEPKMBmRA/e1GYP3sFmD3TBZkUPdMJBD1TA"
+            . "ZkEPdsFmD9fIhckPhTn///9Ig8AQ68L/wukP/v//QTh0CAJzJv/DSIPBBEE52n/uSIPABEw52HM4QIpwAkCKeAFIidEx20CKKOvg"
+            . "QTp0CQJy00E4fAgBcsxBOnwJAXLFQTgsCHK/QTosCXK56wNMidgPKDQkDyh8JBBEDyhEJCBEDyhMJDBEDyhUJEBIg8RQW15fXUFc"
+            . "ww==")
+
+         ; ------------------------------------------------------------------------------------------------------
+
+         ; When doing pointer arithmetic, *Scan0 + 1 is actually adding 4 bytes.
+         if (option == 1)
+            address := DllCall(pixelsearch1, "ptr", this.ptr, "ptr", this.ptr + this.size, "uint", color, "cdecl ptr")
+
+         if (option == 2) {
             r := ((color & 0xFF0000) >> 16)
             g := ((color & 0xFF00) >> 8)
             b := ((color & 0xFF))
             v := abs(variation)
 
-            ; When doing pointer arithmetic, *Scan0 + 1 is actually adding 4 bytes.
-            byte := DllCall(PixelSearch2, "ptr", this.ptr, "ptr", this.ptr + this.size
+            address := DllCall(pixelsearch2, "ptr", this.ptr, "ptr", this.ptr + this.size
                      , "uchar", min(r+v, 255)
                      , "uchar", max(r-v, 0)
                      , "uchar", min(g+v, 255)
@@ -2399,25 +2500,26 @@ class ImagePut {
                      , "cdecl ptr")
          }
 
-         ; PixelSearch, range of colors, and variation.
-         else if IsObject(variation) && (variation.length == 3) {
+         if (option == 3) {
             r := ((color & 0xFF0000) >> 16)
             g := ((color & 0xFF00) >> 8)
             b := ((color & 0xFF))
+            vr := abs(variation[1])
+            vg := abs(variation[2])
+            vb := abs(variation[3])
 
-            byte := DllCall(PixelSearch2, "ptr", this.ptr, "ptr", this.ptr + this.size
-                     , "uchar", min(r + variation[1], 255)
-                     , "uchar", max(r - variation[1], 0)
-                     , "uchar", min(g + variation[2], 255)
-                     , "uchar", max(g - variation[2], 0)
-                     , "uchar", min(b + variation[3], 255)
-                     , "uchar", max(b - variation[3], 0)
+            address := DllCall(pixelsearch2, "ptr", this.ptr, "ptr", this.ptr + this.size
+                     , "uchar", min(r + vr, 255)
+                     , "uchar", max(r - vr, 0)
+                     , "uchar", min(g + vg, 255)
+                     , "uchar", max(g - vg, 0)
+                     , "uchar", min(b + vb, 255)
+                     , "uchar", max(b - vb, 0)
                      , "cdecl ptr")
          }
 
-         ; PixelSearch, range of colors, and variation.
-         else if IsObject(variation) && (variation.length == 6) {
-            byte := DllCall(PixelSearch2, "ptr", this.ptr, "ptr", this.ptr + this.size
+         if (option == 4)
+            address := DllCall(pixelsearch2, "ptr", this.ptr, "ptr", this.ptr + this.size
                      , "uchar", min(max(variation[1], variation[2]), 255)
                      , "uchar", max(min(variation[1], variation[2]), 0)
                      , "uchar", min(max(variation[3], variation[4]), 255)
@@ -2425,87 +2527,348 @@ class ImagePut {
                      , "uchar", min(max(variation[5], variation[6]), 255)
                      , "uchar", max(min(variation[5], variation[6]), 0)
                      , "cdecl ptr")
+
+         if (option == 5) {
+            ; Create a struct of unsigned integers.
+            colors := Buffer(4*color.length)
+
+            ; Fill the struct by iterating through the input array.
+            for c in color {
+                (c >> 24) || c |= 0xFF000000             ; Lift colors to 32-bit ARGB.
+                NumPut("uint", c, colors, 4*(A_Index-1)) ; Place the unsigned int at each offset.
+            }
+
+            address := DllCall(pixelsearch3, "ptr", this.ptr, "ptr", this.ptr + this.size, "ptr", colors, "uint", color.length, "cdecl ptr")
          }
 
-         else throw Error("Invalid variation parameter.")
+         ; Options 6 & 7 - Creates a high and low struct where each pair is the min and max range.
+
+         if (option == 6) {
+            high := Buffer(4*color.length)
+            low := Buffer(4*color.length)
+
+            for c in color {
+               A_Offset := A_Index - 1
+
+               r := ((c & 0xFF0000) >> 16)
+               g := ((c & 0xFF00) >> 8)
+               b := ((c & 0xFF))
+               v := abs(variation)
+
+               NumPut("uchar", 255, high, 4*A_Offset + 3) ; Alpha
+               NumPut("uchar", min(r+v, 255), high, 4*A_Offset + 2)
+               NumPut("uchar", min(g+v, 255), high, 4*A_Offset + 1)
+               NumPut("uchar", min(b+v, 255), high, 4*A_Offset + 0)
+
+               NumPut("uchar", 0, low, 4*A_Offset + 3) ; Alpha
+               NumPut("uchar", max(r-v, 0), low, 4*A_Offset + 2)
+               NumPut("uchar", max(g-v, 0), low, 4*A_Offset + 1)
+               NumPut("uchar", max(b-v, 0), low, 4*A_Offset + 0)
+            }
+
+            address := DllCall(pixelsearch4, "ptr", this.ptr, "ptr", this.ptr + this.size, "ptr", high, "ptr", low, "uint", color.length, "cdecl ptr")
+         }
+
+         if (option == 7) {
+            high := Buffer(4*color.length)
+            low := Buffer(4*color.length)
+
+            for c in color {
+               A_Offset := A_Index - 1
+
+               r := ((c & 0xFF0000) >> 16)
+               g := ((c & 0xFF00) >> 8)
+               b := ((c & 0xFF))
+               vr := abs(variation[1])
+               vg := abs(variation[2])
+               vb := abs(variation[3])
+
+               NumPut("uchar", 255, high, 4*A_Offset + 3) ; Alpha
+               NumPut("uchar", min(r + vr, 255), high, 4*A_Offset + 2)
+               NumPut("uchar", min(g + vg, 255), high, 4*A_Offset + 1)
+               NumPut("uchar", min(b + vb, 255), high, 4*A_Offset + 0)
+
+               NumPut("uchar", 0, low, 4*A_Offset + 3) ; Alpha
+               NumPut("uchar", max(r - vr, 0), low, 4*A_Offset + 2)
+               NumPut("uchar", max(g - vg, 0), low, 4*A_Offset + 1)
+               NumPut("uchar", max(b - vb, 0), low, 4*A_Offset + 0)
+            }
+
+            address := DllCall(pixelsearch4, "ptr", this.ptr, "ptr", this.ptr + this.size, "ptr", high, "ptr", low, "uint", color.length, "cdecl ptr")
+         }
 
          ; Compare the address to the out-of-bounds limit.
-         if (byte == this.ptr + this.size)
+         if (address == this.ptr + this.size)
             return False
 
          ; Return an [x, y] array.
-         offset := (byte - this.ptr) // 4
+         offset := (address - this.ptr) // 4
          return [mod(offset, this.width), offset // this.width]
       }
 
-      PixelSearchAll(color) {
-         ; C source code - https://godbolt.org/z/zPY1qMvYe
-         static PixelSearch3 := 0
-         (PixelSearch3) || PixelSearch3 := this.Base64Put((A_PtrSize == 4)
-            ? "VTHAieVTi1UQi00UOcpzGItdGDkadQw7RQxzBotdCIkUg0CDwgTr5Ftdww=="
-            : "McBEi1QkKE05yHMYRTkQdQ050HMHQYnDTokE2f/ASYPABOvjww==")
+      PixelSearchAll(color, variation := 0) {
 
-         ; Lift color to 32-bits if first 8 bits are zero.
-         (color >> 24) || color |= 0xFF000000
+         if not IsObject(color) {
 
-         ; PixelSearchAll, single color, no variation
-         capacity := 256
-         result := Buffer(A_PtrSize * capacity)
-         count := DllCall(PixelSearch3, "ptr", result, "uint", capacity, "ptr", this.ptr, "ptr", this.ptr + this.size, "uint", color, "cdecl uint")
+            ; Lift color to 32-bits if first 8 bits are zero.
+            (color >> 24) || color |= 0xFF000000
 
-         ; If the default 256 results is exceeded, run the function again.
-         if (count > capacity) {
-            result.size := A_PtrSize * count
-            count := DllCall(PixelSearch3, "ptr", result, "uint", count, "ptr", this.ptr, "ptr", this.ptr + this.size, "uint", color, "cdecl uint")
+            if not IsObject(variation)
+               if (variation == 0)
+                  option := 1
+               else
+                  option := 2
+            else if (variation.length == 3)
+                  option := 3
+            else if (variation.length == 6)
+                  option := 4
+            else throw Error("Invalid variation parameter.")
+         }
+         else
+            if not IsObject(variation)
+               if (variation == 0)
+                  option := 5
+               else
+                  option := 6
+            else if (variation.length == 3)
+                  option := 7
+            else throw Error("Invalid variation parameter.")
+
+         ; ----------------------- Machine code generated with MCode4GCC using gcc 13.2.0 -----------------------
+
+         ; C source code - https://godbolt.org/z/GYMPYv4qT
+         pixelsearchall1 := this.Base64Code((A_PtrSize == 4)
+            ? "VTHSieVXZg9uVRiLRRBWU4tdFGYPcMoAjXP0OfBzDw8QAGYPdsFmD9fIhcl0BY1IEOsVjUgQicjr4TnIdPiLfRg5OHQJg8AEOdhy"
+            . "7usOO1UMcwaLfQiJBJdC6+lbidBeX13D"
+            : "VlMxwESLVCQ4ZkEPbtJmD3DKAEmNWfRJOdhNjVgQcyNBDxAAZg92wWYP1/CF9nUTTYnY6+JNOdh09kU5EHQLSYPABE05yHLt6w45"
+            . "0HMGicZMiQTx/8Dr51teww==")
+
+         ; C source code - https://godbolt.org/z/G5vYe5c8c
+         pixelsearchall2 := this.Base64Code((A_PtrSize == 4)
+            ? "VWYPduSJ5VdWU4Pk8IPsEItdGItNIItVKIpFHIhcJA8PttuLfRTB4xCIRCQOikUkiEwkDQ+2yY139IhUJAsPttLB4QgJ2ohEJAyK"
+            . "RSwJyg+2TSQPttiBygAAAP+IRCQKweEIZg9u6jHSCcsPtk0cZg9wzQDB4RAJy2YPbvNmD3DWADl1EHMri0UQDxAADxAYDxA4Zg/e"
+            . "wWYP3tpmD3TBZg903w9Uw2YPdsRmD9fIhcl0CItFEI1IEOsgi0UQjUgQiU0Q6705TRB09otFEIpYAjhcJA9zC4NFEAQ5fRBy5us0"
+            . "OlwkDnLvilgBOFwkDXLmOlwkDHLgihg4XCQLctg6XCQKctI7VQxzCYtFCItdEIkckELrwY1l9InQW15fXcM="
+            : "QVdBVkFVQVRVV1ZTRItUJGiLhCSIAAAARIucJJAAAABAimwkcESJ10UPttJBicYPtsBBweIQRYnfRQ+220iJy4tMJHiJ1ouUJIAA"
+            . "AABECdBNjVH0QYnMD7bJQYnVD7bSweEIweIICchAD7bNRAnaweEQDQAAAP8JymYPbsAxwGYPbupmD3DIAGYPcMUAZg927U050EmN"
+            . "UBBzQEEPECAPKNEPKNxmD97UZg/e2GYPdNFmD3TcD1TTZg921WYP18qFyXUXSYnQ68lJOdB09kGKSAJAOM9zC0mDwARNOchy6esu"
+            . "QDjpcvBBikgBQTjMcudEOOly4kGKCEE4znLaRDj5ctU58HMGicFMiQTL/8Drx1teX11BXEFdQV5BX8M=")
+
+         ; C source code - https://godbolt.org/z/Px5TE4MWW
+         pixelsearchall3 := this.Base64Code((A_PtrSize == 4)
+            ? "VTHSMcmJ5VdWU4Pk8IPsEItFFIPoDIlEJASLRRwp0IlEJAwPhDwBAACD+AF0PoP4AnQhg/gDuAMAAAAPTEQkCIlEJAiLRRhmD25k"
+            . "kAhmD3DcAOsIx0QkCAIAAACLRRhmD25skARmD3DVAOsIx0QkCAEAAACLRRiNBJCJBCSLRRhmD240kItFEGYPcM4Ag3wkDAF1C4t1"
+            . "FI1e9OmJAAAAg3wkDAJ0YIt8JAQ5+HMuDxAAZg92wWYP19gPEACJ32YPdsJmD9fYDxAACftmD3bDZg/X8AnzdQ2DwBDryoPCA+k2"
+            . "////jXAQ610PEABmD3bBZg/X8A8QAGYPdsJmD9fYCfN14YPAEIt8JAQ5+HLbg8IC6QT///8PEABmD3bBZg/X8IX2db+DwBA52HLq"
+            . "Quno/v//izwkizyfOTh0G0M5XCQIf++DwAQ7RRRzGjnwD4Q6////Mdvr5jtNDHMGi30IiQSPQevXjWX0ichbXl9dww=="
+            : "QVdBVkFVQVRVV1ZTQb4DAAAATItcJGhMiUQkWEiJzonXMckx0kmNafREi0QkcEEp0A+EKQEAAEGD+AFIY8J0MEGD+AJ0FmZBD25s"
+            . "gwhBg/gDRQ9N1mYPcN0A6wZBugIAAABmQQ9ubIMEZg9w1QDrBkG6AQAAAGZBD24Mg02NJINIi0QkWGYPcMkAQYP4AQ+EigAAAEGD"
+            . "+AJ0ZEg56HMxDxAADyjhZg924GZED9f8DyjiZg924GYPdsNmD9fcZkQP1+hECftECet1DkiDwBDryoPCA+lR////TI1oEOthDxAA"
+            . "DyjhZg924GYPdsJmRA/X7GYP19hECet13kiDwBBIOehy24PCAuke////DxAAZg92wWYP19iF23W+SIPAEEg56HLo/8Lp//7//0WL"
+            . "PJxEOTh0Hkj/w0E52n/vSIPABEw5yHMcTDnoD4Q9////Mdvr5Tn5cwdBic9KiQT+/8Hr04nIW15fXUFcQV1BXkFfww==")
+
+         ; C source code - https://godbolt.org/z/T8KjEPb1z
+         pixelsearchall4 := this.Base64Code((A_PtrSize == 4)
+            ? "VWYPdtKJ5VdWMfZTMduD5PCD7ECJXCQ0i0UgKfCJRCQ8D4R3AgAAg/gBdGOD+AJ0OIP4A7gDAAAAD0xEJDiJRCQ4i0UYZg9uZLAI"
+            . "i0UcZg9w7AAPKWwkIGYPbmywCGYPcN0ADykcJOsIx0QkOAIAAACLRRhmD25ksASLRRxmD25MsARmD3DcAGYPcOkA6wjHRCQ4AQAA"
+            . "AItdGI0EtQAAAACLVRiLfRABw2YPbiQCiVwkGItdHGYPcMwAjRQDZg9uJAOJVCQUZg9w5ACDfCQ8AYtFFHUIg+gM6SoBAACDfCQ8"
+            . "Ao1Q9I1Y9A+E2gAAADnfc3YPEAcPKPgPKPBmD978Zg/e8WYPdPhmD3TxD1T3Dyj4Zg928mYP3vtmD3T7Zg/Xzg8o8GYP3vVmD3Tw"
+            . "D1T3Dyh8JCBmD3byZg/e+GYPdHwkIGYP18YPKDQkCchmD97wZg908A9U92YPdvJmD9fWCdB1DYPHEOuGg8YD6aj+//+NRxCJRCQQ"
+            . "6dAAAAAPEDcPKP4PKMZmD978Zg/ewWYPdP5mD3TBD1THDyj+Zg92wmYP3v1mD3T+Zg/XyA8oxmYP3sNmD3TDD1THZg92wmYP18AJ"
+            . "yHWrg8cQOddysIPGAulE/v//DxA3DxAHDxA/Zg/e9GYP3sFmD3TBZg909w9UxmYPdgUAAAAAZg/X0IXSD4Vs////g8cQOcdyyUbp"
+            . "B/7//4tEJBA5xw+Erv7//4pHAjHJi1QkFIlMJDCIRCQfikcBiEQkHooHiEQkHYtEJBiLXCQwOVwkOH8Kg8cEO30UcsDrS4pMJB84"
+            . "SAJyNjpKAnIxilwkHjhYAXIoOloBciOKTCQdOAhyGzoKcheLTCQ0O00McwqLTQiLXCQ0iTyZ/0QkNP9EJDCDwASDwgTroYtEJDSN"
+            . "ZfRbXl9dww=="
+            : "QVdBVkFVQVRVV1ZTSIPseA8pdCQgDyl8JDBEDylEJEBEDylMJFBEDylUJGBFMdJmD3bSSImMJMAAAABNic5Mi4wk6AAAAEyJhCTQ"
+            . "AAAATIuEJOAAAABJjXb0iZQkyAAAADHSRIucJPAAAABBKdMPhHgCAABBg/sBSGPCdEtBg/sCdCZmQQ9ufIAIZkEPbnSBCEGD+wO/"
+            . "AwAAAA9N32YPcO8AZg9w/gDrBbsCAAAAZkEPbmSABGZBD250gQRmD3DcAGYPcPYA6wW7AQAAAGZBD24kgGYPcMwAZkEPbiSBjQSV"
+            . "AAAAAEiYSIlEJBBIi4Qk0AAAAGYPcOQAZkUPdslBg/sBD4RTAQAAQYP7Ag+EBQEAAEg58A+DjgAAAA8QAEQPKMhEDyjAZkQP3sxm"
+            . "RA/ewWZED3TIZkQPdMFFD1TBRA8oyGZED3bCZkQP3stmRA90y2ZBD9foRA8owGZED97GZkQPdMBFD1TBRA8oyGZED3bCZkQP3s1m"
+            . "RA90zWZBD9fIRA8owGZED97HCelmQQ90wEEPVMFmD3bCZg/X+An5dRFIg8AQ6Wn///+DwgPpsv7//0iNeBBIiXwkGOnYAAAARA8Q"
+            . "AEUPKMhBDyjAZkQP3sxmD97BZkUPdMhmD3TBQQ9UwUUPKMhmD3bCZkQP3s5mD9f4QQ8owGYP3sNmRQ90wWYPdMNBD1TAZg92wmYP"
+            . "18gJ+XWeSIPAEEg58HKjg8IC6T/+//9EDxAARQ8o0EEPKMBmRA/e1GYP3sFmD3TBZkUPdMJBD1TAZkEPdsFmD9fIhckPhVr///9I"
+            . "g8AQSDnwcsT/wun8/f//SIt8JBhIOfgPhIT+//8x/0CKaAJEimABRIooSItMJBCJfCQMi3wkDDn7fwtIg8AETDnwcsvrTkE4bAgC"
+            . "cj1BOmwJAnI2RThkCAFyL0U6ZAkBcihFOCwIciJFOiwJchxEO5QkyAAAAHMPSIu8JMAAAABFiddKiQT/Qf/C/0QkDEiDwQTrnw8o"
+            . "dCQgDyh8JDBEidBEDyhEJEBEDyhMJFBEDyhUJGBIg8R4W15fXUFcQV1BXkFfww==")
+
+         ; ------------------------------------------------------------------------------------------------------
+
+         ; Global number of addresses (matching searches) to allocate.
+         limit := 256
+
+         ; If the limit is exceeded, the following routine will be run again.
+         redo:
+         result := Buffer(A_PtrSize * limit) ; Allocate buffer for addresses.
+
+         ; When doing pointer arithmetic, *Scan0 + 1 is actually adding 4 bytes.
+         if (option == 1)
+            count := DllCall(pixelsearchall1, "ptr", result, "uint", limit, "ptr", this.ptr, "ptr", this.ptr + this.size, "uint", color, "cdecl uint")
+
+         if (option == 2) {
+            r := ((color & 0xFF0000) >> 16)
+            g := ((color & 0xFF00) >> 8)
+            b := ((color & 0xFF))
+            v := abs(variation)
+
+            count := DllCall(pixelsearchall2, "ptr", result, "uint", limit, "ptr", this.ptr, "ptr", this.ptr + this.size
+                     , "uchar", min(r+v, 255)
+                     , "uchar", max(r-v, 0)
+                     , "uchar", min(g+v, 255)
+                     , "uchar", max(g-v, 0)
+                     , "uchar", min(b+v, 255)
+                     , "uchar", max(b-v, 0)
+                     , "cdecl ptr")
+         }
+
+         if (option == 3) {
+            r := ((color & 0xFF0000) >> 16)
+            g := ((color & 0xFF00) >> 8)
+            b := ((color & 0xFF))
+            vr := abs(variation[1])
+            vg := abs(variation[2])
+            vb := abs(variation[3])
+
+            count := DllCall(pixelsearchall2, "ptr", result, "uint", limit, "ptr", this.ptr, "ptr", this.ptr + this.size
+                     , "uchar", min(r + vr, 255)
+                     , "uchar", max(r - vr, 0)
+                     , "uchar", min(g + vg, 255)
+                     , "uchar", max(g - vg, 0)
+                     , "uchar", min(b + vb, 255)
+                     , "uchar", max(b - vb, 0)
+                     , "cdecl ptr")
+         }
+
+         if (option == 4)
+            count := DllCall(pixelsearchall2, "ptr", result, "uint", limit, "ptr", this.ptr, "ptr", this.ptr + this.size
+                     , "uchar", min(max(variation[1], variation[2]), 255)
+                     , "uchar", max(min(variation[1], variation[2]), 0)
+                     , "uchar", min(max(variation[3], variation[4]), 255)
+                     , "uchar", max(min(variation[3], variation[4]), 0)
+                     , "uchar", min(max(variation[5], variation[6]), 255)
+                     , "uchar", max(min(variation[5], variation[6]), 0)
+                     , "cdecl ptr")
+
+         if (option == 5) {
+            ; Create a struct of unsigned integers.
+            colors := Buffer(4*color.length)
+
+            ; Fill the struct by iterating through the input array.
+            for c in color {
+                (c >> 24) || c |= 0xFF000000             ; Lift colors to 32-bit ARGB.
+                NumPut("uint", c, colors, 4*(A_Index-1)) ; Place the unsigned int at each offset.
+            }
+
+            count := DllCall(pixelsearchall3, "ptr", result, "uint", limit, "ptr", this.ptr, "ptr", this.ptr + this.size, "ptr", colors, "uint", color.length, "cdecl ptr")
+         }
+
+         ; Options 6 & 7 - Creates a high and low struct where each pair is the min and max range.
+
+         if (option == 6) {
+            high := Buffer(4*color.length)
+            low := Buffer(4*color.length)
+
+            for c in color {
+               A_Offset := A_Index - 1
+
+               r := ((c & 0xFF0000) >> 16)
+               g := ((c & 0xFF00) >> 8)
+               b := ((c & 0xFF))
+               v := abs(variation)
+
+               NumPut("uchar", 255, high, 4*A_Offset + 3) ; Alpha
+               NumPut("uchar", min(r+v, 255), high, 4*A_Offset + 2)
+               NumPut("uchar", min(g+v, 255), high, 4*A_Offset + 1)
+               NumPut("uchar", min(b+v, 255), high, 4*A_Offset + 0)
+
+               NumPut("uchar", 0, low, 4*A_Offset + 3) ; Alpha
+               NumPut("uchar", max(r-v, 0), low, 4*A_Offset + 2)
+               NumPut("uchar", max(g-v, 0), low, 4*A_Offset + 1)
+               NumPut("uchar", max(b-v, 0), low, 4*A_Offset + 0)
+            }
+
+            count := DllCall(pixelsearchall4, "ptr", result, "uint", limit, "ptr", this.ptr, "ptr", this.ptr + this.size, "ptr", high, "ptr", low, "uint", color.length, "cdecl ptr")
+         }
+
+         if (option == 7) {
+            high := Buffer(4*color.length)
+            low := Buffer(4*color.length)
+
+            for c in color {
+               A_Offset := A_Index - 1
+
+               r := ((c & 0xFF0000) >> 16)
+               g := ((c & 0xFF00) >> 8)
+               b := ((c & 0xFF))
+               vr := abs(variation[1])
+               vg := abs(variation[2])
+               vb := abs(variation[3])
+
+               NumPut("uchar", 255, high, 4*A_Offset + 3) ; Alpha
+               NumPut("uchar", min(r + vr, 255), high, 4*A_Offset + 2)
+               NumPut("uchar", min(g + vg, 255), high, 4*A_Offset + 1)
+               NumPut("uchar", min(b + vb, 255), high, 4*A_Offset + 0)
+
+               NumPut("uchar", 0, low, 4*A_Offset + 3) ; Alpha
+               NumPut("uchar", max(r - vr, 0), low, 4*A_Offset + 2)
+               NumPut("uchar", max(g - vg, 0), low, 4*A_Offset + 1)
+               NumPut("uchar", max(b - vb, 0), low, 4*A_Offset + 0)
+            }
+
+            count := DllCall(pixelsearchall4, "ptr", result, "uint", limit, "ptr", this.ptr, "ptr", this.ptr + this.size, "ptr", high, "ptr", low, "uint", color.length, "cdecl ptr")
+         }
+
+         ; If the default 256 results is exceeded, run the machine code again.
+         if (count > limit) {
+            limit := count
+            goto redo
          }
 
          ; Check if any matches are found.
-         if (count = 0)
+         if (count == 0)
             return False
 
          ; Create an array of [x, y] coordinates.
          xys := []
          loop count {
-            byte := NumGet(result, A_PtrSize*(A_Index-1), "ptr")
-            offset := (byte - this.ptr) // 4
-            xy := [mod(offset, this.width), offset // this.width]
-            xys.push(xy)
+            address := NumGet(result, A_PtrSize * (A_Index-1), "ptr")
+            offset := (address - this.ptr) // 4
+            xys.push([mod(offset, this.width), offset // this.width])
          }
          return xys
       }
 
       ImageSearch(image) {
-         ; C source code - https://godbolt.org/z/qPodGdP1d
-         static code := 0
-         (code) || code := this.Base64Put((A_PtrSize == 4)
-            ? "VYnlV1ZTg+wUi0UMi1UYi00IjTyFAAAAAItFECtFHA+vxwNFCIlF6ItFDCnQiUXkjQSVAAAAAIlF7ItF6DnBc2eLRRSLADkBdAmL"
-            . "RRSAeAMAdVCJyCtFCDHSwfgC93UMOVXkfD4x0otFFInLiVXwi3XwO3UcdDyLVeyJ3gHCiVXgi1XgOdBzFIB4AwB0BosWORB1D4PA"
-            . "BIPGBOvl/0XwAfvrzIPBBOuSi0UQD6/HA0UIicGDxBSJyFteX13D"
-            : "QVdBVkFVQVRVV1ZTi1wkcItEJGhIjSyFAAAAAEGJ0kSJwkmJyynaRInXQQ+v0inHSI00kUg58XNjQYsBOQF0B0GAeQMAdU9Iicgx"
-            . "0kwp2EjB+AJB9/I513w8TInIRTHkMdI52nQ+RYnlTI00KE6NLKlMOfBzGYB4AwB0CUWLfQBEOTh1EUiDwARJg8UE6+L/wkUB1OvM"
-            . "SIPBBOuYRQ+vwkuNDINIichbXl9dQVxBXUFeQV/D")
+         ; C source code - https://godbolt.org/z/cKxrrT4ss
+         code := this.Base64Code((A_PtrSize == 4)
+            ? "VYnlV1ZTg+wgi0Uki1UYi30Ui00gD6/Qi3UIix8Pr0UMAcqJXeSLHJeLfQwByItVECtVHIlF7MHnAold4ItdDA+v1ytdGANVCIlV"
+            . "3Ild2ItF3DnGc3CLReyLTeA5DIZ1YInwK0UIMdLB+AL3dQw5VdhyTotF5DkGdUeLRRgx0onxiVXwweACiUXoi0UUi13wO10cdDyL"
+            . "VeiJywHCiVXUi1XUOdBzFIB4AwB0BosTORB1D4PABIPDBOvl/0XwAfnrzIPGBOuJi0UQD6/HA0UIicaDxCCJ8FteX13D"
+            : "QVdBVkFVQVRVV1ZTSIPsKIuEJKgAAACLnCSQAAAARYshQYnSicJJicuLjCSgAAAAD6/TRInXQQ+vwinfiXwkHEgBykWLLJFEicIr"
+            . "lCSYAAAASAHIQQ+v0kiJRCQITInZSY0sk0g56Q+DgAAAAEiLRCQIRDksgXVsSInIMdJMKdhIwfgCQffyOVQkHHJXRDkhdVKJ3jH/"
+            . "MdJIjQS1AAAAAEiJRCQQTInIO5QkmAAAAHRESIt0JBBBif5OjTSxTI08MEw5+HMXgHgDAHQHQYs2OTB1EUiDwARJg8YE6+T/wkQB"
+            . "1+vESIPBBOl3////RQ+vwkuNDINIichIg8QoW15fXUFcQV1BXkFfww==")
 
          ; Convert image to a buffer object.
          if !(IsObject(image) && ObjHasOwnProp(image, "ptr") && ObjHasOwnProp(image, "size"))
             image := ImagePutBuffer(image)
 
          ; Search for the address of the first matching image.
-         byte := DllCall(code, "ptr", this.ptr, "uint", this.width, "uint", this.height
-                           , "ptr", image.ptr, "uint", image.width, "uint", image.height, "cdecl ptr")
+         address := DllCall(code, "ptr", this.ptr, "uint", this.width, "uint", this.height
+            , "ptr", image.ptr, "uint", image.width, "uint", image.height, "uint", image.width//2, "uint", image.height//2
+            , "cdecl ptr")
 
          ; Compare the address to the out-of-bounds limit.
-         if (byte == this.ptr + this.size)
+         if (address == this.ptr + this.size)
             return False
 
          ; Return an [x, y] array.
-         offset := (byte - this.ptr) // 4
+         offset := (address - this.ptr) // 4
          return [mod(offset, this.width), offset // this.width]
       }
 
       ImageSearchAll(image) {
          ; C source code - https://godbolt.org/z/qPodGdP1d
-         static code := 0
-         (code) || code := this.Base64Put((A_PtrSize == 4)
+         code := this.Base64Code((A_PtrSize == 4)
             ? "VYnlV1ZTg+wUi0UMi1UYi00IjTyFAAAAAItFECtFHA+vxwNFCIlF6ItFDCnQiUXkjQSVAAAAAIlF7ItF6DnBc2eLRRSLADkBdAmL"
             . "RRSAeAMAdVCJyCtFCDHSwfgC93UMOVXkfD4x0otFFInLiVXwi3XwO3UcdDyLVeyJ3gHCiVXgi1XgOdBzFIB4AwB0BosWORB1D4PA"
             . "BIPGBOvl/0XwAfvrzIPBBOuSi0UQD6/HA0UIicGDxBSJyFteX13D"
@@ -2540,8 +2903,8 @@ class ImagePut {
          ; Create an array of [x, y] coordinates.
          xys := []
          loop count {
-            byte := NumGet(result, A_PtrSize*(A_Index-1), "ptr")
-            offset := (byte - this.ptr) // 4
+            address := NumGet(result, A_PtrSize*(A_Index-1), "ptr")
+            offset := (address - this.ptr) // 4
             xy := [mod(offset, this.width), offset // this.width]
             xys.push(xy)
          }
@@ -2630,6 +2993,18 @@ class ImagePut {
       x  := IsObject(pos) && pos.Has(1) ? pos[1] : 0.5*(ScreenWidth - w)
       y  := IsObject(pos) && pos.Has(2) ? pos[2] : 0.5*(ScreenHeight - h)
 
+      ; Adjust x and y if a relative to window position is given.
+      if IsObject(pos) && pos.Has(5) && WinExist(pos[5]) {
+         try dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
+         WinGetClientPos &xr, &yr,,, pos[5]
+         try DllCall("SetThreadDpiAwarenessContext", "ptr", dpi, "ptr")
+         x += xr
+         y += yr
+      }
+
+
+
+
       ; Resolve dependent coordinates first, coordinates second, and distances last.
       x2 := Round(x + w)
       y2 := Round(y + h)
@@ -2644,7 +3019,7 @@ class ImagePut {
          NumPut("int", x2, rect,  8)
          NumPut("int", y2, rect, 12)
 
-      DllCall("AdjustWindowRectEx", "ptr", rect, "uint", style, "uint", 0, "uint", styleEx)
+      DllCall("AdjustWindowRectEx", "ptr", rect, "uint", style, "int", 0, "uint", styleEx)
 
       try dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
       hwnd := DllCall("CreateWindowEx"
@@ -2668,16 +3043,16 @@ class ImagePut {
       DllCall("SetWindowLong", "ptr", hwnd, "int", -20, "int", styleEx | WS_EX_LAYERED)
       DllCall("SetLayeredWindowAttributes", "ptr", hwnd, "uint", 0xF0F0F0, "uchar", 0, "int", 1)
 
-      ; Set itself as the *internal* top level window.
-      DllCall("SetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 0, "ptr", hwnd)
-      
       ; A layered child window is only available on Windows 8+.
-      hwnd_child := this.show(pBitmap, title, [0, 0, w, h], WS_CHILD | WS_VISIBLE, WS_EX_LAYERED, hwnd)
+      child := this.show(pBitmap, title, [0, 0, w, h], WS_CHILD | WS_VISIBLE, WS_EX_LAYERED, hwnd)
 
-      ; Override the child's internal hwnd with the parent's hwnd.
-      DllCall("SetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd_child, "int", 0, "ptr", hwnd)
+      ; Store extra data inside window struct (cbWndExtra).
+      DllCall("SetWindowLong", "ptr", hwnd, "int", 0*A_PtrSize, "ptr", hwnd) ; parent window
+      DllCall("SetWindowLong", "ptr", hwnd, "int", 1*A_PtrSize, "ptr", child) ; child window
+      DllCall("SetWindowLong", "ptr", child, "int", 0*A_PtrSize, "ptr", hwnd) ; parent window
+      DllCall("SetWindowLong", "ptr", child, "int", 1*A_PtrSize, "ptr", child) ; child window
 
-      ; Prevent empty windows from showing.
+      ; Delaying this call prevents empty window borders from appearing.
       DllCall("ShowWindow", "ptr", hwnd, "int", 1)
 
       return hwnd
@@ -2718,6 +3093,18 @@ class ImagePut {
 
       x  := IsObject(pos) && pos.Has(1) ? pos[1] : 0.5*(ScreenWidth - w)
       y  := IsObject(pos) && pos.Has(2) ? pos[2] : 0.5*(ScreenHeight - h)
+
+      ; Adjust x and y if a relative to window position is given.
+      if IsObject(pos) && pos.Has(5) && WinExist(pos[5]) {
+         try dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
+         WinGetClientPos &xr, &yr,,, pos[5]
+         try DllCall("SetThreadDpiAwarenessContext", "ptr", dpi, "ptr")
+         x += xr
+         y += yr
+      }
+
+
+
 
       ; Resolve dependent coordinates first, coordinates second, and distances last.
       x2 := Round(x + w)
@@ -2814,15 +3201,18 @@ class ImagePut {
                ,  "uint*", 0xFF << 16 | 0x01 << 24  ; *pblend
                ,   "uint", 2)                       ; dwFlags
 
-      ; Set itself as the *internal* top level window.
-      DllCall("SetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 0, "ptr", hwnd)
+      ; Store extra data inside window struct (cbWndExtra).
+      ; For 64 -> 32-bit: https://learn.microsoft.com/en-us/windows/win32/winprog64/interprocess-communication
+      DllCall("SetWindowLong", "ptr", hwnd, "int", 0*A_PtrSize, "ptr", hwnd) ; parent window (same, only 1 window for now)
+      DllCall("SetWindowLong", "ptr", hwnd, "int", 1*A_PtrSize, "ptr", hwnd) ; child window  (same, only 1 window for now)
+      DllCall("SetWindowLong", "ptr", hwnd, "int", 2*A_PtrSize, "ptr", hdc)  ; contains a pixel buffer
 
       ; Check for multiple frames.
       DllCall("gdiplus\GdipImageGetFrameDimensionsCount", "ptr", pBitmap, "uint*", &dims:=0)
       DllCall("gdiplus\GdipImageGetFrameDimensionsList", "ptr", pBitmap, "ptr", dimIDs := Buffer(16*dims), "uint", dims)
       DllCall("gdiplus\GdipImageGetFrameCount", "ptr", pBitmap, "ptr", dimIDs, "uint*", &frames:=0)
 
-      ; For multiple frames, send WM_APP to WindowProc to render GIFs.
+      ; GIF Animations!
       if (frames > 1) {
          ; Save frame delays because they are slow enough to impact timing.
          DllCall("gdiplus\GdipGetPropertyItemSize", "ptr", pBitmap, "uint", 0x5100, "uint*", &ItemSize:=0) ; PropertyTagFrameDelay
@@ -2833,28 +3223,92 @@ class ImagePut {
          DllCall("gdiplus\GdipCloneImage", "ptr", pBitmap, "ptr*", &pBitmapClone:=0)
          DllCall("gdiplus\GdipImageForceValidation", "ptr", pBitmapClone)
 
-         ; Store data inside window class extra bits (cbWndExtra).
-         DllCall("SetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 1*A_PtrSize, "ptr", pBitmapClone)
-         DllCall("SetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 2*A_PtrSize, "ptr", hdc)
-         DllCall("SetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 3*A_PtrSize, "ptr", Item)
-         DllCall("SetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 4*A_PtrSize, "ptr", pBits)
+         ; Because timeSetEvent calls in a seperate thread, redirect to main thread.
+         ; LPTIMECALLBACK: (uTimerID, uMsg, dwUser, dw1, dw2)
+         pTimeProc := this.SyncWindowProc(hwnd, 0x8000, 5) ; ParamCount = 5
+
+         ; Store extra data inside window struct (cbWndExtra).
+         ptr := DllCall("GlobalAlloc", "uint", 0, "uptr", 6*A_PtrSize, "ptr")
+            NumPut("int",           32, ptr + 0*A_PtrSize) ; custom struct id
+            NumPut("int",           -1, ptr + 1*A_PtrSize) ; frame number
+            NumPut("int",            0, ptr + 2*A_PtrSize) ; current delay
+            NumPut("ptr", pBitmapClone, ptr + 3*A_PtrSize) ; GIF storage
+            NumPut("ptr",         Item, ptr + 4*A_PtrSize) ; Item (max frames & delays)
+            NumPut("ptr",    pTimeProc, ptr + 5*A_PtrSize) ; callback address
+         DllCall("SetWindowLong", "ptr", hwnd, "int", 3*A_PtrSize, "ptr", ptr)
 
          ; Preserve GDI+ scope.
          ImagePut.gdiplusStartup()
 
-         ; Goto WindowProc() and initiate animation via PostMessage.
-         DllCall("PostMessage", "ptr", hwnd, "uint", 0x8000, "uptr", -1, "ptr", 0)
-
-         ; Avoid disposing the device context.
-         return hwnd
+         ; Start GIF Animation loop.
+         timer := DllCall("winmm\timeSetEvent"
+                  , "uint", 10        ; uDelay
+                  , "uint", 10        ; uResolution
+                  ,  "ptr", pTimeProc ; lpTimeProc
+                  , "uint", 0         ; dwUser
+                  , "uint", 1         ; fuEvent
+                  , "uint")
+         DllCall("SetWindowLong", "ptr", hwnd, "int", 4*A_PtrSize, "ptr", timer)
       }
 
-      ; Cleanup the hBitmap and device contexts.
-      DllCall("SelectObject", "ptr", hdc, "ptr", obm)
-      DllCall("DeleteObject", "ptr", hbm)
-      DllCall("DeleteDC",     "ptr", hdc)
-
       return hwnd
+   }
+
+   static SyncWindowProc(hwnd, msg, ParamCount := 0) {
+      hModule := DllCall("GetModuleHandle", "str", "user32.dll", "ptr")
+      SendMessageW := DllCall("GetProcAddress", "ptr", hModule, "astr", "SendMessageW", "ptr")
+
+      pcb := DllCall("GlobalAlloc", "uint", 0, "ptr", 96, "ptr")
+      DllCall("VirtualProtect", "ptr", pcb, "ptr", 96, "uint", 0x40, "uint*", 0)
+
+      p := pcb
+      if (A_PtrSize = 8) {
+                     /*
+                     48 89 4c 24 08  ; mov [rsp+8], rcx
+                     48 89 54'24 10  ; mov [rsp+16], rdx
+                     4c 89 44 24 18  ; mov [rsp+24], r8
+                     4c'89 4c 24 20  ; mov [rsp+32], r9
+                     48 83 ec 28'    ; sub rsp, 40
+                     4c 8d 44 24 30  ; lea r8, [rsp+48]  (arg 3, &params)
+                     49 b9 ..        ; mov r9, .. (arg 4, operand to follow)
+                     */
+         p := NumPut("ptr"  , 0x54894808244c8948,
+                     "ptr"  , 0x4c182444894c1024,
+                     "ptr"  , 0x28ec834820244c89,
+                     "ptr"  , 0x00b9493024448d4c, p) - 1
+         lParamPtr := p, p += 8
+
+         p := NumPut("char" , 0xba,        ; mov edx, nmsg
+                     "int"  , msg,
+                     "char" , 0xb9,        ; mov ecx, hwnd
+                     "int"  , hwnd,
+                     "short", 0xb848,      ; mov rax, SendMessageW
+                     "ptr"  , SendMessageW,
+                     /*
+                     ff d0        ; call rax
+                     48 83 c4 28  ; add rsp, 40
+                     c3           ; ret
+                     */
+                     "ptr"  , 0x00c328c48348d0ff, p)
+      } else {
+         p := NumPut("char" , 0x68, p)     ; push ... (lParam data)
+         lParamPtr := p, p += 4
+         p := NumPut("int"  , 0x0824448d,  ; lea eax, [esp+8]
+                     "char" , 0x50,        ; push eax
+                     "char" , 0x68,        ; push nmsg
+                     "int"  , msg,
+                     "char" , 0x68,        ; push hwnd
+                     "int"  , hwnd,
+                     "char" , 0xb8,        ; mov eax, &SendMessageW
+                     "int"  , SendMessageW,
+                     "short", 0xd0ff,      ; call eax
+                     "char" , 0xc2,        ; ret argsize
+                     "short", ParamCount*4, p) ; InStr(Options, "C") ? 0
+      }
+      NumPut("ptr", p, lParamPtr)          ; To be passed as lParam.
+      p := NumPut("ptr", 0, p)             ; There isn't a function object here so...
+      p := NumPut("int", ParamCount, p)
+      return pcb
    }
 
    static WindowClass(style := 0) {
@@ -2906,39 +3360,105 @@ class ImagePut {
 
          ; WM_DESTROY
          if (uMsg = 0x2) {
-            if pBitmap := DllCall("GetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 1*A_PtrSize, "ptr") {
-               hdc := DllCall("GetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 2*A_PtrSize, "ptr")
-               Item := DllCall("GetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 3*A_PtrSize, "ptr")
+            ; Cleanup the hBitmap and device contexts.
+            hdc := DllCall("GetWindowLong", "ptr", hwnd, "int", 2*A_PtrSize, "ptr")
+            obm := DllCall("CreateBitmap", "int", 0, "int", 0, "uint", 1, "uint", 1, "ptr", 0, "ptr")
+            hbm := DllCall("SelectObject", "ptr", hdc, "ptr", obm, "ptr")
+            DllCall("DeleteObject", "ptr", hbm)
+            DllCall("DeleteDC", "ptr", hdc)
 
-               ; Exit loop.
-               DllCall("SetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 1*A_PtrSize, "ptr", 0)
+            if ptr := DllCall("GetWindowLong", "ptr", hwnd, "int", 3*A_PtrSize, "ptr") {
+               id := NumGet(ptr, 0, "int")
 
-               ; Dispose of all data stored in the window class.
-               DllCall("gdiplus\GdipDisposeImage", "ptr", pBitmap)
-               obm := DllCall("CreateBitmap", "int", 0, "int", 0, "uint", 1, "uint", 1, "ptr", 0, "ptr")
-               hbm := DllCall("SelectObject", "ptr", hdc, "ptr", obm, "ptr")
-               DllCall("DeleteObject", "ptr", hbm)
-               DllCall("DeleteDC", "ptr", hdc)
-               DllCall("GlobalFree", "ptr", Item)
+               ; Exit GIF Animation loop.
+               if (id == 32) {
+                  pBitmap      := NumGet(ptr + 3*A_PtrSize, "ptr")
+                  Item         := NumGet(ptr + 4*A_PtrSize, "ptr")
+                  pTimeProc    := NumGet(ptr + 5*A_PtrSize, "ptr")
+                  timer        := DllCall("GetWindowLong", "ptr", hwnd, "int", 4*A_PtrSize, "ptr")
 
-               ; Exit GDI+ conditionally due to the ImagePut class being destroyed first.
-               ImagePut.gdiplusShutdown()
+                  DllCall("gdiplus\GdipDisposeImage", "ptr", pBitmap)
+                  DllCall("GlobalFree", "ptr", Item)
+                  DllCall("GlobalFree", "ptr", pTimeProc)
+                  DllCall("winmm\timeKillEvent", "uint", timer)
+
+                  ; Exit GDI+ conditionally due to the ImagePut class being destroyed first.
+                  ImagePut.gdiplusShutdown()
+
+                  ; Exit the window procedure.
+                  DllCall("GlobalFree", "ptr", ptr)
+                  DllCall("SetWindowLong", "ptr", hwnd, "int", 3*A_PtrSize, "ptr", 0) ; Exit loop
+               }
             }
+
             Persistent(--active_windows)
          }
 
-         ; WM_LBUTTONDOWN
+         ; WM_LBUTTONDOWN - Drag to move the window.
          if (uMsg = 0x201) {
-            hwnd := DllCall("GetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 0, "ptr") ; internal parent hwnd
-            return DllCall("DefWindowProc", "ptr", hwnd, "uint", 0xA1, "uptr", 2, "ptr", 0, "ptr")
+            parent := DllCall("GetWindowLong", "ptr", hwnd, "int", 0*A_PtrSize, "ptr")
+            return DllCall("DefWindowProc", "ptr", parent, "uint", 0xA1, "uptr", 2, "ptr", 0, "ptr")
          }
 
-         ; WM_RBUTTONUP
+         ; WM_RBUTTONUP - Destroy the window.
          if (uMsg = 0x205) {
-            hwnd := DllCall("GetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 0, "ptr") ; internal parent hwnd
-            DllCall("DestroyWindow", "ptr", hwnd)
+            parent := DllCall("GetWindowLong", "ptr", hwnd, "int", 0*A_PtrSize, "ptr")
+            DllCall("DestroyWindow", "ptr", parent)
             return 0
          }
+
+         ; WM_MBUTTONDOWN - Show x, y, and color.
+         if (uMsg = 0x207) {
+            ; Force the child hwnd as transparent pixels could redirect to the parent hwnd.
+            child := DllCall("GetWindowLong", "ptr", hwnd, "int", 1*A_PtrSize, "ptr")
+            hdc := DllCall("GetWindowLong", "ptr", child, "int", 2*A_PtrSize, "ptr")
+
+            ; Get pBits from hBitmap currently selected onto the device context.
+            ; struct DIBSECTION - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-dibsection
+            ; struct BITMAP - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmap
+            hbm := DllCall("GetCurrentObject", "ptr", hdc, "uint", 7)
+            dib := Buffer(64+5*A_PtrSize) ; sizeof(DIBSECTION) = 84, 104
+            DllCall("GetObject", "ptr", hbm, "int", dib.size, "ptr", dib)
+               , width  := NumGet(dib, 4, "uint")
+               , height := NumGet(dib, 8, "uint")
+               , pBits  := NumGet(dib, A_PtrSize = 4 ? 20:24, "ptr")
+
+            ; Convert from unsigned int to signed shorts.
+            xy := Buffer(4)
+            NumPut("uint", lparam, xy)
+            x := NumGet(xy, 0, "short")
+            y := NumGet(xy, 2, "short")
+
+            ; Safe limits for x and y.
+            (x < 0) && x := 0
+            (x >= width) && x := width-1
+            (y < 0) && y := 0
+            (y >= height) && y := height-1
+
+            ; Get color.
+            c := Format("0x{:08X}", NumGet(pBits + 4*(y*width + x), "uint"))
+
+            ; Process background color (BGR) and text color (greyscale).
+            background_color := RegExReplace(c, "^0x..(..)(..)(..)$", "0x$3$2$1")
+            text_color := (0.3*(255&c>>16) + 0.59*(255&c>>8) + 0.11*(255&c)) >= 128 ? 0x000000 : 0xFFFFFF
+
+            ; Show tooltip.
+            tt := Tooltip(" (" x ", " y ") `n " SubStr(c, 3) " ",,, 16)
+
+
+            ; Style background and text color.
+            DllCall("UxTheme\SetWindowTheme", "ptr", tt, "ptr", 0, "ptr", Buffer(2, 0), "hresult")
+            DllCall("SendMessage", "ptr", tt, "uint", 1043, "ptr", background_color, "ptr", 0)
+            DllCall("SendMessage", "ptr", tt, "uint", 1044, "ptr", text_color, "ptr", 0)
+
+            ; Destroy tooltip after 7 seconds of the last showing.
+            static Reset_Tooltip := Tooltip.bind(,,, 16)
+            SetTimer Reset_Tooltip, -7000
+         }
+
+
+
+
 
          ; WM_APP - Animate GIFs
          if (uMsg = 0x8000) {
@@ -2946,72 +3466,75 @@ class ImagePut {
             Critical
 
             ; Get variables.
-            pBitmap := DllCall("GetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 1*A_PtrSize, "ptr")
-            hdc := DllCall("GetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 2*A_PtrSize, "ptr")
-            Item := DllCall("GetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 3*A_PtrSize, "ptr")
-            pBits := DllCall("GetWindowLong" (A_PtrSize=8 ? "Ptr":""), "ptr", hwnd, "int", 4*A_PtrSize, "ptr")
+            hdc := DllCall("GetWindowLong", "ptr", hwnd, "int", 2*A_PtrSize, "ptr")
+            ptr := DllCall("GetWindowLong", "ptr", hwnd, "int", 3*A_PtrSize, "ptr")
 
-            ; Exit loop.
-            if !pBitmap
+            ; Exit GIF animation loop.
+            if !ptr
                return
-            
+
+            frame        := NumGet(ptr + 1*A_PtrSize, "int")
+            current      := NumGet(ptr + 2*A_PtrSize, "int")
+            pBitmap      := NumGet(ptr + 3*A_PtrSize, "ptr")
+            Item         := NumGet(ptr + 4*A_PtrSize, "ptr")
+            pTimeProc    := NumGet(ptr + 5*A_PtrSize, "ptr")
+
             ; Get next frame.
-            frames := NumGet(Item + 4, "uint") // 4                 ; Max frames
-            frame := wParam + 1                                     ; Next frame
-            frame := mod(frame, frames)                             ; Loop back to first frame
+            frames := NumGet(Item + 4, "uint") // 4            ; Total number of frames
+            frame := mod(frame + 1, frames)                    ; Loop back to zero
 
-            ; Get delay.
-            delays := NumGet(Item + 8 + A_PtrSize, "ptr")           ; Array of delays
-            delay := 10 * NumGet(delays + 4*frame, "uint")          ; Delay of next frame
-            delay := max(delay, 10)                                 ; Minimum delay is 10ms
-            (delay == 10) && delay := 100                           ; 10 ms is actually 100 ms
-            ; See: https://www.biphelps.com/blog/The-Fastest-GIF-Does-Not-Exist
+            ; Get delay. See: https://www.biphelps.com/blog/The-Fastest-GIF-Does-Not-Exist
+            delays := NumGet(Item + 8 + A_PtrSize, "ptr")      ; Array of delays
+            delay := 10 * NumGet(delays + 4*frame, "uint")     ; Delay of next frame
+            delay := max(delay, 10)                            ; Minimum delay is 10ms
+            (delay == 10) && delay := 100                      ; 10 ms is actually 100 ms
 
-            ; Randomize the delay in intervals of 15.6
-            resolution := 15.6
-            rand := random()
-            percentage := mod(delay, resolution) / resolution
-            percentage *= 0.957 ; Higher is faster, lower is slower
+            ; Check delay.
+            current += 10                                      ; Add resolution of timer
+            NumPut("int", current, ptr + 2*A_PtrSize)          ; Save the current delay
 
-            ; Randomized multiples of resolution
-            if (rand > percentage)
-               res := Floor(delay / resolution) * resolution
-            else
-               res := Ceil(delay / resolution) * resolution
+            ; Check if the current tick is equal to the delay.
+            ; Will execute by frame number rather than timing, which is more accurate,
+            ; because the timing will rely take into account the above overhead,
+            ; whereas the frame number will always form an even distribution.
+            ; Note that the variance (jitter) is additive, yet reverts to zero over time.
+            if (current != delay)
+               return
 
-            ; Async the next frame as soon as possible to prevent rendering lag.
-            SetTimer WindowProc.bind(hwnd, uMsg, frame, 0), -1 * res
-
+            NumPut("int",   frame, ptr + 1*A_PtrSize)          ; Save the frame number
+            NumPut("int",       0, ptr + 2*A_PtrSize)          ; Reset the current delay
 
             /*
             ; Debug code
-            static start := 0, sum := 0, count := 0, sum2 := 0, count2 := 0
+            static start := 0, sum := 0, count := 0
             DllCall("QueryPerformanceFrequency", "int64*", &frequency:=0)
             DllCall("QueryPerformanceCounter", "int64*", &now:=0)
             time := (now - start) / frequency * 1000
             if (time < 10000) {
                sum += time
-               count++
-               average := sum / count
-               sum2 += res
-               count2++
-               Tooltip   "Current Tick:`t" Round(time, 4)
-                     . "`nAverage FPS:`t" Round(average, 4)
-                     . "`nQueued FPS:`t" Round(sum2 / count2, 4)
-                     . "`nTarget FPS:`t" delay
-                     . "`nPercentage:`t" percentage ", " rand
-                     . "`nFloor and Ceiling:`t" Floor(delay / resolution) * resolution ", " Ceil(delay / resolution) * resolution
+               count += 1
+               ;if (mod(count, 10) = 0) ; Prevent the tooltip from impacting timings
+                  Tooltip   "Current Delay:`t" Round(time, 4)
+                     . "`n" "Average Delay:`t" Round(sum / count, 4)
+                     . "`n" "Planned Delay:`t" (delay ?? "unknown")
             }
             start := now
             */
+
             ; Select frame to show.
             DllCall("gdiplus\GdipImageGetFrameDimensionsCount", "ptr", pBitmap, "uint*", &dims:=0)
             DllCall("gdiplus\GdipImageGetFrameDimensionsList", "ptr", pBitmap, "ptr", dimIDs := Buffer(16*dims), "uint", dims)
             DllCall("gdiplus\GdipImageSelectActiveFrame", "ptr", pBitmap, "ptr", dimIDs, "uint", frame)
 
-            ; Get Bitmap width and height.
-            DllCall("gdiplus\GdipGetImageWidth", "ptr", pBitmap, "uint*", &width:=0)
-            DllCall("gdiplus\GdipGetImageHeight", "ptr", pBitmap, "uint*", &height:=0)
+            ; Get pBits from hBitmap currently selected onto the device context.
+            ; struct DIBSECTION - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-dibsection
+            ; struct BITMAP - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmap
+            hbm := DllCall("GetCurrentObject", "ptr", hdc, "uint", 7)
+            dib := Buffer(64+5*A_PtrSize) ; sizeof(DIBSECTION) = 84, 104
+            DllCall("GetObject", "ptr", hbm, "int", dib.size, "ptr", dib)
+               , width  := NumGet(dib, 4, "uint")
+               , height := NumGet(dib, 8, "uint")
+               , pBits  := NumGet(dib, A_PtrSize = 4 ? 20:24, "ptr")
 
             ; Transfer data from source pBitmap to an hBitmap manually.
             Rect := Buffer(16, 0)                  ; sizeof(Rect) = 16
@@ -3039,10 +3562,10 @@ class ImagePut {
                      ,   "uint", 0                        ; crKey
                      ,  "uint*", 0xFF << 16 | 0x01 << 24  ; *pblend
                      ,   "uint", 2)                       ; dwFlags
-            return
          }
 
          ; Must return
+         default:
          return DllCall("DefWindowProc", "ptr", hwnd, "uint", uMsg, "uptr", wParam, "ptr", lParam, "ptr")
       }
    }
@@ -3279,7 +3802,7 @@ class ImagePut {
          s64 := StrLen(RTrim(b64, "=")) * 3 // 4
          code := DllCall("GlobalAlloc", "uint", 0, "uptr", s64, "ptr")
          DllCall("crypt32\CryptStringToBinary", "str", b64, "uint", 0, "uint", 0x1, "ptr", code, "uint*", s64, "ptr", 0, "ptr", 0)
-         DllCall("VirtualProtect", "ptr", code, "ptr", s64, "uint", 0x40, "uint*", &op:=0)
+         DllCall("VirtualProtect", "ptr", code, "ptr", s64, "uint", 0x40, "uint*", 0)
       }
 
       ; Default to lowercase hex values. Or capitalize the string below.
@@ -3315,7 +3838,7 @@ class ImagePut {
          s64 := StrLen(RTrim(b64, "=")) * 3 // 4
          code := DllCall("GlobalAlloc", "uint", 0, "uptr", s64, "ptr")
          DllCall("crypt32\CryptStringToBinary", "str", b64, "uint", 0, "uint", 0x1, "ptr", code, "uint*", s64, "ptr", 0, "ptr", 0)
-         DllCall("VirtualProtect", "ptr", code, "ptr", s64, "uint", 0x40, "uint*", &op:=0)
+         DllCall("VirtualProtect", "ptr", code, "ptr", s64, "uint", 0x40, "uint*", 0)
       }
 
       ; Default to lowercase hex values. Or capitalize the string below.
@@ -3787,7 +4310,7 @@ class ImagePut {
                throw Error("Bitmap is out of scope. `n`nIf you wish to handle raw pointers to GDI+ bitmaps, add the line"
                   . "`n`n`t`t" this.prototype.__class ".gdiplusStartup()"
                   . "`n`nto the top of your script. If using Gdip_All.ahk use pToken := Gdip_Startup()."
-                  . "`nAlternatively, use pic := ImagePutBuffer() and pic.pBitmap instead."
+                  . "`nAlternatively, use pic := ImagePutBuffer(image) and pic.pBitmap instead."
                   . "`nYou can copy this message by pressing Ctrl + C.", -4)
          }
       }

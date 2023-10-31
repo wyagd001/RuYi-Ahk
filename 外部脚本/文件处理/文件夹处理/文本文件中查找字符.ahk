@@ -52,7 +52,7 @@ ControlHandler:
         
         Loop, Files, % EditDir "\" (EditType ? EditType : "*.*"), FR
         {
-            if A_LoopFileExt in txt,ahk,au3,htm,json
+            if A_LoopFileExt in txt,ahk,au3,htm,json,md
             	FileEncoding % File_GetEncoding(A_LoopFileFullPath)
             ;FileEncoding % File_GetEncoding(A_LoopFileFullPath)
             Try FileRead, MatchRead, % A_LoopFileFullPath   ;  utf8  编码的问题
@@ -224,7 +224,7 @@ CF_OpenFolder(sfile, OnlyFolder := 1){
 CF_IsFolder(sfile){
 	if InStr(FileExist(sfile), "D")
 	|| (sfile = """::{20D04FE0-3AEA-1069-A2D8-08002B30309D}""")
-	|| SubStr(sfile, 1, 2) = "\\"
+	;|| (SubStr(sfile, 1, 2) = "\\")   ; 局域网共享文件夹 如 \\Win11\Soft
 		return 1
 	else
 		return 0

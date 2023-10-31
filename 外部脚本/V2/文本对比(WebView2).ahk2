@@ -1933,27 +1933,27 @@ return
 comparetext()
 {
 	Global
-main := Gui("+Resize")
-main.OnEvent("Close", _ExitApp)
-main.Title := "文本比较"
-main.Show(Format("w{} h{}", A_ScreenWidth * 0.8, A_ScreenHeight * 0.6))
+	main := Gui("+Resize")
+	main.OnEvent("Close", _ExitApp)
+	main.Title := "文本比较"
+	main.Show(Format("w{} h{}", A_ScreenWidth * 0.8, A_ScreenHeight * 0.6))
 
-wvc := WebView2.create(main.Hwnd)
-;msgbox main.Hwnd
-wv := wvc.CoreWebView2
-nwr := wv.NewWindowRequested(NewWindowRequestedHandler)
-wv.Navigate(A_Temp "\文本对比.html")
+	wvc := WebView2.create(main.Hwnd)
+	;msgbox main.Hwnd
+	wv := wvc.CoreWebView2
+	nwr := wv.NewWindowRequested(NewWindowRequestedHandler)
+	wv.Navigate(A_Temp "\文本对比.html")
 
-NewWindowRequestedHandler(handler, wv2, arg) {
-	argp := WebView2.NewWindowRequestedEventArgs(arg)
-	deferral := argp.GetDeferral()
-	argp.NewWindow := wv2
-	deferral.Complete()
-}
+	NewWindowRequestedHandler(handler, wv2, arg) {
+		argp := WebView2.NewWindowRequestedEventArgs(arg)
+		deferral := argp.GetDeferral()
+		argp.NewWindow := wv2
+		deferral.Complete()
+	}
 
-_ExitApp(*) {
-	ExitApp(0)
-}
+	_ExitApp(*) {
+		ExitApp(0)
+	}
 }
 
 Receive_WM_COPYDATA(wParam, lParam, msg, hwnd)

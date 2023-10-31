@@ -1,4 +1,4 @@
-﻿;|2.3|2023.08.25|1333
+﻿;|2.4|2023.10.07|1333
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\f17f.ico"
 CandySel :=  A_Args[1]
@@ -13,9 +13,9 @@ Gui, Add, Text, x10 yp+32, 命令类型:
 Gui, Add, ComboBox, xp+80 yp-5 w550 h90 vcommand gupdateparam, 查找替换||文首添加一行|文末添加一行|文首删除一行|文末删除一行|
 Gui, Add, Button, xp+560 yp-2 w60 gruncommand, 执行命令
 
-gui, add, Text, x10 yp+38 w60 vmyparam1, 查找字符:
+gui, add, Text, x10 yp+38 w80 vmyparam1, 查找字符:
 gui, add, Edit, xp+80 yp-3 w550 vmyedit1 r3, 
-gui, add, Text, x10 yp+60 w60 vmyparam2, 替换字符:
+gui, add, Text, x10 yp+60 w80 vmyparam2, 替换字符:
 gui, add, Edit, xp+80 yp w550 vmyedit2 r3,
 Gui, Add, CheckBox, x10 yp+60 vzhuanyi h30, 对参数中的 \r, \n, \t 进行转义
 
@@ -35,21 +35,22 @@ updateparam:
 Gui Submit, nohide
 if (command = "查找替换")
 {
-	commmode("查找字符:", "替换字符:",, "enable", "enable")
+	commmode("查找字符:", "替换字符:", "enable", "enable")
+}
+if (command = "文首添加一行") or (command = "文末添加一行")
+{
+	commmode("新增行字符:", "参数2:", "enable", "disable")
 }
 Return
 
-commmode(p1:="参数1:", p2:="参数2:", p3:="参数3:", st1:="Disable", st2:="Disable", st3:="Disable")
+commmode(p1:="参数1:", p2:="参数2:", st1:="Disable", st2:="Disable")
 {
 	GuiControl,, myparam1, % p1
 	GuiControl,, myparam2, % p2
-	GuiControl,, myparam3, % p3
 	GuiControl,, myedit1, `n
 	GuiControl,, myedit2, `n
-	GuiControl,, myedit3
 	GuiControl, % st1, myedit1
 	GuiControl, % st2, myedit2
-	GuiControl, % st3, myedit3
 }
 
 uncheckall:

@@ -1,4 +1,4 @@
-﻿;|2.2|2023.08.14|1121
+﻿;|2.4|2023.10.09|1121
 RecentFolderPath := upDir(A_StartMenu) "\Recent"
 DetectHiddenWindows, On
 WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI
@@ -15,11 +15,11 @@ else
 }
 
 if instr(Windy_CurWin_Class, "Notepad") or (Windy_CurWin_Class = "SciTEWindow")
-	menu, % LnkFolderMenu(RecentFolderPath, "txt,ahk,htm","收藏夹",0,2,1,1), show
+	menu, % LnkFolderMenu(RecentFolderPath, "txt,ahk,htm,md,ini","收藏夹",0,2), show
 else if (Windy_CurWin_Class = "CabinetWClass") or (Windy_CurWin_Class = "Progman")
-	menu, % LnkFolderMenu(RecentFolderPath, "","收藏夹",0,2,1,0), show
+	menu, % LnkFolderMenu(RecentFolderPath, "","收藏夹",0,2), show
 else if (Windy_CurWin_Class = "WinRarWindow")
-	menu, % LnkFolderMenu(RecentFolderPath, "rar,zip,7z","收藏夹",0,2,1,1), show
+	menu, % LnkFolderMenu(RecentFolderPath, "rar,zip,7z","收藏夹",0,2), show
 return
 
 ; LnkFolderMenu 函数参数
@@ -35,17 +35,18 @@ return
 ; LnkFolderMenu 函数返回值  菜单名称 MenuName
 ;                        子文件夹数量超过 50，文件数量超过 500，返回空值
 
-LnkFolderMenu(FolderPath, SpecifyExt:="*", MenuName:="", ShowIcon:=1, ShowOpenFolderMenu:=1, Showhide:=0, FolderFirst:=1, RecurseFolder:=1)
+LnkFolderMenu(FolderPath, SpecifyExt:="*", MenuName:="", ShowIcon:=1, ShowOpenFolderMenu:=1, Showhide:=0, FolderFirst:=0, RecurseFolder:=0)
 {
 	MenuName := MenuName ? MenuName : FolderPath
+	Menu, %MenuName%, DeleteAll
 	Array := StrSplit(SpecifyExt, ",")
 	;msgbox % Array[1] " - " Array[2] " - " (Array[3]=""?0:1)
 	if (ShowOpenFolderMenu = 1)
 	{
 		BoundRun := Func("Run").Bind(FolderPath)
-		Menu, %MenuName%, add, 打开 %FolderPath%, %BoundRun%
+		Menu, %MenuName%, add, 打开 Recent, %BoundRun%
 		if ShowIcon
-			FolderMenu_AddIcon(MenuName, "打开 " . FolderPath)
+			FolderMenu_AddIcon(MenuName, "打开 Recent")
 		Menu, %MenuName%, add
 	}
 
@@ -74,7 +75,8 @@ LnkFolderMenu(FolderPath, SpecifyExt:="*", MenuName:="", ShowIcon:=1, ShowOpenFo
 			if (A_LoopField = "")  ; 忽略列表末尾的最后一个换行符(空项).
 				continue
 			StringSplit, FileItem, A_LoopField, %A_Tab%  ; 用 tab 作为分隔符将其分为两部分.
-			SplitPath, FileItem2,, ParentFolderDirectory, fileExt, FileNameNoExt
+			FFileItem2 := StrReplace(FileItem2, ".lnk")  ; 没有了 ".lnk" 这个后缀
+			SplitPath, FFileItem2, FileName, ParentFolderDirectory, fileExt, FileNameNoExt
 			ParentFolderDirectory := (ParentFolderDirectory=FolderPath) ? MenuName : ParentFolderDirectory
 			if (ShowOpenFolderMenu=1) && (ParentFolderDirectory != MenuName) && !ExistSubMenuName[ParentFolderDirectory]
 			{
@@ -84,13 +86,13 @@ LnkFolderMenu(FolderPath, SpecifyExt:="*", MenuName:="", ShowIcon:=1, ShowOpenFo
 				StringTrimLeft, SubMenuName, ParentFolderDirectory, % pos+1
 				Menu, %ParentFolderDirectory%, add, 打开 %SubMenuName%, %BoundRun%
 				if ShowIcon
-					FolderMenu_AddIcon(ParentFolderDirectory, "打开 " . SubMenuName)
+					LnkFolderMenu_AddIcon(ParentFolderDirectory, "打开 " . SubMenuName)
 				Menu, %ParentFolderDirectory%, add
 			}
 			;msgbox %  pos "`n" A_LoopFileLongPath "`n" ParentFolderDirectory "`n" A_LoopFileName
-			FileMenuName := FileNameNoExt
-			
-			if (Array[1]="*"?1:Array[1]=""?!instr(FileMenuName, "."):instr(FileMenuName, "." Array[1])) or (Array[2]=""?0:instr(FileMenuName, "." Array[2])) or (Array[3]=""?0:instr(FileMenuName, "." Array[3]))
+			FileMenuName := FileName
+			;msgbox % FileMenuName "|" FileItem2
+			if (Array[1] = "*") or (Array[1] = "" && !Instr(FileMenuName, ".")) or (fileExt = Array[1]) or (fileExt = Array[2]) or (fileExt = Array[3]) or (fileExt = Array[4]) or (fileExt = Array[5])
 			{
 				FileGetShortcut, %FileItem2%, OutTarget
 				if fileexist(OutTarget)
@@ -101,7 +103,7 @@ LnkFolderMenu(FolderPath, SpecifyExt:="*", MenuName:="", ShowIcon:=1, ShowOpenFo
 					BoundRun := Func("Run").Bind(FileItem2)
 					Menu, %ParentFolderDirectory%, add, %FileMenuName%, %BoundRun%
 					if ShowIcon
-						FolderMenu_AddIcon(ParentFolderDirectory, FileMenuName)
+						LnkFolderMenu_AddIcon(ParentFolderDirectory, FileMenuName)
 				}
 			}
 		}
@@ -112,7 +114,7 @@ LnkFolderMenu(FolderPath, SpecifyExt:="*", MenuName:="", ShowIcon:=1, ShowOpenFo
 		if (A_Index > 50)
 		{
 			msgbox, ,目录菜单创建失败, 选定文件夹内文件夹过多，无法创建菜单。`n文件夹最大数量：50。
-		return
+			return
 		}
 		if !Showhide
 		{
@@ -130,7 +132,7 @@ LnkFolderMenu(FolderPath, SpecifyExt:="*", MenuName:="", ShowIcon:=1, ShowOpenFo
 			if (ShowOpenFolderMenu=1)
 			{
 				if ShowIcon
-					FolderMenu_AddIcon(A_LoopFileLongPath, "打开 " . A_LoopFileName)
+					LnkFolderMenu_AddIcon(A_LoopFileLongPath, "打开 " . A_LoopFileName)
 				filecount := 0
 				Loop, %A_LoopFileLongPath%\*.%SpecifyExt%, 1, 0
 				{
@@ -148,7 +150,7 @@ LnkFolderMenu(FolderPath, SpecifyExt:="*", MenuName:="", ShowIcon:=1, ShowOpenFo
 		}
 		Menu, %ParentFolderDirectory%, add, %A_LoopFileName%, :%A_LoopFileLongPath%
 		if ShowIcon
-			FolderMenu_AddIcon(ParentFolderDirectory, A_LoopFileName)
+			LnkFolderMenu_AddIcon(ParentFolderDirectory, A_LoopFileName)
 		if (ShowOpenFolderMenu!=1)
 		{
 			Menu, %A_LoopFileLongPath%, Delete, 打开 %A_LoopFileName%
@@ -179,19 +181,20 @@ LnkFolderMenu(FolderPath, SpecifyExt:="*", MenuName:="", ShowIcon:=1, ShowOpenFo
 		{
 			if (A_LoopField = "")  ; 忽略列表末尾的最后一个换行符(空项).
 				continue
-			StringSplit, FileItem, A_LoopField, %A_Tab%  ; 用 tab 
 			if !Showhide
 			{
 				FileGetAttrib, FileAttrib, FileItem2
 				if FileAttrib contains H,R,S  ; 跳过具有 H(隐藏), R(只读) 或 S(系统) 属性的任何文件. 注意: 在 "H,R,S" 中不含空格.
 				continue  ; 跳过这个文件并前进到下一个.
 			}
-			SplitPath, FileItem2, FileName, ParentFolderDirectory, fileExt, FileNameNoExt
+			StringSplit, FileItem, A_LoopField, %A_Tab%  ; 用 tab 
+			FFileItem2 := StrReplace(FileItem2, ".lnk")  ; 没有了 ".lnk" 这个后缀
+			SplitPath, FFileItem2, FileName, ParentFolderDirectory, fileExt, FileNameNoExt
 			ParentFolderDirectory := (ParentFolderDirectory=FolderPath) ? MenuName : ParentFolderDirectory
 			;msgbox %  pos "`n" A_LoopFileLongPath "`n" ParentFolderDirectory "`n" A_LoopFileName
-			FileMenuName := FileNameNoExt
+			FileMenuName := FileName
 
-			if (Array[1]="*"?1:Array[1]=""?!instr(FileMenuName, "."):instr(FileMenuName, "." Array[1])) or (Array[2]=""?0:instr(FileMenuName, "." Array[2])) or (Array[3]=""?0:instr(FileMenuName, "." Array[3]))
+			if (Array[1] = "*") or (Array[1] = "" && !Instr(FileMenuName, ".")) or (fileExt = Array[1]) or (fileExt = Array[2]) or (fileExt = Array[3]) or (fileExt = Array[4]) or (fileExt = Array[5])
 			{
 				FileGetShortcut, %FileItem2%, OutTarget
 				if fileexist(OutTarget)
@@ -202,7 +205,7 @@ LnkFolderMenu(FolderPath, SpecifyExt:="*", MenuName:="", ShowIcon:=1, ShowOpenFo
 					BoundRun := Func("Run").Bind(FileItem2)
 					Menu, %ParentFolderDirectory%, add, %FileMenuName%, %BoundRun%
 					if ShowIcon
-						FolderMenu_AddIcon(ParentFolderDirectory, FileMenuName)
+						LnkFolderMenu_AddIcon(ParentFolderDirectory, FileMenuName)
 				}
 			}
 			
@@ -213,20 +216,43 @@ LnkFolderMenu(FolderPath, SpecifyExt:="*", MenuName:="", ShowIcon:=1, ShowOpenFo
 	{
 		Menu, %MenuName%, add
 		BoundRun := Func("Run").Bind(FolderPath)
-		Menu, %MenuName%, add, 打开 %FolderPath%, %BoundRun%
+		Menu, %MenuName%, add, 打开 Recent, %BoundRun%
 		if ShowIcon
-		 FolderMenu_AddIcon(MenuName, "打开 " . FolderPath)
+			FolderMenu_AddIcon(MenuName, "打开 Recent")
 	}
 	return MenuName
 }
 
 Run(a) {
 	global Windy_CurWin_Fullpath
-	FileGetShortcut, % a, OutTarget
-	if getkeystate("Shift") && Windy_CurWin_Fullpath
-		run "%Windy_CurWin_Fullpath%" "%OutTarget%"
+	if instr(a, ".lnk")
+		FileGetShortcut, % a, OutTarget
 	else
-		run, %OutTargeta%
+		OutTarget := a
+	;ToolTip % a "|" OutTarget
+	if getkeystate("Shift")
+		run "%OutTargeta%"
+	else if Windy_CurWin_Fullpath
+		run, "%Windy_CurWin_Fullpath%" "%OutTarget%"
+}
+
+LnkFolderMenu_AddIcon(menuitem, submenu)
+{
+	; Allocate memory for a SHFILEINFOW struct.
+	VarSetCapacity(fileinfo, fisize := A_PtrSize + 688)
+	;msgbox % A_LoopFileLongPath " - " A_LoopField
+	StringSplit, FileItem, A_LoopField, %A_Tab%
+	; Get the file's icon.
+	if DllCall("shell32\SHGetFileInfoW", "wstr", FileItem2
+		, "uint", 0, "ptr", &fileinfo, "uint", fisize, "uint", 0x100 | 0x000000001)
+	{
+
+		hicon := NumGet(fileinfo, 0, "ptr")
+		; Set the menu item's icon.
+		Menu %menuitem%, Icon, %submenu%, HICON:%hicon%
+		; Because we used ":" and not ":*", the icon will be automatically
+		; freed when the program exits or if the menu or item is deleted.
+	}
 }
 
 FolderMenu_AddIcon(menuitem,submenu)

@@ -37,7 +37,7 @@ CopyDirStructure(_inpath, blankfile := 0)
 CF_IsFolder(sfile){
 	if InStr(FileExist(sfile), "D")
 	|| (sfile = """::{20D04FE0-3AEA-1069-A2D8-08002B30309D}""")
-	|| (SubStr(sfile, 1, 2) = "\\")
+	;|| (SubStr(sfile, 1, 2) = "\\")
 		return 1
 	else
 		return 0

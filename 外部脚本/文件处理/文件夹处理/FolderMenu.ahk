@@ -3,7 +3,6 @@ CandySel :=  A_Args[1]
 CandySel2 :=  A_Args[2]
 if !CandySel2
 	CandySel2 := "*"
-;msgbox % CandySel
 menu, % FolderMenu(CandySel, CandySel2, "收藏夹", 0, 1, 0, 1), show
 return
 

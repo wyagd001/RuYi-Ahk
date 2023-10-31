@@ -137,6 +137,7 @@ rows[i].style.backgroundColor = "#ffffff";
 <tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1209,ccdd:1209})">1209</a><td>测试</td><td>测试插件脚本里的例子<td>无条件执行</td></td></tr>
 <tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1217,ccdd:1217})">1217</a><td>到手机</td><td>同步电脑文件夹到手机文件夹(参数指定文件夹)<td>无条件执行</td></td></tr>
 <tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1218,ccdd:1218})">1218</a><td>连接手机</td><td>使用adb连接到手机<td>无条件执行</td></td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1220,ccdd:1220})">1220</a><td>股票行情</td><td>显示自定义股票当天的涨跌<td>无条件执行</td></td></tr>
 <tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1222,ccdd:1222})">1222</a><td>360收藏夹</td><td>将360浏览器的收藏夹显示为菜单(只支持一级文件夹, 参数 CandySel 请替换为收藏夹文件的路径)<td>无条件执行</td></td></tr>
 <tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1223,ccdd:1223})">1223</a><td>Chrome收藏夹</td><td>将Chrome浏览器的收藏夹显示为菜单(只支持两级文件夹, 参数 CandySel 请替换为收藏夹文件的路径)<td>无条件执行</td></td></tr>
 <tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1224,ccdd:1224})">1224</a><td>Edge收藏夹</td><td>将Edge浏览器的收藏夹显示为菜单(只支持两级文件夹, 参数 CandySel 请替换为收藏夹文件的路径)<td>无条件执行</td></td></tr>
@@ -237,7 +238,6 @@ rows[i].style.backgroundColor = "#ffffff";
 <tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1420,ccdd:1420})">1420</a><td>UAC</td><td>打开 UAC 通知管理(以管理员身份打开)<td>无条件执行</td></td></tr>
 <tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1422,ccdd:1422})">1422</a><td>远程协助</td><td>工具: 系统远程协助<td>无条件执行</td></td></tr>
 <tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1423,ccdd:1423})">1423</a><td>回收站预览</td><td>显示回收站中的文件<td>无条件执行</td></td></tr>
-<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1424,ccdd:1424})">1424</a><td>同时编辑</td><td>同时使用记事本打开两个文件夹下(当前打开的文件夹) 的同名文件<td>无条件执行</td></td></tr>
 <tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1428,ccdd:1428})">1428</a><td>输入法指示</td><td>工具: 在鼠标旁边显示当前窗口输入法状态(A, 中, 英)<td>无条件执行</td></td></tr>
 <tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1429,ccdd:1429})">1429</a><td>脚本管理器</td><td>如意内置的 Ahk 脚本管理器<td>无条件执行</td></td></tr>
 <tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1430,ccdd:1430})">1430</a><td>托盘图标管理</td><td>显示隐藏系统托盘区域中图标<td>无条件执行</td></td></tr>
@@ -302,6 +302,19 @@ rows[i].style.backgroundColor = "#ffffff";
 <tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1512,ccdd:1512})">1512</a><td>深色模式</td><td>打开系统深色模式(Win10+)<td>无条件</td></td></tr>
 <tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1513,ccdd:1513})">1513</a><td>启动文件夹</td><td>打开开始菜单启动文件夹<td>无条件</td></td></tr>
 <tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1514,ccdd:1514})">1514</a><td>网络设置</td><td>打开系统网络设置(Win10)<td>无条件</td></td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1516,ccdd:1516})">1516</a><td>Ini_Fav</td><td>Ini 文件显示为列表面板(作为收藏夹使用)<td>无条件</td></td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1519,ccdd:1519})">1519</a><td>锁定电脑</td><td>锁定电脑<td>无条件</td></td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1520,ccdd:1520})">1520</a><td>关屏锁定</td><td>关闭屏幕并锁定电脑<td>无条件</td></td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1521,ccdd:1521})">1521</a><td>截取屏幕</td><td>截取屏幕并存入脚本所在目录的截图目录中(带鼠标光标)<td>无条件</td></td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1522,ccdd:1522})">1522</a><td>系统属性</td><td>打开系统属性界面(高级系统设置)第三个选项卡<td>无条件</td></td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1523,ccdd:1523})">1523</a><td>额外任务栏</td><td>打开额外任务栏<td>无条件</td></td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1524,ccdd:1524})">1524</a><td>任务栏自动隐藏</td><td>切换任务栏的自动隐藏<td>无条件</td></td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1529,ccdd:1529})">1529</a><td>随机播放</td><td>随机播放指定文件夹(列表) 中的音频文件<td>无条件</td></td></tr>
+
+
+
+
+
 
 <tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:5000,ccdd:5000})">5000</a><td>趣词</td><td>以当前浏览器打开动作中指定的网址<td>无条件</td></td></tr>
 <tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:5038,ccdd:5038})">5038</a><td>WiFi</td><td>二维码共享WiFi<td>无条件</td></td></tr>

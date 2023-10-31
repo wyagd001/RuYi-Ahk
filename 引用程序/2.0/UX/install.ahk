@@ -891,9 +891,10 @@ class Installation {
     MakeUIA(baseFile) {
         SplitPath baseFile,, &baseDir,, &baseName
         baseDir := baseDir = '.' ? '' : baseDir '\'
-        FileCopy baseFile, newPath := baseDir baseName '_UIA.exe', true
+        newPath := baseDir baseName '_UIA.exe'
         static abort := false  ; Let "Abort" disable MakeUIA calls, but let other PostActions complete.
         while !abort {
+            FileCopy baseFile, newPath, true
             try {
                 EnableUIAccess newPath
                 break
@@ -907,7 +908,7 @@ class Installation {
                         break
                     Sleep 500
                 }
-                switch MsgBox("Unable to create " baseName ". Try adding an exclusion in your antivirus software. If that doesn't work, please report the issue.`n`nError: " e.Message
+                switch MsgBox("Unable to create " baseName "_UIA.exe. Try adding an exclusion in your antivirus software. If that doesn't work, please report the issue.`n`nError: " e.Message
                     ,, "a/r/i") {
                 case "Abort": abort := true
                 case "Ignore": break

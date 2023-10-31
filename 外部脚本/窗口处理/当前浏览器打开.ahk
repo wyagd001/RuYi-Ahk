@@ -38,9 +38,9 @@ If Default_Browser
 	}
 }
 br := 0
-if InStr(InUse_Browser, Windy_CurWin_ProcName)   ;当前窗口在使用的浏览器列表当中
+if InStr(InUse_Browser, Windy_CurWin_ProcName)   ; 当前窗口在使用的浏览器列表当中
 {
-	If (Windy_CurWin_ProcName = "chrome.exe" or Windy_CurWin_ProcName = "firefox.exe" or Windy_CurWin_ProcName = "360se.exe" or  Windy_CurWin_ProcName = "msedge.exe")
+	If (Windy_CurWin_ProcName = "chrome.exe" or Windy_CurWin_ProcName = "firefox.exe")
 	{
 			pid := GetCommandLine2(OutPID)
 			run, %pid% "%ATA_filepath%"
@@ -54,7 +54,7 @@ if InStr(InUse_Browser, Windy_CurWin_ProcName)   ;当前窗口在使用的浏览
 			br := 1
 	}
 }
-StringSplit, BApp, InUse_Browser, `,     ;当前窗口进程名不在使用的浏览器列表当中
+StringSplit, BApp, InUse_Browser, `,     ; 当前窗口进程名不在使用的浏览器列表当中
 LoopN := 1
 if !br
 {
@@ -63,7 +63,7 @@ if !br
 		BCtrApp := BApp%LoopN%
 		LoopN++
 		Process, Exist, %BCtrApp%
-		If (errorlevel<>0)    ;  使用的浏览器列表当中的浏览器进程是否存在
+		If (errorlevel<>0)    ; 使用的浏览器列表当中的浏览器进程是否存在
 		{
 			NewPID = %ErrorLevel%
 			If (BCtrApp = "chrome.exe" or BCtrApp = "firefox.exe" or BCtrApp = "360se.exe" or BCtrApp = "msedge.exe")
@@ -94,7 +94,7 @@ if !br   ; 没有打开的浏览器时使用默认的浏览器
 		{
 			run %A_LoopField% "%ATA_filepath%",, UseErrorLevel
 			if !ErrorLevel
-			break
+				break
 		}
 		if (ErrorLevel = "error") && (A_LastError = 2)
 		{

@@ -106,7 +106,7 @@ else if (comm = "添加")
 	commmode("开头添加的字符串:", "结束添加的字符串:", "指定位置:", "enable", "enable", "enable")
 	GuiControl,, myedit1, `n`n`n\所有者\_
 	GuiControl,, myedit2, `n`n`n_\创建日期\
-	GuiControl,, myedit3, 数字|替换的字符
+	GuiControl,, myedit3, 数字|将添加的字符
 }
 else if (comm = "属性标签覆盖")
 {

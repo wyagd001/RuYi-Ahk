@@ -1,7 +1,8 @@
 ﻿;|2.4|2023.10.03|1516
 #Persistent
 #SingleInstance Force
-CandySel := A_Args[1]
+Windy_CurWin_Id := A_Args[1]
+
 IniMenuInifile := A_ScriptDir "\..\配置文件\外部脚本\ini菜单.ini"
 ATA_settingFile := A_ScriptDir "\..\配置文件\如一.ini"
 IniMenuobj := ini2obj(IniMenuInifile)
@@ -20,7 +21,7 @@ Gui, Add, Button, xp yp+28 w60 gDelListItem, 删除
 Gui, Add, Button, xp yp+40 w60 gMoveRow_Up, 向上
 Gui, Add, Button, xp yp+28 w60 gMoveRow_Down, 向下
 
-Gui, Add, Button, xp yp+40 w60 gopensetfile, 打开配制
+Gui, Add, Button, xp yp+40 w60 gopensetfile, 打开配置
 
 Menu, MyListViewMenu, Add, 删除条目, DelListItem
 Gosub updateListView
@@ -38,10 +39,17 @@ if (A_GuiEvent = "DoubleClick")
 		Return
 	}
 
-	if(Comb = "常用文本")
+	else if(Comb = "常用文本")
 	{
-		Gui, hide
-		content := RowText3
+		if Windy_CurWin_Id
+		{
+			if WinExist("ahk_id" Windy_CurWin_id)
+				WinActivate, ahk_id %Windy_CurWin_id%
+			else
+				gui, Minimize
+		}
+		else
+			gui, Minimize
 		Candy_Cmd := StrReplace(Candy_Cmd, "\r", "`r")
 		Candy_Cmd := StrReplace(Candy_Cmd, "\n", "`n")
 		sleep 200
@@ -49,14 +57,14 @@ if (A_GuiEvent = "DoubleClick")
 	}
 
 	; 注册表
-	if (RegExMatch(Candy_Cmd, "i)^(HKCU|HKCR|HKCC|HKU|HKLM|HKEY|计算机\\HK|\[HK)"))
+	else if (RegExMatch(Candy_Cmd, "i)^(HKCU|HKCR|HKCC|HKU|HKLM|HKEY|计算机\\HK|\[HK)"))
 	{
 		f_OpenReg(Candy_Cmd)
 		return
 	}
 
 	; 网址
-	if RegExMatch(Candy_Cmd, "i)^(https://|http://)+(.*\.)+.*")
+	else if RegExMatch(Candy_Cmd, "i)^(https://|http://)+(.*\.)+.*")
 	{
 		WinGet, Windy_CurWin_Fullpath, ProcessPath, A
 		WinGet, OutPID, PID, A

@@ -1,8 +1,8 @@
-﻿;|2.0|2023.07.01|1307
+﻿;|2.4|2023.10.23|1307
 CandySel := A_Args[1]
 Engzh := {",":"，", ".":"。", ":": "：", "?": "？", "!": "！", "(": "（", ")": "）", " ":"　"}
 zhEng := {"，":",", "。":".", "：": ":", "？": "?", "！": "!", "（": "(", "）": ")", "　": " "}
-if CandySel
+if CandySel or (strlen(CandySel) = 1)
 {
 	if zhEng[CandySel]
 		send % zhEng[CandySel]

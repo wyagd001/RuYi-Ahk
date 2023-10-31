@@ -1,5 +1,5 @@
-﻿;|2.0|2023.07.01|1239
-; 对话框跳转使用 Folder Menu 就足够了, 这里只是展示 TV 定位的函数
+﻿;|2.4|2023.10.11|1239
+; 这里只是展示 TV 定位函数
 ; 注意 64 位主程序对 64 位程序打开的对话框有效, 对 32 位程序打开的对话框无效
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e734.ico"
@@ -19,12 +19,16 @@ if (ProcessGetBits(Windy_CurWin_Pid) = 64) && (A_ptrSize = 4)
 	run %A_ScriptDir%\..\..\引用程序\AutoHotkeyU64.exe "%A_ScriptFullPath%" %Windy_CurWin_id%
 	exitapp
 }
-hdialogedit := ""
+sleep 50
+WinActivate, ahk_id %Windy_CurWin_id% 
 If WinActive("ahk_class #32770")
 {
 	WinGetPos, hX, hY, , , ahk_class #32770
 	ControlGet, hTreeView, Hwnd,, SysTreeView321, ahk_id %Windy_CurWin_id%
+	;msgbox % hTreeView
 	ControlGet, hdialogedit, Hwnd,, DirectUIHWND3, ahk_class #32770
+	if !hdialogedit
+		hdialogedit := 0
 }
 else If WinActive("ahk_class RegEdit_RegEdit")
 {
@@ -33,7 +37,8 @@ else If WinActive("ahk_class RegEdit_RegEdit")
 	hdialogedit := 1
 }
 if !hTreeView
-	return
+	exitapp
+
 Gui DialogTv:Destroy
 Gui DialogTv:New
 Gui DialogTv:Default 
@@ -48,7 +53,7 @@ return
 
 DialogTvGuiEscape:
 Gui,DialogTv:Destroy
-return
+exitapp
 
 DialogCandyMenu:
 IniMenuInifile := A_ScriptDir "\..\..\配置文件\外部脚本\ini菜单.ini"
@@ -59,6 +64,7 @@ return
 MenuHandler:
 ;msgbox % IniMenuobj["对话框"][A_ThisMenuItemPos]
 dpath := GetStringIndex(IniMenuobj["对话框"][A_ThisMenuItemPos])
+;msgbox % dpath
 gosub Cando_Dialogsetpath
 return
 
@@ -74,11 +80,10 @@ If WinExist("ahk_class #32770")
 	dpath := StrReplace(dpath, "\desktop", "\桌面")
 }
 ;tooltip % dpath
-hdialogedit := 0
 if (A_OSVersion = "WIN_7")
 	TVPath_Set(hTreeView, (hdialogedit?"计算机\":instr(dpath, "桌面")?"":"桌面\计算机\") dpath, outMatchPath,,,10)
 else ; 适配 Win10
-	TVPath_Set(hTreeView, (hdialogedit?"此电脑\":instr(dpath, "桌面")?"":"此电脑\") dpath, outMatchPath,,,10)
+	TVPath_Set(hTreeView, (hdialogedit=0?"桌面\此电脑\":instr(dpath, "桌面")?"":"桌面\此电脑\") dpath, outMatchPath,,,10)
 ControlFocus, , ahk_id %hTreeView%
 if hdialogedit
 	ControlSend, , {Enter}, ahk_id %hTreeView%
@@ -101,14 +106,15 @@ If WinExist("ahk_class #32770")
 	dpath := StrReplace(dpath, "\users\", "\用户\")
 	dpath := StrReplace(dpath, "\desktop", "\桌面")
 ;tooltip % dpath " - " hTreeView
+;msgbox % (hdialogedit=0?"此电脑\":instr(dpath, "桌面")?"":"桌面\此电脑\") "`n" hdialogedit
 if (A_OSVersion = "WIN_7")
 	TVPath_Set(hTreeView, (hdialogedit?"计算机\":instr(dpath, "桌面")?"":"桌面\计算机\") dpath, outMatchPath,,,10)
 else ; 适配 Win10
-	TVPath_Set(hTreeView, (hdialogedit?"此电脑\":"此电脑\") dpath, outMatchPath,,,10)
+	TVPath_Set(hTreeView, (hdialogedit=0?"此电脑\":instr(dpath, "桌面")?"":"桌面\此电脑\") dpath, outMatchPath,,,10)
 ControlFocus, , ahk_id %hTreeView%
 if hdialogedit
 	ControlSend, , {Enter}, ahk_id %hTreeView%
-;msgbox % (hdialogedit?"此电脑\":"桌面\计算机\") dpath "`n" hdialogedit
+
 }
 If WinExist("ahk_class RegEdit_RegEdit")
 {
@@ -520,6 +526,7 @@ __dummySetPathToTreeView(hProcess, hTreeView, hItem, RestPath, ByRef tvitem, ByR
 	Depth++
 	DelimiterPos:=instr(RestPath, Delimiter)
 	FindText := DelimiterPos>0 ? substr(RestPath, 1, DelimiterPos-1) : RestPath
+	;msgbox % FindText "|" RestPath
 	StringTrimLeft, RestPath, RestPath, % StrLen(FindText)+Strlen(Delimiter)
 
 	FuncName=
@@ -549,6 +556,7 @@ __dummySetPathToTreeView(hProcess, hTreeView, hItem, RestPath, ByRef tvitem, ByR
 	}
 	;fileappend, % "路径: " RestPath "`n",%A_Desktop%\345.txt
 	;fileappend, % FindText "`n",%A_Desktop%\345.txt
+	;fileappend, % Delimiter " - " DelimiterPos "`n",%A_Desktop%\345.txt
 	;判断窗口是否是Unicode
 	isUnicode:=DllCall("IsWindowUnicode", uint, hTreeView)
 

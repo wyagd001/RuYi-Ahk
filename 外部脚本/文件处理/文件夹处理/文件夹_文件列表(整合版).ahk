@@ -6,7 +6,7 @@ Gui,66: Default
 Gui, +Resize
 Gui, Add, text, x10 y10, 文件夹:
 Gui, Add, edit, xp+70 y10 w550 h25 vfolder1, % CandySel
-Gui, Add, Button, xp+560 yp h25 gfolderfilelist, 文件列表
+Gui, Add, Button, xp+560 yp h25 gfolderfilelist default, 文件列表
 Gui, Add, text, x10 yp+40, 排序选项:
 Gui, Add, DropDownList, xp+70 yp-3 w80 h120 vlistordermode, 默认||创建日期|修改日期|文件大小
 Gui, Add, DropDownList, xp+90 yp w80 h60 vlistorderR, 默认||逆序

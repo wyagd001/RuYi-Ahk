@@ -31,7 +31,7 @@ Else
 }
 return
 
-;来源网址: https://www.autohotkey.com/boards/viewtopic.php?t=55680
+; 来源网址: https://www.autohotkey.com/boards/viewtopic.php?t=55680
 ; UnRAR.dll/UnRAR64.dll ahk demo, reads password from UTF-8 encoded "password.txt"
 ; UnRAR dlls at https://rarlab.com/rar_add.htm
 ; 只能解压 rar 文件, zip 文件提示错误 13

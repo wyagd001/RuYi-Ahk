@@ -1,4 +1,4 @@
-﻿;|2.0|2023.07.01|1226
+﻿;|2.4|2023.10.10|1226
 Windy_CurWin_id := A_Args[1]
 
 Windo_对话框打开目录:
@@ -8,7 +8,8 @@ AllOpenFolder := GetAllWindowOpenFolder()
 
 for k,v in IniMenuobj["对话框"]
 {
-	Menu JumpToFavFolder, add, %v%, Windo_JumpToFolder
+	SubMenuName := GetStringIndex(v)
+	Menu JumpToFavFolder, add, %SubMenuName%, Windo_JumpToFolder
 }
 Menu DialogMenu, Add, 收藏的文件夹, :JumpToFavFolder
 Menu DialogMenu, Add
@@ -168,4 +169,11 @@ RunScript(script, WaitResult:="false")
 		return exec.StdOut.ReadAll()
 	else 
 return
+}
+
+GetStringIndex(String, Index := 1)
+{
+	arrCandy_Cmd_Str := StrSplit(String, "|", " `t")
+	NewStr := arrCandy_Cmd_Str[Index]
+	return NewStr
 }
