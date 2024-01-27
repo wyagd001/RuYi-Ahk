@@ -2,7 +2,6 @@
 #SingleInstance force
 folder1 :=  A_Args[1], folder2 :=  A_Args[2]
 B_adb := A_ScriptDir "\..\..\引用程序\adb.exe"
-; 1088
 
 SyncFolder:
 Gui,66: Destroy

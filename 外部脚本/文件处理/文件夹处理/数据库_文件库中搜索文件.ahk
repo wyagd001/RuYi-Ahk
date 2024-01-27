@@ -171,6 +171,15 @@ if fileexist(flibfolder2)
 		filelistarray[a_loopfilefullpath] := 1
 	}
 }
+if fileexist("H:\备份\资料备份\脚本收集\AutoHotkey\Ahk_L")
+{
+	Loop, Files, H:\备份\资料备份\脚本收集\AutoHotkey\Ahk_L\*.*, FR
+	{
+		if A_LoopFileAttrib contains H,R,S
+			continue
+		filelistarray[a_loopfilefullpath] := 1
+	}
+}
 if fileexist("G:\Github")
 	StackLoop("G:\Github")
 tooltip 遍历文件完成.

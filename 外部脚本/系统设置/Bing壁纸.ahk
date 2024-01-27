@@ -1,6 +1,6 @@
-﻿;|2.2|2023.07.30|1327
+﻿;|2.5|2024.01.22|1327
 ;来源网址: https://blog.csdn.net/liuyukuan/article/details/73656922
-
+ComObjError(0)
 Today := SubStr(A_Now, 1, 8)
 TodayWallpaper := 0
 Loop, Files, %A_ScriptDir%\..\..\临时目录\*.jpg, F
@@ -29,15 +29,23 @@ return
 
 BingWallpapers(ByRef imgpath := "")
 {
-	Winhttp := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+	;Winhttp := ComObjCreate("WinHttp.WinHttpRequest.5.1") ; 一些系统可能无法打开 json 文件
+	Winhttp := ComObjCreate("Msxml2.XMLHTTP")
 	Winhttp.Open("GET", "https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1",true)
 	Winhttp.Send()
 	Winhttp.WaitForResponse()
+	sleep 1200
 	r := Winhttp.ResponseText
+	msgbox % r
+	if !r
+	{
+		UrlDownloadToFile, https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1, % A_ScriptDir . "\..\..\临时目录\bing.txt"
+		FileRead, r, % A_ScriptDir . "\..\..\临时目录\bing.txt"
+	}
 	RegExMatch(r, "O)urlbase"":""(.*?)""", Match)
-	path := Match.Value(1)
+	Bpath := Match.Value(1)
 	;RegExMatch(path, "\d*$", fname)
-	url := "https://cn.bing.com" . path . "_1920x1080.jpg"
+	url := "https://cn.bing.com" . Bpath . "_1920x1080.jpg"
 	if !imgpath
 	{
 		Random, rand, 1, 6

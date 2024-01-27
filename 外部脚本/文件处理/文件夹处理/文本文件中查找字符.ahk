@@ -1,4 +1,4 @@
-﻿;|2.4|2023.09.20|1096
+﻿;|2.5|2023.11.02|1096
 ; Script Information ===========================================================
 ; Name:         File String Search
 ; Description:  Search files for a specific string (Inspired by TLM)
@@ -108,22 +108,22 @@ Gui,1:default
 Gui,1:submit, nohide
 rcon := a_guicontrol
 Gui,1:ListView, %rcon%
-Extensions := "ahk,txt,bat,bas,ini,htm,html,csv,xml"    ;- some extensions with text
-  RN := LV_GetNext("C")
-  RF := LV_GetNext("F")
-  GC := LV_GetCount()
-  if (rn = 0)
-    return
-if A_GuiEvent = DoubleClick
-  {
-  LV_GetText(C2, a_eventinfo, 2)
-  SplitPath,c2, , , ext,
-  if Ext in %Extensions%
-    {
-    try
+Extensions := "ahk,txt,bat,bas,ini,htm,html,csv,xml,md,reg,au3"    ;- some extensions with text
+RN := LV_GetNext("C")
+RF := LV_GetNext("F")
+GC := LV_GetCount()
+if (rn = 0)
+	return
+if (A_GuiEvent = "DoubleClick")
+{
+	LV_GetText(C2, a_eventinfo, 2)
+	SplitPath, c2,,, ext,
+	if Ext in %Extensions%
+	{
+		try
 		run, "%notepad2%" "%c2%"
-    }
-  }
+	}
+}
 return
 
 GuiEscape:

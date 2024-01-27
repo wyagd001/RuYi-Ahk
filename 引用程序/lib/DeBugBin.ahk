@@ -1,4 +1,4 @@
-﻿DeBugBin(Var, Size := 20, FileName := "")
+﻿DeBugBin(ByRef Var, Size := 20, FileName := "")
 {
 	if !FileName
 		FileName := A_Desktop "\debug.bin"

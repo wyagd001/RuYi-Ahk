@@ -1,4 +1,4 @@
-﻿;|2.4|2023.10.01|1229
+﻿;|2.5|2023.11.18|1229
 CandySel :=  A_Args[1]
 ;CandySel := "C:\Documents and Settings\Administrator\Desktop\文本碎片小脚本"
 Menu, Tray, UseErrorLevel
@@ -11,7 +11,7 @@ Gui, Add, Edit, xp+80 yp-5 w550 h25 vsExt,
 Gui, Add, Text, x10 yp+40 h25, 目标文件夹:
 Gui, Add, Edit, xp+80 yp-5 w550 h25 vtfolder,
 Gui, Add, Button, xp+560 yp h25 gseltfolder, ...
-Gui, Add, ListView, x10 yp+40 w700 h500 vfilelist Checked hwndHLV AltSubmit, 文件名|相对路径|大小|修改日期|完整路径|md5
+Gui, Add, ListView, x10 yp+40 w700 h500 vfilelist Checked hwndHLV AltSubmit, 分组|序号|文件名|相对路径|大小|修改日期|完整路径|md5
 Gui, Add, Button, xp yp+510 w60 h30 guncheckall, 全不选
 Gui, Add, Button, xp+70 yp w60 h30 gEditfilefromlist, 编辑文件
 Gui, Add, Button, xp+70 yp w60 h30 gopenfilefromlist, 打开文件
@@ -93,28 +93,49 @@ Loop, parse, sfolder, |;
 		}
 	}
 }
+fsizeobj := {}, fMD5obj := {}, md5obj := {}
 ;msgbox % "文件遍历完成. 用时: " A_TickCount - st
-ToolTip
+CF_ToolTip("文件遍历完成.", 2500)
 GuiControl, -redraw, filelist
 for nFile in folderobj
 {
-	LV_Add("", folderobj[nFile].fname, folderobj[nFile].relPath, folderobj[nFile].fsize, folderobj[nFile].fTmod, nFile, folderobj[nFile].fmd5)
+	LV_Add("", "", "", folderobj[nFile].fname, folderobj[nFile].relPath, folderobj[nFile].fsize, folderobj[nFile].fTmod, nFile, folderobj[nFile].fmd5)
 }
 LV_ModifyCol()
-LV_ModifyCol(1, 200)
-LV_ModifyCol(2, 300)
-LV_ModifyCol(3, "Logical SortDesc")
-LV_ModifyCol(5, 200)
+LV_ModifyCol(1, 40)
+LV_ModifyCol(2, "40 Logical")
+LV_ModifyCol(3, 200)
+LV_ModifyCol(4, 300)
+LV_ModifyCol(5, "Logical")  ; 按大小排序, 如果有大量文件大小一致的文件会显示混乱
+LV_ModifyCol(7, 200)
+LV_ModifyCol(8, "SortDesc")
+colorou := 0
 Loop % LV_GetCount()
 {
-	LV_GetText(RetrievedText, A_Index, 5)
+	LV_Modify(A_Index, "", "", A_Index)
+	LV_GetText(RetrievedText, A_Index, 7)
+	LV_GetText(md5value, A_Index, 8)
+	if (A_Index = 1)
+		premd5value := md5value
+	if (md5value != premd5value)
+	{
+		colorou := !colorou
+	}
+	if colorou
+		LV_Modify(A_Index, "", "☆_" A_Index)
 	if folderobj[RetrievedText].unchecked
-		continue
+	{
+		premd5value := md5value
+	}
 	Else
+	{
 		LV_Modify(A_Index, "check")
+		premd5value := md5value
+	}
 }
 GuiControl, +redraw, filelist
 ;FileAppend, % Array_ToString(folderobj) , %A_desktop%\123.txt
+folderobj := {}
 return
 
 seltfolder:
@@ -131,16 +152,16 @@ Editfilefromlist:
 RF := LV_GetNext("F")
 if RF
 {
-	LV_GetText(Tmp_file, RF, 5)
+	LV_GetText(Tmp_file, RF, 7)
 }
-run notepad  %Tmp_file%
+run notepad %Tmp_file%
 return
 
 openfilefromlist:
 RF := LV_GetNext("F")
 if RF
 {
-	LV_GetText(Tmp_file, RF, 5)
+	LV_GetText(Tmp_file, RF, 7)
 }
 run %Tmp_file%
 return
@@ -149,7 +170,7 @@ openfilepfromlist:
 RF := LV_GetNext("F")
 if RF
 {
-	LV_GetText(Tmp_file, RF, 5)
+	LV_GetText(Tmp_file, RF, 7)
 }
 SplitPath, Tmp_file,, OutDir
 Run, %OutDir%
@@ -178,8 +199,8 @@ Loop
 	if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
 		break
 
-	LV_GetText(Tmp_Rel, RowNumber, 2)
-	LV_GetText(Tmp_Name, RowNumber, 1)
+	LV_GetText(Tmp_Rel, RowNumber, 4)
+	LV_GetText(Tmp_Name, RowNumber, 3)
 	Tmp_index := Format("{:04}", A_Index)
 	
 	Tmp_Str .= Tmp_index tipStr Tmp_Rel Tmp_Name "`n"
@@ -193,31 +214,32 @@ gui, Submit, NoHide
 RowNumber := 0  ; 这样使得首次循环从列表的顶部开始搜索.
 if (actionmode = 1)
 {
-Loop
-{
-	RowNumber := LV_GetNext(RowNumber, "C")  ; 在前一次找到的位置后继续搜索.
-	if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
-		break
-	LV_GetText(Tmp_Path, RowNumber, 5)
-	FileRecycle, % Tmp_Path
-}
+	Loop
+	{
+		RowNumber := LV_GetNext(RowNumber, "C")  ; 在前一次找到的位置后继续搜索.
+		if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
+			break
+		LV_GetText(Tmp_Path, RowNumber, 7)
+		FileRecycle, % Tmp_Path
+	}
 }
 if (actionmode = 2)
 {
 	if !tfolder
-	return
-Loop
-{
-	RowNumber := LV_GetNext(RowNumber, "C")  ; 在前一次找到的位置后继续搜索.
-	if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
-		break
-	LV_GetText(Tmp_Path, RowNumber, 5)
-	LV_GetText(Tmp_Rel, RowNumber, 2)
-	LV_GetText(Tmp_Name, RowNumber, 1)
-	FileCreateDir, % tfolder Tmp_Rel
-	FileMove, % Tmp_Path, % tfolder  Tmp_Rel Tmp_Name
+		return
+	Loop
+	{
+		RowNumber := LV_GetNext(RowNumber, "C")  ; 在前一次找到的位置后继续搜索.
+		if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
+			break
+		LV_GetText(Tmp_Path, RowNumber, 7)
+		LV_GetText(Tmp_Rel, RowNumber, 4)
+		LV_GetText(Tmp_Name, RowNumber, 3)
+		FileCreateDir, % tfolder Tmp_Rel
+		FileMove, % Tmp_Path, % tfolder  Tmp_Rel Tmp_Name
+	}
 }
-}
+CF_ToolTip("文件处理完成.", 3000)
 Return
 
 GuiClose:

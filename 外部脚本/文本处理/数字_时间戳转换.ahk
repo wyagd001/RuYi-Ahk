@@ -5,20 +5,20 @@ Cando_时间戳转换:
 Gui, 66: Destroy
 Gui, 66: Default
 
-Gui, add, text, x10 y10 , Unix 时间戳:
-Gui, add, Edit, xp+100 yp-5 w150 h24 vS_Timestamp, 
+Gui, add, text, x10 y10 , Unix 时间戳:`n(19700101 秒数)
+Gui, add, Edit, xp+150 yp w150 h24 vS_Timestamp, 
 Gui, add, button, xp+160 yp w60 h25 gTS2T, 转换
 
-Gui, add, text, x10 yp+40 cBlue ggetNowTS, Unix 时间戳:
-Gui, add, Edit, xp+100 yp-5 w150 h24 vTimestamp, 
+Gui, add, text, x10 yp+38 cBlue ggetNowTS, Unix 时间戳:`n(点击获取当前时间)
+Gui, add, Edit, xp+150 yp w150 h24 vTimestamp, 
 Gui, add, button, xp+160 yp w60 h25 gTS2T1 Default, 转换
 
-Gui, add, text, x10 yp+40, LDAP 时间戳:
-Gui, add, Edit, xp+100 yp-5 w150 h24 vLDAPTimestamp,
+Gui, add, text, x10 yp+38, LDAP 时间戳:`n(16010101 100纳秒数)
+Gui, add, Edit, xp+150 yp w150 h24 vLDAPTimestamp,
 Gui, add, button, xp+160 yp w60 h25 gTS2T2 Default, 转换
 
-Gui, add, text, x10 yp+40 cBlue ggetNowT, 本地日期时间:
-Gui, add, Edit, xp+100 yp-5 w150 h24 vTime,
+Gui, add, text, x10 yp+38 cBlue ggetNowT, 本地日期时间:`n(点击获取当前时间)
+Gui, add, Edit, xp+150 yp w150 h24 vTime,
 Gui, add, button, xp+160 yp w60 h25 gTS2T3 Default, 转换
 
 Gosub, TimeCon

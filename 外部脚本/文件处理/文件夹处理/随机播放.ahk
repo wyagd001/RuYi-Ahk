@@ -76,7 +76,7 @@ RandomFile(path)  ; 文件夹随机次数平均, 对于文件夹中文件数量�
 	}
 	FirstF := path
 	objShell := ComObjCreate("Shell.Application")
-	if InStr(FileExist(path), "D") || InStr(path, "::{")
+	if InStr(FileExist(path), "D")
 	{
 		objFolder := objShell.NameSpace(path)   
 		;objFolderItem := objFolder.Self
@@ -104,7 +104,7 @@ RandomFile(path)  ; 文件夹随机次数平均, 对于文件夹中文件数量�
 		}
 		else
 		{
-			return RandomFile(r1)  ; 某个文件夹下就没有 音频文件 造成无线循环
+			return RandomFile(r1)  ; 某个文件夹下就没有 音频文件 造成无限循环
 		}
 	}
 }

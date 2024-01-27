@@ -1,4 +1,4 @@
-﻿;|2.7|2023.10.20|1220
+﻿;|2.5|2023.10.20|1220
 SetFormat, float, 10.4
 
 ; <title>上证指数 3167.24 +1.08%(33.99)股票价格-行情-走势图-行情-金融界</title>
@@ -97,12 +97,12 @@ gcolor:
 Gui, Submit, NoHide
 If (ColorsOn)
 {
-   CLV.OnMessage()    ; 开启颜色
+	CLV.OnMessage()    ; 开启颜色
 	GuiControl, Enable, speccolor
 }
 Else
 {
-   CLV.OnMessage(False)    ; 关闭颜色
+	CLV.OnMessage(False)    ; 关闭颜色
 	GuiControl, Disable, speccolor
 }
 settingobj["选项"]["仅五六列显示颜色"] := speccolor

@@ -13,16 +13,16 @@ return
 
 setwinappid(winhwnd, appid)
 {
-VarSetCapacity(IID_IPropertyStore, 16)
-DllCall("ole32.dll\CLSIDFromString", "wstr", "{886d8eeb-8cf2-4446-8d02-cdba1dbdcf99}", "ptr", &IID_IPropertyStore)
-VarSetCapacity(PKEY_AppUserModel_ID, 20)
-DllCall("ole32.dll\CLSIDFromString", "wstr", "{9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3}", "ptr", &PKEY_AppUserModel_ID)
-NumPut(5, PKEY_AppUserModel_ID, 16, "uint")
-dllcall("shell32\SHGetPropertyStoreForWindow","Ptr", winhwnd, "ptr", &IID_IPropertyStore, "ptrp", pstore)
-VarSetCapacity(variant, 8+2*A_PtrSize, 0)
-NumPut(31, variant, 0, "short") ; VT_LPWSTR
-NumPut(&Appid, variant, 8)
-hr := IPropertyStore_SetValue(pstore, &PKEY_AppUserModel_ID, &variant)
+	VarSetCapacity(IID_IPropertyStore, 16)
+	DllCall("ole32.dll\CLSIDFromString", "wstr", "{886d8eeb-8cf2-4446-8d02-cdba1dbdcf99}", "ptr", &IID_IPropertyStore)
+	VarSetCapacity(PKEY_AppUserModel_ID, 20)
+	DllCall("ole32.dll\CLSIDFromString", "wstr", "{9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3}", "ptr", &PKEY_AppUserModel_ID)
+	NumPut(5, PKEY_AppUserModel_ID, 16, "uint")
+	dllcall("shell32\SHGetPropertyStoreForWindow","Ptr", winhwnd, "ptr", &IID_IPropertyStore, "ptrp", pstore)
+	VarSetCapacity(variant, 8+2*A_PtrSize, 0)
+	NumPut(31, variant, 0, "short") ; VT_LPWSTR
+	NumPut(&Appid, variant, 8)
+	hr := IPropertyStore_SetValue(pstore, &PKEY_AppUserModel_ID, &variant)
 }
 
 IPropertyStore_GetCount(pstore, ByRef count) {

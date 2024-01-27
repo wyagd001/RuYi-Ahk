@@ -2380,8 +2380,8 @@ s.=",蕏zhū,藷zhū,朱zhū,劯zhū,侏zhū,诛zhū,邾zhū,洙zhū,茱zhū,株
 
 Simplified2Traditional(ByRef String, toSimp:=0){
 	LCMAP_SIMPLIFIED_CHINESE := 0x02000000, LCMAP_TRADITIONAL_CHINESE := 0x04000000
-	VarSetCapacity(output, 10240)
-	DllCall("kernel32\LCMapString", "UInt", DllCall("kernel32\GetUserDefaultLCID"), "UInt", (!toSimp?LCMAP_TRADITIONAL_CHINESE:LCMAP_SIMPLIFIED_CHINESE), "WStr", String, "Int", -1, "WStr", output, "Int", 10240)
+	VarSetCapacity(output, 102400)
+	DllCall("kernel32\LCMapString", "UInt", DllCall("kernel32\GetUserDefaultLCID"), "UInt", (!toSimp?LCMAP_TRADITIONAL_CHINESE:LCMAP_SIMPLIFIED_CHINESE), "WStr", String, "Int", -1, "WStr", output, "Int", 102400)
 	reStr := output, VarSetCapacity(output, -1)
 	Return reStr
 }
