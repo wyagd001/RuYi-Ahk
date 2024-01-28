@@ -113,19 +113,19 @@ objWMIService := ComObjGet("winmgmts:\\.\root\cimv2")
 colItems := objWMIService.ExecQuery("Select * from Win32_NetworkAdapterConfiguration WHERE IPEnabled = True")._NewEnum
 while colItems[objItem]
 {
-if objItem.IPAddress[0] == A_IPAddress1
-{
-comp_ip:=A_IPAddress1
-netmask:=objItem.IPSubnet[0]
-gateway:=objItem.DefaultIPGateway[0]
-dns_1:=objItem.DNSServerSearchOrder[0]?objItem.DNSServerSearchOrder[0]:""
-dns_2:=objItem.DNSServerSearchOrder[1]?objItem.DNSServerSearchOrder[1]:""
-guicontrol,, comp_ip,  %comp_ip%
-guicontrol,, netmask,  %netmask%
-guicontrol,, gateway,  %gateway%
-guicontrol,, dns_1,  %dns_1%
-guicontrol,, dns_2,  %dns_2%
-}
+	if objItem.IPAddress[0] == A_IPAddress1
+	{
+		comp_ip:=A_IPAddress1
+		netmask:=objItem.IPSubnet[0]
+		gateway:=objItem.DefaultIPGateway[0]
+		dns_1:=objItem.DNSServerSearchOrder[0]?objItem.DNSServerSearchOrder[0]:""
+		dns_2:=objItem.DNSServerSearchOrder[1]?objItem.DNSServerSearchOrder[1]:""
+		guicontrol,, comp_ip,  %comp_ip%
+		guicontrol,, netmask,  %netmask%
+		guicontrol,, gateway,  %gateway%
+		guicontrol,, dns_1,  %dns_1%
+		guicontrol,, dns_2,  %dns_2%
+	}
 }
 Return
 
