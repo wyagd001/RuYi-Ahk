@@ -178,8 +178,8 @@ ImageEqual(images*) {
 
 class ImagePut {
 
-   static decode := False   ; Forces conversion using a bitmap. The original file encoding will be lost.
-   static validate := False ; Always copies image data into memory instead of passing references.
+   static decode := False   ; Decompresses image to a pixel buffer. Any encoding such as JPG will be lost.
+   static validate := False ; Always copies pixels to new memory immediately instead of copy-on-read/write.
 
    call(cotype, image, p*) {
 
@@ -218,8 +218,9 @@ class ImagePut {
       ; #2 - Fallback to GDI+ bitmap as the intermediate.
       else {
          ; GdipImageForceValidation must be called immediately or it fails without any errors.
-         ; It load the image pixels to the bitmap buffer, increasing memory usage and prevents
-         ; changes to the pixels while bypassing any copy-on-write and copy on LockBits(read) behavior.
+         ; Doing so loads the pixels to the bitmap buffer. Increases memory usage.
+         ; Prevents future changes to the original pixels from altering any copies.
+         ; Without validation, it preforms copy-on-write and copy on LockBits(read).
 
          ; Convert via GDI+ bitmap intermediate.
          if !(pBitmap := this.ToBitmap(type, image, keywords))
@@ -307,123 +308,140 @@ class ImagePut {
    }
 
    ImageType(image) {
+
+
+
       ; Throw if the image is an empty string.
       if (image == "") {
 
 
+         ; A "clipboard_png" is a pointer to a PNG stream saved as the "png" clipboard format.
+         if DllCall("IsClipboardFormatAvailable", "uint", DllCall("RegisterClipboardFormat", "str", "png", "uint"))
+            return "clipboard_png"
 
+         ; A "clipboard" is a handle to a GDI bitmap saved as CF_BITMAP.
+         if DllCall("IsClipboardFormatAvailable", "uint", 2)
+            return "clipboard"
 
+         throw Exception("Image data is an empty string.")
+      }
 
+      if not IsObject(image)
+         goto string
 
-            ; A "clipboard_png" is a pointer to a PNG stream saved as the "png" clipboard format.
-            if DllCall("IsClipboardFormatAvailable", "uint", DllCall("RegisterClipboardFormat", "str", "png", "uint"))
-               return "clipboard_png"
-
-            ; A "clipboard" is a handle to a GDI bitmap saved as CF_BITMAP.
-            if DllCall("IsClipboardFormatAvailable", "uint", 2)
-               return "clipboard"
-
-            throw Exception("Image data is an empty string.")
-         }
-      if IsObject(image) {
-         ; A "object" has a pBitmap property that points to an internal GDI+ bitmap.
-         if image.HasKey("pBitmap")
+      ; A "object" has a pBitmap property that points to an internal GDI+ bitmap.
+      if image.HasKey("pBitmap")
+         try if !DllCall("gdiplus\GdipGetImageType", "ptr", image.pBitmap, "ptr*", type:=0) && (type == 1)
             return "object"
 
-         ; A "buffer" is an object with ptr and size properties.
-         if image.HasKey("ptr") && image.HasKey("size")
-            return "buffer"
+      ; A "window" is an object with an hwnd property.
+      if image.HasKey("hwnd")
+         return "window"
 
-         ; A "window" is an object with an hwnd property.
-         if image.HasKey("hwnd")
-            return "window"
+      ; A "screenshot" is an array of 4 numbers.
+      if (image[1] ~= "^-?\d+$" && image[2] ~= "^-?\d+$" && image[3] ~= "^-?\d+$" && image[4] ~= "^-?\d+$")
+         return "screenshot"
 
-         ; A "screenshot" is an array of 4 numbers.
-         if (image[1] ~= "^-?\d+$" && image[2] ~= "^-?\d+$" && image[3] ~= "^-?\d+$" && image[4] ~= "^-?\d+$")
-            return "screenshot"
+      ; A "buffer" is an object with a pointer to bytes and properties to determine its 2-D shape.
+      if image.HasKey("ptr")
+         and (image.HasKey("width") && image.HasKey("height")
+         or image.HasKey("stride") && image.HasKey("height")
+         or image.HasKey("size") && (image.HasKey("stride") || image.HasKey("width") || image.HasKey("height")))
+         return "buffer"
 
-         throw Exception("Image type could not be identified.")
-      }
-         SysGet MonitorGetCount, MonitorCount ; A non-zero "monitor" number identifies each display uniquely; and 0 refers to the entire virtual screen.
-         if (image ~= "^\d+$" && image >= 0 && image <= MonitorGetCount)
-            return "monitor"
+      if image.HasKey("ptr") {
+         image := image.ptr
+         goto pointer
+      } else
+         goto end
 
-         ; A "desktop" is a hidden window behind the desktop icons created by ImagePutDesktop.
-         if (image = "desktop")
-            return "desktop"
+      string:
+      if (image == "")
+         throw Exception("Image data is an empty string.")
 
-         ; A "wallpaper" is the desktop wallpaper.
-         if (image = "wallpaper")
-            return "wallpaper"
+      SysGet MonitorGetCount, MonitorCount ; A non-zero "monitor" number identifies each display uniquely; and 0 refers to the entire virtual screen.
+      if (image ~= "^\d+$" && image >= 0 && image <= MonitorGetCount)
+         return "monitor"
 
-         ; A "cursor" is the name of a known cursor name.
-         if (image ~= "(?i)^A_Cursor|Unknown|(IDC_)?(AppStarting|Arrow|Cross|Hand(writing)?|"
-         . "Help|IBeam|No|Pin|Person|SizeAll|SizeNESW|SizeNS|SizeNWSE|SizeWE|UpArrow|Wait)$")
-            return "cursor"
+      ; A "desktop" is a hidden window behind the desktop icons created by ImagePutDesktop.
+      if (image = "desktop")
+         return "desktop"
 
-         ; A "pdf" is either a file or url with a .pdf extension.
-         if (image ~= "\.pdf$") && (FileExist(image) || this.is_url(image))
-            return "pdf"
+      ; A "wallpaper" is the desktop wallpaper.
+      if (image = "wallpaper")
+         return "wallpaper"
 
-         ; A "url" satisfies the url format.
-         if this.is_url(image)
-            return "url"
+      ; A "cursor" is the name of a known cursor name.
+      if (image ~= "(?i)^A_Cursor|Unknown|(IDC_)?(AppStarting|Arrow|Cross|Hand(writing)?|"
+      . "Help|IBeam|No|Pin|Person|SizeAll|SizeNESW|SizeNS|SizeNWSE|SizeWE|UpArrow|Wait)$")
+         return "cursor"
 
-         ; A "file" is stored on the disk or network.
-         if FileExist(image)
-            return "file"
+      ; A "pdf" is either a file or url with a .pdf extension.
+      if (image ~= "\.pdf$") && (FileExist(image) || this.is_url(image))
+         return "pdf"
 
-         ; A "window" is anything considered a Window Title including ahk_class and "A".
-         if WinExist(image) || DllCall("IsWindow", "ptr", image)
-            return "window"
+      ; A "url" satisfies the url format.
+      if this.is_url(image)
+         return "url"
 
-         ; A "hex" string is binary image data encoded into text using hexadecimal.
-         if (StrLen(image) >= 48) && (image ~= "^\s*(?:[A-Fa-f0-9]{2})*+\s*$")
-            return "hex"
+      ; A "file" is stored on the disk or network.
+      if FileExist(image)
+         return "file"
 
-         ; A "base64" string is binary image data encoded into text using standard 64 characters.
-         if (StrLen(image) >= 32) && (image ~= "^\s*(?:data:image\/[a-z]+;base64,)?"
-         . "(?:[A-Za-z0-9+\/]{4})*+(?:[A-Za-z0-9+\/]{3}=|[A-Za-z0-9+\/]{2}==)?\s*$")
-            return "base64"
+      ; A "window" is anything considered a Window Title including ahk_class and "A".
+      if WinExist(image) || DllCall("IsWindow", "ptr", image)
+         return "window"
 
-      if (image ~= "^-?\d+$") {
-         ; A "dc" is a handle to a GDI device context.
-         if (DllCall("GetObjectType", "ptr", image, "uint") == 3 || DllCall("GetObjectType", "ptr", image, "uint") == 10)
-            return "dc"
+      ; A "hex" string is binary image data encoded into text using hexadecimal.
+      if (StrLen(image) >= 48) && (image ~= "^\s*(?:[A-Fa-f0-9]{2})*+\s*$")
+         return "hex"
 
-         ; An "hBitmap" is a handle to a GDI Bitmap.
-         if (DllCall("GetObjectType", "ptr", image, "uint") == 7)
-            return "hBitmap"
+      ; A "base64" string is binary image data encoded into text using standard 64 characters.
+      if (StrLen(image) >= 32) && (image ~= "^\s*(?:data:image\/[a-z]+;base64,)?"
+      . "(?:[A-Za-z0-9+\/]{4})*+(?:[A-Za-z0-9+\/]{3}=|[A-Za-z0-9+\/]{2}==)?\s*$")
+         return "base64"
 
-         ; An "hIcon" is a handle to a GDI icon.
-         if DllCall("DestroyIcon", "ptr", DllCall("CopyIcon", "ptr", image, "ptr"))
-            return "hIcon"
+      if not (image ~= "^-?\d+$")
+         goto end
 
-         ; A "bitmap" is a pointer to a GDI+ Bitmap.
-         try if !DllCall("gdiplus\GdipGetImageType", "ptr", image, "ptr*", type:=0) && (type == 1)
-            return "bitmap"
+      handle:
+      ; A "dc" is a handle to a GDI device context.
+      if (DllCall("GetObjectType", "ptr", image, "uint") == 3 || DllCall("GetObjectType", "ptr", image, "uint") == 10)
+         return "dc"
 
-         ; Note 1: All GDI+ functions add 1 to the reference count of COM objects.
-         ; Note 2: GDI+ pBitmaps that are queried cease to stay pBitmaps.
-         ; Note 3: Critical error for ranges 0-4095 on v1 and 0-65535 on v2.
-         ObjRelease(image) ; Therefore do not move this, it has been tested.
+      ; An "hBitmap" is a handle to a GDI Bitmap.
+      if (DllCall("GetObjectType", "ptr", image, "uint") == 7)
+         return "hBitmap"
 
-         ; A "stream" is a pointer to the IStream interface.
-         try if ComObjQuery(image, "{0000000C-0000-0000-C000-000000000046}")
-            return "stream", ObjRelease(image)
+      ; An "hIcon" is a handle to a GDI icon.
+      if DllCall("DestroyIcon", "ptr", DllCall("CopyIcon", "ptr", image, "ptr"))
+         return "hIcon"
 
-         ; A "RandomAccessStream" is a pointer to the IRandomAccessStream interface.
-         try if ComObjQuery(image, "{905A0FE1-BC53-11DF-8C49-001E4FC686DA}")
-            return "RandomAccessStream", ObjRelease(image)
+      ; A "bitmap" is a pointer to a GDI+ Bitmap.
+      try if !DllCall("gdiplus\GdipGetImageType", "ptr", image, "ptr*", type:=0) && (type == 1)
+         return "bitmap"
 
-         ; A "wicBitmap" is a pointer to a IWICBitmapSource.
-         try if ComObjQuery(image, "{00000120-A8F2-4877-BA0A-FD2B6645FB94}")
-            return "wicBitmap", ObjRelease(image)
+      ; Note 1: All GDI+ functions add 1 to the reference count of COM objects.
+      ; Note 2: GDI+ pBitmaps that are queried cease to stay pBitmaps.
+      ; Note 3: Critical error for ranges 0-4095 on v1 and 0-65535 on v2.
+      ObjRelease(image) ; Therefore do not move this, it has been tested.
 
-         ; A "d2dBitmap" is a pointer to a ID2D1Bitmap.
-         try if ComObjQuery(image, "{A2296057-EA42-4099-983B-539FB6505426}")
-            return "d2dBitmap", ObjRelease(image)
-      }
+      pointer:
+      ; A "stream" is a pointer to the IStream interface.
+      try if ComObjQuery(image, "{0000000C-0000-0000-C000-000000000046}")
+         return "stream", ObjRelease(image)
+
+      ; A "RandomAccessStream" is a pointer to the IRandomAccessStream interface.
+      try if ComObjQuery(image, "{905A0FE1-BC53-11DF-8C49-001E4FC686DA}")
+         return "RandomAccessStream", ObjRelease(image)
+
+      ; A "wicBitmap" is a pointer to a IWICBitmapSource.
+      try if ComObjQuery(image, "{00000120-A8F2-4877-BA0A-FD2B6645FB94}")
+         return "wicBitmap", ObjRelease(image)
+
+      ; A "d2dBitmap" is a pointer to a ID2D1Bitmap.
+      try if ComObjQuery(image, "{A2296057-EA42-4099-983B-539FB6505426}")
+         return "d2dBitmap", ObjRelease(image)
 
 
       ; For more helpful error messages: Catch file names without extensions!
@@ -431,6 +449,7 @@ class ImagePut {
          if FileExist(image "." extension)
             throw Exception("A ." extension " file extension is required!", -4)
 
+      end:
       throw Exception("Image type could not be identified.")
    }
 
@@ -446,7 +465,7 @@ class ImagePut {
          return this.from_clipboard()
 
       if (type = "object")
-         return this.from_object(image)
+         return this.from_bitmap(image.pBitmap)
 
       if (type = "buffer")
          return this.from_buffer(image)
@@ -786,7 +805,7 @@ class ImagePut {
 
       ; Draw Image.
       DllCall("gdiplus\GdipCreateImageAttributes", "ptr*", ImageAttr:=0)
-      DllCall("gdiplus\GdipSetImageAttributesWrapMode", "ptr", ImageAttr, "int", 3) ; WrapModeTileFlipXY
+      DllCall("gdiplus\GdipSetImageAttributesWrapMode", "ptr", ImageAttr, "int", 3, "uint", 0, "int", 0) ; WrapModeTileFlipXY
       DllCall("gdiplus\GdipDrawImageRectRectI"
                ,    "ptr", pGraphics
                ,    "ptr", pBitmap
@@ -893,12 +912,47 @@ class ImagePut {
       return pStream
    }
 
-   from_object(image) {
-      return this.from_bitmap(image.pBitmap)
-   }
-
    from_buffer(image) {
-      ; to do
+
+      if image.HasKey("stride")
+         stride := image.stride
+      else if image.HasKey("width")
+         stride := image.width * 4
+      else if image.HasKey("height") && image.HasKey("size")
+         stride := image.size // image.height
+      else throw Exception("Buffer must have a stride property.")
+
+      if image.HasKey("width")
+         width := image.width
+      else if image.HasKey("stride")
+         width := image.stride // 4
+      else if image.HasKey("height") && image.HasKey("size")
+         width := image.size // (4 * image.height)
+      else throw Exception("Buffer must have a width property.")
+
+      if image.HasKey("height")
+         height := image.height
+      else if image.HasKey("stride") && image.HasKey("size")
+         height := image.size // image.stride
+      else if image.HasKey("width") && image.HasKey("size")
+         height := image.size // (4 * image.width)
+      else throw Exception("Buffer must have a height property.")
+
+      ; Could assert a few assumptions, such as stride * height = size.
+      ; However, I'd like for the pointer and its size to be as flexable as possible.
+      ; So permit underflow for now.
+
+      ; Check for buffer overflow errors.
+      if image.HasKey("size") && (abs(stride * height) > image.size)
+         throw Exception("Image dimensions exceed the size of the buffer.")
+
+      ; Create a pBitmap from the current pointer.
+      DllCall("gdiplus\GdipCreateBitmapFromScan0"
+               , "int", width, "int", height, "int", stride, "int", 0x26200A, "ptr", image.ptr, "ptr*", pBitmap:=0)
+
+      ; Todo: what happens if the backing data is destroyed?
+
+      return pBitmap
    }
 
 
@@ -2829,6 +2883,7 @@ class ImagePut {
 
          ; Create an array of [x, y] coordinates.
          xys := []
+         xys.count := count
          loop % count {
             address := NumGet(result, A_PtrSize*(A_Index-1), "ptr")
             offset := (address - this.ptr) // 4
@@ -2902,6 +2957,7 @@ class ImagePut {
 
          ; Create an array of [x, y] coordinates.
          xys := []
+         xys.count := count
          loop % count {
             address := NumGet(result, A_PtrSize*(A_Index-1), "ptr")
             offset := (address - this.ptr) // 4
@@ -3156,7 +3212,7 @@ class ImagePut {
 
          ; Draw Image.
          DllCall("gdiplus\GdipCreateImageAttributes", "ptr*", ImageAttr:=0)
-         DllCall("gdiplus\GdipSetImageAttributesWrapMode", "ptr", ImageAttr, "int", 3) ; WrapModeTileFlipXY
+         DllCall("gdiplus\GdipSetImageAttributesWrapMode", "ptr", ImageAttr, "int", 3, "uint", 0, "int", 0) ; WrapModeTileFlipXY
          DllCall("gdiplus\GdipDrawImageRectRectI"
                   ,    "ptr", pGraphics
                   ,    "ptr", pBitmap
@@ -4250,7 +4306,8 @@ class ImagePut {
 
       ; Create a filepath based on the timestamp.
       if (filename == "") {
-         FormatTime, filename,, % "yyyy-MM-dd HH꞉mm꞉ss"
+         colon := A_IsUnicode ? Chr(0xA789) : "_"
+         FormatTime, filename,, % "yyyy-MM-dd HH" colon "mm" colon "ss"
          filepath := directory "\" filename "." extension
          while FileExist(filepath)
             filepath := directory "\" filename " (" A_Index ")." extension
@@ -4287,8 +4344,9 @@ class ImagePut {
       if (instances = 0 && vary = 1) {
 
          DllCall("LoadLibrary", "str", "gdiplus")
-         VarSetCapacity(si, A_PtrSize = 4 ? 16:24, 0) ; sizeof(GdiplusStartupInput) = 16, 24
-            NumPut(0x1, si, "uint")
+         VarSetCapacity(si, A_PtrSize = 4 ? 20:32, 0) ; sizeof(GdiplusStartupInputEx) = 20, 32
+            NumPut(0x2, si, "uint")
+            NumPut(0x4, si, A_PtrSize = 4 ? 16:24, "uint")
          DllCall("gdiplus\GdiplusStartup", "ptr*", pToken:=0, "ptr", &si, "ptr", 0)
 
       }

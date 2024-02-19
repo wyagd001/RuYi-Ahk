@@ -1,9 +1,12 @@
-﻿;|2.0|2023.07.01|1120
-CandySel :=  A_Args[1]
-if !CandySel
-	exitapp
+﻿;|2.5|2024.02.12|1120
 ; 复制文字或图片后,在资源管理器窗口和桌面，
 ; 将复制的内容保存为文件
+CandySel :=  A_Args[1]
+if !CandySel
+{
+	CF_ToolTip("文件夹路径为空, 保存路径设置为桌面", 3000)
+	CandySel := A_desktop
+}
 剪贴板到文件:
 PasteToPath(CandySel)
 return
@@ -98,4 +101,16 @@ CF_IsFolder(sfile){
 		return 1
 	else
 		return 0
+}
+
+CF_ToolTip(tipText, delay := 1000)
+{
+	ToolTip
+	ToolTip, % tipText
+	SetTimer, RemoveToolTip, % "-" delay
+return
+
+RemoveToolTip:
+	ToolTip
+return
 }

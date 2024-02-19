@@ -1,55 +1,386 @@
-﻿;|2.5|2024.02.16|1316
+﻿;|2.5|2023.10.20|1220
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\f17f.ico"
 
 CandySel :=  A_Args[1]
 ;CandySel := "C:\Documents and Settings\Administrator\Desktop\Gui"
 valuetocp := {"ANSI(中文简体)": "CP936", "UTF-8 BOM": "UTF-8", "UTF-8 Raw": "UTF-8-Raw", "Unicode(UTF-16)": "UTF-16"}
-Gui, Add, Text, x10 y15 h25, 查找文件夹:
+Gui, Add, Text, x10 y15 h25, 文件夹:
 Gui, Add, Edit, xp+80 yp-5 w550 h25 vsfolder, % CandySel
-Gui, Add, Button, xp+560 yp-2 w60 h30 gstartsearch, 开始查找
+Gui, Add, Button, xp+560 yp-2 w60 h30 gstartsearch, 载入
 Gui, Add, Text, x10 yp+40 h25, 指定扩展名:
 Gui, Add, Edit, xp+80 yp-5 w550 h25 vsExt, % "txt,ahk,md"
-Gui, Add, Button, xp+560 yp w60 h30 grunzhuanma, 执行转码
-gui, add, Text, x10 yp+40 w60 vmyparam1, 输出编码:
-gui, add, ComboBox, xp+80 yp w550 vOut_Code, ANSI(中文简体)|UTF-8 Raw|UTF-8 BOM||Unicode(UTF-16)
-Gui, Add, ListView, x10 yp+40 w700 h500 vfilelist Checked hwndHLV AltSubmit, 文件名|相对路径|扩展名|文件编码|大小(KB)|修改日期|完整路径
-Gui, Add, Button, xp yp+510 w60 h30 guncheckall, 全不选
+Gui, Add, Button, xp+560 yp w60 h30 gnull, 执行
+
+Gui, Add, Text, x10 yp+40  w60, 文件名:
+Gui, Add, Edit, xp+80 yp-3 w150 h25 vofilename,
+gui, add, Text, xp+160 yp+3 w60, 输出编码:
+gui, add, ComboBox, xp+80 yp-3 w100  vOut_Code, ANSI(中文简体)|UTF-8 Raw|UTF-8 BOM||Unicode(UTF-16)
+Gui, Add, CheckBox, xp+110 yp h30 vaddfilepath, 合并时添加文件名到首行
+
+Gui, Add, ListView, x10 yp+40 w700 h500 vfilelist hwndHLV Checked AltSubmit, 序号|文件名|相对路径|扩展名|文件编码|大小(KB)|修改日期|完整路径   ;
+Gui, Add, Button, xp+710 yp w60 geditnewrow, 新增
+Gui, Add, Button, xp yp+28 w60 geditrow, 编辑
+Gui, Add, Button, xp yp+28 w60 gDelListItem, 删除
+
+Gui, Add, Button, xp yp+40 w60 gMoveRow_Up, 向上
+Gui, Add, Button, xp yp+28 w60 gMoveRow_Down, 向下
+
+Gui, Add, Button, x10 y630 w60 h30 gcheckall, 全选
+Gui, Add, Button, xp+70 yp w60 h30 guncheckall, 全不选
 Gui, Add, Button, xp+70 yp w60 h30 gEditfilefromlist, 编辑文件
 Gui, Add, Button, xp+70 yp w60 h30 gopenfilefromlist, 打开文件
 Gui, Add, Button, xp+70 yp w60 h30 gopenfilepfromlist, 打开路径
 
-gui, Show,, 列出文件夹中文本文件的编码
+Gui, Show,, 多文件合并
 
 if FileExist(CandySel)
 	gosub startsearch
-Return
+return
 
 startsearch:
 gui, Submit, NoHide
+if !FileExist(sfolder)
+	return
 ToolTip, % "正在遍历文本文件编码类型, 请稍候..."
 LV_Delete()
+B_Index := 0
 Loop, Files, %sfolder%\*.*, FR
 {
 	if A_LoopFileSize = 0
 		continue
+	if Tmp_Hfolderpath     ; 不加载隐藏文件夹中的文件
+	{
+		if InStr(A_LoopFileLongPath, Tmp_Hfolderpath)
+			continue
+	}
+	if A_LoopFileAttrib contains H,R,S   ; 不在载隐藏的文件
+	{
+		if InStr(A_LoopFileAttrib, "D")
+			Tmp_Hfolderpath := A_LoopFileLongPath
+		continue
+	}
 	if sExt
 	{
 		if A_LoopFileExt not in %sExt%
 			continue
 	}
-	LV_Add("", A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, sfolder), A_LoopFileName), A_LoopFileExt, File_GetEncoding(A_LoopFileFullPath), A_LoopFileSizeKB+1, A_LoopFileTimeModified, A_LoopFilePath)
+	B_Index ++
+	LV_Add("", B_Index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, sfolder), A_LoopFileName), A_LoopFileExt, File_GetEncoding(A_LoopFileFullPath), A_LoopFileSizeKB+1, A_LoopFileTimeModified, A_LoopFilePath)
 }
 ;msgbox % "文件遍历完成. 用时: " A_TickCount - st
 ToolTip
 
 LV_ModifyCol()
-LV_ModifyCol(1, 200)
-LV_ModifyCol(2, 250)
-LV_ModifyCol(3, 60)
-LV_ModifyCol(5, 75)
+LV_ModifyCol(2, 200)
+LV_ModifyCol(3, 250)
+LV_ModifyCol(4, 60)
+LV_ModifyCol(6, 75)
+Return
 
-;FileAppend, % Array_ToString(folderobj) , %A_desktop%\123.txt
+null:
+
+gui, Submit, NoHide
+RowNumber := 0
+ofilecode := valuetocp[out_code]
+Tmp_Str := ""
+Loop
+{
+	RowNumber := LV_GetNext(RowNumber, "C")  ; 在前一次找到的位置后继续搜索.
+	if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
+		break
+	LV_GetText(fullpath, RowNumber, 8)
+	FileRead, OutputVar, %fullpath%
+	if addfilepath
+		Tmp_Str .= fullpath "`r`n" OutputVar "`r`n`r`n"
+	else
+		Tmp_Str .= OutputVar "`r`n`r`n"
+}
+ofilename := ofilename ? ofilename : "合并_" A_Now ".txt"
+FileAppend, %Tmp_Str%, %sfolder%\%ofilename%, % ofilecode
+Return
+
+
+settingInifile := A_ScriptDir "\股票当天行情.ini"
+settingobj := ini2obj(settingInifile)
+Global settingobj, settingInifile
+ColorsOn := settingobj["选项"]["显示颜色"]
+speccolor := settingobj["选项"]["仅五六列显示颜色"]
+
+return
+
+GuiClose:
+ExitApp
+
+ini2obj(file)
+{
+	iniobj := {}
+	FileRead, filecontent, %file% ;加载文件到变量
+	StringReplace, filecontent, filecontent, `r, , All
+	StringSplit, line, filecontent, `n, , ;用函数分割变量为伪数组
+	Loop ;循环
+	{
+		if A_Index > %line0%
+			Break
+		content = % line%A_Index% ; 赋值当前行
+		if (instr(content, ";") = 1)  ; 每行第一个字符为 ; 为注释跳过
+			continue
+		FSection := RegExMatch(content, "\[.*\]") ;正则表达式匹配section
+		if FSection = 1 ;如果找到
+		{
+			TSection := RegExReplace(content, "\[(.*)\]", "$1") ; 正则替换并赋值临时section $为向后引用
+			iniobj[TSection] := {}
+		}
+		Else
+		{
+			FKey := RegExMatch(content, "^.*=.*")    ;正则表达式匹配key
+			if FKey
+			{
+				TKey := RegExReplace(content, "^(.*?)=.*", "$1")   ; 正则替换并赋值临时key
+				;StringReplace, TKey, TKey, ., _, All               ; 会将键中的 "." 自动替换为 "_". 快捷键中有 ., 所以注释掉了
+				TValue := RegExReplace(content, "^.*?=(.*)", "$1") ; 正则替换并赋值临时value
+				if TKey
+					iniobj[TSection][TKey] := TValue
+			}
+		}
+	}
+	Return iniobj
+}
+
+obj2ini(obj, file){
+	if (!isobject(obj) or !file)
+		Return 0
+	for k,v in obj
+	{
+		for key,value in v                                  ; 删除的键值不会保存
+		{
+			IniWrite, %value%, %file%, %k%, %key%
+			;fileappend %key%-%value%`n, %A_desktop%\123.txt
+		}
+	}
+Return 1
+}
+
+GetStringIndex(String, Index := "")
+{
+	arrCandy_Cmd_Str := StrSplit(String, "|", " `t")
+	if Index
+	{
+		NewStr := arrCandy_Cmd_Str[Index]
+		return NewStr
+	}
+	else
+		return arrCandy_Cmd_Str
+}
+
+editrow:
+RF := LV_GetNext(0, "F")
+if RF
+{
+	LV_GetText(R_index, RF, 1)
+	LV_GetText(R_Code, RF, 2)
+	LV_GetText(R_Name, RF, 3)
+	LV_GetText(R_Share, RF, 8)
+	LV_GetText(R_Price, RF, 9)
+}
+editnewrow:
+Gui, 98:Destroy
+Gui, 98:+Owner1
+Gui, 1:+Disabled
+Gui, 98:Default
+Gui, Submit, NoHide
+if !R_index && !R_Code
+	R_index := settingobj["股票"].Count()+1
+Gui, Add, Text, x20 y20 w50 h20, 编号：
+Gui, Add, Text, x20 y50 w60 h20, 股票代码：
+Gui, Add, Text, x20 y80 w80 h20, 股票名称：
+Gui, Add, Text, x20 y110 w80 h20, 持有份额：
+Gui, Add, Text, x20 y140 w80 h20, 成本价格：
+
+Gui, Add, Edit, x110 y20 w100 h20 readonly vR_index, %R_index%
+Gui, Add, Edit, x110 y50 w100 h20 vR_Code, %R_Code%
+Gui, Add, Edit, x110 y80 w100 h20 vR_Name, %R_Name%
+Gui, Add, Edit, x110 y110 w100 h20 vR_Share, %R_Share%
+Gui, Add, Edit, x110 y140 w100 h20 vR_Price, %R_Price%
+
+Gui, Add, Button, x200 y170 w70 h30 g98ButtonOK, 确定
+Gui, Add, Button, x280 y170 w70 h30 g98GuiClose Default, 取消
+Gui, Show,, 股票基金项目编辑
+Return
+
+98ButtonOK:
+Gui, 98:Submit
+Gui, 98:Destroy
+Gui, 1:Default
+Gui, 1:-Disabled
+Gui, Submit, NoHide
+settingobj["股票"][R_index] := R_Code "|" R_Name "|" R_Share "|" R_Price
+obj2ini(settingobj, settingInifile)
+;RefreshData("股票")
+R_index := R_Code := R_Name := R_Share := R_Price := ""
+return
+
+98GuiEscape:
+98GuiClose:
+Gui, 1:-Disabled
+Gui, 98:Destroy
+R_index := R_Code := R_Name := R_Share := R_Price := ""
+Return
+
+MoveRow_Up:
+Gui, Submit, NoHide
+LV_MoveRow()
+LV_RowIndexOrder()
+LV_ListToObj("股票")
+Return
+
+MoveRow_Down:
+Gui, Submit, NoHide
+LV_MoveRow(0)
+LV_RowIndexOrder()
+LV_ListToObj("股票")
+Return
+
+LV_MoveRow(moveup = true) {
+	; Original by diebagger (Guest) from:
+	; http://de.autohotkey.com/forum/viewtopic.php?p=58526#58526
+	; Slightly Modifyed by Obi-Wahn
+	If moveup not in 1,0
+		Return	; If direction not up or down (true or false)
+	while x := LV_GetNext(x)	; Get selected lines
+		i := A_Index, i%i% := x
+	If (!i) || ((i1 < 2) && moveup) || ((i%i% = LV_GetCount()) && !moveup)
+		Return	; Break Function if: nothing selected, (first selected < 2 AND moveup = true) [header bug]
+				; OR (last selected = LV_GetCount() AND moveup = false) [delete bug]
+	cc := LV_GetCount("Col"), fr := LV_GetNext(0, "Focused"), d := moveup ? -1 : 1
+	; Count Columns, Query Line Number of next selected, set direction math.
+	Loop, %i% {	; Loop selected lines
+		r := moveup ? A_Index : i - A_Index + 1, ro := i%r%, rn := ro + d
+		; Calculate row up or down, ro (current row), rn (target row)
+		Loop, %cc% {	; Loop through header count
+			LV_GetText(to, ro, A_Index), LV_GetText(tn, rn, A_Index)
+			; Query Text from Current and Targetrow
+			LV_Modify(rn, "Col" A_Index, to), LV_Modify(ro, "Col" A_Index, tn)
+			; Modify Rows (switch text)
+		}
+		LV_Modify(ro, "-select -focus"), LV_Modify(rn, "select vis")
+		If (ro = fr)
+			LV_Modify(rn, "Focus")
+	}
+}
+
+; ================================================================================================================================
+; LV_MoveRow
+; Moves a complete row within an own ListView control.
+;     HLV            -  the handle to the ListView
+;     RowNumber      -  the number of the row to be moved
+;     InsertBefore   -  the number of the row to insert the moved row before
+;     MaxTextLength  -  maximum length of item/subitem text being retrieved
+; Returns the new row number of the moved row on success, otherwise zero (False).
+; ================================================================================================================================
+LV_MoveRow2(HLV, RowNumber, InsertBefore, MaxTextLength := 257) {
+   Static LVM_GETITEM := A_IsUnicode ? 0x104B : 0x1005
+   Static LVM_INSERTITEM := A_IsUnicode ? 0x104D : 0x1007
+   Static LVM_SETITEM := A_IsUnicode ? 0x104C : 0x1006
+   Static OffMask := 0
+        , OffItem := OffMask + 4
+        , OffSubItem := OffItem + 4
+        , OffState := OffSubItem + 4
+        , OffStateMask := OffState + 4
+        , OffText := OffStateMask + A_PtrSize
+        , OffTextLen := OffText + A_PtrSize
+   ; Some checks -----------------------------------------------------------------------------------------------------------------
+   If (RowNumber = InsertBefore)
+      Return True
+   Rows := DllCall("SendMessage", "Ptr", HLV, "UInt", 0x1004, "Ptr", 0, "Ptr", 0, "Int") ; LVM_GETITEMCOUNT
+   If (RowNumber < 1) || (InsertBefore < 1) || (RowNumber > Rows)
+      Return False
+   ; Move it, if possible --------------------------------------------------------------------------------------------------------
+   GuiControl, -Redraw, %HLV%
+   HHD := DllCall("SendMessage", "Ptr", HLV, "UInt", 0x101F, "Ptr", 0, "Ptr", 0, "UPtr") ; LVM_GETHEADER
+   Columns := DllCall("SendMessage", "Ptr", HHD, "UInt", 0x1200, "Ptr", 0, "Ptr", 0, "Int") ; HDM_GETITEMCOUNT
+   Item := RowNumber - 1
+   StructSize := 88 + (MaxTextLength << !!A_IsUnicode)
+   VarSetCapacity(LVITEM, StructSize, 0)
+   NumPut(0x01031F, LVITEM, OffMask, "UInt") ; might need to be adjusted for Win XP/Vista
+   NumPut(Item, LVITEM, OffItem, "Int")
+   NumPut(-1, LVITEM, OffStateMask, "UInt")
+   NumPut(&LVITEM + 88, LVITEM, OffText, "Ptr")
+   NumPut(MaxTextLength, LVITEM, OffTextLen, "Int")
+   If !DllCall("SendMessage", "Ptr", HLV, "UInt", LVM_GETITEM, "Ptr", 0, "Ptr", &LVITEM, "Int")
+      Return False
+   NumPut(InsertBefore - 1, LVITEM, OffItem, "Int")
+   NewItem := DllCall("SendMessage", "Ptr", HLV, "UInt", LVM_INSERTITEM, "Ptr", 0, "Ptr", &LVITEM, "Int")
+   If (NewItem = -1)
+      Return False
+   DllCall("SendMessage", "Ptr", HLV, "UInt", 0x102B, "Ptr", NewItem, "Ptr", &LVITEM) ; LVM_SETITEMSTATE
+   If (InsertBefore <= RowNumber)
+      Item++
+   VarSetCapacity(LVITEM, StructSize, 0) ; reinitialize
+   Loop, %Columns% {
+      NumPut(0x03, LVITEM, OffMask, "UInt")
+      NumPut(Item, LVITEM, OffItem, "Int")
+      NumPut(A_Index, LVITEM, OffSubItem, "Int")
+      NumPut(&LVITEM + 88, LVITEM, OffText, "Ptr")
+      NumPut(MaxTextLength, LVITEM, OffTextLen, "Int")
+      If !DllCall("SendMessage", "Ptr", HLV, "UInt", LVM_GETITEM, "Ptr", 0, "Ptr", &LVITEM, "Int")
+         Return False
+      NumPut(NewItem, LVITEM, OffItem, "Int")
+      DllCall("SendMessage", "Ptr", HLV, "UInt", LVM_SETITEM, "Ptr", 0, "Ptr", &LVITEM, "Int")
+   }
+   Result := DllCall("SendMessage", "Ptr", HLV, "UInt", 0x1008, "Ptr", Item, "Ptr", 0) ; LVM_DELETEITEM
+   GuiControl, +Redraw, %HLV%
+   Return (Result ? (NewItem + 1) : 0)
+}
+
+LV_RowIndexOrder()
+{
+	loop % LV_GetCount()
+	{
+		LV_Modify(A_index, , A_index)
+	}
+}
+
+LV_ListToObj(SubObjName)
+{
+	loop % LV_GetCount()
+	{
+		LV_GetText(R_index, A_index, 1)
+		LV_GetText(R_Code, A_index, 2)
+		LV_GetText(R_Name, A_index, 3)
+		LV_GetText(R_Share, A_index, 8)
+		LV_GetText(R_Price, A_index, 9)
+		settingobj[SubObjName][R_index] := R_Code "|" R_Name "|" R_Share "|" R_Price
+	}
+	obj2ini(settingobj, settingInifile)
+}
+
+DelListItem:
+Gui, Submit, NoHide
+RowNumber := 0, TmpArr := []
+Loop
+{
+	RowNumber := LV_GetNext(RowNumber)
+	if not RowNumber
+		Break
+
+	LV_GetText(Tmp_Str, RowNumber, 1)
+	;msgbox % RowNumber "|" Tmp_Str
+	TmpArr.Push(Tmp_Str)
+}
+Loop % TmpArr.Length()
+{
+	Tmp_Index := TmpArr.Pop()
+	;msgbox % Tmp_Index
+	settingobj["股票"].RemoveAt(Tmp_Index)
+	IniDelete, % settingInifile, 股票, % settingobj["股票"].Count()+1
+}
+obj2ini(settingobj, settingInifile)
+;RefreshData(Comb)
+return
+
+checkall:
+LV_Modify(0, "check")
 return
 
 uncheckall:
@@ -85,59 +416,38 @@ Run, %OutDir%
 ;Run, explorer.exe /select`, %Tmp_file%
 return
 
-runzhuanma:
-gui, Submit, NoHide
-out_code := valuetocp[out_code]
-;msgbox % out_code
-RowNumber := 0  ; 这样使得首次循环从列表的顶部开始搜索.
-Loop
-{
-	RowNumber := LV_GetNext(RowNumber, "C")  ; 在前一次找到的位置后继续搜索.
-	if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
-		break
-	LV_GetText(Tmp_Path, RowNumber, 7)
-	LV_GetText(Tmp_CPcode, RowNumber, 4)
 
-	if (Tmp_CPcode != out_code)
-		File_CpTransform(Tmp_Path, Tmp_CPcode, out_code, 0)
-}
-Return
 
-GuiClose:
-Guiescape:
-Gui Destroy
-Gui, GuiText: Destroy
-exitapp
-Return
 
-GuiText(Gtext, Title:="", w:=300, l:=20)
-{
-	global myedit, TextGuiHwnd
-	Gui,GuiText: Destroy
-	Gui,GuiText: Default
-	Gui, +HwndTextGuiHwnd
-	Gui, Add, Edit, Multi readonly w%w% r%l% vmyedit
-	GuiControl,, myedit, %Gtext%
-	gui, Show, AutoSize, % Title
-	return
 
-	GuiTextGuiClose:
-	GuiTextGuiescape:
-	Gui, GuiText: Destroy
-	Return
-}
 
-CF_ToolTip(tipText, delay := 1000)
-{
-	ToolTip
-	ToolTip, % tipText
-	SetTimer, RemoveToolTip, % "-" delay
-return
 
-RemoveToolTip:
-	ToolTip
-return
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*!
 	函数: File_GetEncoding
@@ -467,4 +777,3 @@ Local OutFile
   DllCall("Shell32\PathYetAnotherMakeUniqueName", "Str",OutFile, "Str",Outfile, "Ptr",0, "Ptr",0)
 Return A_IsUnicode ? OutFile : StrGet(&OutFile, "UTF-16")
 }
-

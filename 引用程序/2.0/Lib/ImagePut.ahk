@@ -1,4 +1,4 @@
-; Script:    ImagePut.ahk
+﻿; Script:    ImagePut.ahk
 ; License:   MIT License
 ; Author:    Edison Hua (iseahound)
 ; Github:    https://github.com/iseahound/ImagePut
@@ -178,8 +178,8 @@ ImageEqual(images*) {
 
 class ImagePut {
 
-   static decode := False   ; Forces conversion using a bitmap. The original file encoding will be lost.
-   static validate := False ; Always copies image data into memory instead of passing references.
+   static decode := False   ; Decompresses image to a pixel buffer. Any encoding such as JPG will be lost.
+   static validate := False ; Always copies pixels to new memory immediately instead of copy-on-read/write.
 
    static call(cotype, image, p*) {
 
@@ -218,8 +218,9 @@ class ImagePut {
       ; #2 - Fallback to GDI+ bitmap as the intermediate.
       else {
          ; GdipImageForceValidation must be called immediately or it fails without any errors.
-         ; It load the image pixels to the bitmap buffer, increasing memory usage and prevents
-         ; changes to the pixels while bypassing any copy-on-write and copy on LockBits(read) behavior.
+         ; Doing so loads the pixels to the bitmap buffer. Increases memory usage.
+         ; Prevents future changes to the original pixels from altering any copies.
+         ; Without validation, it preforms copy-on-write and copy on LockBits(read).
 
          ; Convert via GDI+ bitmap intermediate.
          if !(pBitmap := this.ToBitmap(type, image, keywords))
@@ -307,123 +308,140 @@ class ImagePut {
    }
 
    static ImageType(image) {
-      ; Throw if the image is an empty string.
+
+      if not IsObject(image)
+         goto string
+
+      if (image.HasOwnProp("prototype") && image.prototype.HasOwnProp("__class") && image.prototype.__class == "ClipboardAll")
+      or (image.base.HasOwnProp("__class") && image.base.__class == "ClipboardAll") {
+
+         ; A "clipboard_png" is a pointer to a PNG stream saved as the "png" clipboard format.
+         if DllCall("IsClipboardFormatAvailable", "uint", DllCall("RegisterClipboardFormat", "str", "png", "uint"))
+            return "clipboard_png"
+
+         ; A "clipboard" is a handle to a GDI bitmap saved as CF_BITMAP.
+         if DllCall("IsClipboardFormatAvailable", "uint", 2)
+            return "clipboard"
+
+         throw Error("Clipboard format not supported.")
+      }
+
+
+
+
+      ; A "object" has a pBitmap property that points to an internal GDI+ bitmap.
+      if image.HasOwnProp("pBitmap")
+         try if !DllCall("gdiplus\GdipGetImageType", "ptr", image.pBitmap, "ptr*", &type:=0) && (type == 1)
+            return "object"
+
+      ; A "window" is an object with an hwnd property.
+      if image.HasOwnProp("hwnd")
+         return "window"
+
+      ; A "screenshot" is an array of 4 numbers.
+      if (HasMethod(image, "__Item") && image[1] ~= "^-?\d+$" && image[2] ~= "^-?\d+$" && image[3] ~= "^-?\d+$" && image[4] ~= "^-?\d+$")
+         return "screenshot"
+
+      ; A "buffer" is an object with a pointer to bytes and properties to determine its 2-D shape.
+      if image.HasOwnProp("ptr")
+         and (image.HasOwnProp("width") && image.HasOwnProp("height")
+         or image.HasOwnProp("stride") && image.HasOwnProp("height")
+         or image.HasOwnProp("size") && (image.HasOwnProp("stride") || image.HasOwnProp("width") || image.HasOwnProp("height")))
+         return "buffer"
+
+      if image.HasOwnProp("ptr") {
+         image := image.ptr
+         goto pointer
+      } else
+         goto end
+
+      string:
       if (image == "")
          throw Error("Image data is an empty string.")
 
-      if IsObject(image) {
-         if (image.HasOwnProp("prototype") && image.prototype.HasOwnProp("__class") && image.prototype.__class == "ClipboardAll"
-         || image.base.HasOwnProp("__class") && image.base.__class == "ClipboardAll") {
+      ; A non-zero "monitor" number identifies each display uniquely; and 0 refers to the entire virtual screen.
+      if (image ~= "^\d+$" && image >= 0 && image <= MonitorGetCount())
+         return "monitor"
 
-            ; A "clipboard_png" is a pointer to a PNG stream saved as the "png" clipboard format.
-            if DllCall("IsClipboardFormatAvailable", "uint", DllCall("RegisterClipboardFormat", "str", "png", "uint"))
-               return "clipboard_png"
+      ; A "desktop" is a hidden window behind the desktop icons created by ImagePutDesktop.
+      if (image = "desktop")
+         return "desktop"
 
-            ; A "clipboard" is a handle to a GDI bitmap saved as CF_BITMAP.
-            if DllCall("IsClipboardFormatAvailable", "uint", 2)
-               return "clipboard"
+      ; A "wallpaper" is the desktop wallpaper.
+      if (image = "wallpaper")
+         return "wallpaper"
 
-            throw Error("Clipboard format not supported.")
-         }
+      ; A "cursor" is the name of a known cursor name.
+      if (image ~= "(?i)^A_Cursor|Unknown|(IDC_)?(AppStarting|Arrow|Cross|Hand(writing)?|"
+      . "Help|IBeam|No|Pin|Person|SizeAll|SizeNESW|SizeNS|SizeNWSE|SizeWE|UpArrow|Wait)$")
+         return "cursor"
 
-         ; A "object" has a pBitmap property that points to an internal GDI+ bitmap.
-         if image.HasOwnProp("pBitmap")
-            return "object"
+      ; A "pdf" is either a file or url with a .pdf extension.
+      if (image ~= "\.pdf$") && (FileExist(image) || this.is_url(image))
+         return "pdf"
 
-         ; A "buffer" is an object with ptr and size properties.
-         if image.HasOwnProp("ptr") && image.HasOwnProp("size")
-            return "buffer"
+      ; A "url" satisfies the url format.
+      if this.is_url(image)
+         return "url"
 
-         ; A "window" is an object with an hwnd property.
-         if image.HasOwnProp("hwnd")
-            return "window"
+      ; A "file" is stored on the disk or network.
+      if FileExist(image)
+         return "file"
 
-         ; A "screenshot" is an array of 4 numbers.
-         if (image[1] ~= "^-?\d+$" && image[2] ~= "^-?\d+$" && image[3] ~= "^-?\d+$" && image[4] ~= "^-?\d+$")
-            return "screenshot"
+      ; A "window" is anything considered a Window Title including ahk_class and "A".
+      if WinExist(image)
+         return "window"
 
-         throw Error("Image type could not be identified.")
-      }
-         ; A non-zero "monitor" number identifies each display uniquely; and 0 refers to the entire virtual screen.
-         if (image ~= "^\d+$" && image >= 0 && image <= MonitorGetCount())
-            return "monitor"
+      ; A "hex" string is binary image data encoded into text using hexadecimal.
+      if (StrLen(image) >= 48) && (image ~= "^\s*(?:[A-Fa-f0-9]{2})*+\s*$")
+         return "hex"
 
-         ; A "desktop" is a hidden window behind the desktop icons created by ImagePutDesktop.
-         if (image = "desktop")
-            return "desktop"
+      ; A "base64" string is binary image data encoded into text using standard 64 characters.
+      if (StrLen(image) >= 32) && (image ~= "^\s*(?:data:image\/[a-z]+;base64,)?"
+      . "(?:[A-Za-z0-9+\/]{4})*+(?:[A-Za-z0-9+\/]{3}=|[A-Za-z0-9+\/]{2}==)?\s*$")
+         return "base64"
 
-         ; A "wallpaper" is the desktop wallpaper.
-         if (image = "wallpaper")
-            return "wallpaper"
+      if not (image ~= "^-?\d+$")
+         goto end
 
-         ; A "cursor" is the name of a known cursor name.
-         if (image ~= "(?i)^A_Cursor|Unknown|(IDC_)?(AppStarting|Arrow|Cross|Hand(writing)?|"
-         . "Help|IBeam|No|Pin|Person|SizeAll|SizeNESW|SizeNS|SizeNWSE|SizeWE|UpArrow|Wait)$")
-            return "cursor"
+      handle:
+      ; A "dc" is a handle to a GDI device context.
+      if (DllCall("GetObjectType", "ptr", image, "uint") == 3 || DllCall("GetObjectType", "ptr", image, "uint") == 10)
+         return "dc"
 
-         ; A "pdf" is either a file or url with a .pdf extension.
-         if (image ~= "\.pdf$") && (FileExist(image) || this.is_url(image))
-            return "pdf"
+      ; An "hBitmap" is a handle to a GDI Bitmap.
+      if (DllCall("GetObjectType", "ptr", image, "uint") == 7)
+         return "hBitmap"
 
-         ; A "url" satisfies the url format.
-         if this.is_url(image)
-            return "url"
+      ; An "hIcon" is a handle to a GDI icon.
+      if DllCall("DestroyIcon", "ptr", DllCall("CopyIcon", "ptr", image, "ptr"))
+         return "hIcon"
 
-         ; A "file" is stored on the disk or network.
-         if FileExist(image)
-            return "file"
+      ; A "bitmap" is a pointer to a GDI+ Bitmap.
+      try if !DllCall("gdiplus\GdipGetImageType", "ptr", image, "ptr*", &type:=0) && (type == 1)
+         return "bitmap"
 
-         ; A "window" is anything considered a Window Title including ahk_class and "A".
-         if WinExist(image)
-            return "window"
+      ; Note 1: All GDI+ functions add 1 to the reference count of COM objects.
+      ; Note 2: GDI+ pBitmaps that are queried cease to stay pBitmaps.
+      ; Note 3: Critical error for ranges 0-4095 on v1 and 0-65535 on v2.
+      ObjRelease(image) ; Therefore do not move this, it has been tested.
 
-         ; A "hex" string is binary image data encoded into text using hexadecimal.
-         if (StrLen(image) >= 48) && (image ~= "^\s*(?:[A-Fa-f0-9]{2})*+\s*$")
-            return "hex"
+      pointer:
+      ; A "stream" is a pointer to the IStream interface.
+      try if ComObjQuery(image, "{0000000C-0000-0000-C000-000000000046}")
+         return "stream"
 
-         ; A "base64" string is binary image data encoded into text using standard 64 characters.
-         if (StrLen(image) >= 32) && (image ~= "^\s*(?:data:image\/[a-z]+;base64,)?"
-         . "(?:[A-Za-z0-9+\/]{4})*+(?:[A-Za-z0-9+\/]{3}=|[A-Za-z0-9+\/]{2}==)?\s*$")
-            return "base64"
+      ; A "RandomAccessStream" is a pointer to the IRandomAccessStream interface.
+      try if ComObjQuery(image, "{905A0FE1-BC53-11DF-8C49-001E4FC686DA}")
+         return "RandomAccessStream"
 
-      if (image ~= "^-?\d+$") {
-         ; A "dc" is a handle to a GDI device context.
-         if (DllCall("GetObjectType", "ptr", image, "uint") == 3 || DllCall("GetObjectType", "ptr", image, "uint") == 10)
-            return "dc"
+      ; A "wicBitmap" is a pointer to a IWICBitmapSource.
+      try if ComObjQuery(image, "{00000120-A8F2-4877-BA0A-FD2B6645FB94}")
+         return "wicBitmap"
 
-         ; An "hBitmap" is a handle to a GDI Bitmap.
-         if (DllCall("GetObjectType", "ptr", image, "uint") == 7)
-            return "hBitmap"
-
-         ; An "hIcon" is a handle to a GDI icon.
-         if DllCall("DestroyIcon", "ptr", DllCall("CopyIcon", "ptr", image, "ptr"))
-            return "hIcon"
-
-         ; A "bitmap" is a pointer to a GDI+ Bitmap.
-         try if !DllCall("gdiplus\GdipGetImageType", "ptr", image, "ptr*", &type:=0) && (type == 1)
-            return "bitmap"
-
-         ; Note 1: All GDI+ functions add 1 to the reference count of COM objects.
-         ; Note 2: GDI+ pBitmaps that are queried cease to stay pBitmaps.
-         ; Note 3: Critical error for ranges 0-4095 on v1 and 0-65535 on v2.
-         ObjRelease(image) ; Therefore do not move this, it has been tested.
-
-         ; A "stream" is a pointer to the IStream interface.
-         try if ComObjQuery(image, "{0000000C-0000-0000-C000-000000000046}")
-            return "stream"
-
-         ; A "RandomAccessStream" is a pointer to the IRandomAccessStream interface.
-         try if ComObjQuery(image, "{905A0FE1-BC53-11DF-8C49-001E4FC686DA}")
-            return "RandomAccessStream"
-
-         ; A "wicBitmap" is a pointer to a IWICBitmapSource.
-         try if ComObjQuery(image, "{00000120-A8F2-4877-BA0A-FD2B6645FB94}")
-            return "wicBitmap"
-
-         ; A "d2dBitmap" is a pointer to a ID2D1Bitmap.
-         try if ComObjQuery(image, "{A2296057-EA42-4099-983B-539FB6505426}")
-            return "d2dBitmap"
-      }
+      ; A "d2dBitmap" is a pointer to a ID2D1Bitmap.
+      try if ComObjQuery(image, "{A2296057-EA42-4099-983B-539FB6505426}")
+         return "d2dBitmap"
 
 
       ; For more helpful error messages: Catch file names without extensions!
@@ -431,6 +449,7 @@ class ImagePut {
          if FileExist(image "." extension)
             throw Error("A ." extension " file extension is required!", -3)
 
+      end:
       throw Error("Image type could not be identified.")
    }
 
@@ -446,7 +465,7 @@ class ImagePut {
          return this.from_clipboard()
 
       if (type = "object")
-         return this.from_object(image)
+         return this.from_bitmap(image.pBitmap)
 
       if (type = "buffer")
          return this.from_buffer(image)
@@ -786,7 +805,7 @@ class ImagePut {
 
       ; Draw Image.
       DllCall("gdiplus\GdipCreateImageAttributes", "ptr*", &ImageAttr:=0)
-      DllCall("gdiplus\GdipSetImageAttributesWrapMode", "ptr", ImageAttr, "int", 3) ; WrapModeTileFlipXY
+      DllCall("gdiplus\GdipSetImageAttributesWrapMode", "ptr", ImageAttr, "int", 3, "uint", 0, "int", 0) ; WrapModeTileFlipXY
       DllCall("gdiplus\GdipDrawImageRectRectI"
                ,    "ptr", pGraphics
                ,    "ptr", pBitmap
@@ -892,13 +911,48 @@ class ImagePut {
       DllCall("CloseClipboard")
       return pStream
    }
-
-   static from_object(image) {
-      return this.from_bitmap(image.pBitmap)
-   }
-
+   
    static from_buffer(image) {
-      ; to do
+
+      if image.HasOwnProp("stride")
+         stride := image.stride
+      else if image.HasOwnProp("width")
+         stride := image.width * 4
+      else if image.HasOwnProp("height") && image.HasOwnProp("size")
+         stride := image.size // image.height
+      else throw Error("Buffer must have a stride property.")
+
+      if image.HasOwnProp("width")
+         width := image.width
+      else if image.HasOwnProp("stride")
+         width := image.stride // 4
+      else if image.HasOwnProp("height") && image.HasOwnProp("size")
+         width := image.size // (4 * image.height)
+      else throw Error("Buffer must have a width property.")
+
+      if image.HasOwnProp("height")
+         height := image.height
+      else if image.HasOwnProp("stride") && image.HasOwnProp("size")
+         height := image.size // image.stride
+      else if image.HasOwnProp("width") && image.HasOwnProp("size")
+         height := image.size // (4 * image.width)
+      else throw Error("Buffer must have a height property.")
+
+      ; Could assert a few assumptions, such as stride * height = size.
+      ; However, I'd like for the pointer and its size to be as flexable as possible.
+      ; So permit underflow for now.
+
+      ; Check for buffer overflow errors.
+      if image.HasOwnProp("size") && (abs(stride * height) > image.size)
+         throw Error("Image dimensions exceed the size of the buffer.")
+
+      ; Create a pBitmap from the current pointer.
+      DllCall("gdiplus\GdipCreateBitmapFromScan0"
+               , "int", width, "int", height, "int", stride, "int", 0x26200A, "ptr", image.ptr, "ptr*", &pBitmap:=0)
+
+      ; Todo: what happens if the backing data is destroyed?
+
+      return pBitmap
    }
 
    static read_screen() {
@@ -2425,7 +2479,7 @@ class ImagePut {
                   option := 7
             else throw Error("Invalid variation parameter.")
 
-         ; ----------------------- Machine code generated with MCode4GCC using gcc 13.2.0 -----------------------
+         ; ------------------------ Machine code generated with MCode4GCC using gcc 13.2.0 ------------------------
 
          ; C source code - https://godbolt.org/z/zr71creqn
          pixelsearch1 := this.Base64Code((A_PtrSize == 4)
@@ -2478,7 +2532,7 @@ class ImagePut {
             . "QTp0CQJy00E4fAgBcsxBOnwJAXLFQTgsCHK/QTosCXK56wNMidgPKDQkDyh8JBBEDyhEJCBEDyhMJDBEDyhUJEBIg8RQW15fXUFc"
             . "ww==")
 
-         ; ------------------------------------------------------------------------------------------------------
+         ; --------------------------------------------------------------------------------------------------------
 
          ; When doing pointer arithmetic, *Scan0 + 1 is actually adding 4 bytes.
          if (option == 1)
@@ -2634,7 +2688,7 @@ class ImagePut {
                   option := 7
             else throw Error("Invalid variation parameter.")
 
-         ; ----------------------- Machine code generated with MCode4GCC using gcc 13.2.0 -----------------------
+         ; ------------------------ Machine code generated with MCode4GCC using gcc 13.2.0 ------------------------
 
          ; C source code - https://godbolt.org/z/GYMPYv4qT
          pixelsearchall1 := this.Base64Code((A_PtrSize == 4)
@@ -2691,7 +2745,7 @@ class ImagePut {
             . "cj1BOmwJAnI2RThkCAFyL0U6ZAkBcihFOCwIciJFOiwJchxEO5QkyAAAAHMPSIu8JMAAAABFiddKiQT/Qf/C/0QkDEiDwQTrnw8o"
             . "dCQgDyh8JDBEidBEDyhEJEBEDyhMJFBEDyhUJGBIg8R4W15fXUFcQV1BXkFfww==")
 
-         ; ------------------------------------------------------------------------------------------------------
+         ; --------------------------------------------------------------------------------------------------------
 
          ; Global number of addresses (matching searches) to allocate.
          limit := 256
@@ -2829,6 +2883,7 @@ class ImagePut {
 
          ; Create an array of [x, y] coordinates.
          xys := []
+         xys.count := count
          loop count {
             address := NumGet(result, A_PtrSize * (A_Index-1), "ptr")
             offset := (address - this.ptr) // 4
@@ -2837,25 +2892,54 @@ class ImagePut {
          return xys
       }
 
-      ImageSearch(image) {
-         ; C source code - https://godbolt.org/z/cKxrrT4ss
-         code := this.Base64Code((A_PtrSize == 4)
-            ? "VYnlV1ZTg+wgi0Uki1UYi30Ui00gD6/Qi3UIix8Pr0UMAcqJXeSLHJeLfQwByItVECtVHIlF7MHnAold4ItdDA+v1ytdGANVCIlV"
-            . "3Ild2ItF3DnGc3CLReyLTeA5DIZ1YInwK0UIMdLB+AL3dQw5VdhyTotF5DkGdUeLRRgx0onxiVXwweACiUXoi0UUi13wO10cdDyL"
-            . "VeiJywHCiVXUi1XUOdBzFIB4AwB0BosTORB1D4PABIPDBOvl/0XwAfnrzIPGBOuJi0UQD6/HA0UIicaDxCCJ8FteX13D"
-            : "QVdBVkFVQVRVV1ZTSIPsKIuEJKgAAACLnCSQAAAARYshQYnSicJJicuLjCSgAAAAD6/TRInXQQ+vwinfiXwkHEgBykWLLJFEicIr"
-            . "lCSYAAAASAHIQQ+v0kiJRCQITInZSY0sk0g56Q+DgAAAAEiLRCQIRDksgXVsSInIMdJMKdhIwfgCQffyOVQkHHJXRDkhdVKJ3jH/"
-            . "MdJIjQS1AAAAAEiJRCQQTInIO5QkmAAAAHRESIt0JBBBif5OjTSxTI08MEw5+HMXgHgDAHQHQYs2OTB1EUiDwARJg8YE6+T/wkQB"
-            . "1+vESIPBBOl3////RQ+vwkuNDINIichIg8QoW15fXUFcQV1BXkFfww==")
+      ImageSearch(image, variation := 0, option := "") {
 
          ; Convert image to a buffer object.
          if !(IsObject(image) && ObjHasOwnProp(image, "ptr") && ObjHasOwnProp(image, "size"))
             image := ImagePutBuffer(image)
 
+         ; Check if the object has the coordinates.
+         x := ObjHasOwnProp(image, "x") ? image.x : image.width//2
+         y := ObjHasOwnProp(image, "y") ? image.y : image.height//2
+
+         if (option == "") {
+            if (variation == 0)
+               option := 1
+            else
+               option := 2
+         }
+
+         ; ------------------------ Machine code generated with MCode4GCC using gcc 13.2.0 ------------------------
+         ; C source code - https://godbolt.org/z/zGhb3dYcs
+         imagesearch1 := this.Base64Code((A_PtrSize == 4)
+            ? ""
+            : "QVdBVkFVQVRVV1ZTSIPsGESLlCSYAAAARQ+2YQNEidAPr4QkgAAAAInTi5QkkAAAAESJxUiJz0GJ3UWLAUQrrCSAAAAASAHQQYs0"
+            . "gYnoK4QkiAAAAIPAAQ+vw0yNHIFMOdkPgwQBAABED6/TiWwkcEkB0usQDx8ASIPBBEw52Q+D4wAAAEI5NJF17UWE5A+FrAAAAEiJ"
+            . "yDHSSCn4SMH4AvfzQTnVctGLhCSIAAAAhcB0eIuEJIAAAABFMfZEiGQkD0Ux/0SJ8kiNLIUAAAAATInISI0UkUyNJChMOeBzS0iJ"
+            . "LCQPH0QAAIB4AwB0CosqOSgPhYAAAABIg8AESIPCBEw54HLjSIssJEGDxwFEObwkiAAAAHQTQQHeTI0kKESJ8kiNFJFMOeBytUiJ"
+            . "yEiDxBhbXl9dQVxBXUFeQV/DZpBEOQEPhEv///9Ig8EETDnZcxZCOTSRdOhIg8EETDnZD4Ig////Dx8Ai2wkcA+v3UiNDJ/rtQ8f"
+            . "AEQPtmQkD+n1/v//")
+
+         ; C source code - https://godbolt.org/z/qGexdGqMn
+         imagesearch2 := this.Base64Code((A_PtrSize == 4)
+            ? ""
+            : "QVdBVkFVQVRVV1ZTSIPsOESLnCSgAAAAi7wkqAAAAEGJ1EmJyouUJLgAAACLjCSwAAAAQSn4TImMJJgAAABIi7QkmAAAAEQPt4wkwAAAAInQRQ+vxEEPr8NPjTSCSAHIiwSGRInmRCneiXQkLE058g+DcAEAAEEPr9QPtthEieVmiVwkKA+23MHoEA+2wIlcJBxIAcpmiUQkKkiNDJUAAAAARInaSI1xAUgp1UyNLJUAAAAASIl0JBBBjVP/SI1xAkWJy0iJdCQgSMHlAjH2QffbTI08lQAAAABmDx9EAABBD7YUCg+3RCQoKdBmQTnBcwpmRDnYD4LTAAAASItEJBBBD7YUAg+3RCQcKdBmQTnBcwpmRDnYD4KyAAAASItEJCBBD7YUAg+3RCQqKdBmQTnBcwpmRDnYD4KRAAAAhf8PhKMAAABIi4QkmAAAAEyJfCQITInSMdtJic9OjQQoTDnAD4OBAAAAiVwkGOsTZpBIg8AESIPCBEw5wA+DfwAAAIB4AwB06Q+2CA+2GinZZkE5yXMGZkQ52XIsD7ZIAQ+2WgEp2WZBOclzBmZEOdlyFg+2SAIPtloCKdlmQTnJc69mRDnZc6lMiflMi3wkCIPGAUmDwgREOeZyPTH2TTnyD4L6/v//RTHSTInQSIPEOFteX11BXEFdQV5BX8MPHwCLXCQYSAHqg8MBOfsPhUn////r1Q8fQABNOfJzyTl0JCwPg7n+//9NAfpNOfJztzH26ar+//8=")
+
+
+
+         ; --------------------------------------------------------------------------------------------------------
+
          ; Search for the address of the first matching image.
-         address := DllCall(code, "ptr", this.ptr, "uint", this.width, "uint", this.height
-            , "ptr", image.ptr, "uint", image.width, "uint", image.height, "uint", image.width//2, "uint", image.height//2
-            , "cdecl ptr")
+         if (option == 1)
+            address := DllCall(imagesearch1, "ptr", this.ptr, "uint", this.width, "uint", this.height
+                     , "ptr", image.ptr, "uint", image.width, "uint", image.height
+                     , "uint", x, "uint", y, "cdecl ptr")
+
+         ; Search for the coordinates of the first matching image.
+         if (option == 2)
+            address := DllCall(imagesearch2, "ptr", this.ptr, "uint", this.width, "uint", this.height
+                     , "ptr", image.ptr, "uint", image.width, "uint", image.height
+                     , "uint", x, "uint", y, "ushort", variation, "cdecl ptr")
 
          ; Compare the address to the out-of-bounds limit.
          if (address == this.ptr + this.size)
@@ -2866,9 +2950,25 @@ class ImagePut {
          return [mod(offset, this.width), offset // this.width]
       }
 
-      ImageSearchAll(image) {
+      ImageSearchAll(image, variation := 0) {
+
+         ; Convert image to a buffer object.
+         if !(IsObject(image) && ObjHasOwnProp(image, "ptr") && ObjHasOwnProp(image, "size"))
+            image := ImagePutBuffer(image)
+
+         ; Check if the object has the coordinates.
+         x := ObjHasOwnProp(image, "x") ? image.x : image.width//2
+         y := ObjHasOwnProp(image, "y") ? image.y : image.height//2
+
+         if (variation == 0)
+            option := 1
+         else
+            option := 2
+
+         ; ------------------------ Machine code generated with MCode4GCC using gcc 13.2.0 ------------------------
+
          ; C source code - https://godbolt.org/z/qPodGdP1d
-         code := this.Base64Code((A_PtrSize == 4)
+         imagesearchall1 := this.Base64Code((A_PtrSize == 4)
             ? "VYnlV1ZTg+wUi0UMi1UYi00IjTyFAAAAAItFECtFHA+vxwNFCIlF6ItFDCnQiUXkjQSVAAAAAIlF7ItF6DnBc2eLRRSLADkBdAmL"
             . "RRSAeAMAdVCJyCtFCDHSwfgC93UMOVXkfD4x0otFFInLiVXwi3XwO3UcdDyLVeyJ3gHCiVXgi1XgOdBzFIB4AwB0BosWORB1D4PA"
             . "BIPGBOvl/0XwAfvrzIPBBOuSi0UQD6/HA0UIicGDxBSJyFteX13D"
@@ -2877,23 +2977,34 @@ class ImagePut {
             . "NLFJAcdMOfhzGIB4AwB0CEWLFkQ5EHUgSIPABEmDxgTr4//CRAHN68lBOfNzB0SJ2EiJDMNB/8NIg8EE64dEidhIg8QYW15fXUFc"
             . "QV1BXkFfww==")
 
-         ; Convert image to a buffer object.
-         if !(IsObject(image) && ObjHasOwnProp(image, "ptr") && ObjHasOwnProp(image, "size"))
-            image := ImagePutBuffer(image)
+         imagesearchall2 := this.Base64Code((A_PtrSize == 4)
+            ? ""
+            : "QVdBVkFVQVRVV1ZTSIPsSIuEJNgAAABEi5QkwAAAAEiLnCS4AAAAi7wk4AAAAImUJJgAAACJwkEPr8FMjWwkPEEPr9JIiYwkkAAAAIuMJNAAAABIAchIAcpIweACMcmLFJNIiUQkEESJyESJy0Qp04lUJDyLlCSwAAAAK5QkyAAAAIlcJCRBD6/RSY00kESJ0kiJdCQoSCnQif5MjSSVAAAAAEjB4AL33kiJRCQYQY1C/2aJdCQiSMHgAkiJRCQIMcBIi3QkKEk58A+D2QAAADlEJCRzDUiLRCQISQHA6b8AAABIi3QkEDHSSY0cMEYPthwqD7Y0E0Ep82ZEOd9zCGZEO1wkInJUSP/CSIP6A3XdSIuUJLgAAABNicMx7esKSItcJBj/xUkB2zusJMgAAAB0RE6NNCJMOfJz5IB6AwB0KzHbD7Y0GkUPtjwbRCn+Zjn3cw9mO3QkInMISYPABP/A6zVI/8NIg/sDdddIg8IESYPDBOvAO4wkmAAAAHMRRYsYSIucJJAAAACJykSJHJP/wU0B4EQB0EQ5yA+CIP///zHA6Rn///+JyEiDxEhbXl9dQVxBXUFeQV/D")
+
+         ; --------------------------------------------------------------------------------------------------------
+
+         ; Global number of addresses (matching searches) to allocate.
+         limit := 256
+
+         ; If the limit is exceeded, the following routine will be run again.
+         redo:
+         result := Buffer(A_PtrSize * limit) ; Allocate buffer for addresses.
 
          ; Search for the address of the first matching image.
-         capacity := 256
-         result := Buffer(A_PtrSize * capacity)
-         count := DllCall(code, "ptr", result, "uint", capacity
-                           , "ptr", this.ptr, "uint", this.width, "uint", this.height
-                           , "ptr", image.ptr, "uint", image.width, "uint", image.height, "cdecl uint")
+         count := DllCall(imagesearchall1, "ptr", result, "uint", limit
+                  , "ptr", this.ptr, "uint", this.width, "uint", this.height
+                  , "ptr", image.ptr, "uint", image.width, "uint", image.height
+                  , "uint", x, "uint", y, "cdecl uint")
 
-         ; If more than 256 results, run the function with the true capacity.
-         if (count > capacity) {
-            result.size := A_PtrSize * count
-            count := DllCall(code, "ptr", result, "uint", capacity
-                           , "ptr", this.ptr, "uint", this.width, "uint", this.height
-                           , "ptr", image.ptr, "uint", image.width, "uint", image.height, "cdecl uint")
+         count := DllCall(imagesearchall2, "ptr", result, "uint", limit
+                  , "ptr", this.ptr, "uint", this.width, "uint", this.height
+                  , "ptr", image.ptr, "uint", image.width, "uint", image.height
+                  , "uint", x, "uint", y,  "ushort", variation, "cdecl uint")
+
+         ; If the default 256 results is exceeded, run the machine code again.
+         if (count > limit) {
+            limit := count
+            goto redo
          }
 
          ; Check if any matches are found.
@@ -2902,11 +3013,11 @@ class ImagePut {
 
          ; Create an array of [x, y] coordinates.
          xys := []
+         xys.count := count
          loop count {
-            address := NumGet(result, A_PtrSize*(A_Index-1), "ptr")
+            address := NumGet(result, A_PtrSize * (A_Index-1), "ptr")
             offset := (address - this.ptr) // 4
-            xy := [mod(offset, this.width), offset // this.width]
-            xys.push(xy)
+            xys.push([mod(offset, this.width), offset // this.width])
          }
          return xys
       }
@@ -3156,7 +3267,7 @@ class ImagePut {
 
          ; Draw Image.
          DllCall("gdiplus\GdipCreateImageAttributes", "ptr*", &ImageAttr:=0)
-         DllCall("gdiplus\GdipSetImageAttributesWrapMode", "ptr", ImageAttr, "int", 3) ; WrapModeTileFlipXY
+         DllCall("gdiplus\GdipSetImageAttributesWrapMode", "ptr", ImageAttr, "int", 3, "uint", 0, "int", 0) ; WrapModeTileFlipXY
          DllCall("gdiplus\GdipDrawImageRectRectI"
                   ,    "ptr", pGraphics
                   ,    "ptr", pBitmap
@@ -4250,7 +4361,8 @@ class ImagePut {
 
       ; Create a filepath based on the timestamp.
       if (filename == "") {
-         filename := FormatTime(, "yyyy-MM-dd HH꞉mm꞉ss")
+         colon := Chr(0xA789)
+         filename := FormatTime(, "yyyy-MM-dd HH" colon "mm" colon "ss")
          filepath := directory "\" filename "." extension
          while FileExist(filepath)
             filepath := directory "\" filename " (" A_Index ")." extension
@@ -4287,8 +4399,9 @@ class ImagePut {
       if (instances = 0 && vary = 1) {
 
          DllCall("LoadLibrary", "str", "gdiplus")
-         si := Buffer(A_PtrSize = 4 ? 16:24, 0) ; sizeof(GdiplusStartupInput) = 16, 24
-            NumPut("uint", 0x1, si)
+         si := Buffer(A_PtrSize = 4 ? 20:32, 0) ; sizeof(GdiplusStartupInputEx) = 20, 32
+            NumPut("uint", 0x2, si)
+            NumPut("uint", 0x4, si, A_PtrSize = 4 ? 16:24)
          DllCall("gdiplus\GdiplusStartup", "ptr*", &pToken:=0, "ptr", si, "ptr", 0)
 
       }

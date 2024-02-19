@@ -1,4 +1,4 @@
-﻿;|2.5|2023.11.02|1096
+﻿;|2.5|2024.02.03|1096
 ; Script Information ===========================================================
 ; Name:         File String Search
 ; Description:  Search files for a specific string (Inspired by TLM)
@@ -98,7 +98,19 @@ Return
 OpenFile:
 LV_GetText(FileFullPath, LV_GetNext("F"), 2)
 If Fileexist(FileFullPath)
-	Run, "%notepad2%" "%FileFullPath%"
+{
+	FileEncoding % File_GetEncoding(FileFullPath)
+	Loop, Read, % FileFullPath
+	{
+		if instr(A_LoopReadLine, EditString)
+		{
+			tmp_linenum := A_index
+			;tooltip % EditString "-" tmp_linenum
+			break
+		}
+	}
+	Run, "%notepad2%" /g %tmp_linenum% "%FileFullPath%" 
+}
 else
 	msgbox, 未选中或文件不存在。
 Return

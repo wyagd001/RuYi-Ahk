@@ -1,9 +1,9 @@
 ﻿;|2.4|2023.10.06|1171,1172,1360
 #SingleInstance force
 #include <ImagePut>
-CandySel := A_Args[1]
-CaptureArea := (A_Args[2] = "") ? 0 : A_Args[2]
-WinIdOrDesktopId := (A_Args[3] = "") ? 0 : A_Args[3]
+CandySel := A_Args[1]                                     ; 截图保存的文件路径
+CaptureArea := (A_Args[2] = "") ? 0 : A_Args[2]           ; 截图区域
+WinIdOrDesktopId := (A_Args[3] = "") ? 0 : A_Args[3]      ; 截图窗口句柄
 ;msgbox % CandySel "-" CaptureArea "-" WinIdOrDeskTopId
 
 if instr(CaptureArea, "|")
@@ -45,5 +45,6 @@ return
 屏幕截图:
 if !CandySel
 	CandySel := A_ScriptDir "\..\..\截图目录\截取屏幕_" A_Now ".png"
+sleep 500
 filepath := ImagePutFile(ImagePutWindow(WinIdOrDesktopId), CandySel)
 return

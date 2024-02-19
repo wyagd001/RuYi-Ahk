@@ -24,10 +24,9 @@ Return
 
 Esc::ExitApp
 
-#IfWinActive,  ahk_class AutoHotkeyGUI
+#IfWinNotActive,  ahk_class AutoHotkeyGUI
 Rbutton:: ExitApp
-#IfWinActive
-
+#IfWinNotActive
 
 SelectCaptureArea:
 CoordMode, Mouse, Screen
@@ -101,17 +100,34 @@ pBitmap := Gdip_BitmapFromScreen(aRect)
 hBitmap := Gdip_CreateHBITMAPFromBitmap(pBitmap)
 hw := GetStringIndex(aRect, 3), hh := GetStringIndex(aRect, 4), bhh := hh+5
 Gui, Add, Picture, w%hw% h%hh% vprev_pic, HBITMAP:%hBitmap%
-Gui, Add, Button, x5 yp+%bhh% gocr w40, OCR
+Gui, Add, Button, x5 yp+%bhh% gocr w40 vocr, OCR
 Gui, Add, Button, xp+50 yp gmspaint w40, 画图
 Gui, Add, Button, xp+50 yp gsave w40, 保存
 Gui, Add, Button, xp+50 yp gsavas w60, 另存为
 Gui, Add, Button, xp+70 yp gclip w60, 剪贴板
 Gui, Add, Button, xp+70 yp gguiclose w40, 取消
+Gui, Add, text, x5 yp+30 w60, 文件名:
+Gui, Add, Edit, xp+50 yp vjtfn w300, 
 Gui Show
+if A_OSVersion in Win_7,Win_8,Win_8.1
+	GuiControl, Disable, ocr
 Return
 
 save:
-Gdip_SaveBitmapToFile(pBitmap, A_ScriptDir "\..\..\截图目录\区域截图_" A_Now ".png")
+gui, submit, NoHide
+if jtfn
+	JTFilePath := A_ScriptDir "\..\..\截图目录\" SafeFileName(jtfn) ".png"
+else
+	JTFilePath := A_ScriptDir "\..\..\截图目录\区域截图_" A_Now ".png"
+if FileExist(JTFilePath)
+{
+	msgbox, 51, 警告, % "文件已存在, 是否覆盖?"
+	IfMsgBox, No
+		return
+	IfMsgBox, Cancel
+		return
+}
+Gdip_SaveBitmapToFile(pBitmap, JTFilePath)
 Gdip_DisposeImage(pBitmap)
 DeleteObject(hBitmap)
 gosub guiclose
@@ -124,7 +140,7 @@ text := ocr(pIRandomAccessStream, "zh-Hans-CN")
 DeleteObject(hBitmap1)
 Gdip_DisposeImage(pBitmap)
 if text
-   GuiText(text)
+   GuiText(text, "区域截图 - OCR")
 else
    gosub guiclose
 Return
@@ -158,6 +174,15 @@ guiclose:
 GuiEscape:
 gui, Destroy
 exitapp
+
+SafeFileName(String)
+{
+	IllegalLetter := "<,>,|,/,\,"",?,*,:,`n,`r,`t"
+	Loop, parse, IllegalLetter, `,
+		String := StrReplace(String, A_LoopField)
+	String := LTrim(String, " ")
+	return String
+}
 
 GetArea() {
    area := []
