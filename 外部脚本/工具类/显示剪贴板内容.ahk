@@ -59,7 +59,12 @@ Return
 	zoom-=0.1
 	jiancck := 0
 	WinClose, ahk_id %windowsid%
-	windowsid := ImagePut("window", {image: ClipboardAll, scale: zoom}, "剪贴板中的图片")     ;crop字段为optional
+	if (A_OSversion = "Win_7")
+	{
+		windowsid := ImagePut("show", {image: ClipboardAll, scale: zoom}, "剪贴板中的图片")
+	}
+	else
+		windowsid := ImagePut("window", {image: ClipboardAll, scale: zoom}, "剪贴板中的图片")     ;crop字段为optional
 	ToolTip, % "缩放率：" Round(zoom,1)
 	jiancck := 1
 Return
@@ -70,7 +75,12 @@ Return
 	zoom+=0.1
 	jiancck := 0
 	WinClose, ahk_id %windowsid%
-	windowsid := ImagePut("window", {image: ClipboardAll, scale: zoom}, "剪贴板中的图片")     ;crop字段为optional
+	if (A_OSversion = "Win_7")
+	{
+		windowsid := ImagePut("show", {image: ClipboardAll, scale: zoom}, "剪贴板中的图片")
+	}
+	else
+		windowsid := ImagePut("window", {image: ClipboardAll, scale: zoom}, "剪贴板中的图片")     ;crop字段为optional
 	ToolTip, % "缩放率：" Round(zoom,1)
 	jiancck := 1
 Return
