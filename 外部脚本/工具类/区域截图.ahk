@@ -99,9 +99,11 @@ else if(区域选择方式 = 2)
 pBitmap := Gdip_BitmapFromScreen(aRect)
 hBitmap := Gdip_CreateHBITMAPFromBitmap(pBitmap)
 hw := GetStringIndex(aRect, 3), hh := GetStringIndex(aRect, 4), bhh := hh+5
+;Gui, +hwndquyujt
 Gui, Add, Picture, w%hw% h%hh% vprev_pic, HBITMAP:%hBitmap%
 Gui, Add, Button, x5 yp+%bhh% gocr w40 vocr, OCR
-Gui, Add, Button, xp+50 yp gmspaint w40, 画图
+Gui, Add, Button, xp+50 yp gOCR2 w60 vocr2, 本地OCR
+Gui, Add, Button, xp+70 yp gmspaint w40, 画图
 Gui, Add, Button, xp+50 yp gsave w40, 保存
 Gui, Add, Button, xp+50 yp gsavas w60, 另存为
 Gui, Add, Button, xp+70 yp gclip w60, 剪贴板
@@ -111,6 +113,8 @@ Gui, Add, Edit, xp+50 yp vjtfn w300,
 Gui Show
 if A_OSVersion in Win_7,Win_8,Win_8.1
 	GuiControl, Disable, ocr
+if !fileexist(A_ScriptDir "\..\..\引用程序\其它资源\leptonica_util") or !fileexist(A_ScriptDir "\..\..\引用程序\其它资源\tesseract")
+	GuiControl, Disable, ocr2
 Return
 
 save:
@@ -144,6 +148,14 @@ if text
 else
    gosub guiclose
 Return
+
+; win_7 本地 OCR, 将下载 VIS2 压缩包解压到 引用程序\其它资源 文件夹
+OCR2:
+JTFilePath := A_temp "\Vis2_123.bmp"
+Gdip_SaveBitmapToFile(pBitmap, JTFilePath)
+B_Autohotkey := A_ScriptDir "\..\..\引用程序\" (A_PtrSize = 8 ? "AutoHotkeyU64.exe" : "AutoHotkeyU32.exe")
+run %B_Autohotkey% "%A_ScriptDir%\..\文件处理\本地OCR(Vis2).ahk" "%JTFilePath%"
+return
 
 mspaint:
 Gdip_SetBitmapToClipboard(pBitmap)

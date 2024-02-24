@@ -38,9 +38,29 @@ rows[i].style.backgroundColor = "#ffffff";
 }
 }
 </script>
+<script type="text/javascript">
+function onSearch(obj){     //js函数开始
+  setTimeout(function(){     //因为是即时查询，需要用setTimeout进行延迟，让值写入到input内，再读取
+    var storeId = document.getElementById('mytable');   //获取table的id标识
+    var rowsLength = storeId.rows.length;    //表格总共有多少行
+    var key = obj.value.toUpperCase();   //获取输入框的值
+    var searchCol = 1;    //要搜索的哪一列，这里是第一列，从0开始数起
+    for(var i=1;i<rowsLength;i++){   //按表的行数进行循环，本例第一行是标题，所以i=1，从第二行开始筛选（从0数起）
+      var searchText = storeId.rows[i].cells[searchCol].innerHTML;     //取得table行，列的值
+      var searchText1 = storeId.rows[i].cells[2].innerHTML;
+      if(searchText.toUpperCase().indexOf(key) > -1|| searchText1.toUpperCase().indexOf(key) > -1){  //用match函数进行筛选，如果input的值，即变量 key的值为空，返回的是ture，
+        storeId.rows[i].style.display='';    //显示行操作，
+      }else{
+        storeId.rows[i].style.display='none';     //隐藏行操作
+      }
+    }
+  },200);   //200为延时时间
+}
+</script>
 </head>
 <body>
 <h1>如意网页动作列表</h1>
+<div >搜索: <input name="key" type="text" id="key" onkeydown="onSearch(this)" value="" />
 <table id="mytable">
     <tr>
         <th style="width:40px">编号</th>
@@ -311,10 +331,10 @@ rows[i].style.backgroundColor = "#ffffff";
 <tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1524,ccdd:1524})">1524</a><td>任务栏自动隐藏</td><td>切换任务栏的自动隐藏<td>无条件</td></td></tr>
 <tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1529,ccdd:1529})">1529</a><td>随机播放</td><td>随机播放指定文件夹(列表) 中的音频文件<td>无条件</td></td></tr>
 <tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1535,ccdd:1535})">1535</a><td>粘贴</td><td>发送粘贴快捷键<td>无条件</td></td></tr>
-
-
-
-
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1549,ccdd:1549})">1549</a><td>搜狗输入法</td><td>激活搜狗拼音输入法<td>无条件</td></td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1552,ccdd:1552})">1552</a><td>语言设置</td><td>打开系统语言设置(Win7+)@控制面板<td>任意窗口</td></td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1554,ccdd:1554})">1554</a><td>天气</td><td>利用免费的天气api显示当天气温<td>无条件</td></td></tr>
+<tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:1555,ccdd:1555})">1555</a><td>农历时间</td><td>显示农历时间<td>无条件</td></td></tr>
 
 <tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:5000,ccdd:5000})">5000</a><td>趣词</td><td>以当前浏览器打开动作中指定的网址<td>无条件</td></td></tr>
 <tr><td><a href="javascript:;" onclick="javascript:post('/runCmd', {aabb:5038,ccdd:5038})">5038</a><td>WiFi</td><td>二维码共享WiFi<td>无条件</td></td></tr>

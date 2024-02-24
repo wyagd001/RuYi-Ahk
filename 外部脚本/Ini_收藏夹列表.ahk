@@ -35,7 +35,7 @@ if (A_GuiEvent = "DoubleClick")
 
 	if (Comb = "如意动作")
 	{
-		ExecSendToRuyi("", Candy_Cmd)
+		ExecSendToRuyi("",, Candy_Cmd)
 		Return
 	}
 
@@ -334,7 +334,7 @@ Gui, Submit, NoHide
 
 if (Comb = "如意动作")
 {
-	ExecSendToRuyi("", Candy_Cmd)
+	ExecSendToRuyi("",, Candy_Cmd)
 	Return
 }
 
@@ -671,7 +671,7 @@ FileExt_GetIcon(File)
 	}
 }
 
-ExecSendToRuyi(ByRef StringToSend := "", wParam := 0, Title := "如一 ahk_class AutoHotkey", Msg := 0x4a) {
+ExecSendToRuyi(ByRef StringToSend := "", Title := "如一 ahk_class AutoHotkey", wParam := 0, Msg := 0x4a) {
 	VarSetCapacity(CopyDataStruct, 3*A_PtrSize, 0)
 	SizeInBytes := (StrLen(StringToSend) + 1) * (A_IsUnicode ? 2 : 1)
 	NumPut(SizeInBytes, CopyDataStruct, A_PtrSize)

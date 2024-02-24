@@ -1,4 +1,4 @@
-﻿;|2.5|2024.02.15|1550
+﻿;|2.5|2024.02.15|1549
 
 /*
 CandySel := A_Args[1]
@@ -76,17 +76,16 @@ if !CandySel
 	ControlGetText, CandySel, Edit1, 获取当前窗口信息_
 }
 ;msgbox % Windy_CurWin_id
+
+	; 界面激活时才会生效
+Gui, Destroy
+Gui, +ToolWindow -caption
+Gui, Add, Edit, x0 y0 w1 vName
+Gui, show, w1 h1
 if (CandySel = "搜狗拼音输入法")
 {
-	; 界面激活时才会生效
-	Gui, Destroy
-	Gui, +ToolWindow -caption
-	Gui, Add, Edit, x0 y0 w1 vName
-	Gui, show, w1 h1
 	TSF_ChangeCurrentLanguage(2052)
 	i := TSF_ActiveLanguageProfile("{E7EA138E-69F8-11D7-A6EA-00065B844310}", "{E7EA138F-69F8-11D7-A6EA-00065B844311}", 2052)
-	sleep 200
-	Gui, Destroy
 	;tooltip % i
 
 	if (A_OSversion = "Win_7") && i   ; 未能在 win7 64位下测试成功
@@ -99,6 +98,13 @@ if (CandySel = "搜狗拼音输入法")
 		;gosub NextIME
 	}
 }
+else if (CandySel = "QQ拼音输入法")
+{
+	TSF_ChangeCurrentLanguage(2052)
+	i := TSF_ActiveLanguageProfile("{AE51F1C0-807F-4A64-AC55-F2ADF92E2603}", "{96EC4774-55A1-498B-827F-E95D5445B6C1}", 2052)
+}
+sleep 200
+Gui, Destroy
 exitapp
 
 TSF_ChangeCurrentLanguage(langid)
@@ -117,7 +123,7 @@ Gui, Add, Edit, x0 y0 w10 vName
 gui, show, w200 h100
 IME_UnloadLayout(0x04090409)
 */
-
+; win7_64位下测试无效
 IME_ActivateKeyboardLayout(dwLayout)
 {
 	HKL := DllCall("LoadKeyboardLayout", "Str", dwLayout, "UInt", 1, "UInt")

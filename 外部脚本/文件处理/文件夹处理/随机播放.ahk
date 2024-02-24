@@ -20,15 +20,15 @@ while !i
 }
 
 PlayMusic(i)
-ExecSendToRuyi("1529", 1526)
+ExecSendToRuyi("1529",, 1526)
 Sleep 600
-ExecSendToRuyi("1529||FF0000", 1525)
+ExecSendToRuyi("1529||FF0000",, 1525)
 onmessage(0x3B9, "ContinuePlay")
 OnExit, _exit
 return
 
 _exit:
-ExecSendToRuyi("1529", 1526)
+ExecSendToRuyi("1529",, 1526)
 ExitApp
 
 ContinuePlay(w,l,msg,hwnd)
@@ -117,7 +117,7 @@ MCICommand(comm, file)
 	return
 }
 
-ExecSendToRuyi(ByRef StringToSend := "", wParam := 0, Title := "如一 ahk_class AutoHotkey", Msg := 0x4a) {
+ExecSendToRuyi(ByRef StringToSend := "", Title := "如一 ahk_class AutoHotkey", wParam := 0, Msg := 0x4a) {
 	VarSetCapacity(CopyDataStruct, 3*A_PtrSize, 0)
 	SizeInBytes := (StrLen(StringToSend) + 1) * (A_IsUnicode ? 2 : 1)
 	NumPut(SizeInBytes, CopyDataStruct, A_PtrSize)

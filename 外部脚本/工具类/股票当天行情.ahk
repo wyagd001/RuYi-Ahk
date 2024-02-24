@@ -22,7 +22,8 @@ Gui, Add, Button, xp yp+28 w60 gDelListItem, 删除
 Gui, Add, Button, xp yp+40 w60 gMoveRow_Up, 向上
 Gui, Add, Button, xp yp+28 w60 gMoveRow_Down, 向下
 
-Gui, Add, Button, xp yp+40 w60 gopensetfile, 打开配置
+Gui, Add, Button, xp yp+40 w60 gopenweb, 打开网页
+Gui, Add, Button, xp yp+28 w60 gopensetfile, 打开配置
 
 GuiControl,, ColorsOn, % ColorsOn
 GuiControl,, speccolor, % speccolor
@@ -199,6 +200,13 @@ GetStringIndex(String, Index := "")
 
 opensetfile:
 run, % settingInifile
+return
+
+openweb:
+RF := LV_GetNext(0, "F")
+if RF
+	LV_GetText(R_Code, RF, 2)
+run http://fund.eastmoney.com/%R_Code%.html
 return
 
 editrow:

@@ -9,15 +9,14 @@ Tmp_涨幅 := SubStr(trim(Tmp_涨幅), 1, -1)
 if (Tmp_涨幅+0>=0)
 {
 	;msgbox % Tmp_涨幅
-	ExecSendToRuyi("A" SubStr(Tmp_价格, 1, 4) "`n" SubStr(Tmp_涨幅, 1, 5) "|red", 1527)
+	ExecSendToRuyi("A" SubStr(Tmp_价格, 1, 4) "`n" SubStr(Tmp_涨幅, 1, 5) "|red",, 1527)
 }
 if (Tmp_涨幅+0<0)
 {
 	;msgbox % Tmp_涨幅+0 "小于0"
-	ExecSendToRuyi("A" SubStr(Tmp_价格, 1, 4) "`n" SubStr(Tmp_涨幅, 1, 5) "|GREEN", 1527)
+	ExecSendToRuyi("A" SubStr(Tmp_价格, 1, 4) "`n" SubStr(Tmp_涨幅, 1, 5) "|GREEN",, 1527)
 }
 Return
-
 
 Gupiao(Code)
 {
@@ -42,7 +41,7 @@ Gupiao(Code)
 	return GPOBJ
 }
 
-ExecSendToRuyi(ByRef StringToSend := "", wParam := 0, Title := "如一 ahk_class AutoHotkey", Msg := 0x4a) {
+ExecSendToRuyi(ByRef StringToSend := "", Title := "如一 ahk_class AutoHotkey", wParam := 0, Msg := 0x4a) {
 	VarSetCapacity(CopyDataStruct, 3*A_PtrSize, 0)
 	SizeInBytes := (StrLen(StringToSend) + 1) * (A_IsUnicode ? 2 : 1)
 	NumPut(SizeInBytes, CopyDataStruct, A_PtrSize)
