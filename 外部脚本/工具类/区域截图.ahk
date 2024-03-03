@@ -107,7 +107,8 @@ Gui, Add, Button, xp+70 yp gmspaint w40, 画图
 Gui, Add, Button, xp+50 yp gsave w40, 保存
 Gui, Add, Button, xp+50 yp gsavas w60, 另存为
 Gui, Add, Button, xp+70 yp gclip w60, 剪贴板
-Gui, Add, Button, xp+70 yp gguiclose w40, 取消
+Gui, Add, Button, xp+70 yp gBreload w40, 重启
+Gui, Add, Button, xp+50 yp gguiclose w40, 取消
 Gui, Add, text, x5 yp+30 w60, 文件名:
 Gui, Add, Edit, xp+50 yp vjtfn w300, 
 Gui Show
@@ -181,6 +182,10 @@ Gdip_DisposeImage(pBitmap)
 DeleteObject(hBitmap)
 gosub guiclose
 Return
+
+Breload:
+reload
+return
 
 guiclose:
 GuiEscape:

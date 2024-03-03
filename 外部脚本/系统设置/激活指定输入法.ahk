@@ -88,14 +88,35 @@ if (CandySel = "搜狗拼音输入法")
 	i := TSF_ActiveLanguageProfile("{E7EA138E-69F8-11D7-A6EA-00065B844310}", "{E7EA138F-69F8-11D7-A6EA-00065B844311}", 2052)
 	;tooltip % i
 
-	if (A_OSversion = "Win_7") && i   ; 未能在 win7 64位下测试成功
+	if (A_OSversion = "Win_7") && (A_ptrsize = 4) && i   ; 未能在 win7 64位下测试成功
 	{
-		IME_ActivateKeyboardLayout("E0200804")
+		;IME_ActivateKeyboardLayout("E0200804")
 		;IME_SET(1, "A")
-		;IME_SetLayout("E0200804", Windy_CurWin_id)   
+		IME_SetLayout("E0200804", Windy_CurWin_id)   
 		;SetLayout("E0200804", Windy_CurWin_id)
 		;msgbox 123123
 		;gosub NextIME
+	}
+	if (A_OSversion = "Win_7") && (A_ptrsize = 8) && i
+	{
+		RegRead, OutputVar, HKEY_CURRENT_USER\Keyboard Layout\Toggle, Layout Hotkey   ; 切换布局热键
+		if (OutputVar=3)
+			return
+		loop 5
+		{
+			WinActivate, ahk_id %Windy_CurWin_id%
+			if (OutputVar=1)
+				send {Alt down}{Shift}{Alt up}
+			if (OutputVar=2)
+				send {ctrl down}{Shift}{ctrl up}
+			sleep 300
+			a := IME_GetKeyboardLayout()       ;, b := GetLayoutDisplayName(strreplace(a, "0x"))
+			if (a = 0xE0200804)
+			{
+				;msgbox % a " - " b " - " Bhotkey
+				break
+			}
+		}
 	}
 }
 else if (CandySel = "QQ拼音输入法")
@@ -105,7 +126,7 @@ else if (CandySel = "QQ拼音输入法")
 }
 sleep 200
 Gui, Destroy
-exitapp
+return
 
 TSF_ChangeCurrentLanguage(langid)
 {
@@ -150,10 +171,10 @@ Return
 2: 0xE0200804   搜狗
 
 ---------------------------
-确定   
+确定   w
 ---------------------------
 
-q::
+w::
 msgbox % IME_GetKeyboardLayoutList()
 return
 */
@@ -204,16 +225,16 @@ IME_GetKeyboardLayoutList()
 	return HKLList
 }
 
-
 /*
-q::
+w::
 msgbox % IME_GetKeyboardLayout()
 return
+*/
 
+/*
 ;1: 0x08040804   美式键盘
 ;2: 0xE0200804   搜狗
 */
-
 
 ;                          Ptr       UPtr
 ; 英语美国 美式键盘    0x4090409    0x4090409
@@ -229,7 +250,7 @@ IME_GetKeyboardLayout(WinTitle="A")
 hWord	:= HKL >> 16
 lWord	:= HKL & 0xFFFF
 oHKL := strreplace(dec2hex(hWord) "0" dec2hex(lWord), "0x")
-tooltip % oHKL "`n" dec2hex(hWord) "|" hWord "`n" dec2hex(lWord) "|" lWord
+;tooltip % oHKL "`n" dec2hex(hWord) "|" hWord "`n" dec2hex(lWord) "|" lWord
 	HKL := dec2hex(HKL)
 
 Return HKL
@@ -250,6 +271,24 @@ IME_GetKeyboardLayoutName()
 	VarSetCapacity(Str, 16)
 	DllCall("GetKeyboardLayoutName", "Str", Str)
 	Return Str
+}
+
+GetLayoutDisplayName(subkey, usemui := 1)
+{
+	Static key := "SYSTEM\CurrentControlSet\Control\Keyboard Layouts"
+	RegRead, mui, HKLM, %key%\%subkey%, Layout Display Name
+	if (!mui OR !usemui)
+		RegRead, Dname, HKLM, %key%\%subkey%, Layout Text
+	else
+		Dname := SHLoadIndirectString(mui)
+	Return Dname
+}
+
+SHLoadIndirectString(in)	; uses WStr for both in and out
+{
+	VarSetCapacity(out, 2*(sz:=256), 0)
+	DllCall("shlwapi\SHLoadIndirectString", "Str", in, "Str", out, "UInt", sz, "Ptr", 0)
+	return out
 }
 
 /*

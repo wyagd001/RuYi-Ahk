@@ -48,6 +48,13 @@ ImagePutDesktop(image) {
    return ImagePut("desktop", image)
 }
 
+; Puts the image as an encoded format into a binary data object.
+;   extension  -  File Encoding           |  string   ->   bmp, gif, jpg, png, tiff
+;   quality    -  JPEG Quality Level      |  integer  ->   0 - 100
+ImagePutEncodedBuffer(image, extension := "", quality := "") {
+   return ImagePut("EncodedBuffer", image, extension, quality)
+}
+
 ; Puts the image into the most recently active explorer window.
 ImagePutExplorer(image, default := "") {
    return ImagePut("explorer", image, default)
@@ -141,9 +148,10 @@ ImagePutWICBitmap(image) {
 ;   style      -  Window Style            |  uint     ->   WS_VISIBLE
 ;   styleEx    -  Window Extended Style   |  uint     ->   WS_EX_LAYERED
 ;   parent     -  Window Parent           |  ptr      ->   hwnd
-;   playback   -  Window Animation        |  bool     ->   True
-ImagePutWindow(image, title := "", pos := "", style := 0x82C80000, styleEx := 0x9, parent := "", playback := True) {
-   return ImagePut("window", image, title, pos, style, styleEx, parent, playback)
+;   playback   -  Animate Window?         |  bool     ->   True
+;   cache      -  Cache Animation Frames? |  bool     ->   False
+ImagePutWindow(image, title := "", pos := "", style := 0x82C80000, styleEx := 0x9, parent := "", playback := True, cache := False) {
+   return ImagePut("window", image, title, pos, style, styleEx, parent, playback, cache)
 }
 
 
@@ -152,9 +160,10 @@ ImagePutWindow(image, title := "", pos := "", style := 0x82C80000, styleEx := 0x
 ;   style      -  Window Style            |  uint     ->   WS_VISIBLE
 ;   styleEx    -  Window Extended Style   |  uint     ->   WS_EX_LAYERED
 ;   parent     -  Window Parent           |  ptr      ->   hwnd
-;   playback   -  Window Animation        |  bool     ->   True
-ImageShow(image, title := "", pos := "", style := 0x90000000, styleEx := 0x80088, parent := "", playback := True) {
-   return ImagePut("show", image, title, pos, style, styleEx, parent, playback)
+;   playback   -  Animate Window?         |  bool     ->   True
+;   cache      -  Cache Animation Frames? |  bool     ->   False
+ImageShow(image, title := "", pos := "", style := 0x90000000, styleEx := 0x80088, parent := "", playback := True, cache := False) {
+   return ImagePut("show", image, title, pos, style, styleEx, parent, playback, cache)
 }
 
 ImageDestroy(image) {
@@ -180,8 +189,9 @@ ImageEqual(images*) {
 
 class ImagePut {
 
-   static decode := False   ; Decompresses image to a pixel buffer. Any encoding such as JPG will be lost.
-   static validate := False ; Always copies pixels to new memory immediately instead of copy-on-read/write.
+   static decode := False    ; Decompresses image to a pixel buffer. Any encoding such as JPG will be lost.
+   static render := True     ; Determines whether vectorized formats such as SVG and PDF are rendered to pixels.
+   static validate := False  ; Always copies pixels to new memory immediately instead of copy-on-read/write.
 
    static call(cotype, image, p*) {
 
@@ -193,220 +203,178 @@ class ImagePut {
       catch
          type := this.ImageType(image)
 
-      crop := keywords.crop
-      scale := keywords.scale, upscale := keywords.upscale, downscale := keywords.downscale
-      decode := (keywords.decode != "") ? keywords.decode : this.decode
-      validate := (keywords.validate != "") ? keywords.validate : this.validate
+      ; Extract parameters for intermediate processing.
+      crop      := keywords.HasProp("crop")      ? keywords.crop      : ""
+      scale     := keywords.HasProp("scale")     ? keywords.scale     : ""
+      upscale   := keywords.HasProp("upscale")   ? keywords.upscale   : ""
+      downscale := keywords.HasProp("downscale") ? keywords.downscale : ""
+      decode    := keywords.HasProp("decode")    ? keywords.decode    : this.decode
+      render    := keywords.HasProp("render")    ? keywords.render    : this.render
+      validate  := keywords.HasProp("validate")  ? keywords.validate  : this.validate
 
-      ; #1 - Stream intermediate.
-      if not decode and not crop and not (scale || upscale || downscale)
-         and (type ~= "^(?i:clipboard_png|pdf|url|file|stream|RandomAccessStream|hex|base64)$")
-         and (cotype ~= "^(?i:file|stream|RandomAccessStream|hex|base64|uri|explorer|safeArray|formData)$")
-         and (!p.Has(1) || p[1] == "") { ; For now, disallow any specification of extensions.
+      ; Keywords are for ImageToBitmap or ImageToStream.
+      try index := keywords.index
 
-         ; Convert via stream intermediate.
-         if !(pStream := this.ToStream(type, image, keywords))
-            throw Error("pStream cannot be zero.")
+      cleanup := ""
+
+      ; #1 - Stream as the intermediate.
+      if not type ~= "^(?i:clipboardpng|encodedbuffer|url|file|stream|RandomAccessStream|hex|base64)$"
+         goto make_bitmap
+
+      if !(pStream := this.ImageToStream(type, image, keywords))
+         throw Error("pStream cannot be zero.")
+
+      ; Check the file signature for magic numbers.
+      stream:
+      DllCall("shlwapi\IStream_Size", "ptr", pStream, "uint64*", &size:=0, "hresult")
+      DllCall("shlwapi\IStream_Reset", "ptr", pStream, "hresult")
+
+      ; 2048 characters should be good enough to identify the file correctly.
+      size := min(size, 2048)
+      bin := Buffer(size)
+      (ComCall(Seek := 5, pStream, "uint64", 0, "uint", 1, "uint64*", &current:=0), current != 0 && MsgBox(current))
+      ; Get the first few bytes of the image.
+      DllCall("shlwapi\IStream_Read", "ptr", pStream, "ptr", bin, "uint", size, "hresult")
+      DllCall("shlwapi\IStream_Reset", "ptr", pStream, "hresult")
+
+      ; Allocate enough space for a hexadecimal string with spaces interleaved and a null terminator.
+      length := 2*size + (size-1) + 1
+      VarSetStrCapacity(&str, length)
+
+      ; Lift the binary representation to hex.
+      flags := 0x40000004 ; CRYPT_STRING_NOCRLF | CRYPT_STRING_HEX
+      DllCall("crypt32\CryptBinaryToString", "ptr", bin, "uint", size, "uint", flags, "str", str, "uint*", &length)
+
+      ; Determine the extension using herustics. See: http://fileformats.archiveteam.org
+      extension := 0                                                              ? ""
+      : str ~= "(?i)66 74 79 70 61 76 69 66"                                      ? "avif" ; ftypavif
+      : str ~= "(?i)^42 4d (.. ){36}00 00 .. 00 00 00"                            ? "bmp"  ; BM
+      : str ~= "(?i)^01 00 00 00 (.. ){36}20 45 4D 46"                            ? "emf"  ; emf
+      : str ~= "(?i)^47 49 46 38 (37|39) 61"                                      ? "gif"  ; GIF87a or GIF89a
+      : str ~= "(?i)66 74 79 70 68 65 69 63"                                      ? "heic" ; ftypheic
+      : str ~= "(?i)^00 00 01 00"                                                 ? "ico"
+      : str ~= "(?i)^ff d8 ff"                                                    ? "jpg"
+      : str ~= "(?i)^25 50 44 46 2d"                                              ? "pdf"  ; %PDF-
+      : str ~= "(?i)^89 50 4e 47 0d 0a 1a 0a"                                     ? "png"  ; PNG
+      : str ~= "(?i)^(((?!3c|3e).. )|3c (3f|21) ((?!3c|3e).. )*3e )*+3c 73 76 67" ? "svg"  ; <svg
+      : str ~= "(?i)^(49 49 2a 00|4d 4d 00 2a)"                                   ? "tif"  ; II* or MM*
+      : str ~= "(?i)^52 49 46 46 .. .. .. .. 57 45 42 50"                         ? "webp" ; RIFF....WEBP
+      : str ~= "(?i)^d7 cd c6 9a"                                                 ? "wmf"
+      : "" ; Extension must be blank for file pass-through as-is.
+
+      ; Convert vectorized formats to rasterized formats.
+      if (render && extension ~= "^(?i:pdf|svg)$") {
+         (extension = "pdf") && this.RenderPdf(&pStream, index?)
+         (extension = "svg") && pBitmap := this.RenderSvg(&pStream, 800, 800)
+         goto( IsSet(pBitmap) ? "bitmap" : "stream" )
+      }
+
+      ; If positive, the stream will be decoded into pixels.
+      weight := decode || crop || scale || upscale || downscale ||
+
+      ; Check if the 1st parameter matches the file signature.
+      !( cotype ~= "^(?i:encodedbuffer|url|hex|base64|uri|stream|randomaccessstream|safearray)$"
+         && (!p.Has(1) || p[1] == "" || p[1] = extension)
+
+      ; Check if the 2nd parameter matches the file signature.
+      || cotype = "formdata"
+         && (!p.Has(2) || p[2] == "" || p[2] = extension)
+
+      ; For files, if the desired extension is not supported, it is ignored.
+      || cotype = "file"
+         && (!p.Has(1) || p[1] == "" || p[1] ~= "(^|:|\\|\.)" extension "$"
+            || !(RegExReplace(p[1], "^.*(?:^|:|\\|\.)(.*)$", "$1")
+            ~= "^(?i:avif|avifs|bmp|dib|rle|gif|heic|heif|hif|jpg|jpeg|jpe|jfif|png|tif|tiff)$")))
+
+      ; MsgBox weight ? "convert to pixels" : "stay as stream"
+
+      ; Attempt conversion using StreamToCoimage.
+      if not weight && cotype ~= "^(?i:encodedbuffer|file|stream|RandomAccessStream|hex|base64|uri|explorer|safeArray|formData)$" {
+
          coimage := this.StreamToCoimage(cotype, pStream, p*)
 
-         ; Prevents the stream object from being freed.
-         if (cotype = "stream")
-            ObjAddRef(pStream)
+         ; Clean up the copy. Export raw pointers if requested.
+         if (cotype != "stream")
+            ObjRelease(pStream)
 
-         ; Free the temporary stream object.
-         ObjRelease(pStream)
+         goto exit
       }
+
+      ; Otherwise export the image as a stream.
+      type := "stream"
+      image := pStream
+      cleanup := "stream"
 
       ; #2 - Fallback to GDI+ bitmap as the intermediate.
-      else {
-         ; GdipImageForceValidation must be called immediately or it fails without any errors.
-         ; Doing so loads the pixels to the bitmap buffer. Increases memory usage.
-         ; Prevents future changes to the original pixels from altering any copies.
-         ; Without validation, it preforms copy-on-write and copy on LockBits(read).
+      make_bitmap:
+      if !(pBitmap := this.ImageToBitmap(type, image, keywords))
+         throw Error("pBitmap cannot be zero.")
 
-         if (type ~= "^(?i:clipboard_png|pdf|url|file|stream|RandomAccessStream|hex|base64)$") {
+      ; GdipImageForceValidation must be called immediately or it fails silently.
+      bitmap:
+      (validate) && DllCall("gdiplus\GdipImageForceValidation", "ptr", pBitmap)
+      (crop) && this.BitmapCrop(&pBitmap, crop)
+      (scale) && this.BitmapScale(&pBitmap, scale)
+      (upscale) && this.BitmapScale(&pBitmap, upscale, 1)
+      (downscale) && this.BitmapScale(&pBitmap, downscale, -1)
 
-            ; Check the file signature for magic numbers.
-            size := 12
-            bin := Buffer(size)
-
-            ; Get the first few bytes of the image.
-            pStream := this.ToStream(type, image, keywords)
-            try DllCall("shlwapi\IStream_Read", "ptr", pStream, "ptr", bin, "uint", size, "hresult")
-            catch ; todo: reset streams...
-               goto otherwise
-
-            ; Allocate enough space for a hexadecimal string with spaces and a null terminator.
-            length := 2 * size + (size - 1) + 1
-            VarSetStrCapacity(&str, length)
-
-            ; Lift the binary representation to hex.
-            flags := 0x40000004 ; CRYPT_STRING_NOCRLF | CRYPT_STRING_HEX
-            DllCall("crypt32\CryptBinaryToString", "ptr", bin, "uint", size, "uint", flags, "str", str, "uint*", &length)
-
-            ; WEBP Signature: RIFF....WEBP
-            if not str ~= "^52 49 46 46 .. .. .. .. 57 45 42 50"
-               goto otherwise
-
-            ; Gets the size of the stream.
-            DllCall("shlwapi\IStream_Size", "ptr", pStream, "uint64*", &end:=0, "hresult")
-
-            ; Create FourCC binary buffer and a general purpose uint32 buffer.
-            fourcc := Buffer(4)
-            offset := 0
-            current := 0
-
-            ; Create the VP8X FourCC.
-            StrPut("VP8X", VP8X := Buffer(4), "cp1252")
-            DllCall("shlwapi\IStream_Read", "ptr", pStream, "ptr", fourcc, "uint", 4, "hresult")
-            DllCall("shlwapi\IStream_Read", "ptr", pStream, "uint*", &offset, "uint", 4, "hresult")
-            if (4 != DllCall("ntdll\RtlCompareMemory", "ptr", fourcc, "ptr", VP8X, "uptr", 4, "uptr"))
-               goto otherwise
-
-            ; Check the animation bit.
-            DllCall("shlwapi\IStream_Read", "ptr", pStream, "uchar*", &flags:=0, "uint", 1, "hresult")
-            if not flags & 0x2
-               goto otherwise
-
-            ; Goto the ANIM FourCC.
-            StrPut("ANIM", ANIM := Buffer(4), "cp1252")
-            ComCall(Seek := 5, pStream, "uint64", offset - 1, "uint", 1, "uint64*", &current)
-            DllCall("shlwapi\IStream_Read", "ptr", pStream, "ptr", fourcc, "uint", 4, "hresult")
-            DllCall("shlwapi\IStream_Read", "ptr", pStream, "uint*", &offset, "uint", 4, "hresult")
-            if (4 != DllCall("ntdll\RtlCompareMemory", "ptr", fourcc, "ptr", ANIM, "uptr", 4, "uptr"))
-               goto otherwise
-
-
-
-            ; Create the custom loop count struct.
-            pCount := DllCall("GlobalAlloc", "uint", 0, "uptr", 8 + 3*A_PtrSize, "ptr")
-            NumPut(   "uint",    0x5101, pCount + 0) ; PropertyTagLoopCount
-            NumPut(   "uint",         1, pCount + 4) ; Size
-            NumPut( "ushort",         3, pCount + 8) ; PropertyTagTypeShort
-            NumPut(    "ptr", pCount + 8 + 2*A_PtrSize, pCount + 8 + A_PtrSize)
-
-            ; Save the loop count into the struct.
-            ComCall(Seek := 5, pStream, "uint64", 4, "uint", 1, "uint64*", &current)
-            DllCall("shlwapi\IStream_Read", "ptr", pStream, "ushort*", pCount + 8 + 2*A_PtrSize, "uint", 2, "hresult")
-            ComCall(Seek := 5, pStream, "uint64", offset - 6, "uint", 1, "uint64*", &current)
-
-            ; ANMF fourcc.
-            StrPut("ANMF", ANMF := Buffer(4), "cp1252")
-
-            ; Create the custom frame delays struct.
-            hDelays := DllCall("GlobalAlloc", "uint", 0x42, "uptr", 8 + 2*A_PtrSize, "ptr")
-            pDelays := DllCall("GlobalLock", "ptr", hDelays, "ptr")
-            NumPut(   "uint",    0x5100, pDelays + 0) ; PropertyTagFrameDelay
-            NumPut( "ushort",    0xCAFE, pDelays + 8) ; My custom tag for milliseconds.
-            ; The size and the pointer will be filled in after all ANMF chunks are found.
-
-            ; Create the delays stream.
-            DllCall("GlobalUnlock", "ptr", hDelays)
-            DllCall("ole32\CreateStreamOnHGlobal", "ptr", hDelays, "int", False, "ptr*", &sDelays:=0, "hresult")
-            ComCall(Seek := 5, sDelays, "uint64", 0, "uint", 2, "ptr", 0) ; Advance to end.
-
-            ; Search for each RIFF-type ANMF chunk header (fourcc followed by its chunk size).
-            while current < end {
-
-               ; Get fourcc and chunk size.
-               DllCall("shlwapi\IStream_Read", "ptr", pStream, "ptr", fourcc, "uint", 4, "hresult")
-               DllCall("shlwapi\IStream_Read", "ptr", pStream, "uint*", &offset, "uint", 4, "hresult")
-
-               ; Rounds up to a even number. Odd numbers are +1, and even numbers are +0.
-               alignment := offset&1 ; Use this as offset + alignment.
-
-               if (4 == DllCall("ntdll\RtlCompareMemory", "ptr", fourcc, "ptr", ANMF, "uptr", 4, "uptr")) {
-
-                  ; Seek to the Frame Duration.
-                  ComCall(Seek := 5, pStream, "uint64", 12, "uint", 1, "uint64*", &current)
-
-                  ; Cast the Frame Delay from uint24 to uint32 and write it to the delays stream.
-                  DllCall("shlwapi\IStream_Copy", "ptr", pStream, "ptr", sDelays, "uint", 3, "hresult")
-                  DllCall("shlwapi\IStream_Write", "ptr", sDelays, "uchar*", 0, "uint", 1, "hresult")
-
-                  ; Subtract the 15 bytes that have already been read.
-                  offset -= 15
-               }
-
-               ; Seek to the next fourcc which must be aligned to 2 bytes.
-               ComCall(Seek := 5, pStream, "uint64", offset + alignment, "uint", 1, "uint64*", &current)
-            }
-
-            ; Fill in the size of the delays array and pointer position.
-            ObjRelease(sDelays)
-            DelaySize := DllCall("GlobalSize", "ptr", hDelays, "uptr") - 8 - 2*A_PtrSize
-            pDelays := DllCall("GlobalLock", "ptr", hDelays, "ptr")
-            NumPut(   "uint", DelaySize, pDelays + 4) ; Size
-            NumPut(    "ptr", pDelays + 8 + 2*A_PtrSize, pDelays + 8 + A_PtrSize)
-
-            otherwise:
-            ObjRelease(pStream)
-         }
-
-         ; Convert via GDI+ bitmap intermediate.
-         if !(pBitmap := this.ToBitmap(type, image, keywords))
-            throw Error("pBitmap cannot be zero.")
-
-         (validate) && DllCall("gdiplus\GdipImageForceValidation", "ptr", pBitmap)
-         (crop) && this.BitmapCrop(&pBitmap, crop)
-         (scale) && this.BitmapScale(&pBitmap, scale)
-         (upscale) && this.BitmapScale(&pBitmap, upscale, 1)
-         (downscale) && this.BitmapScale(&pBitmap, downscale, -1)
-
-         IsSet(pDelays) && DllCall("gdiplus\GdipSetPropertyItem", "ptr", pBitmap, "ptr", pDelays)
-         IsSet(pCount) && DllCall("gdiplus\GdipSetPropertyItem", "ptr", pBitmap, "ptr", pCount)
-
-         coimage := this.BitmapToCoimage(cotype, pBitmap, p*)
-
-         ; Clean up the pBitmap copy. Export raw pointers if requested.
-         if !(cotype = "bitmap")
-            DllCall("gdiplus\GdipDisposeImage", "ptr", pBitmap)
+      ; Save frame delays and loop count for webp.
+      if (type = "stream" && extension = "webp" && cotype ~= "^(?i:show|window)$") {
+         this.ParseWebp(pStream, &pDelays, &pCount)
+         DllCall("gdiplus\GdipSetPropertyItem", "ptr", pBitmap, "ptr", pDelays)
+         DllCall("gdiplus\GdipSetPropertyItem", "ptr", pBitmap, "ptr", pCount)
       }
 
+      ; Attempt conversion using BitmapToCoimage.
+      coimage := this.BitmapToCoimage(cotype, pBitmap, p*)
+
+      ; Clean up the copy. Export raw pointers if requested.
+      if (cotype != "bitmap")
+         DllCall("gdiplus\GdipDisposeImage", "ptr", pBitmap)
+
+      if cleanup = "stream"
+         ObjRelease(pStream)
+
+      exit:
       ; Check for dangling pointers.
       this.gdiplusShutdown(cotype)
 
       return coimage
    }
 
-   static get(self, name) {
-      return self.HasProp(name) ? self.%name% : ""
-   }
-
-   static inputs := 
+   static Inputs :=
 
    [
-      "clipboard_png",
-      "clipboard",
-      "object",
-      "buffer",
-      "screenshot",
-      "window",
-      "desktop",
-      "wallpaper",
-      "cursor",
-      "pdf",
-      "url",
-      "file",
-      "hex",
-      "base64",
-      "monitor",
-      "dc",
-      "hBitmap",
-      "hIcon",
-      "bitmap",
-      "stream",
+      "ClipboardPng",
+      "Clipboard",
+      "Object",
+      "EncodedBuffer",
+      "Buffer",
+      "Screenshot",
+      "Window",
+      "Desktop",
+      "Wallpaper",
+      "Cursor",
+      "Url",
+      "File",
+      "Hex",
+      "Base64",
+      "Monitor",
+      "DC",
+      "HBitmap",
+      "HIcon",
+      "Bitmap",
+      "Stream",
       "RandomAccessStream",
-      "wicBitmap",
-      "d2dBitmap",
-      "sprite"
+      "WicBitmap",
+      "D2dBitmap",
+      "Sprite"
    ]
-
 
    static DontVerifyImageType(&image, &keywords := "") {
 
-      ; Sentinel value: Returns the empty string for unknown properties.
-      keywords := {base: {__get: (self, name, *) => this.get(self, name)}}
+      ; Sentinel value.
+      keywords := {}
 
       ; Try ImageType.
       if !IsObject(image)
@@ -415,7 +383,6 @@ class ImagePut {
       ; Goto ImageType.
       if image.HasProp("image") {
          keywords := image
-         keywords.base := {__get: (self, name, *) => this.get(self, name)}
          image := image.image
          throw Error("Must catch this error with ImageType.")
       }
@@ -424,7 +391,6 @@ class ImagePut {
       for type in this.inputs
          if image.HasProp(type) {
             keywords := image
-            keywords.base := {__get: (self, name, *) => this.get(self, name)}
             image := image.%type%
             return type
          }
@@ -441,9 +407,9 @@ class ImagePut {
       if (image.HasProp("prototype") && image.prototype.HasProp("__class") && image.prototype.__class == "ClipboardAll")
       or (image.base.HasProp("__class") && image.base.__class == "ClipboardAll") {
 
-         ; A "clipboard_png" is a pointer to a PNG stream saved as the "png" clipboard format.
+         ; A "clipboardpng" is a pointer to a PNG stream saved as the "png" clipboard format.
          if DllCall("IsClipboardFormatAvailable", "uint", DllCall("RegisterClipboardFormat", "str", "png", "uint"))
-            return "clipboard_png"
+            return "clipboardpng"
 
          ; A "clipboard" is a handle to a GDI bitmap saved as CF_BITMAP.
          if DllCall("IsClipboardFormatAvailable", "uint", 2)
@@ -455,6 +421,12 @@ class ImagePut {
 
 
 
+      ; A "screenshot" is an array of 4 numbers with an optional window.
+      if image.HasProp("__Item") && image.HasProp("length") && image.length ~= "4|5"
+      && image[1] ~= "^-?\d+$" && image[2] ~= "^-?\d+$" && image[3] ~= "^\d+$" && image[4] ~= "^\d+$"
+      && (image.Has(5) ? WinExist(image[5]) : True)
+         return "screenshot"
+
       ; A "object" has a pBitmap property that points to an internal GDI+ bitmap.
       if image.HasProp("pBitmap")
          try if !DllCall("gdiplus\GdipGetImageType", "ptr", image.pBitmap, "ptr*", &type:=0) && (type == 1)
@@ -464,9 +436,26 @@ class ImagePut {
       if image.HasProp("hwnd")
          return "window"
 
-      ; A "screenshot" is an array of 4 numbers.
-      if (HasMethod(image, "__Item") && image[1] ~= "^-?\d+$" && image[2] ~= "^-?\d+$" && image[3] ~= "^-?\d+$" && image[4] ~= "^-?\d+$")
-         return "screenshot"
+      ; An "EncodedBuffer" contains a pointer to the bytes of an encoded image format.
+      if image.HasProp("ptr") and image.HasProp("size") and (image.size > 24) {
+         size := min(image.size, 2048)
+         length := VarSetStrCapacity(&str, 2*size + (size-1) + 1)
+         DllCall("crypt32\CryptBinaryToString", "ptr", image.ptr, "uint", size, "uint", 0x40000004, "str", str, "uint*", &length)
+         if str ~= "(?i)66 74 79 70 61 76 69 66"                                      ; "avif"
+         || str ~= "(?i)^42 4d (.. ){36}00 00 .. 00 00 00"                            ; "bmp"
+         || str ~= "(?i)^01 00 00 00 (.. ){36}20 45 4D 46"                            ; "emf"
+         || str ~= "(?i)^47 49 46 38 (37|39) 61"                                      ; "gif"
+         || str ~= "(?i)66 74 79 70 68 65 69 63"                                      ; "heic"
+         || str ~= "(?i)^00 00 01 00"                                                 ; "ico"
+         || str ~= "(?i)^ff d8 ff"                                                    ; "jpg"
+         || str ~= "(?i)^25 50 44 46 2d"                                              ; "pdf"
+         || str ~= "(?i)^89 50 4e 47 0d 0a 1a 0a"                                     ; "png"
+         || str ~= "(?i)^(((?!3c|3e).. )|3c (3f|21) ((?!3c|3e).. )*3e )*+3c 73 76 67" ; "svg"
+         || str ~= "(?i)^(49 49 2a 00|4d 4d 00 2a)"                                   ; "tif"
+         || str ~= "(?i)^52 49 46 46 .. .. .. .. 57 45 42 50"                         ; "webp"
+         || str ~= "(?i)^d7 cd c6 9a"                                                 ; "wmf"
+            return "EncodedBuffer"
+      }
 
       ; A "buffer" is an object with a pointer to bytes and properties to determine its 2-D shape.
       if image.HasProp("ptr")
@@ -478,8 +467,8 @@ class ImagePut {
       if image.HasProp("ptr") {
          image := image.ptr
          goto pointer
-      } else
-         goto end
+      }
+      goto end
 
       string:
       if (image == "")
@@ -502,12 +491,8 @@ class ImagePut {
       . "Help|IBeam|No|Pin|Person|SizeAll|SizeNESW|SizeNS|SizeNWSE|SizeWE|UpArrow|Wait)$")
          return "cursor"
 
-      ; A "pdf" is either a file or url with a .pdf extension.
-      if (image ~= "\.pdf$") && (FileExist(image) || this.is_url(image))
-         return "pdf"
-
       ; A "url" satisfies the url format.
-      if this.is_url(image)
+      if this.IsUrl(image)
          return "url"
 
       ; A "file" is stored on the disk or network.
@@ -547,10 +532,10 @@ class ImagePut {
       try if !DllCall("gdiplus\GdipGetImageType", "ptr", image, "ptr*", &type:=0) && (type == 1)
          return "bitmap"
 
-      ; Note 1: All GDI+ functions add 1 to the reference count of COM objects.
+      ; Note 1: All GDI+ functions add 1 to the reference count of COM objects on 64-bit systems.
       ; Note 2: GDI+ pBitmaps that are queried cease to stay pBitmaps.
       ; Note 3: Critical error for ranges 0-4095 on v1 and 0-65535 on v2.
-      ObjRelease(image) ; Therefore do not move this, it has been tested.
+      (A_PtrSize == 8) && ObjRelease(image) ; Therefore do not move this, it has been tested.
 
       pointer:
       ; A "stream" is a pointer to the IStream interface.
@@ -579,251 +564,224 @@ class ImagePut {
       throw Error("Image type could not be identified.")
    }
 
-   static ToBitmap(type, image, k := "") {
+   static ImageToBitmap(type, image, keywords := "") {
 
-      ; Sentinel value: Returns the empty string for unknown properties.
-      (!k) && k := {__get: (self, name, *) => this.get(self, name)}
+      try index := keywords.index
 
-      if (type = "clipboard_png")
-         return this.from_clipboard_png()
+      if (type = "ClipboardPng")
+         return this.ClipboardPngToBitmap()
 
-      if (type = "clipboard")
-         return this.from_clipboard()
+      if (type = "Clipboard")
+         return this.ClipboardToBitmap()
 
-      if (type = "object")
-         return this.from_bitmap(image.pBitmap)
+      if (type = "Object")
+         return this.BitmapToBitmap(image.pBitmap)
 
-      if (type = "buffer")
-         return this.from_buffer(image)
+      if (type = "EncodedBuffer")
+         return this.EncodedBufferToBitmap(image)
 
-      if (type = "screenshot")
-         return this.from_screenshot(image)
+      if (type = "Buffer")
+         return this.BufferToBitmap(image)
 
-      if (type = "window")
-         return this.from_window(image)
+      if (type = "Screenshot")
+         return this.ScreenshotToBitmap(image)
 
-      if (type = "desktop")
-         return this.from_desktop()
+      if (type = "Window")
+         return this.WindowToBitmap(image)
 
-      if (type = "wallpaper")
-         return this.from_wallpaper()
+      if (type = "Desktop")
+         return this.DesktopToBitmap()
 
-      if (type = "cursor")
-         return this.from_cursor()
+      if (type = "Wallpaper")
+         return this.WallpaperToBitmap()
 
-      if (type = "pdf")
-         return this.from_pdf(image, k.index)
+      if (type = "Cursor")
+         return this.CursorToBitmap()
 
-      if (type = "url")
-         return this.from_url(image)
+      if (type = "Url")
+         return this.UrlToBitmap(image)
 
-      if (type = "file")
-         return this.from_file(image)
+      if (type = "File")
+         return this.FileToBitmap(image)
 
-      if (type = "hex")
-         return this.from_hex(image)
+      if (type = "Hex")
+         return this.HexToBitmap(image)
 
-      if (type = "base64")
-         return this.from_base64(image)
+      if (type = "Base64")
+         return this.Base64ToBitmap(image)
 
-      if (type = "monitor")
-         return this.from_monitor(image)
+      if (type = "Monitor")
+         return this.MonitorToBitmap(image)
 
-      if (type = "dc")
-         return this.from_dc(image)
+      if (type = "DC")
+         return this.DCToBitmap(image)
 
-      if (type = "hBitmap")
-         return this.from_hBitmap(image)
+      if (type = "HBitmap")
+         return this.HBitmapToBitmap(image)
 
-      if (type = "hIcon")
-         return this.from_hIcon(image)
+      if (type = "HIcon")
+         return this.HIconToBitmap(image)
 
-      if (type = "bitmap")
-         return this.from_bitmap(image)
+      if (type = "Bitmap")
+         return this.BitmapToBitmap(image)
 
-      if (type = "stream")
-         return this.from_stream(image)
+      if (type = "Stream")
+         return this.StreamToBitmap(image)
 
       if (type = "RandomAccessStream")
-         return this.from_RandomAccessStream(image)
+         return this.RandomAccessStreamToBitmap(image)
 
-      if (type = "wicBitmap")
-         return this.from_wicBitmap(image)
+      if (type = "WicBitmap")
+         return this.WicBitmapToBitmap(image)
 
-      if (type = "sprite")
-         return this.from_sprite(image)
+      if (type = "Sprite")
+         return this.SpriteToBitmap(image)
 
       throw Error("Conversion from " type " to bitmap is not supported.")
    }
 
-   static BitmapToCoimage(cotype, pBitmap, p1:="", p2:="", p3:="", p4:="", p5:="", p6:="", p*) {
-      ; BitmapToCoimage("clipboard", pBitmap)
-      if (cotype = "clipboard" || cotype = "clipboard_png")
-         return this.to_clipboard(pBitmap)
+   static BitmapToCoimage(cotype, pBitmap, p1:="", p2:="", p3:="", p4:="", p5:="", p6:="", p7:="", p*) {
 
-      ; BitmapToCoimage("buffer", pBitmap)
-      if (cotype = "buffer")
-         return this.to_buffer(pBitmap)
+      if (cotype = "Clipboard" || cotype = "ClipboardPng") ; (pBitmap)
+         return this.BitmapToClipboard(pBitmap)
 
-      ; BitmapToCoimage("sharedbuffer", pBitmap, p1)
-      if (cotype = "sharedbuffer")
-         return this.to_sharedbuffer(pBitmap, p1)
+      if (cotype = "EncodedBuffer") ; (pBitmap, extension, quality)
+         return this.BitmapToEncodedBuffer(pBitmap, p1, p2)
 
-      ; BitmapToCoimage("screenshot", pBitmap, screenshot, alpha)
-      if (cotype = "screenshot")
-         return this.to_screenshot(pBitmap, p1, p2)
+      if (cotype = "Buffer") ; (pBitmap)
+         return this.BitmapToBuffer(pBitmap)
 
-      ; BitmapToCoimage("show", pBitmap, title, pos, style, styleEx, parent, playback)
-      if (cotype = "show")
-         return this.show(pBitmap, p1, p2, p3, p4, p5, p6)
+      if (cotype = "SharedBuffer") ; (pBitmap, name)
+         return this.BitmapToSharedBuffer(pBitmap, p1)
 
-      ; BitmapToCoimage("window", pBitmap, title, pos, style, styleEx, parent, playback)
-      if (cotype = "window")
-         return this.to_window(pBitmap, p1, p2, p3, p4, p5, p6)
+      if (cotype = "Screenshot") ; (pBitmap, pos, alpha)
+         return this.BitmapToScreenshot(pBitmap, p1, p2)
 
-      ; BitmapToCoimage("desktop", pBitmap)
-      if (cotype = "desktop")
-         return this.to_desktop(pBitmap)
+      if (cotype = "Show") ; (pBitmap, title, pos, style, styleEx, parent, playback, cache)
+         return this.Show(pBitmap, p1, p2, p3, p4, p5, p6, p7)
 
-      ; BitmapToCoimage("wallpaper", pBitmap)
-      if (cotype = "wallpaper")
-         return this.to_wallpaper(pBitmap)
+      if (cotype = "Window") ; (pBitmap, title, pos, style, styleEx, parent, playback, cache)
+         return this.BitmapToWindow(pBitmap, p1, p2, p3, p4, p5, p6, p7)
 
-      ; BitmapToCoimage("cursor", pBitmap, xHotspot, yHotspot)
-      if (cotype = "cursor")
-         return this.to_cursor(pBitmap, p1, p2)
+      if (cotype = "Desktop") ; (pBitmap)
+         return this.BitmapToDesktop(pBitmap)
 
-      ; BitmapToCoimage("url", pBitmap)
-      if (cotype = "url")
-         return this.to_url(pBitmap)
+      if (cotype = "Wallpaper") ; (pBitmap)
+         return this.BitmapToWallpaper(pBitmap)
 
-      ; BitmapToCoimage("file", pBitmap, filepath, quality)
-      if (cotype = "file")
-         return this.to_file(pBitmap, p1, p2)
+      if (cotype = "Cursor") ; (pBitmap, xHotspot, yHotspot)
+         return this.BitmapToCursor(pBitmap, p1, p2)
 
-      ; BitmapToCoimage("hex", pBitmap, extension, quality)
-      if (cotype = "hex")
-         return this.to_hex(pBitmap, p1, p2)
+      if (cotype = "Url") ; (pBitmap)
+         return this.BitmapToUrl(pBitmap)
 
-      ; BitmapToCoimage("base64", pBitmap, extension, quality)
-      if (cotype = "base64")
-         return this.to_base64(pBitmap, p1, p2)
+      if (cotype = "File") ; (pBitmap, filepath, quality)
+         return this.BitmapToFile(pBitmap, p1, p2)
 
-      ; BitmapToCoimage("uri", pBitmap, extension, quality)
-      if (cotype = "uri")
-         return this.to_uri(pBitmap, p1, p2)
+      if (cotype = "Hex") ; (pBitmap, extension, quality)
+         return this.BitmapToHex(pBitmap, p1, p2)
 
-      ; BitmapToCoimage("dc", pBitmap, alpha)
-      if (cotype = "dc")
-         return this.to_dc(pBitmap, p1)
+      if (cotype = "Base64") ; (pBitmap, extension, quality)
+         return this.BitmapToBase64(pBitmap, p1, p2)
 
-      ; BitmapToCoimage("hBitmap", pBitmap, alpha)
-      if (cotype = "hBitmap")
-         return this.to_hBitmap(pBitmap, p1)
+      if (cotype = "Uri") ; (pBitmap, extension, quality)
+         return this.BitmapToUri(pBitmap, p1, p2)
 
-      ; BitmapToCoimage("hIcon", pBitmap)
-      if (cotype = "hIcon")
-         return this.to_hIcon(pBitmap)
+      if (cotype = "DC") ; (pBitmap, alpha)
+         return this.BitmapToDC(pBitmap, p1)
 
-      ; BitmapToCoimage("bitmap", pBitmap)
-      if (cotype = "bitmap")
+      if (cotype = "HBitmap") ; (pBitmap, alpha)
+         return this.BitmapToHBitmap(pBitmap, p1)
+
+      if (cotype = "HIcon") ; (pBitmap)
+         return this.BitmapToHIcon(pBitmap)
+
+      if (cotype = "Bitmap")
          return pBitmap
 
-      ; BitmapToCoimage("stream", pBitmap, extension, quality)
-      if (cotype = "stream")
-         return this.to_stream(pBitmap, p1, p2)
+      if (cotype = "Stream") ; (pBitmap, extension, quality)
+         return this.BitmapToStream(pBitmap, p1, p2)
 
-      ; BitmapToCoimage("RandomAccessStream", pBitmap, extension, quality)
-      if (cotype = "RandomAccessStream")
-         return this.to_RandomAccessStream(pBitmap, p1, p2)
+      if (cotype = "RandomAccessStream") ; (pBitmap, extension, quality)
+         return this.BitmapToRandomAccessStream(pBitmap, p1, p2)
 
-      ; BitmapToCoimage("wicBitmap", pBitmap)
-      if (cotype = "wicBitmap")
-         return this.to_wicBitmap(pBitmap)
+      if (cotype = "WicBitmap") ; (pBitmap)
+         return this.BitmapToWicBitmap(pBitmap)
 
-      ; BitmapToCoimage("explorer", pBitmap, default)
-      if (cotype = "explorer")
-         return this.to_explorer(pBitmap, p1)
+      if (cotype = "Explorer") ; (pBitmap, default)
+         return this.BitmapToExplorer(pBitmap, p1)
 
-      ; BitmapToCoimage("safeArray", pBitmap, extension, quality)
-      if (cotype = "safeArray")
-         return this.to_safeArray(pBitmap, p1, p2)
+      if (cotype = "SafeArray") ; (pBitmap, extension, quality)
+         return this.BitmapToSafeArray(pBitmap, p1, p2)
 
-      ; BitmapToCoimage("formData", pBitmap, boundary, extension, quality)
-      if (cotype = "formData")
-         return this.to_formData(pBitmap, p1, p2, p3)
+      if (cotype = "FormData") ; (pBitmap, boundary, extension, quality)
+         return this.BitmapToFormData(pBitmap, p1, p2, p3)
 
       throw Error("Conversion from bitmap to " cotype " is not supported.")
    }
 
-   static ToStream(type, image, k := "") {
+   static ImageToStream(type, image, keywords := "") {
 
-      ; Sentinel value: Returns the empty string for unknown properties.
-      (!k) && k := {__get: (self, name, *) => this.get(self, name)}
+      try index := keywords.index
 
-      if (type = "clipboard_png")
-         return this.get_clipboard_png()
+      if (type = "ClipboardPng")
+         return this.ClipboardPngToStream()
 
-      if (type = "pdf")
-         return this.get_pdf(image, k.index)
+      if (type = "EncodedBuffer")
+         return this.EncodedBufferToStream(image)
 
-      if (type = "url")
-         return this.get_url(image)
+      if (type = "Url")
+         return this.UrlToStream(image)
 
-      if (type = "file")
-         return this.get_file(image)
+      if (type = "File")
+         return this.FileToStream(image)
 
-      if (type = "hex")
-         return this.get_hex(image)
+      if (type = "Hex")
+         return this.HexToStream(image)
 
-      if (type = "base64")
-         return this.get_base64(image)
+      if (type = "Base64")
+         return this.Base64ToStream(image)
 
-      if (type = "stream")
-         return this.get_stream(image)
+      if (type = "Stream")
+         return this.StreamToStream(image)
 
       if (type = "RandomAccessStream")
-         return this.get_RandomAccessStream(image)
+         return this.RandomAccessStreamToStream(image)
 
       throw Error("Conversion from " type " to stream is not supported.")
    }
 
    static StreamToCoimage(cotype, pStream, p1 := "", p2 := "", p*) {
-      ; StreamToCoimage("file", pStream, filepath)
-      if (cotype = "file")
-         return this.set_file(pStream, p1)
 
-      ; StreamToCoimage("hex", pStream)
-      if (cotype = "hex")
-         return this.set_hex(pStream)
+      if (cotype = "EncodedBuffer") ; (pStream)
+         return this.StreamToEncodedBuffer(pStream)
 
-      ; StreamToCoimage("base64", pStream)
-      if (cotype = "base64")
-         return this.set_base64(pStream)
+      if (cotype = "File") ; (pStream, filepath)
+         return this.StreamToFile(pStream, p1)
 
-      ; StreamToCoimage("uri", pStream)
-      if (cotype = "uri")
-         return this.set_uri(pStream)
+      if (cotype = "Hex") ; (pStream)
+         return this.StreamToHex(pStream)
 
-      ; StreamToCoimage("stream", pStream)
-      if (cotype = "stream")
+      if (cotype = "Base64") ; (pStream)
+         return this.StreamToBase64(pStream)
+
+      if (cotype = "Uri") ; (pStream)
+         return this.StreamToUri(pStream)
+
+      if (cotype = "Stream")
          return pStream
 
-      ; StreamToCoimage("RandomAccessStream", pStream)
-      if (cotype = "RandomAccessStream")
-         return this.set_RandomAccessStream(pStream)
+      if (cotype = "RandomAccessStream") ; (pStream)
+         return this.StreamToRandomAccessStream(pStream)
 
-      ; StreamToCoimage("explorer", pStream, default)
-      if (cotype = "explorer")
-         return this.set_explorer(pStream, p1)
+      if (cotype = "Explorer") ; (pStream, default)
+         return this.StreamToExplorer(pStream, p1)
 
-      ; StreamToCoimage("safeArray", pStream)
-      if (cotype = "safeArray")
-         return this.set_safeArray(pStream)
+      if (cotype = "SafeArray") ; (pStream)
+         return this.StreamToSafeArray(pStream)
 
-      ; StreamToCoimage("formData", pStream, boundary)
-      if (cotype = "formData")
-         return this.set_formData(pStream, p1)
+      if (cotype = "FormData") ; (pStream, boundary)
+         return this.StreamToFormData(pStream, p1)
 
       throw Error("Conversion from stream to " cotype " is not supported.")
    }
@@ -950,7 +908,7 @@ class ImagePut {
       return pBitmap := pBitmapScale
    }
 
-   static is_url(url) {
+   static IsUrl(url) {
       ; Thanks dperini - https://gist.github.com/dperini/729294
       ; Also see for comparisons: https://mathiasbynens.be/demo/url-regex
       ; Modified to be compatible with AutoHotkey. \u0000 -> \x{0000}.
@@ -984,7 +942,7 @@ class ImagePut {
          . "(?:[/?#]\S*)?$" ; resource path (optional)
    }
 
-   static from_clipboard() {
+   static ClipboardToBitmap() {
       ; Open the clipboard with exponential backoff.
       loop
          if DllCall("OpenClipboard", "ptr", A_ScriptHwnd)
@@ -994,7 +952,7 @@ class ImagePut {
                Sleep (2**(A_Index-1) * 30)
             else throw Error("Clipboard could not be opened.")
 
-      ; Fallback to CF_BITMAP. This format does not support transparency even with to_hBitmap().
+      ; Fallback to CF_BITMAP. This format does not support transparency even with BitmapToHBitmap().
       if !DllCall("IsClipboardFormatAvailable", "uint", 2)
          throw Error("Clipboard does not have CF_BITMAP data.")
 
@@ -1007,14 +965,14 @@ class ImagePut {
       return pBitmap
    }
 
-   static from_clipboard_png() {
-      pStream := this.get_clipboard_png()
+   static ClipboardPngToBitmap() {
+      pStream := this.ClipboardPngToStream()
       DllCall("gdiplus\GdipCreateBitmapFromStream", "ptr", pStream, "ptr*", &pBitmap:=0)
       ObjRelease(pStream)
       return pBitmap
    }
 
-   static get_clipboard_png() {
+   static ClipboardPngToStream() {
       ; Open the clipboard with exponential backoff.
       loop
          if DllCall("OpenClipboard", "ptr", A_ScriptHwnd)
@@ -1038,7 +996,23 @@ class ImagePut {
       return pStream
    }
 
-   static from_buffer(image) {
+   static EncodedBufferToBitmap(image) {
+      pStream := this.EncodedBufferToStream(image)
+      DllCall("gdiplus\GdipCreateBitmapFromStream", "ptr", pStream, "ptr*", &pBitmap:=0)
+      ObjRelease(pStream)
+      return pBitmap
+   }
+
+   static EncodedBufferToStream(image) {
+      handle := DllCall("GlobalAlloc", "uint", 0x2, "uptr", image.size, "ptr")
+      ptr := DllCall("GlobalLock", "ptr", handle, "ptr")
+      DllCall("RtlMoveMemory", "ptr", ptr, "ptr", image.ptr, "uptr", image.size)
+      DllCall("GlobalUnlock", "ptr", handle)
+      DllCall("ole32\CreateStreamOnHGlobal", "ptr", handle, "int", True, "ptr*", &pStream:=0, "hresult")
+      return pStream
+   }
+
+   static BufferToBitmap(image) {
 
       if image.HasProp("pitch")
          stride := image.pitch
@@ -1262,7 +1236,7 @@ class ImagePut {
       Cleanup : Cleanup}.update() ; init ptr && size.
    }
 
-   static from_screenshot2(image) {
+   static Screenshot2ToBitmap(image) {
       obj := this.read_screen()
 
       width := obj.width
@@ -1296,7 +1270,7 @@ class ImagePut {
       return pBitmap
    }
 
-   static from_screenshot(image) {
+   static ScreenshotToBitmap(image) {
       ; Thanks tic - https://www.autohotkey.com/boards/viewtopic.php?t=6517
 
       ; Allow the image to be a window handle.
@@ -1355,7 +1329,7 @@ class ImagePut {
       return pBitmap
    }
 
-   static from_window(image) {
+   static WindowToBitmap(image) {
       ; Thanks tic - https://www.autohotkey.com/boards/viewtopic.php?t=6517
 
       ; Get the handle to the window.
@@ -1407,7 +1381,7 @@ class ImagePut {
       return pBitmap
    }
 
-   static from_desktop() {
+   static DesktopToBitmap() {
       ; Find the child window.
       windows := WinGetList("ahk_class WorkerW")
       if (windows.length == 0)
@@ -1461,7 +1435,7 @@ class ImagePut {
       return pBitmap
    }
 
-   static from_wallpaper() {
+   static WallpaperToBitmap() {
       ; Get the width and height of all monitors.
       try dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
       width  := DllCall("GetSystemMetrics", "int", 78, "int")
@@ -1493,7 +1467,7 @@ class ImagePut {
       return pBitmap
    }
 
-   static from_cursor() {
+   static CursorToBitmap() {
       ; Thanks 23W - https://stackoverflow.com/a/13295280
 
       ; struct CURSORINFO - https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-cursorinfo
@@ -1506,7 +1480,7 @@ class ImagePut {
          ; yCursor := NumGet(ci, 12+A_PtrSize, "int")
 
       ; Cursors are the same as icons!
-      pBitmap := this.from_hIcon(hCursor)
+      pBitmap := this.HIconToBitmap(hCursor)
 
       ; Cleanup the handle to the cursor. Same as DestroyIcon.
       DllCall("DestroyCursor", "ptr", hCursor)
@@ -1514,110 +1488,14 @@ class ImagePut {
       return pBitmap
    }
 
-   static from_pdf(image, index := "") {
-      pStream := this.get_pdf(image, index)
+   static UrlToBitmap(image) {
+      pStream := this.UrlToStream(image)
       DllCall("gdiplus\GdipCreateBitmapFromStream", "ptr", pStream, "ptr*", &pBitmap:=0)
       ObjRelease(pStream)
       return pBitmap
    }
 
-   static get_pdf(image, index := "") {
-      ; Thanks malcev - https://www.autohotkey.com/boards/viewtopic.php?t=80735
-      (index == "") && index := 1
-
-      ; Create a stream from either a url or a file.
-      pStream := this.is_url(image) ? this.get_url(image) : this.get_file(image)
-
-      ; Compare the signature of the file with the PDF magic string "%PDF".
-      DllCall("shlwapi\IStream_Read", "ptr", pStream, "ptr", signature := Buffer(4), "uint", 4, "hresult")
-      StrPut("%PDF", magic := Buffer(4), "CP0")
-      if 4 > DllCall("ntdll\RtlCompareMemory", "ptr", signature, "ptr", magic, "uptr", 4, "uptr")
-         throw Error("Invalid PDF.")
-
-      ; Create a RandomAccessStream with BSOS_PREFERDESTINATIONSTREAM.
-      DllCall("ole32\CLSIDFromString", "wstr", "{905A0FE1-BC53-11DF-8C49-001E4FC686DA}", "ptr", CLSID := Buffer(16), "hresult")
-      DllCall("ShCore\CreateRandomAccessStreamOverStream", "ptr", pStream, "uint", 1, "ptr", CLSID, "ptr*", &pRandomAccessStream:=0, "hresult")
-
-      ; Create the "Windows.Data.Pdf.PdfDocument" class using IPdfDocumentStatics.
-      DllCall("combase\WindowsCreateString", "wstr", "Windows.Data.Pdf.PdfDocument", "uint", 28, "ptr*", &hString:=0, "hresult")
-      DllCall("ole32\CLSIDFromString", "wstr", "{433A0B5F-C007-4788-90F2-08143D922599}", "ptr", CLSID := Buffer(16), "hresult")
-      DllCall("combase\RoGetActivationFactory", "ptr", hString, "ptr", CLSID, "ptr*", &PdfDocumentStatics:=0, "hresult")
-      DllCall("combase\WindowsDeleteString", "ptr", hString, "hresult")
-
-      ; Create the PDF document.
-      ComCall(LoadFromStreamAsync := 8, PdfDocumentStatics, "ptr", pRandomAccessStream, "ptr*", &PdfDocument:=0)
-      this.WaitForAsync(&PdfDocument)
-
-      ; Get Page
-      ComCall(get_PageCount := 7, PdfDocument, "uint*", &count:=0)
-      index := (index > 0) ? index - 1 : (index < 0) ? count + index : 0 ; Zero indexed.
-      if (index > count || index < 0) {
-         ObjRelease(PdfDocument)
-         ObjRelease(PdfDocumentStatics)
-         this.ObjReleaseClose(&pRandomAccessStream)
-         ObjRelease(pStream)
-         throw Error("The maximum number of pages in this pdf is " count ".")
-      }
-      ComCall(GetPage := 6, PdfDocument, "uint", index, "ptr*", &PdfPage:=0)
-
-      ; Render the page to an output stream.
-      DllCall("ole32\CreateStreamOnHGlobal", "ptr", 0, "uint", True, "ptr*", &pStreamOut:=0)
-      DllCall("ole32\CLSIDFromString", "wstr", "{905A0FE1-BC53-11DF-8C49-001E4FC686DA}", "ptr", CLSID := Buffer(16), "hresult")
-      DllCall("ShCore\CreateRandomAccessStreamOverStream", "ptr", pStreamOut, "uint", BSOS_DEFAULT := 0, "ptr", CLSID, "ptr*", &pRandomAccessStreamOut:=0)
-      ComCall(RenderToStreamAsync := 6, PdfPage, "ptr", pRandomAccessStreamOut, "ptr*", &AsyncInfo:=0)
-      this.WaitForAsync(&AsyncInfo)
-
-      ; Cleanup
-      this.ObjReleaseClose(&pRandomAccessStreamOut)
-      this.ObjReleaseClose(&PdfPage)
-
-      ObjRelease(PdfDocument)
-      ObjRelease(PdfDocumentStatics)
-
-      this.ObjReleaseClose(&pRandomAccessStream)
-      ObjRelease(pStream)
-
-      return pStreamOut
-   }
-
-   static WaitForAsync(&Object) {
-      AsyncInfo := ComObjQuery(Object, IAsyncInfo := "{00000036-0000-0000-C000-000000000046}")
-      while !ComCall(_Status := 7, AsyncInfo, "uint*", &status:=0)
-         and (status = 0)
-            Sleep 10
-
-      if (status != 1) {
-         ComCall(_ErrorCode := 8, AsyncInfo, "uint*", &ErrorCode:=0)
-         throw Error("AsyncInfo status error: " ErrorCode)
-      }
-
-      ComCall(GetResults := 8, Object, "ptr*", &ObjectResult:=0, "cdecl")
-      ObjRelease(Object)
-      Object := ObjectResult
-
-      ComCall(Close := 10, AsyncInfo)
-      AsyncInfo := ""
-   }
-
-   static ObjReleaseClose(&Object) {
-      if Object {
-         if (Close := ComObjQuery(Object, IClosable := "{30D5A829-7FA4-4026-83BB-D75BAE4EA99E}")) {
-            ComCall(_Close := 6, Close)
-            Close := ""
-         }
-         try return ObjRelease(Object)
-         finally Object := ""
-      }
-   }
-
-   static from_url(image) {
-      pStream := this.get_url(image)
-      DllCall("gdiplus\GdipCreateBitmapFromStream", "ptr", pStream, "ptr*", &pBitmap:=0)
-      ObjRelease(pStream)
-      return pBitmap
-   }
-
-   static get_url(image) {
+   static UrlToStream(image) {
       req := ComObject("WinHttp.WinHttpRequest.5.1")
       req.Open("GET", image, True)
       req.Send()
@@ -1626,16 +1504,16 @@ class ImagePut {
       return IStream.ptr
    }
 
-   static from_file(image) {
-      ; This is faster than GdipCreateBitmapFromFile and does not lock the file.
-      pStream := this.get_file(image)
+   static FileToBitmap(image) {
+      pStream := this.FileToStream(image) ; Faster than GdipCreateBitmapFromFile and does not lock the file.
       DllCall("gdiplus\GdipCreateBitmapFromStream", "ptr", pStream, "ptr*", &pBitmap:=0)
       ObjRelease(pStream)
       return pBitmap
    }
 
-   static get_file(image) {
+   static FileToStream(image) {
       file := FileOpen(image, "r")
+      file.pos := 0
       hData := DllCall("GlobalAlloc", "uint", 0x2, "uptr", file.length, "ptr")
       pData := DllCall("GlobalLock", "ptr", hData, "ptr")
       file.RawRead(pData, file.length)
@@ -1645,59 +1523,61 @@ class ImagePut {
       return pStream
    }
 
-   static from_hex(image) {
-      pStream := this.get_hex(image)
+   static HexToBitmap(image) {
+      pStream := this.HexToStream(image)
       DllCall("gdiplus\GdipCreateBitmapFromStream", "ptr", pStream, "ptr*", &pBitmap:=0)
       ObjRelease(pStream)
       return pBitmap
    }
 
-   static get_hex(image) {
+   static HexToStream(image) {
       ; Trim whitespace and remove hexadecimal indicator.
       image := Trim(image)
       image := RegExReplace(image, "^(0[xX])")
 
-      ; Retrieve the size of bytes from the length of the base64 string.
-      flags := 0xC ; CRYPT_STRING_HEXRAW
+      ; Retrieve the size of bytes from the length of the hex string.
       size := StrLen(image) / 2
+      handle := DllCall("GlobalAlloc", "uint", 0x2, "uptr", size, "ptr")
+      bin := DllCall("GlobalLock", "ptr", handle, "ptr")
 
-      hData := DllCall("GlobalAlloc", "uint", 0x2, "uptr", size, "ptr")
-      pData := DllCall("GlobalLock", "ptr", hData, "ptr")
+      ; Place the decoded hex string into a binary buffer.
+      flags := 0xC ; CRYPT_STRING_HEXRAW
+      DllCall("crypt32\CryptStringToBinary", "str", image, "uint", 0, "uint", flags, "ptr", bin, "uint*", size, "ptr", 0, "ptr", 0)
 
-      DllCall("crypt32\CryptStringToBinary", "str", image, "uint", 0, "uint", flags, "ptr", pData, "uint*", size, "ptr", 0, "ptr", 0)
-
-      DllCall("GlobalUnlock", "ptr", hData)
-      DllCall("ole32\CreateStreamOnHGlobal", "ptr", hData, "int", True, "ptr*", &pStream:=0, "hresult")
+      ; Returns a stream that release the handle on ObjRelease().
+      DllCall("GlobalUnlock", "ptr", handle)
+      DllCall("ole32\CreateStreamOnHGlobal", "ptr", handle, "int", True, "ptr*", &pStream:=0, "hresult")
       return pStream
    }
 
-   static from_base64(image) {
-      pStream := this.get_base64(image)
+   static Base64ToBitmap(image) {
+      pStream := this.Base64ToStream(image)
       DllCall("gdiplus\GdipCreateBitmapFromStream", "ptr", pStream, "ptr*", &pBitmap:=0)
       ObjRelease(pStream)
       return pBitmap
    }
 
-   static get_base64(image) {
+   static Base64ToStream(image) {
       ; Trim whitespace and remove mime type.
       image := Trim(image)
       image := RegExReplace(image, "(?i)^data:image\/[a-z]+;base64,")
 
       ; Retrieve the size of bytes from the length of the base64 string.
-      flags := 0x1 ; CRYPT_STRING_BASE64
       size := StrLen(RTrim(image, "=")) * 3 // 4
+      handle := DllCall("GlobalAlloc", "uint", 0x2, "uptr", size, "ptr")
+      bin := DllCall("GlobalLock", "ptr", handle, "ptr")
 
-      hData := DllCall("GlobalAlloc", "uint", 0x2, "uptr", size, "ptr")
-      pData := DllCall("GlobalLock", "ptr", hData, "ptr")
+      ; Place the decoded base64 string into a binary buffer.
+      flags := 0x1 ; CRYPT_STRING_BASE64
+      DllCall("crypt32\CryptStringToBinary", "str", image, "uint", 0, "uint", flags, "ptr", bin, "uint*", size, "ptr", 0, "ptr", 0)
 
-      DllCall("crypt32\CryptStringToBinary", "str", image, "uint", 0, "uint", flags, "ptr", pData, "uint*", size, "ptr", 0, "ptr", 0)
-
-      DllCall("GlobalUnlock", "ptr", hData)
-      DllCall("ole32\CreateStreamOnHGlobal", "ptr", hData, "int", True, "ptr*", &pStream:=0, "hresult")
+      ; Returns a stream that release the handle on ObjRelease().
+      DllCall("GlobalUnlock", "ptr", handle)
+      DllCall("ole32\CreateStreamOnHGlobal", "ptr", handle, "int", True, "ptr*", &pStream:=0, "hresult")
       return pStream
    }
 
-   static from_monitor(image) {
+   static MonitorToBitmap(image) {
       try dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
       if (image > 0) {
          MonitorGet(image, &Left, &Top, &Right, &Bottom)
@@ -1712,10 +1592,10 @@ class ImagePut {
          h := DllCall("GetSystemMetrics", "int", 79, "int")
       }
       try DllCall("SetThreadDpiAwarenessContext", "ptr", dpi, "ptr")
-      return this.from_screenshot([x,y,w,h])
+      return this.ScreenshotToBitmap([x,y,w,h])
    }
 
-   static from_dc(image) {
+   static DcToBitmap(image) {
       ; An application cannot select a single bitmap into more than one DC at a time.
       if !(sbm := DllCall("GetCurrentObject", "ptr", image, "uint", 7))
          throw Error("The device context has no bitmap selected.")
@@ -1785,7 +1665,7 @@ class ImagePut {
       return pBitmap
    }
 
-   static from_hBitmap(image) {
+   static HBitmapToBitmap(image) {
       ; struct DIBSECTION - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-dibsection
       ; struct BITMAP - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmap
       dib := Buffer(64+5*A_PtrSize) ; sizeof(DIBSECTION) = 84, 104
@@ -1862,7 +1742,7 @@ class ImagePut {
       return pBitmap
    }
 
-   static from_hIcon(image) {
+   static HIconToBitmap(image) {
       ; struct ICONINFO - https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-iconinfo
       ii := Buffer(8+3*A_PtrSize)                       ; sizeof(ICONINFO) = 20, 32
       DllCall("GetIconInfo", "ptr", image, "ptr", ii)
@@ -1929,7 +1809,7 @@ class ImagePut {
       return pBitmap
    }
 
-   static from_bitmap(image) {
+   static BitmapToBitmap(image) {
       ; Retain the current PixelFormat, unlike GdipCloneImage.
       DllCall("gdiplus\GdipGetImageWidth", "ptr", image, "uint*", &width:=0)
       DllCall("gdiplus\GdipGetImageHeight", "ptr", image, "uint*", &height:=0)
@@ -1945,16 +1825,14 @@ class ImagePut {
       return pBitmap
    }
 
-   static from_stream(image) {
-      ; Cloning a temporary stream bypasses the downsides of GDI+ controlling the stream.
-      ComCall(Clone := 13, image, "ptr*", &pStream:=0)
-      ; Completely ignores the seek pointer and sets the seek position to 4096.
+   static StreamToBitmap(image) {
+      pStream := this.StreamToStream(image) ; Below adds +3 references and seeks to 4096.
       DllCall("gdiplus\GdipCreateBitmapFromStream", "ptr", pStream, "ptr*", &pBitmap:=0)
       ObjRelease(pStream)
       return pBitmap
    }
 
-   static get_stream(image) {
+   static StreamToStream(image) {
       ; Creates a new, separate stream. Necessary to separate reference counting through a clone.
       ComCall(Clone := 13, image, "ptr*", &pStream:=0)
       ; Ensures that a duplicated stream does not inherit the original seek position.
@@ -1962,15 +1840,14 @@ class ImagePut {
       return pStream
    }
 
-   static from_RandomAccessStream(image) {
-      ; Creating a Bitmap from stream adds +3 to the reference count until DisposeImage is called.
-      pStream := this.get_RandomAccessStream(image)
+   static RandomAccessStreamToBitmap(image) {
+      pStream := this.RandomAccessStreamToStream(image) ; Below adds +3 to the reference count.
       DllCall("gdiplus\GdipCreateBitmapFromStream", "ptr", pStream, "ptr*", &pBitmap:=0)
       ObjRelease(pStream)
       return pBitmap
    }
 
-   static get_RandomAccessStream(image) {
+   static RandomAccessStreamToStream(image) {
       ; Note that the returned stream shares a reference count with the original RandomAccessStream's internal stream.
       DllCall("ole32\CLSIDFromString", "wstr", "{0000000C-0000-0000-C000-000000000046}", "ptr", CLSID := Buffer(16), "hresult")
       DllCall("ShCore\CreateStreamOverRandomAccessStream", "ptr", image, "ptr", CLSID, "ptr*", &pStream:=0, "hresult")
@@ -1980,7 +1857,7 @@ class ImagePut {
       return pStreamClone
    }
 
-   static from_wicBitmap(image) {
+   static WicBitmapToBitmap(image) {
       ; IWICBitmapSource::GetSize - https://github.com/iseahound/10/blob/win/10.0.16299.0/um/wincodec.h#L1304
       ComCall(GetSize := 3, image, "uint*", &width:=0, "uint*", &height:=0)
 
@@ -2011,12 +1888,12 @@ class ImagePut {
       return pBitmap
    }
 
-   static from_sprite(image) {
+   static SpriteToBitmap(image) {
       ; Create a source pBitmap.
-      if this.is_url(image)
-         pBitmap := this.from_url(image)
+      if this.IsUrl(image)
+         pBitmap := this.UrlToBitmap(image)
       else if FileExist(image)
-         pBitmap := this.from_file(image)
+         pBitmap := this.FileToBitmap(image)
       else
          throw Error("Could not be loaded from a valid file path or URL.")
 
@@ -2058,7 +1935,7 @@ class ImagePut {
       return pBitmap
    }
 
-   static to_clipboard(pBitmap) {
+   static BitmapToClipboard(pBitmap) {
       ; Standard Clipboard Formats - https://www.codeproject.com/Reference/1091137/Windows-Clipboard-Formats
       ; Synthesized Clipboard Formats - https://docs.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats
 
@@ -2124,12 +2001,12 @@ class ImagePut {
       return ClipboardAll()
    }
 
-   set_clipboard(pStream) { ; Not yet implemented.
-      this.select_extension(pStream, &extension:="")
-
+   StreamToClipboard(pStream) { ; Not yet implemented.
+      ;this.select_extension(pStream, &extension:="")
+      extension := ""
       if !(extension ~= "gif|png") {
          DllCall("gdiplus\GdipCreateBitmapFromStream", "ptr", pStream, "ptr*", &pBitmap:=0)
-         this.to_clipboard(pBitmap)
+         this.BitmapToClipboard(pBitmap)
          DllCall("gdiplus\GdipDisposeImage", "ptr", pBitmap)
          return ClipboardAll()
       }
@@ -2159,7 +2036,36 @@ class ImagePut {
       return ClipboardAll()
    }
 
-   static to_buffer(pBitmap) {
+   static BitmapToEncodedBuffer(pBitmap, extension := "", quality := "") {
+      ; Defaults to PNG for small sizes!
+      pStream := this.BitmapToStream(pBitmap, (extension) ? extension : "png", quality)
+
+      ; Get a pointer to the encoded image data.
+      DllCall("ole32\GetHGlobalFromStream", "ptr", pStream, "ptr*", &handle:=0, "hresult")
+      ptr := DllCall("GlobalLock", "ptr", handle, "ptr")
+      size := DllCall("GlobalSize", "ptr", handle, "uptr")
+
+      ; Copy data into a buffer.
+      buf := Buffer(size)
+      DllCall("RtlMoveMemory", "ptr", buf.ptr, "ptr", ptr, "uptr", size)
+
+      ; Release binary data and stream.
+      DllCall("GlobalUnlock", "ptr", handle)
+      ObjRelease(pStream)
+
+      return buf
+   }
+
+   static StreamToEncodedBuffer(pStream) {
+      DllCall("shlwapi\IStream_Size", "ptr", pStream, "uint64*", &size:=0, "hresult")
+      buf := Buffer(size)
+      DllCall("shlwapi\IStream_Reset", "ptr", pStream, "hresult")
+      DllCall("shlwapi\IStream_Read", "ptr", pStream, "ptr", buf.ptr, "uint", size, "hresult")
+      DllCall("shlwapi\IStream_Reset", "ptr", pStream, "hresult")
+      return buf
+   }
+
+   static BitmapToBuffer(pBitmap) {
       ; Get Bitmap width and height.
       DllCall("gdiplus\GdipGetImageWidth", "ptr", pBitmap, "uint*", &width:=0)
       DllCall("gdiplus\GdipGetImageHeight", "ptr", pBitmap, "uint*", &height:=0)
@@ -2210,7 +2116,7 @@ class ImagePut {
       return buf
    }
 
-   static to_sharedbuffer(pBitmap, name := "Alice") {
+   static BitmapToSharedbuffer(pBitmap, name := "Alice") {
       ; Get Bitmap width and height.
       DllCall("gdiplus\GdipGetImageWidth", "ptr", pBitmap, "uint*", &width:=0)
       DllCall("gdiplus\GdipGetImageHeight", "ptr", pBitmap, "uint*", &height:=0)
@@ -2424,13 +2330,13 @@ class ImagePut {
       Crop(x, y, w, h) {
          DllCall("gdiplus\GdipGetImagePixelFormat", "ptr", this.pBitmap, "int*", &format:=0)
          DllCall("gdiplus\GdipCloneBitmapAreaI", "int", x, "int", y, "int", w, "int", h, "int", format, "ptr", this.pBitmap, "ptr*", &pBitmap:=0)
-         try return ImagePut.to_buffer(pBitmap)
+         try return ImagePut.BitmapToBuffer(pBitmap)
          finally DllCall("gdiplus\GdipDisposeImage", "ptr", pBitmap)
       }
 
       Show(window_border := False, title := "", pos := "", style := "", styleEx := "", parent := "") {
          return (window_border)
-            ? ImagePut.to_window(this.pBitmap, title, pos, style, styleEx, parent)
+            ? ImagePut.BitmapToWindow(this.pBitmap, title, pos, style, styleEx, parent)
             : ImagePut.show(this.pBitmap, title, pos, style, styleEx, parent)
       }
 
@@ -2442,14 +2348,15 @@ class ImagePut {
 
          ; If extension is not .bmp, use to_file routine.
          if (extension != "bmp")
-            return ImagePut.to_file(this.pBitmap, filepath, quality)
+            return ImagePut.BitmapToFile(this.pBitmap, filepath, quality)
 
-         bm := Buffer(54)
+         ; Note because the ARGB values are 4-byte aligned it's not a "packed" bitmap.
+         bm := Buffer(56)
 
          StrPut("BM", bm, "CP0")                ; identifier
-         NumPut(  "uint", 54+this.size, bm,  2) ; file size
+         NumPut(  "uint", 56+this.size, bm,  2) ; file size
          NumPut(  "uint",            0, bm,  6) ; reserved
-         NumPut(  "uint",           54, bm, 10) ; bitmap data offset
+         NumPut(  "uint",           56, bm, 10) ; bitmap data offset
 
          ; BITMAPINFOHEADER struct
          NumPut(  "uint",           40, bm, 14) ; Size
@@ -3163,7 +3070,7 @@ class ImagePut {
       }
    }
 
-   static to_screenshot(pBitmap, screenshot := "", alpha := "") {
+   static BitmapToScreenshot(pBitmap, screenshot := "", alpha := "") {
       ; Get Bitmap width and height.
       DllCall("gdiplus\GdipGetImageWidth", "ptr", pBitmap, "uint*", &width:=0)
       DllCall("gdiplus\GdipGetImageHeight", "ptr", pBitmap, "uint*", &height:=0)
@@ -3175,7 +3082,7 @@ class ImagePut {
 
       ; Convert the Bitmap to a hBitmap and associate a device context for blitting.
       hdc := DllCall("CreateCompatibleDC", "ptr", 0, "ptr")
-      hbm := this.to_hBitmap(pBitmap, alpha)
+      hbm := this.BitmapToHBitmap(pBitmap, alpha)
       obm := DllCall("SelectObject", "ptr", hdc, "ptr", hbm, "ptr")
 
       ; Retrieve the device context for the screen.
@@ -3201,7 +3108,7 @@ class ImagePut {
       return [x,y,w,h]
    }
 
-   static to_window(pBitmap, title := "", pos := "", style := 0x82C80000, styleEx := 0x9, parent := "", playback := "") {
+   static BitmapToWindow(pBitmap, title := "", pos := "", style := 0x82C80000, styleEx := 0x9, parent := "", playback := "", cache := "") {
       ; Window Styles - https://docs.microsoft.com/en-us/windows/win32/winmsg/window-styles
       ; Extended Window Styles - https://docs.microsoft.com/en-us/windows/win32/winmsg/extended-window-styles
 
@@ -3297,7 +3204,7 @@ class ImagePut {
       DllCall("SetLayeredWindowAttributes", "ptr", hwnd, "uint", 0xF0F0F0, "uchar", 0, "int", 1)
 
       ; A layered child window is only available on Windows 8+.
-      child := this.show(pBitmap, title, [0, 0, w, h], WS_CHILD | WS_VISIBLE, WS_EX_LAYERED, hwnd, playback)
+      child := this.Show(pBitmap, title, [0, 0, w, h], WS_CHILD | WS_VISIBLE, WS_EX_LAYERED, hwnd, playback, cache)
 
       ; Store extra data inside window struct (cbWndExtra).
       DllCall("SetWindowLong", "ptr", hwnd, "int", 0*A_PtrSize, "ptr", hwnd) ; parent window
@@ -3311,7 +3218,7 @@ class ImagePut {
       return hwnd
    }
 
-   static show(pBitmap, title := "", pos := "", style := 0x90000000, styleEx := 0x80088, parent := "", playback := "") {
+   static Show(pBitmap, title := "", pos := "", style := 0x90000000, styleEx := 0x80088, parent := "", playback := "", cache := "") {
       ; Window Styles - https://docs.microsoft.com/en-us/windows/win32/winmsg/window-styles
       WS_POPUP                  := 0x80000000   ; Allow small windows.
       WS_VISIBLE                := 0x10000000   ; Show on creation.
@@ -3518,7 +3425,7 @@ class ImagePut {
          DllCall("SetWindowLong" (A_PtrSize=8?"Ptr":""), "ptr", hwnd, "int", 3*A_PtrSize, "ptr", ObjPtr(obj))
 
          ; Case 1: Image is not scaled.
-         if (w == width && h == height) {
+         if (!cache && w == width && h == height) {
             ; Clone bitmap to avoid disposal.
             DllCall("gdiplus\GdipCloneImage", "ptr", pBitmap, "ptr*", &pBitmapClone:=0)
             DllCall("gdiplus\GdipImageForceValidation", "ptr", pBitmapClone) ; Load to memory.
@@ -3547,7 +3454,7 @@ class ImagePut {
                ; Get Bitmap width and height.
                DllCall("gdiplus\GdipGetImageWidth", "ptr", pBitmap, "uint*", &width:=0)
                DllCall("gdiplus\GdipGetImageHeight", "ptr", pBitmap, "uint*", &height:=0)
-               
+
                ; Convert the source pBitmap into a hBitmap manually.
                ; struct BITMAPINFOHEADER - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapinfoheader
                hdc := DllCall("CreateCompatibleDC", "ptr", 0, "ptr")
@@ -3702,7 +3609,7 @@ class ImagePut {
 
          ; For some reason using DefWindowProc or PostMessage to reroute WM_LBUTTONDOWN to WM_NCLBUTTONDOWN
          ; will always disable the complementary WM_LBUTTONUP. However, if the CS_DBLCLKS window style is set,
-         ; then a single WM_RBUTTONUP will be received as double-clicking generates a sequence of four messages: 
+         ; then a single WM_RBUTTONUP will be received as double-clicking generates a sequence of four messages:
          ; WM_LBUTTONDOWN, WM_LBUTTONUP, WM_LBUTTONDBLCLK, and WM_LBUTTONUP.
          ;                 ^ This message is lost when 0x201 → 0xA1.
          ;                               ^ Only happens when 0x8 is set in RegisterClass.
@@ -3799,10 +3706,13 @@ class ImagePut {
             obj.HasProp("pBitmap") && pBitmap := obj.pBitmap ; not scaled
             obj.HasProp("pBits") && pBits := obj.pBits       ; not scaled
             obj.HasProp("cache") && cache := obj.cache       ; is scaled
+         }
 
-            ; Get next frame number and next delay.
-            frame := mod(frame + 1, number)     ; Increment and loop back to zero
-            delay := delays[frame]              ; Zero-based array
+         ; Each timer interval is the GCF of all frame delays.
+         ; Avoids using oneshot timers to reduce additive jitter from constant overhead.
+         if (uMsg = 0x8000 && wParam == 0) {
+            index := mod(frame + 1, number)     ; Increment and loop back to zero
+            delay := delays[index]              ; Zero-based array
 
             ; See: https://www.biphelps.com/blog/The-Fastest-GIF-Does-Not-Exist
             if (type = "gif") {
@@ -3815,23 +3725,16 @@ class ImagePut {
             accumulate += interval              ; Add resolution of timer
             obj.accumulate := accumulate        ; Save the current wait time
 
-            ; Checks if the current wait time is equal to the frame delay.
-            ; Executing via frame number rather than timing is more accurate.
-            ; Either a oneshot timer or a periodic timer can be used.
-            ; A oneshot timer will always take into account the above overhead.
-            ; Whereas the periodic timer will always form an even distribution.
-            ; Note that the variance (jitter) is additive. It reverts to zero
-            ; over time only when a periodic timer is used.
-            ; Clever thinking also determined that setting the timer resolution
-            ; or interval to the greatest common factor of all frame delays
-            ; would reduce overhead as well. This is because the timer would
-            ; always be divisible by the frame delays.
+            ; Check if enough time has passed to advance to the next frame.
             if (accumulate == delay)
-               wParam := 1
+               wParam := 1                      ; Step size of +1
          }
 
          ; WM_APP - Advance to next frame.
-         if (uMsg = 0x8000 && wParam) {
+         if (uMsg = 0x8000 && wParam != 0) {
+            ; Restrict frame index from 0 to the maximum number of frames - 1.
+            frame := mod(mod(frame + wParam, number) + number, number)
+
             obj.frame := frame                  ; Update to next frame number
             obj.accumulate := 0                 ; Resets the wait time
 
@@ -3897,7 +3800,7 @@ class ImagePut {
 
             ; Render to window.
             DllCall("UpdateLayeredWindow"
-                     ,    "ptr", hwnd                     ; hWnd
+                     ,    "ptr", child                    ; hWnd
                      ,    "ptr", 0                        ; hdcDst
                      ,    "ptr", 0                        ; *pptDst
                      ,"uint64*", w | h << 32              ; *psize
@@ -4002,7 +3905,7 @@ class ImagePut {
       return pcb
    }
 
-   static to_desktop(pBitmap) {
+   static BitmapToDesktop(pBitmap) {
       ; Thanks Gerald Degeneve - https://www.codeproject.com/Articles/856020/Draw-Behind-Desktop-Icons-in-Windows-plus
 
       ; Get Bitmap width and height.
@@ -4011,7 +3914,7 @@ class ImagePut {
 
       ; Convert the Bitmap to a hBitmap and associate a device context for blitting.
       hdc := DllCall("CreateCompatibleDC", "ptr", 0, "ptr")
-      hbm := this.to_hBitmap(pBitmap)
+      hbm := this.BitmapToHBitmap(pBitmap)
       obm := DllCall("SelectObject", "ptr", hdc, "ptr", hbm, "ptr")
 
       ; Post-Creator's Update Windows 10. WM_SPAWN_WORKER = 0x052C
@@ -4053,9 +3956,9 @@ class ImagePut {
       return "desktop"
    }
 
-   static to_wallpaper(pBitmap) {
+   static BitmapToWallpaper(pBitmap) {
       ; Create a temporary image file.
-      filepath := this.to_file(pBitmap)
+      filepath := this.BitmapToFile(pBitmap)
 
       ; Get the absolute path of the file.
       length := DllCall("GetFullPathName", "str", filepath, "uint", 0, "ptr", 0, "ptr", 0, "uint")
@@ -4081,7 +3984,7 @@ class ImagePut {
       return "wallpaper"
    }
 
-   static to_cursor(pBitmap, xHotspot := "", yHotspot := "") {
+   static BitmapToCursor(pBitmap, xHotspot := "", yHotspot := "") {
       ; Thanks Nick - https://stackoverflow.com/a/550965
 
       ; Creates an icon that can be used as a cursor.
@@ -4116,7 +4019,7 @@ class ImagePut {
       return "A_Cursor"
    }
 
-   static to_explorer(pBitmap, default := "") {
+   static BitmapToExplorer(pBitmap, default := "") {
 
       ; Default directory to desktop.
       (default == "") && default := A_Desktop
@@ -4138,10 +4041,10 @@ class ImagePut {
       else
          directory := default
 
-      return this.to_file(pBitmap, directory)
+      return this.BitmapToFile(pBitmap, directory)
    }
 
-   static set_explorer(pStream, default := "") {
+   static StreamToExplorer(pStream, default := "") {
 
       ; Default directory to desktop.
       (default == "") && default := A_Desktop
@@ -4163,10 +4066,10 @@ class ImagePut {
       else
          directory := default
 
-      return this.set_file(pStream, directory)
+      return this.StreamToFile(pStream, directory)
    }
 
-   static to_file(pBitmap, filepath := "", quality := "") {
+   static BitmapToFile(pBitmap, filepath := "", quality := "") {
       ; Thanks tic - https://www.autohotkey.com/boards/viewtopic.php?t=6517
       extension := "png"
       this.select_filepath(&filepath, &extension)
@@ -4184,9 +4087,43 @@ class ImagePut {
       return filepath
    }
 
-   static set_file(pStream, filepath := "") {
-      extension := "png"
-      this.select_extension(pStream, &extension)
+   static StreamToFile(pStream, filepath := "") {
+      DllCall("shlwapi\IStream_Size", "ptr", pStream, "uint64*", &size:=0, "hresult")
+      DllCall("shlwapi\IStream_Reset", "ptr", pStream, "hresult")
+
+      ; 2048 characters should be good enough to identify the file correctly.
+      size := min(size, 2048)
+      bin := Buffer(size)
+
+      ; Get the first few bytes of the image.
+      DllCall("shlwapi\IStream_Read", "ptr", pStream, "ptr", bin, "uint", size, "hresult")
+      DllCall("shlwapi\IStream_Reset", "ptr", pStream, "hresult")
+
+      ; Allocate enough space for a hexadecimal string with spaces interleaved and a null terminator.
+      length := 2*size + (size-1) + 1
+      VarSetStrCapacity(&str, length)
+
+      ; Lift the binary representation to hex.
+      flags := 0x40000004 ; CRYPT_STRING_NOCRLF | CRYPT_STRING_HEX
+      DllCall("crypt32\CryptBinaryToString", "ptr", bin, "uint", size, "uint", flags, "str", str, "uint*", &length)
+
+      ; Determine the extension using herustics. See: http://fileformats.archiveteam.org
+      extension := 0                                                              ? ""
+      : str ~= "(?i)66 74 79 70 61 76 69 66"                                      ? "avif" ; ftypavif
+      : str ~= "(?i)^42 4d (.. ){36}00 00 .. 00 00 00"                            ? "bmp"  ; BM
+      : str ~= "(?i)^01 00 00 00 (.. ){36}20 45 4D 46"                            ? "emf"  ; emf
+      : str ~= "(?i)^47 49 46 38 (37|39) 61"                                      ? "gif"  ; GIF87a or GIF89a
+      : str ~= "(?i)66 74 79 70 68 65 69 63"                                      ? "heic" ; ftypheic
+      : str ~= "(?i)^00 00 01 00"                                                 ? "ico"
+      : str ~= "(?i)^ff d8 ff"                                                    ? "jpg"
+      : str ~= "(?i)^25 50 44 46 2d"                                              ? "pdf"  ; %PDF-
+      : str ~= "(?i)^89 50 4e 47 0d 0a 1a 0a"                                     ? "png"  ; PNG
+      : str ~= "(?i)^(((?!3c|3e).. )|3c (3f|21) ((?!3c|3e).. )*3e )*+3c 73 76 67" ? "svg"  ; <svg
+      : str ~= "(?i)^(49 49 2a 00|4d 4d 00 2a)"                                   ? "tif"  ; II* or MM*
+      : str ~= "(?i)^52 49 46 46 .. .. .. .. 57 45 42 50"                         ? "webp" ; RIFF....WEBP
+      : str ~= "(?i)^d7 cd c6 9a"                                                 ? "wmf"
+      : "" ; Extension must be blank for file pass-through as-is.
+
       this.select_filepath(&filepath, &extension)
 
       ; For compatibility with SHCreateMemStream do not use GetHGlobalFromStream.
@@ -4199,7 +4136,6 @@ class ImagePut {
                ,   "ptr*", &pFileStream:=0
                ,"hresult")
       DllCall("shlwapi\IStream_Size", "ptr", pStream, "uint64*", &size:=0, "hresult")
-      DllCall("shlwapi\IStream_Reset", "ptr", pStream, "hresult")
       DllCall("shlwapi\IStream_Copy", "ptr", pStream, "ptr", pFileStream, "uint", size, "hresult")
       DllCall("shlwapi\IStream_Reset", "ptr", pStream, "hresult")
       ObjRelease(pFileStream)
@@ -4207,14 +4143,14 @@ class ImagePut {
       return filepath
    }
 
-   static to_hex(pBitmap, extension := "", quality := "") {
+   static BitmapToHex(pBitmap, extension := "", quality := "") {
       ; Thanks noname - https://www.autohotkey.com/boards/viewtopic.php?style=7&p=144247#p144247
 
       ; Default extension is PNG for small sizes!
       if (extension == "")
          extension := "png"
 
-      pStream := this.to_stream(pBitmap, extension, quality)
+      pStream := this.BitmapToStream(pBitmap, extension, quality)
 
       ; Get a pointer to binary data.
       DllCall("ole32\GetHGlobalFromStream", "ptr", pStream, "ptr*", &hbin:=0, "hresult")
@@ -4250,7 +4186,7 @@ class ImagePut {
       return StrGet(str, length, "CP0")
    }
 
-   static set_hex(pStream) {
+   static StreamToHex(pStream) {
       ; For compatibility with SHCreateMemStream do not use GetHGlobalFromStream.
       DllCall("shlwapi\IStream_Size", "ptr", pStream, "uint64*", &size:=0, "hresult")
       DllCall("shlwapi\IStream_Reset", "ptr", pStream, "hresult")
@@ -4282,37 +4218,38 @@ class ImagePut {
       return StrGet(str, length, "CP0")
    }
 
-   static to_base64(pBitmap, extension := "", quality := "") {
+   static BitmapToBase64(pBitmap, extension := "", quality := "") {
       ; Thanks noname - https://www.autohotkey.com/boards/viewtopic.php?style=7&p=144247#p144247
 
       ; Default extension is PNG for small sizes!
       if (extension == "")
          extension := "png"
 
-      pStream := this.to_stream(pBitmap, extension, quality)
+      pStream := this.BitmapToStream(pBitmap, extension, quality)
 
       ; Get a pointer to binary data.
-      DllCall("ole32\GetHGlobalFromStream", "ptr", pStream, "ptr*", &hbin:=0, "hresult")
-      bin := DllCall("GlobalLock", "ptr", hbin, "ptr")
-      size := DllCall("GlobalSize", "ptr", hbin, "uptr")
+      DllCall("ole32\GetHGlobalFromStream", "ptr", pStream, "ptr*", &handle:=0, "hresult")
+      bin := DllCall("GlobalLock", "ptr", handle, "ptr")
+      size := DllCall("GlobalSize", "ptr", handle, "uptr")
 
       ; Calculate the length of the base64 string.
-      flags := 0x40000001 ; CRYPT_STRING_NOCRLF | CRYPT_STRING_BASE64
-      length := 4 * Ceil(size/3) + 1 ; An extra byte of padding is required.
-      str := Buffer(length)
+      length := 4 * Ceil(size / 3) + 1   ; A string has a null terminator
+      VarSetStrCapacity(&str, length)    ; Allocates a ANSI or Unicode string
+      ; This appends 1 or 2 zero byte null terminators respectively.
 
-      ; Using CryptBinaryToStringA is faster and saves about 2MB in memory.
-      DllCall("crypt32\CryptBinaryToStringA", "ptr", bin, "uint", size, "uint", flags, "ptr", str, "uint*", &length)
+      ; Passing a pre-allocated string buffer prevents an additional memory copy via StrGet.
+      flags := 0x40000001 ; CRYPT_STRING_NOCRLF | CRYPT_STRING_BASE64
+      DllCall("crypt32\CryptBinaryToString", "ptr", bin, "uint", size, "uint", flags, "str", str, "uint*", &length)
 
       ; Release binary data and stream.
-      DllCall("GlobalUnlock", "ptr", hbin)
+      DllCall("GlobalUnlock", "ptr", handle)
       ObjRelease(pStream)
 
-      ; Return encoded string length minus 1.
-      return StrGet(str, length, "CP0")
+      ; Returns an AutoHotkey native string.
+      return str
    }
 
-   static set_base64(pStream) {
+   static StreamToBase64(pStream) {
       ; For compatibility with SHCreateMemStream do not use GetHGlobalFromStream.
       DllCall("shlwapi\IStream_Size", "ptr", pStream, "uint64*", &size:=0, "hresult")
       DllCall("shlwapi\IStream_Reset", "ptr", pStream, "hresult")
@@ -4320,50 +4257,87 @@ class ImagePut {
       DllCall("shlwapi\IStream_Reset", "ptr", pStream, "hresult")
 
       ; Calculate the length of the base64 string.
+      length := 4 * Ceil(size / 3) + 1   ; A string has a null terminator
+      VarSetStrCapacity(&str, length)    ; Allocates a ANSI or Unicode string
+      ; This appends 1 or 2 zero byte null terminators respectively.
+
+      ; Passing a pre-allocated string buffer prevents an additional memory copy via StrGet.
       flags := 0x40000001 ; CRYPT_STRING_NOCRLF | CRYPT_STRING_BASE64
-      length := 4 * Ceil(size/3) + 1 ; An extra byte of padding is required.
-      str := Buffer(length)
+      DllCall("crypt32\CryptBinaryToString", "ptr", bin, "uint", size, "uint", flags, "str", str, "uint*", &length)
 
-      ; Using CryptBinaryToStringA is faster and saves about 2MB in memory.
-      DllCall("crypt32\CryptBinaryToStringA", "ptr", bin, "uint", size, "uint", flags, "ptr", str, "uint*", &length)
-
-      ; Return encoded string length minus 1.
-      return StrGet(str, length, "CP0")
+      ; Returns an AutoHotkey native string.
+      return str
    }
 
-   static to_uri(pBitmap, extension := "", quality := "") {
-      static dict := Map("bmp", "bmp", "dib", "bmp", "rle", "bmp", "jpg", "jpeg", "jpeg", "jpeg", "jpe", "jpeg"
-                     , "jfif", "jpeg", "gif", "gif", "tif", "tiff", "tiff", "tiff", "png", "png")
-
-      extension := RegExReplace(extension, "^\*?\.?")
-      return "data:image/" dict[StrLower(extension)] ";base64," this.to_base64(pBitmap, extension, quality)
+   static BitmapToUri(pBitmap, extension := "", quality := "") {
+      extension := RegExReplace(extension, "^(\*?\.)?") ; Trim leading "*." or "." from the extension
+      extension :=  extension ~= "^(avif|avifs)$"           ? "avif"
+                  : extension ~= "^(bmp|dib|rle)$"          ? "bmp"
+                  : extension ~= "^(gif)$"                  ? "gif"
+                  : extension ~= "^(heic|heif|hif)$"        ? "heic"
+                  : extension ~= "^(jpg|jpeg|jpe|jfif)$"    ? "jpeg"
+                  : extension ~= "^(png)$"                  ? "png"
+                  : extension ~= "^(tif|tiff)$"             ? "tiff"
+                  : "png" ; Defaults to PNG
+      return "data:image/" extension ";base64," this.BitmapToBase64(pBitmap, extension, quality)
    }
 
-   static set_uri(pStream) {
+   static StreamToUri(pStream) {
+      DllCall("shlwapi\IStream_Size", "ptr", pStream, "uint64*", &size:=0, "hresult")
       DllCall("shlwapi\IStream_Reset", "ptr", pStream, "hresult")
-      DllCall("shlwapi\IStream_Read", "ptr", pStream, "ptr", signature := Buffer(256), "uint", 256, "hresult")
+
+      ; 2048 characters should be good enough to identify the file correctly.
+      size := min(size, 2048)
+      bin := Buffer(size)
+
+      ; Get the first few bytes of the image.
+      DllCall("shlwapi\IStream_Read", "ptr", pStream, "ptr", bin, "uint", size, "hresult")
       DllCall("shlwapi\IStream_Reset", "ptr", pStream, "hresult")
 
-      ; This function sniffs the first 256 bytes and matches a known file signature.
-      ; 256 bytes is recommended, but images only need 12 bytes.
-      ; See: https://en.wikipedia.org/wiki/List_of_file_signatures
-      DllCall("urlmon\FindMimeFromData"
-               ,    "ptr", 0             ; pBC
-               ,    "ptr", 0             ; pwzUrl
-               ,    "ptr", signature     ; pBuffer
-               ,   "uint", 256           ; cbSize
-               ,    "ptr", 0             ; pwzMimeProposed
-               ,   "uint", 0x20          ; dwMimeFlags
-               ,   "ptr*", &MimeOut:=0   ; ppwzMimeOut
-               ,   "uint", 0             ; dwReserved
-               ,"hresult")
-      MimeType := StrGet(MimeOut, "UTF-16")
-      DllCall("ole32\CoTaskMemFree", "ptr", MimeOut)
+      ; Allocate enough space for a hexadecimal string with spaces interleaved and a null terminator.
+      length := 2*size + (size-1) + 1
+      VarSetStrCapacity(&str, length)
 
-      return "data:" MimeType ";base64," this.set_base64(pStream)
+      ; Lift the binary representation to hex.
+      flags := 0x40000004 ; CRYPT_STRING_NOCRLF | CRYPT_STRING_HEX
+      DllCall("crypt32\CryptBinaryToString", "ptr", bin, "uint", size, "uint", flags, "str", str, "uint*", &length)
+
+      ; Determine the mime type using herustics. See: http://fileformats.archiveteam.org
+      mime := 0                                                                   ? ""
+      : str ~= "(?i)66 74 79 70 61 76 69 66"                                      ? "image/avif"
+      : str ~= "(?i)^42 4d (.. ){36}00 00 .. 00 00 00"                            ? "image/bmp"
+      : str ~= "(?i)^01 00 00 00 (.. ){36}20 45 4D 46"                            ? "image/emf"
+      : str ~= "(?i)^47 49 46 38 (37|39) 61"                                      ? "image/gif"
+      : str ~= "(?i)66 74 79 70 68 65 69 63"                                      ? "image/heic"
+      : str ~= "(?i)^00 00 01 00"                                                 ? "image/x-icon"
+      : str ~= "(?i)^ff d8 ff"                                                    ? "image/jpeg"
+      : str ~= "(?i)^25 50 44 46 2d"                                              ? "application/pdf"
+      : str ~= "(?i)^89 50 4e 47 0d 0a 1a 0a"                                     ? "image/png"
+      : str ~= "(?i)^(((?!3c|3e).. )|3c (3f|21) ((?!3c|3e).. )*3e )*+3c 73 76 67" ? "image/svg+xml"
+      : str ~= "(?i)^(49 49 2a 00|4d 4d 00 2a)"                                   ? "image/tiff"
+      : str ~= "(?i)^52 49 46 46 .. .. .. .. 57 45 42 50"                         ? "image/webp"
+      : str ~= "(?i)^d7 cd c6 9a"                                                 ? "image/wmf"
+      : ""
+
+      if (mime == "") {
+         DllCall("urlmon\FindMimeFromData"
+                  ,    "ptr", 0             ; pBC
+                  ,    "ptr", 0             ; pwzUrl
+                  ,    "ptr", bin           ; pBuffer
+                  ,   "uint", size          ; cbSize
+                  ,    "ptr", 0             ; pwzMimeProposed
+                  ,   "uint", 0x20          ; dwMimeFlags
+                  ,   "ptr*", &MimeOut:=0   ; ppwzMimeOut
+                  ,   "uint", 0             ; dwReserved
+                  ,"hresult")
+         mime := StrGet(MimeOut, "UTF-16")
+         DllCall("ole32\CoTaskMemFree", "ptr", MimeOut)
+      }
+
+      return "data:" mime ";base64," this.StreamToBase64(pStream)
    }
 
-   static to_dc(pBitmap, alpha := "") {
+   static BitmapToDc(pBitmap, alpha := "") {
       ; Revert to built in functionality if a replacement color is declared.
       if (alpha != "") { ; This built-in version is about 25% slower and also preserves transparency.
          DllCall("gdiplus\GdipCreateHBITMAPFromBitmap", "ptr", pBitmap, "ptr*", &hbm:=0, "uint", alpha)
@@ -4406,7 +4380,7 @@ class ImagePut {
       return hdc
    }
 
-   static to_hBitmap(pBitmap, alpha := "") {
+   static BitmapToHBitmap(pBitmap, alpha := "") {
       ; Revert to built in functionality if a replacement color is declared.
       if (alpha != "") { ; This built-in version is about 25% slower and also preserves transparency.
          DllCall("gdiplus\GdipCreateHBITMAPFromBitmap", "ptr", pBitmap, "ptr*", &hbm:=0, "uint", alpha)
@@ -4451,12 +4425,12 @@ class ImagePut {
       return hbm
    }
 
-   static to_hIcon(pBitmap) {
+   static BitmapToHIcon(pBitmap) {
       DllCall("gdiplus\GdipCreateHICONFromBitmap", "ptr", pBitmap, "ptr*", &hIcon:=0)
       return hIcon
    }
 
-   static to_stream(pBitmap, extension := "", quality := "") {
+   static BitmapToStream(pBitmap, extension := "", quality := "") {
       ; Default extension is TIF for fast speeds!
       if (extension == "")
          extension := "tif"
@@ -4470,14 +4444,14 @@ class ImagePut {
       return pStream
    }
 
-   static to_RandomAccessStream(pBitmap, extension := "", quality := "") {
-      pStream := this.to_stream(pBitmap, extension, quality)
-      pRandomAccessStream := this.set_RandomAccessStream(pStream)
+   static BitmapToRandomAccessStream(pBitmap, extension := "", quality := "") {
+      pStream := this.BitmapToStream(pBitmap, extension, quality)
+      pRandomAccessStream := this.StreamToRandomAccessStream(pStream)
       ObjRelease(pStream) ; Decrement the reference count of the IStream interface.
       return pRandomAccessStream
    }
 
-   static set_RandomAccessStream(pStream) {
+   static StreamToRandomAccessStream(pStream) {
       ; Thanks teadrinker - https://www.autohotkey.com/boards/viewtopic.php?f=6&t=72674
       DllCall("ole32\CLSIDFromString", "wstr", "{905A0FE1-BC53-11DF-8C49-001E4FC686DA}", "ptr", CLSID := Buffer(16), "hresult")
       DllCall("ShCore\CreateRandomAccessStreamOverStream"
@@ -4489,7 +4463,7 @@ class ImagePut {
       return pRandomAccessStream
    }
 
-   static to_wicBitmap(pBitmap) {
+   static BitmapToWicBitmap(pBitmap) {
       ; Get Bitmap width and height.
       DllCall("gdiplus\GdipGetImageWidth", "ptr", pBitmap, "uint*", &width:=0)
       DllCall("gdiplus\GdipGetImageHeight", "ptr", pBitmap, "uint*", &height:=0)
@@ -4529,7 +4503,7 @@ class ImagePut {
       return wicBitmap
    }
 
-   static set_safeArray(pStream) {
+   static StreamToSafeArray(pStream) {
       ; Allocate a one-dimensional SAFEARRAY based on the size of the stream.
       DllCall("shlwapi\IStream_Size", "ptr", pStream, "uint64*", &size:=0, "hresult")
       safeArray := ComObjArray(0x11, size) ; VT_ARRAY | VT_UI1
@@ -4543,7 +4517,7 @@ class ImagePut {
       return safeArray
    }
 
-   static to_safeArray(pBitmap, extension := "", quality := "") {
+   static BitmapToSafeArray(pBitmap, extension := "", quality := "") {
       ; Thanks tmplinshi - https://www.autohotkey.com/boards/viewtopic.php?p=354007#p354007
 
       ; Create an IStream backed with movable memory.
@@ -4573,6 +4547,245 @@ class ImagePut {
       return safeArray
    }
 
+   static ParseWebp(pStream, &pDelays, &pCount) {
+      ; Gets the size of the stream.
+      DllCall("shlwapi\IStream_Size", "ptr", pStream, "uint64*", &end:=0, "hresult")
+
+      ; Create FourCC binary buffer and a general purpose uint32 buffer.
+      fourcc := Buffer(4)
+      offset := 0
+      current := 0
+
+      ; Create the VP8X FourCC.
+      StrPut("VP8X", VP8X := Buffer(4), "cp1252")
+      ComCall(Seek := 5, pStream, "uint64", 12, "uint", 0, "uint64*", &current)
+      DllCall("shlwapi\IStream_Read", "ptr", pStream, "ptr", fourcc, "uint", 4, "hresult")
+      DllCall("shlwapi\IStream_Read", "ptr", pStream, "uint*", &offset, "uint", 4, "hresult")
+      if (4 != DllCall("ntdll\RtlCompareMemory", "ptr", fourcc, "ptr", VP8X, "uptr", 4, "uptr"))
+         return
+
+      ; Check the animation bit.
+      DllCall("shlwapi\IStream_Read", "ptr", pStream, "uchar*", &flags:=0, "uint", 1, "hresult")
+      if not flags & 0x2
+         return
+
+      ; Goto the ANIM FourCC.
+      StrPut("ANIM", ANIM := Buffer(4), "cp1252")
+      ComCall(Seek := 5, pStream, "uint64", offset - 1, "uint", 1, "uint64*", &current)
+      DllCall("shlwapi\IStream_Read", "ptr", pStream, "ptr", fourcc, "uint", 4, "hresult")
+      DllCall("shlwapi\IStream_Read", "ptr", pStream, "uint*", &offset, "uint", 4, "hresult")
+      if (4 != DllCall("ntdll\RtlCompareMemory", "ptr", fourcc, "ptr", ANIM, "uptr", 4, "uptr"))
+         return
+
+      ; Create the custom loop count struct.
+      pCount := DllCall("GlobalAlloc", "uint", 0, "uptr", 8 + 3*A_PtrSize, "ptr")
+      NumPut(   "uint",    0x5101, pCount + 0) ; PropertyTagLoopCount
+      NumPut(   "uint",         1, pCount + 4) ; Size
+      NumPut( "ushort",         3, pCount + 8) ; PropertyTagTypeShort
+      NumPut(    "ptr", pCount + 8 + 2*A_PtrSize, pCount + 8 + A_PtrSize)
+
+      ; Save the loop count into the struct.
+      ComCall(Seek := 5, pStream, "uint64", 4, "uint", 1, "uint64*", &current)
+      DllCall("shlwapi\IStream_Read", "ptr", pStream, "ushort*", pCount + 8 + 2*A_PtrSize, "uint", 2, "hresult")
+      ComCall(Seek := 5, pStream, "uint64", offset - 6, "uint", 1, "uint64*", &current)
+
+      ; ANMF fourcc.
+      StrPut("ANMF", ANMF := Buffer(4), "cp1252")
+
+      ; Create the custom frame delays struct.
+      hDelays := DllCall("GlobalAlloc", "uint", 0x42, "uptr", 8 + 2*A_PtrSize, "ptr")
+      pDelays := DllCall("GlobalLock", "ptr", hDelays, "ptr")
+      NumPut(   "uint",    0x5100, pDelays + 0) ; PropertyTagFrameDelay
+      NumPut( "ushort",    0xCAFE, pDelays + 8) ; My custom tag for milliseconds.
+      ; The size and the pointer will be filled in after all ANMF chunks are found.
+
+      ; Create the delays stream.
+      DllCall("GlobalUnlock", "ptr", hDelays)
+      DllCall("ole32\CreateStreamOnHGlobal", "ptr", hDelays, "int", False, "ptr*", &sDelays:=0, "hresult")
+      ComCall(Seek := 5, sDelays, "uint64", 0, "uint", 2, "ptr", 0) ; Advance to end.
+
+      ; Search for each RIFF-type ANMF chunk header (fourcc followed by its chunk size).
+      while current < end {
+
+         ; Get fourcc and chunk size.
+         DllCall("shlwapi\IStream_Read", "ptr", pStream, "ptr", fourcc, "uint", 4, "hresult")
+         DllCall("shlwapi\IStream_Read", "ptr", pStream, "uint*", &offset, "uint", 4, "hresult")
+
+         ; Rounds up to a even number. Odd numbers are +1, and even numbers are +0.
+         alignment := offset&1 ; Use this as offset + alignment.
+
+         if (4 == DllCall("ntdll\RtlCompareMemory", "ptr", fourcc, "ptr", ANMF, "uptr", 4, "uptr")) {
+
+            ; Seek to the Frame Duration.
+            ComCall(Seek := 5, pStream, "uint64", 12, "uint", 1, "uint64*", &current)
+
+            ; Cast the Frame Delay from uint24 to uint32 and write it to the delays stream.
+            DllCall("shlwapi\IStream_Copy", "ptr", pStream, "ptr", sDelays, "uint", 3, "hresult")
+            DllCall("shlwapi\IStream_Write", "ptr", sDelays, "uchar*", 0, "uint", 1, "hresult")
+
+            ; Subtract the 15 bytes that have already been read.
+            offset -= 15
+         }
+
+         ; Seek to the next fourcc which must be aligned to 2 bytes.
+         ComCall(Seek := 5, pStream, "uint64", offset + alignment, "uint", 1, "uint64*", &current)
+      }
+
+      ; Fill in the size of the delays array and pointer position.
+      ObjRelease(sDelays)
+      DelaySize := DllCall("GlobalSize", "ptr", hDelays, "uptr") - 8 - 2*A_PtrSize
+      pDelays := DllCall("GlobalLock", "ptr", hDelays, "ptr")
+      NumPut(   "uint", DelaySize, pDelays + 4) ; Size
+      NumPut(    "ptr", pDelays + 8 + 2*A_PtrSize, pDelays + 8 + A_PtrSize)
+   }
+
+   static RenderPdf(&image, index := "") {
+      ; Thanks malcev - https://www.autohotkey.com/boards/viewtopic.php?t=80735
+      (index == "") && index := 1
+
+      ; Create a stream from either a url or a file.
+      pStream := image
+
+      ; Create a RandomAccessStream with BSOS_PREFERDESTINATIONSTREAM.
+      DllCall("ole32\CLSIDFromString", "wstr", "{905A0FE1-BC53-11DF-8C49-001E4FC686DA}", "ptr", CLSID := Buffer(16), "hresult")
+      DllCall("ShCore\CreateRandomAccessStreamOverStream", "ptr", pStream, "uint", 1, "ptr", CLSID, "ptr*", &pRandomAccessStream:=0, "hresult")
+
+      ; Create the "Windows.Data.Pdf.PdfDocument" class using IPdfDocumentStatics.
+      DllCall("combase\WindowsCreateString", "wstr", "Windows.Data.Pdf.PdfDocument", "uint", 28, "ptr*", &hString:=0, "hresult")
+      DllCall("ole32\CLSIDFromString", "wstr", "{433A0B5F-C007-4788-90F2-08143D922599}", "ptr", CLSID := Buffer(16), "hresult")
+      DllCall("combase\RoGetActivationFactory", "ptr", hString, "ptr", CLSID, "ptr*", &PdfDocumentStatics:=0, "hresult")
+      DllCall("combase\WindowsDeleteString", "ptr", hString, "hresult")
+
+      ; Create the PDF document.
+      ComCall(LoadFromStreamAsync := 8, PdfDocumentStatics, "ptr", pRandomAccessStream, "ptr*", &PdfDocument:=0)
+      this.WaitForAsync(&PdfDocument)
+
+      ; Get Page
+      ComCall(get_PageCount := 7, PdfDocument, "uint*", &count:=0)
+      index := (index > 0) ? index - 1 : (index < 0) ? count + index : 0 ; Zero indexed.
+      if (index > count || index < 0) {
+         ObjRelease(PdfDocument)
+         ObjRelease(PdfDocumentStatics)
+         this.ObjReleaseClose(&pRandomAccessStream)
+         ObjRelease(pStream)
+         throw Error("The maximum number of pages in this pdf is " count ".")
+      }
+      ComCall(GetPage := 6, PdfDocument, "uint", index, "ptr*", &PdfPage:=0)
+
+      ; Render the page to an output stream.
+      DllCall("ole32\CreateStreamOnHGlobal", "ptr", 0, "uint", True, "ptr*", &pStreamOut:=0)
+      DllCall("ole32\CLSIDFromString", "wstr", "{905A0FE1-BC53-11DF-8C49-001E4FC686DA}", "ptr", CLSID := Buffer(16), "hresult")
+      DllCall("ShCore\CreateRandomAccessStreamOverStream", "ptr", pStreamOut, "uint", BSOS_DEFAULT := 0, "ptr", CLSID, "ptr*", &pRandomAccessStreamOut:=0)
+      ComCall(RenderToStreamAsync := 6, PdfPage, "ptr", pRandomAccessStreamOut, "ptr*", &AsyncInfo:=0)
+      this.WaitForAsync(&AsyncInfo)
+
+      ; Cleanup
+      this.ObjReleaseClose(&pRandomAccessStreamOut)
+      this.ObjReleaseClose(&PdfPage)
+
+      ObjRelease(PdfDocument)
+      ObjRelease(PdfDocumentStatics)
+
+      this.ObjReleaseClose(&pRandomAccessStream)
+      ObjRelease(pStream)
+
+      DllCall("shlwapi\IStream_Reset", "ptr", pStreamOut, "hresult")
+      return image := pStreamOut
+   }
+
+   static WaitForAsync(&Object) {
+      AsyncInfo := ComObjQuery(Object, IAsyncInfo := "{00000036-0000-0000-C000-000000000046}")
+      while !ComCall(_Status := 7, AsyncInfo, "uint*", &status:=0)
+         and (status = 0)
+            Sleep 10
+
+      if (status != 1) {
+         ComCall(_ErrorCode := 8, AsyncInfo, "uint*", &ErrorCode:=0)
+         throw Error("AsyncInfo status error: " ErrorCode)
+      }
+
+      ComCall(GetResults := 8, Object, "ptr*", &ObjectResult:=0, "cdecl")
+      ObjRelease(Object)
+      Object := ObjectResult
+
+      ComCall(Close := 10, AsyncInfo)
+      AsyncInfo := ""
+   }
+
+   static ObjReleaseClose(&Object) {
+      if Object {
+         if (Close := ComObjQuery(Object, IClosable := "{30D5A829-7FA4-4026-83BB-D75BAE4EA99E}")) {
+            ComCall(_Close := 6, Close)
+            Close := ""
+         }
+         try return ObjRelease(Object)
+         finally Object := ""
+      }
+   }
+
+   static RenderSvg(&IStream, width, height) {
+      ; Thanks MrDoge - https://www.autohotkey.com/boards/viewtopic.php?f=83&t=121834
+      ;https://gist.github.com/smourier/5b770d32043121d477a8079ef6be0995
+      ;https://stackoverflow.com/questions/75917247/convert-svg-files-to-bitmap-using-direct2d-in-mfc#75935717
+      ; ID2D1DeviceContext5::CreateSvgDocument is the carrying api
+      hModule:=DllCall("GetModuleHandleA", "AStr", "WindowsCodecs.dll", "ptr")||DllCall("LoadLibraryA", "AStr", "WindowsCodecs.dll", "ptr")
+      CLSID_WICImagingFactory:=Buffer(0x10)
+      NumPut("uint64", 0x433D5F24317D06E8, CLSID_WICImagingFactory, 0x0)
+      NumPut("uint64", 0xC2ABD868CE79F7BD, CLSID_WICImagingFactory, 0x8)
+      IID_IClassFactory:=Buffer(0x10)
+      NumPut("uint64", 0x0000000000000001, IID_IClassFactory, 0x0)
+      NumPut("uint64", 0x46000000000000C0, IID_IClassFactory, 0x8)
+      DllGetClassObject:=DllCall("GetProcAddress", "ptr", hModule, "AStr", "DllGetClassObject", "ptr")
+      DllCall(DllGetClassObject, "ptr", CLSID_WICImagingFactory, "ptr", IID_IClassFactory, "ptr*", &IClassFactory:=0)
+
+      IID_IWICImagingFactory := Buffer(0x10)
+      NumPut("uint64", 0x4314C395EC5EC8A9, IID_IWICImagingFactory, 0x0)
+      NumPut("uint64", 0x70FF35A9D754779C, IID_IWICImagingFactory, 0x8)
+      ComCall(CreateInstance := 3, IClassFactory, "ptr", 0, "ptr", IID_IWICImagingFactory, "ptr*", &IWICImagingFactory:=0) ;IClassFactory::
+
+      GUID_WICPixelFormat32bppPBGRA := Buffer(0x10)
+      NumPut("uint64", 0x4BFE4E036FDDC324, GUID_WICPixelFormat32bppPBGRA, 0x0)
+      NumPut("uint64", 0x10C98D76773D85B1, GUID_WICPixelFormat32bppPBGRA, 0x8)
+      ComCall(CreateBitmap := 17, IWICImagingFactory, "uint", width, "uint", height, "ptr", GUID_WICPixelFormat32bppPBGRA, "Int", 0x2, "ptr*", &IWICBitmap:=0) ;IWICImagingFactory::,  0x2=WICBitmapCacheOnLoad
+
+
+      IID_ID2D1Factory:=Buffer(0x10)
+      NumPut("uint64", 0x465A6F5006152247, IID_ID2D1Factory, 0x0)
+      NumPut("uint64", 0x07603BFD8B114592, IID_ID2D1Factory, 0x8)
+
+      DllCall("GetModuleHandleA",  "AStr",  "d2d1") || DllCall("LoadLibraryA",  "AStr",  "d2d1") ;this is needed to avoid "Critical Error: Invalid memory read/write"
+      DllCall("d2d1\D2D1CreateFactory", "Int", 0, "ptr", IID_ID2D1Factory, "Int*", 3, "ptr*", &ID2D1Factory:=0) ;0=D2D1_FACTORY_TYPE_SINGLE_THREADED,  3=D2D1_DEBUG_LEVEL_INFORMATION
+
+      D2D1_RENDER_TARGET_PROPERTIES:=Buffer(0x1c, 0)
+      ComCall(13, ID2D1Factory, "ptr", IWICBitmap, "ptr", D2D1_RENDER_TARGET_PROPERTIES, "ptr*", &ID2D1RenderTarget:=0) ;ID2D1Factory::CreateWicBitmapRenderTarget
+
+      ; IID_ID2D1DeviceContext5:=Buffer(0x10)
+      ; NumPut("uint64", 0x4DF668CC7836D248, IID_ID2D1DeviceContext5, 0x0)
+      ; NumPut("uint64", 0xB72EF61B99DEE8B9, IID_ID2D1DeviceContext5, 0x8)
+      ; ComCall(0, ID2D1RenderTarget, "ptr", IID_ID2D1DeviceContext5, "ptr*", &ID2D1DeviceContext5:=0) ;ID2D1RenderTarget::QueryInterface
+
+      ; DllCall("shlwapi\SHCreateStreamOnFileW", "WStr", svgPath, "uint", 0, "ptr*", &IStream:=0)
+
+      D2D1_SIZE_F:=Buffer(8)
+      NumPut("float", width, D2D1_SIZE_F, 0x0)
+      NumPut("float", height, D2D1_SIZE_F, 0x4)
+      ComCall(115, ID2D1RenderTarget, "ptr", IStream, "uint64", NumGet(D2D1_SIZE_F, "uint64"), "ptr*", &ID2D1SvgDocument:=0) ;ID2D1DeviceContext5::CreateSvgDocument
+
+      ComCall(BeginDraw := 48, ID2D1RenderTarget) ;ID2D1RenderTarget::
+      ComCall(DrawSvgDocument := 116, ID2D1RenderTarget, "ptr", ID2D1SvgDocument) ;ID2D1DeviceContext5::
+      ComCall(EndDraw := 49, ID2D1RenderTarget, "ptr", 0, "ptr", 0) ;ID2D1RenderTarget::
+      static pData
+      cbStride:=4*width ;stride=bpp*width
+      pData:=Buffer(cbStride * height) ;bpp*width*height
+      ComCall(7, IWICBitmap, "ptr", 0, "uint", cbStride, "uint", pData.Size, "ptr", pData) ;IWICBitmapSource::CopyPixels
+
+      ObjRelease(IStream)
+      DllCall("gdiplus\GdipCreateBitmapFromScan0", "uint", width, "uint", height, "Int", cbStride, "uint", 0xE200B, "ptr", pData, "ptr*", &pBitmap:=0) ;PixelFormat32bppPBGRA
+      return pBitmap
+      ;HBITMAP := DllCall("gdi32\CreateBitmap","Int",width,"Int",height,"Uint",1,"Uint",32,"Ptr",pData,"Ptr")
+      ;return HBITMAP
+   }
+
    static select_codec(pBitmap, extension, quality, &pCodec, &ep, &ci, &v) {
       ; Fill a buffer with the available image codec info.
       DllCall("gdiplus\GdipGetImageEncodersSize", "uint*", &count:=0, "uint*", &size:=0)
@@ -4589,6 +4802,9 @@ class ImagePut {
       ; Get the pointer to the clsid of the matching encoder.
       pCodec := ci.ptr + idx ; ClassID
 
+      ; Default encoding parameter.
+      ep := 0
+
       ; JPEG default quality is 75. Otherwise set a quality value from [0-100].
       if (quality ~= "^-?\d+$") and ("image/jpeg" = StrGet(NumGet(ci, idx+32+4*A_PtrSize, "ptr"), "UTF-16")) { ; MimeType
          ; Use a separate buffer to store the quality as ValueTypeLong (4).
@@ -4604,39 +4820,6 @@ class ImagePut {
             NumPut(  "uint",     4, ep, 20+A_PtrSize)  ; Type
             NumPut(   "ptr", v.ptr, ep, 24+A_PtrSize)  ; Value
       }
-   }
-
-   static select_extension(pStream, &extension) {
-      DllCall("shlwapi\IStream_Reset", "ptr", pStream, "hresult")
-      DllCall("shlwapi\IStream_Read", "ptr", pStream, "ptr", signature := Buffer(256), "uint", 256, "hresult")
-      DllCall("shlwapi\IStream_Reset", "ptr", pStream, "hresult")
-
-      ; This function sniffs the first 256 bytes and matches a known file signature.
-      ; 256 bytes is recommended, but images only need 12 bytes.
-      ; See: https://en.wikipedia.org/wiki/List_of_file_signatures
-      DllCall("urlmon\FindMimeFromData"
-               ,    "ptr", 0             ; pBC
-               ,    "ptr", 0             ; pwzUrl
-               ,    "ptr", signature     ; pBuffer
-               ,   "uint", 256           ; cbSize
-               ,    "ptr", 0             ; pwzMimeProposed
-               ,   "uint", 0x20          ; dwMimeFlags
-               ,   "ptr*", &MimeOut:=0   ; ppwzMimeOut
-               ,   "uint", 0             ; dwReserved
-               ,"hresult")
-      MimeType := StrGet(MimeOut, "UTF-16")
-      DllCall("ole32\CoTaskMemFree", "ptr", MimeOut)
-
-      if (MimeType ~= "gif")
-         extension := "gif"
-      if (MimeType ~= "jpeg")
-         extension := "jpg"
-      if (MimeType ~= "png")
-         extension := "png"
-      if (MimeType ~= "tiff")
-         extension := "tif"
-      if (MimeType ~= "bmp")
-         extension := "bmp"
    }
 
    static select_filepath(&filepath, &extension) {
@@ -4666,12 +4849,15 @@ class ImagePut {
       ; Default directory is a dot.
       (directory == "") && directory := "."
 
+      ; Declare allowed extension outputs.
+      static outputs := "^(?i:avif|avifs|bmp|dib|rle|gif|heic|heif|hif|jpg|jpeg|jpe|jfif|png|tif|tiff)$"
+
       ; Check if the filename is actually the extension.
-      if (extension == "" && filename ~= "^(?i:bmp|dib|rle|jpg|jpeg|jpe|jfif|gif|tif|tiff|png)$")
+      if (extension == "" && filename ~= outputs)
          extension := filename, filename := ""
 
       ; An invalid extension is actually part of the filename.
-      if !(extension ~= "^(?i:bmp|dib|rle|jpg|jpeg|jpe|jfif|gif|tif|tiff|png)$") {
+      if !(extension ~= outputs) {
          ; Avoid appending an extra period without an extension.
          if (extension != "")
             filename .= "." extension
@@ -4766,7 +4952,7 @@ class ImagePut {
       try type := this.DontVerifyImageType(&image)
       catch
          type := this.ImageType(image)
-      pBitmap := this.ToBitmap(type, image)
+      pBitmap := this.ImageToBitmap(type, image)
       DllCall("gdiplus\GdipGetImageWidth", "ptr", pBitmap, "uint*", &width:=0)
       DllCall("gdiplus\GdipGetImageHeight", "ptr", pBitmap, "uint*", &height:=0)
       DllCall("gdiplus\GdipDisposeImage", "ptr", pBitmap)
@@ -4858,7 +5044,7 @@ class ImageEqual extends ImagePut {
          type := this.ImageType(image)
 
       ; Convert only the first image to a bitmap.
-      if !(pBitmap1 := this.ToBitmap(type, image))
+      if !(pBitmap1 := this.ImageToBitmap(type, image))
          throw Error("Conversion to bitmap failed. The pointer value is zero.")
 
       ; If there is only one image, verify that image and return.
@@ -4880,7 +5066,7 @@ class ImageEqual extends ImagePut {
                type := this.ImageType(image)
 
             ; Convert the other image to a bitmap.
-            pBitmap2 := this.ToBitmap(type, image)
+            pBitmap2 := this.ImageToBitmap(type, image)
 
             ; Compare the two images.
             if !this.BitmapEqual(pBitmap1, pBitmap2)

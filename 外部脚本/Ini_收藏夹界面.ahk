@@ -305,9 +305,9 @@ Loop, Files, %A_Desktop%\*.lnk, F
 	;MsgBox % Btn_IconFile
 	if !Btn_Name
 		break
-	if a_index > 24
+	if (a_index > 24)
 		break
-	if a_index = 1
+	if (a_index = 1)
 	{
 		Gui Add, Button, x116 y50 w70 h70 BackgroundWhite hwndhBtn v桌面_%a_index%_btn grunbtn, % Btn_Name
 		ILButton(hBtn, Btn_IconFile, 32, 32, 2, ",5,,,")
@@ -327,7 +327,7 @@ Loop, Files, %A_Desktop%\*.lnk, F
 Gui Tab, 11
 Loop, Files, %A_Desktop%\*.lnk, F
 {
-	if a_index < 25
+	if (a_index < 25)
 		Continue
 	IniMenuobj["桌面"][a_index] := A_LoopFilePath
 	SplitPath, A_LoopFilePath,,,, Name
@@ -338,9 +338,9 @@ Loop, Files, %A_Desktop%\*.lnk, F
 	;MsgBox % Btn_IconFile
 	if !Btn_Name
 		break
-	if a_index > 48
+	if (a_index > 48)
 		break
-	if a_index = 25
+	if (a_index = 25)
 	{
 		Gui Add, Button, x116 y50 w70 h70 BackgroundWhite hwndhBtn v桌面_%a_index%_btn grunbtn, % Btn_Name
 		ILButton(hBtn, Btn_IconFile, 32, 32, 2, ",5,,,")
