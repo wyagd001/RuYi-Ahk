@@ -7,7 +7,7 @@ CandySel := A_Args[1]
 result := WinHttp.URLGet("http://t.weather.sojson.com/api/weather/city/" CandySel, "Charset:utf-8") ; 101270101为天气预报城市id  api接口https://www.sojson.com/api/weather.html
 ;msgbox %result% ;检查是否获取
 city := json(result, "cityInfo.city")
-tmp := json(result, "data.wendu")
+atmp := json(result, "data.wendu")
 quality := json(result, "data.quality")
 htype0 := json(Result, "data.forecast[0].type") ;读取数组中的值
 high0 := strreplace(json(Result, "data.forecast[0].high"), "高温 ")
@@ -20,7 +20,7 @@ if WinExist("AppBarWin ahk_class AutoHotkeyGUI")
 {
 	loop 3
 	{
-		h := ExecSendToRuyi(tmp "`n" htype0 "`n"  strreplace(high0, "℃") "-"  strreplace(low0, "℃") "|red",, 1527)
+		h := ExecSendToRuyi(atmp "`n" htype0 "`n"  strreplace(high0, "℃") "-"  strreplace(low0, "℃") "|red",, 1527)
 		;FileAppend("`n" A_now ": " h)
 		if h
 			break

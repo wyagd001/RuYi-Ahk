@@ -1,4 +1,4 @@
-﻿;|2.4|2023.09.16|1479
+﻿;|2.4|2023.09.16|1481
 #SingleInstance force
 SetBatchLines, -1
 CandySel := A_Args[1]
@@ -20,6 +20,7 @@ if !instr(CandySel, "`n")
 	SplitPath, CandySel,, CandySel_ParentPath, CandySel_Ext, CandySel_FileNameNoExt
 	outputFilePath := CandySel_ParentPath "\" CandySel_FileNamenoExt "_其他颜色替换." CandySel_Ext
 	PicFile_ReplaceOtherColor(CandySel, CandySel2, CandySel3, outputFilePath)
+	msgbox % CandySel "`n" CandySel2  "`n" CandySel3  "`n" outputFilePath
 }
 else
 {
@@ -37,6 +38,7 @@ Return
 PicFile_ReplaceOtherColor(InputFile, whichColor, ReplaceColor, outputFile)
 {
 	pBitmap := Gdip_CreateBitmapFromFile(InputFile)
+msgbox % pBitmap
 	Gdip_ColorFilter(pBitmap, whichColor, ReplaceColor)   ; 指定颜色转透明
 	Gdip_SaveBitmapToFile(pBitmap, outputFile)
 	Gdip_DisposeImage(pBitmap)

@@ -25,8 +25,8 @@ return
 
 iciba(KeyWord)
 {
-	url:="https://dict.iciba.com/dictionary/word/suggestion?word=" SkSub_UrlEncode(KeyWord,"utf-8")
-    Return WinHttp.URLGet(url)
+	url := "https://dict.iciba.com/dictionary/word/suggestion?word=" SkSub_UrlEncode(KeyWord, "utf-8")
+	Return WinHttp.URLGet(url)
 }
 
 SkSub_UrlEncode(str, enc="UTF-8")       ;From Ahk Forum

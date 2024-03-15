@@ -62,7 +62,6 @@ gosub preIME
 return
 */
 
-
 CandySel := A_Args[1]
 Windy_CurWin_id := A_Args[2]
 
@@ -126,7 +125,7 @@ else if (CandySel = "QQ拼音输入法")
 }
 sleep 200
 Gui, Destroy
-return
+exitapp
 
 TSF_ChangeCurrentLanguage(langid)
 {

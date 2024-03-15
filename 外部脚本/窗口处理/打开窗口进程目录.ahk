@@ -4,11 +4,11 @@ WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI
 Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")
 if Windy_CurWin_id
 {
-	WinGet, Windy_CurWin_Fullpath, ProcessPath, ahk_id %Windy_CurWin_id%
+	Windy_CurWin_Fullpath := WinGetProcessPath(Windy_CurWin_id)
 }
 else
 {
-	WinGet, Windy_CurWin_Fullpath, ProcessPath, A
+	Windy_CurWin_Fullpath := WinGetProcessPath(WinExist("A"))
 }
 File_OpenAndSelect(Windy_CurWin_Fullpath)
 sleep 300
@@ -40,6 +40,32 @@ File_OpenAndSelect(sFullPath)
 	CoTaskMemFree(ItemPidl)
 return
 }
+
+WinGetProcessPath(WinId) {
+	WinGet apath, ProcessPath, ahk_id %WinId%
+	SplitPath, apath, Name
+	if (name = "ApplicationFrameHost.exe") {
+;tooltip 1111
+		ControlGet hwnd, Hwnd,, Windows.UI.Core.CoreWindow1, ahk_id %WinId%
+		if hwnd {
+			WinGet apath, ProcessPath, ahk_id %hwnd%
+		}
+	}
+	return apath
+}
+
+WinGetProcessName(WinId) {
+    WinGet name, ProcessName, ahk_id %WinId%
+    if (name = "ApplicationFrameHost.exe") {
+;tooltip 1111
+        ControlGet hwnd, Hwnd,, Windows.UI.Core.CoreWindow1, ahk_id %WinId%
+        if hwnd {
+            WinGet name, ProcessName, ahk_id %hwnd%
+        }
+    }
+    return name
+}
+
 
 QtTabBar()
 {
