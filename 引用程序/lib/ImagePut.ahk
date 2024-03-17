@@ -203,7 +203,11 @@ class ImagePut {
       catch
          type := this.ImageType(image)
 
-      ; Extract parameters for intermediate processing.
+      ; Determine if the intermediate type is supported.
+      isStreamIn := type ~= "^(?i:clipboardpng|safearray|encodedbuffer|url|file|stream|RandomAccessStream|hex|base64)$"
+      isStreamOut := cotype ~= "^(?i:clipboard|encodedbuffer|file|stream|RandomAccessStream|hex|base64|uri|explorer|safeArray|formData)$"
+
+      ; Extract options to be directly applied the intermediate representation here.
       crop      := keywords.HasKey("crop")       ? keywords.crop      : ""
       scale     := keywords.HasKey("scale")      ? keywords.scale     : ""
       upscale   := keywords.HasKey("upscale")    ? keywords.upscale   : ""
@@ -213,13 +217,13 @@ class ImagePut {
       render    := keywords.HasKey("render")     ? keywords.render    : this.render
       validate  := keywords.HasKey("validate")   ? keywords.validate  : this.validate
 
-      ; Keywords are for ImageToBitmap or ImageToStream.
+      ; Keywords are for (input -> intermediate).
       try index := keywords.index
 
       cleanup := ""
 
       ; #1 - Stream as the intermediate representation.
-      if not type ~= "^(?i:clipboardpng|safearray|encodedbuffer|url|file|stream|RandomAccessStream|hex|base64)$"
+      if not isStreamIn
          goto make_bitmap
 
       if !(stream := this.ImageToStream(type, image, keywords))
@@ -246,7 +250,7 @@ class ImagePut {
       flags := 0x40000004 ; CRYPT_STRING_NOCRLF | CRYPT_STRING_HEX
       DllCall("crypt32\CryptBinaryToString", "ptr", &bin, "uint", size, "uint", flags, "str", str, "uint*", length)
 
-      ; Determine the file extension using herustics. See: http://fileformats.archiveteam.org
+      ; Determine the extension using herustics. See: http://fileformats.archiveteam.org
       extension := 0                                                              ? ""
       : str ~= "(?i)66 74 79 70 61 76 69 66"                                      ? "avif" ; ftypavif
       : str ~= "(?i)^42 4d (.. ){36}00 00 .. 00 00 00"                            ? "bmp"  ; BM
@@ -289,11 +293,11 @@ class ImagePut {
 
          ; Pass through all other cotypes.
          || cotype)
-         
+
          ; MsgBox % weight ? "convert to pixels" : "stay as stream"
 
       ; Attempt conversion using StreamToCoimage.
-      if not weight && cotype ~= "^(?i:clipboard|encodedbuffer|file|stream|RandomAccessStream|hex|base64|uri|explorer|safeArray|formData)$" {
+      if not weight && isStreamOut {
 
          coimage := this.StreamToCoimage(cotype, stream, p*)
 
@@ -337,7 +341,7 @@ class ImagePut {
       if (cotype != "bitmap")
          DllCall("gdiplus\GdipDisposeImage", "ptr", pBitmap)
 
-      if cleanup = "stream"
+      if (cleanup = "stream")
          ObjRelease(stream)
 
       exit:
@@ -407,18 +411,20 @@ class ImagePut {
 
    ImageType(image) {
 
+
+
       ; Throw if the image is an empty string.
-      if (image == "") {
+      if (image == "")
          ; A "clipboardpng" is a pointer to a PNG stream saved as the "png" clipboard format.
          if DllCall("IsClipboardFormatAvailable", "uint", DllCall("RegisterClipboardFormat", "str", "png", "uint"))
             return "ClipboardPng"
 
          ; A "clipboard" is a handle to a GDI bitmap saved as CF_BITMAP.
-         if DllCall("IsClipboardFormatAvailable", "uint", 2)
+         else if DllCall("IsClipboardFormatAvailable", "uint", 2)
             return "Clipboard"
 
-         throw Exception("Image data is an empty string.")
-      }
+         else throw Exception("Image data is an empty string.")
+
 
       if not IsObject(image)
          goto string
@@ -441,25 +447,28 @@ class ImagePut {
 
       ; A "object" has a pBitmap property that points to an internal GDI+ bitmap.
       if image.HasKey("pBitmap")
-         try if !DllCall("gdiplus\GdipGetImageType", "ptr", image.pBitmap, "ptr*", type:=0) && (type == 1)
+         try if !DllCall("gdiplus\GdipGetImageType", "ptr", image.pBitmap, "ptr*", _type:=0) && (_type == 1)
             return "Object"
 
+      if not image.HasKey("ptr")
+         goto end
+
+      ; Check if image is a pointer. If not, crash and do not recover.
+      ("POINTER IS BAD AND PROGRAM IS CRASH") && NumGet(image.ptr, "char")
+
       ; An "encodedbuffer" contains a pointer to the bytes of an encoded image format.
-      if image.HasKey("ptr") and image.HasKey("size") and this.IsImage(image.ptr, image.size)
+      if image.HasKey("ptr") && image.HasKey("size") && this.IsImage(image.ptr, image.size)
          return "EncodedBuffer"
 
       ; A "buffer" is an object with a pointer to bytes and properties to determine its 2-D shape.
       if image.HasKey("ptr")
-         and (image.HasKey("width") && image.HasKey("height")
-         or image.HasKey("stride") && image.HasKey("height")
-         or image.HasKey("size") && (image.HasKey("stride") || image.HasKey("width") || image.HasKey("height")))
+         and ( image.HasKey("width") && image.HasKey("height")
+            or image.HasKey("stride") && image.HasKey("height")
+            or image.HasKey("size") && (image.HasKey("stride") || image.HasKey("width") || image.HasKey("height")))
          return "Buffer"
 
-      if image.HasKey("ptr") {
-         image := image.ptr
-         goto pointer
-      }
-      goto end
+      image := image.ptr
+      goto pointer
 
       string:
       if (image == "")
@@ -529,8 +538,11 @@ class ImagePut {
       if DllCall("DestroyIcon", "ptr", DllCall("CopyIcon", "ptr", image, "ptr"))
          return "HIcon"
 
-      ; A "bitmap" is a pointer to a GDI+ Bitmap.
-      try if !DllCall("gdiplus\GdipGetImageType", "ptr", image, "ptr*", type:=0) && (type == 1)
+      ; Check if image is a pointer. If not, crash and do not recover.
+      ("POINTER IS BAD AND PROGRAM IS CRASH") && NumGet(image+0, "char")
+
+      ; A "bitmap" is a pointer to a GDI+ Bitmap. GdiplusStartup exception is caught above.
+      try if !DllCall("gdiplus\GdipGetImageType", "ptr", image, "ptr*", _type:=0) && (_type == 1)
          return "Bitmap"
 
       ; Note 1: All GDI+ functions add 1 to the reference count of COM objects on 64-bit systems.
@@ -840,7 +852,7 @@ class ImagePut {
       if (safe_x || safe_y || safe_w || safe_h)
          return pBitmap
 
-      ; Clone
+      ; Clone and retain a reference to the backing stream.
       DllCall("gdiplus\GdipCloneBitmapAreaI"
                ,    "int", crop[1]
                ,    "int", crop[2]
@@ -884,7 +896,7 @@ class ImagePut {
       if (direction < 0 and (safe_w > width && safe_h > height))
          return pBitmap
 
-      ; Create a new bitmap and get the graphics context.
+      ; Create a destination GDI+ Bitmap that owns its memory.
       DllCall("gdiplus\GdipCreateBitmapFromScan0"
                , "int", safe_w, "int", safe_h, "int", 0, "int", format, "ptr", 0, "ptr*", pBitmapScale:=0)
       DllCall("gdiplus\GdipGetImageGraphicsContext", "ptr", pBitmapScale, "ptr*", pGraphics:=0)
@@ -953,6 +965,15 @@ class ImagePut {
 
       return pBitmap
    }
+
+
+
+
+
+
+
+
+
 
    IsImage(ptr, size) {
       ; Shortest possible image is 24 bytes.
@@ -1024,22 +1045,48 @@ class ImagePut {
                Sleep (2**(A_Index-1) * 30)
             else throw Exception("Clipboard could not be opened.")
 
-      ; Fallback to CF_BITMAP. This format does not support transparency even with BitmapToHBitmap().
-      if !DllCall("IsClipboardFormatAvailable", "uint", 2)
-         throw Exception("Clipboard does not have CF_BITMAP data.")
+      ; Check for CF_DIB to retrieve transparent pixels when possible.
+      if DllCall("IsClipboardFormatAvailable", "uint", 8)
+         if !(handle := DllCall("GetClipboardData", "uint", 8, "ptr"))
+            throw Exception("Shared clipboard data has been deleted.")
 
-      if !(hbm := DllCall("GetClipboardData", "uint", 2, "ptr"))
-         throw Exception("Shared clipboard data has been deleted.")
+      ; Adjust Scan0 for top-down or bottom-up bitmaps.
+      ptr := DllCall("GlobalLock", "ptr", handle, "ptr")
+      width := NumGet(ptr + 4, "int")
+      height := NumGet(ptr + 8, "int")
+      bpp := NumGet(ptr + 14, "ushort")
+      stride := ((height < 0) ? 1 : -1) * (width * bpp + 31) // 32 * 4
+      pBits := ptr + 40
+      Scan0 := (height < 0) ? pBits : pBits - stride*(height-1)
 
-      DllCall("gdiplus\GdipCreateBitmapFromHBITMAP", "ptr", hbm, "ptr", 0, "ptr*", pBitmap:=0)
-      DllCall("DeleteObject", "ptr", hbm)
+      ; Create a destination GDI+ Bitmap that owns its memory. The pixel format is 32-bit ARGB.
+      DllCall("gdiplus\GdipCreateBitmapFromScan0"
+               , "int", width, "int", height, "int", 0, "uint", 0x26200A, "ptr", 0, "ptr*", pBitmap:=0)
+
+      ; Describe the current buffer holding the pixel data.
+      VarSetCapacity(Rect, 16, 0)            ; sizeof(Rect) = 16
+         NumPut(  width, Rect,  8,   "uint") ; Width
+         NumPut( height, Rect, 12,   "uint") ; Height
+      VarSetCapacity(BitmapData, 16+2*A_PtrSize, 0)   ; sizeof(BitmapData) = 24, 32
+         NumPut(    stride, BitmapData,  8,    "int") ; Stride
+         NumPut(     Scan0, BitmapData, 16,    "ptr") ; Scan0
+
+      ; Use LockBits to copy pixel data from an external buffer into the internal GDI+ Bitmap.
+      DllCall("gdiplus\GdipBitmapLockBits"
+               ,    "ptr", pBitmap
+               ,    "ptr", Rect
+               ,   "uint", 6            ; ImageLockMode.UserInputBuffer | ImageLockMode.WriteOnly
+               ,    "int", 0x26200A     ; Format32bppArgb (external buffer)
+               ,    "ptr", &BitmapData) ; Contains the pointer to the external buffer.
+      DllCall("gdiplus\GdipBitmapUnlockBits", "ptr", pBitmap, "ptr", &BitmapData)
+
       DllCall("CloseClipboard")
       return pBitmap
    }
 
    ClipboardPngToBitmap() {
       stream := this.ClipboardPngToStream()
-      DllCall("gdiplus\GdipCreateBitmapFromStream", "ptr", stream, "ptr*", pBitmap:=0)
+      DllCall("gdiplus\GdipCreateBitmapFromStreamICM", "ptr", stream, "ptr*", pBitmap:=0)
       ObjRelease(stream)
       return pBitmap
    }
@@ -1061,19 +1108,19 @@ class ImagePut {
       if !(handle := DllCall("GetClipboardData", "uint", png, "ptr"))
          throw Exception("Shared clipboard PNG has been deleted.")
 
-      DllCall("CloseClipboard")
-
       ; Create a new stream from the clipboard data.
       size := DllCall("GlobalSize", "ptr", handle, "uptr")
       DllCall("ole32\CreateStreamOnHGlobal", "ptr", handle, "int", False, "ptr*", PngStream:=0, "uint")
       DllCall("ole32\CreateStreamOnHGlobal", "ptr", 0, "int", True, "ptr*", stream:=0, "uint")
       DllCall("shlwapi\IStream_Copy", "ptr", PngStream, "ptr", stream, "uint", size, "uint")
+
+      DllCall("CloseClipboard")
       return stream
    }
 
    SafeArrayToBitmap(image) {
       stream := this.SafeArrayToBitmap(image)
-      DllCall("gdiplus\GdipCreateBitmapFromStream", "ptr", stream, "ptr*", pBitmap:=0)
+      DllCall("gdiplus\GdipCreateBitmapFromStreamICM", "ptr", stream, "ptr*", pBitmap:=0)
       ObjRelease(stream)
       return pBitmap
    }
@@ -1094,7 +1141,7 @@ class ImagePut {
 
    EncodedBufferToBitmap(image) {
       stream := this.EncodedBufferToStream(image)
-      DllCall("gdiplus\GdipCreateBitmapFromStream", "ptr", stream, "ptr*", pBitmap:=0)
+      DllCall("gdiplus\GdipCreateBitmapFromStreamICM", "ptr", stream, "ptr*", pBitmap:=0)
       ObjRelease(stream)
       return pBitmap
    }
@@ -1119,7 +1166,7 @@ class ImagePut {
          stride := image.width * 4
       else if image.HasKey("height") && image.HasKey("size")
          stride := image.size // image.height
-      else throw Exception("Buffer must have a stride or pitch property.")
+      else throw Exception("Image buffer is missing a stride or pitch property.")
 
       if image.HasKey("height")
          height := image.height
@@ -1127,7 +1174,7 @@ class ImagePut {
          height := image.size // stride
       else if image.HasKey("width") && image.HasKey("size")
          height := image.size // (4 * image.width)
-      else throw Exception("Buffer must have a height property.")
+      else throw Exception("Image buffer is missing a height property.")
 
       if image.HasKey("width")
          width := image.width
@@ -1135,7 +1182,7 @@ class ImagePut {
          width := stride // 4
       else if height && image.HasKey("size")
          width := image.size // (4 * height)
-      else throw Exception("Buffer must have a width property.")
+      else throw Exception("Image buffer is missing a width property.")
 
       ; Could assert a few assumptions, such as stride * height = size.
       ; However, I'd like for the pointer and its size to be as flexable as possible.
@@ -1145,9 +1192,13 @@ class ImagePut {
       if image.HasKey("size") && (abs(stride * height) > image.size)
          throw Exception("Image dimensions exceed the size of the buffer.")
 
-      ; User is responsible for ensuring that the pointer remains valid.
-      DllCall("gdiplus\GdipCreateBitmapFromScan0"
-               , "int", width, "int", height, "int", stride, "int", 0x26200A, "ptr", image.ptr, "ptr*", pBitmap:=0)
+      ; Create a source GDI+ Bitmap that owns its memory. The pixel format is 32-bit ARGB.
+      if (height > 0) ; top-down bitmap
+         DllCall("gdiplus\GdipCreateBitmapFromScan0", "int", width, "int", height
+         , "int", stride, "int", 0x26200A, "ptr", image.ptr, "ptr*", pBitmap:=0)
+      else            ; bottom-up bitmap
+         DllCall("gdiplus\GdipCreateBitmapFromScan0", "int", width, "int", height
+         , "int", -stride, "int", 0x26200A, "ptr", image.ptr + (height-1)*stride, "ptr*", pBitmap:=0)
 
       return pBitmap
    }
@@ -1383,7 +1434,7 @@ class ImagePut {
       }
 
       ; Adjust coordinates relative to specified window.
-      if image.haskey(5) && (WinExist(image[5]) || DllCall("IsWindow", "ptr", image[5])) {
+      if image.HasKey(5) && (WinExist(image[5]) || DllCall("IsWindow", "ptr", image[5])) {
          try dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
          image[5] := (hwnd := WinExist(image[5])) ? hwnd : image[5]
          VarSetCapacity(rect, 16, 0)
@@ -1432,6 +1483,12 @@ class ImagePut {
 
       ; Get the handle to the window.
       image := (hwnd := IsObject(image) ? image.hwnd : WinExist(image)) ? hwnd : image
+
+      ; Test whether keystrokes can be sent to this window using a reserved virtual key code.
+      PostMessage WM_KEYDOWN := 0x100, 0x88,,, % "ahk_id" image
+      if ErrorLevel
+         throw Exception("Administrator privileges are required to capture the window.")
+      PostMessage WM_KEYUP := 0x101, 0x88, 0xC0000000,, % "ahk_id" image
 
       ; Restore the window if minimized! Must be visible for capture.
       if DllCall("IsIconic", "ptr", image)
@@ -1579,7 +1636,7 @@ class ImagePut {
 
    UrlToBitmap(image) {
       stream := this.UrlToStream(image)
-      DllCall("gdiplus\GdipCreateBitmapFromStream", "ptr", stream, "ptr*", pBitmap:=0)
+      DllCall("gdiplus\GdipCreateBitmapFromStreamICM", "ptr", stream, "ptr*", pBitmap:=0)
       ObjRelease(stream)
       return pBitmap
    }
@@ -1595,7 +1652,7 @@ class ImagePut {
 
    FileToBitmap(image) {
       stream := this.FileToStream(image) ; Faster than GdipCreateBitmapFromFile and does not lock the file.
-      DllCall("gdiplus\GdipCreateBitmapFromStream", "ptr", stream, "ptr*", pBitmap:=0)
+      DllCall("gdiplus\GdipCreateBitmapFromStreamICM", "ptr", stream, "ptr*", pBitmap:=0)
       ObjRelease(stream)
       return pBitmap
    }
@@ -1614,7 +1671,7 @@ class ImagePut {
 
    HexToBitmap(image) {
       stream := this.HexToStream(image)
-      DllCall("gdiplus\GdipCreateBitmapFromStream", "ptr", stream, "ptr*", pBitmap:=0)
+      DllCall("gdiplus\GdipCreateBitmapFromStreamICM", "ptr", stream, "ptr*", pBitmap:=0)
       ObjRelease(stream)
       return pBitmap
    }
@@ -1641,7 +1698,7 @@ class ImagePut {
 
    Base64ToBitmap(image) {
       stream := this.Base64ToStream(image)
-      DllCall("gdiplus\GdipCreateBitmapFromStream", "ptr", stream, "ptr*", pBitmap:=0)
+      DllCall("gdiplus\GdipCreateBitmapFromStreamICM", "ptr", stream, "ptr*", pBitmap:=0)
       ObjRelease(stream)
       return pBitmap
    }
@@ -1684,7 +1741,7 @@ class ImagePut {
       return this.ScreenshotToBitmap([x,y,w,h])
    }
 
-   DcToBitmap(image) {
+   DCToBitmap(image) {
       ; An application cannot select a single bitmap into more than one DC at a time.
       if !(sbm := DllCall("GetCurrentObject", "ptr", image, "uint", 7))
          throw Exception("The device context has no bitmap selected.")
@@ -1718,7 +1775,7 @@ class ImagePut {
       hbm := DllCall("CreateDIBSection", "ptr", hdc, "ptr", &bi, "uint", 0, "ptr*", pBits:=0, "ptr", 0, "uint", 0, "ptr")
       obm := DllCall("SelectObject", "ptr", hdc, "ptr", hbm, "ptr")
 
-      ; This is the 32-bit ARGB pBitmap (different from an hBitmap) that will receive the final converted pixels.
+      ; Create a destination GDI+ Bitmap that owns its memory to receive the final converted pixels. The pixel format is 32-bit ARGB.
       DllCall("gdiplus\GdipCreateBitmapFromScan0"
                , "int", width, "int", height, "int", 0, "int", 0x26200A, "ptr", 0, "ptr*", pBitmap:=0)
 
@@ -1784,7 +1841,7 @@ class ImagePut {
       hbm := DllCall("CreateDIBSection", "ptr", hdc, "ptr", &bi, "uint", 0, "ptr*", pBits:=0, "ptr", 0, "uint", 0, "ptr")
       obm := DllCall("SelectObject", "ptr", hdc, "ptr", hbm, "ptr")
 
-      ; This is the 32-bit ARGB pBitmap (different from an hBitmap) that will receive the final converted pixels.
+      ; Create a destination GDI+ Bitmap that owns its memory to receive the final converted pixels. The pixel format is 32-bit ARGB.
       DllCall("gdiplus\GdipCreateBitmapFromScan0"
                , "int", width, "int", height, "int", 0, "int", 0x26200A, "ptr", 0, "ptr*", pBitmap:=0)
 
@@ -1861,7 +1918,7 @@ class ImagePut {
       hbm := DllCall("CreateDIBSection", "ptr", hdc, "ptr", &bi, "uint", 0, "ptr*", pBits:=0, "ptr", 0, "uint", 0, "ptr")
       obm := DllCall("SelectObject", "ptr", hdc, "ptr", hbm, "ptr")
 
-      ; This is the 32-bit ARGB pBitmap (different from an hBitmap) that will receive the final converted pixels.
+      ; Create a destination GDI+ Bitmap that owns its memory to receive the final converted pixels. The pixel format is 32-bit ARGB.
       DllCall("gdiplus\GdipCreateBitmapFromScan0"
                , "int", width, "int", height, "int", 0, "int", 0x26200A, "ptr", 0, "ptr*", pBitmap:=0)
 
@@ -1899,24 +1956,14 @@ class ImagePut {
    }
 
    BitmapToBitmap(image) {
-      ; Retain the current PixelFormat, unlike GdipCloneImage.
-      DllCall("gdiplus\GdipGetImageWidth", "ptr", image, "uint*", width:=0)
-      DllCall("gdiplus\GdipGetImageHeight", "ptr", image, "uint*", height:=0)
-      DllCall("gdiplus\GdipGetImagePixelFormat", "ptr", image, "int*", format:=0)
-      DllCall("gdiplus\GdipCloneBitmapAreaI"
-               ,    "int", 0
-               ,    "int", 0
-               ,    "int", width
-               ,    "int", height
-               ,    "int", format
-               ,    "ptr", image
-               ,   "ptr*", pBitmap:=0)
+      ; Clone and retain a reference to the backing stream.
+      DllCall("gdiplus\GdipCloneImage", "ptr", image, "ptr*", pBitmap:=0)
       return pBitmap
    }
 
    StreamToBitmap(image) {
       stream := this.StreamToStream(image) ; Below adds +3 references and seeks to 4096.
-      DllCall("gdiplus\GdipCreateBitmapFromStream", "ptr", stream, "ptr*", pBitmap:=0)
+      DllCall("gdiplus\GdipCreateBitmapFromStreamICM", "ptr", stream, "ptr*", pBitmap:=0)
       ObjRelease(stream)
       return pBitmap
    }
@@ -1931,7 +1978,7 @@ class ImagePut {
 
    RandomAccessStreamToBitmap(image) {
       stream := this.RandomAccessStreamToStream(image) ; Below adds +3 to the reference count.
-      DllCall("gdiplus\GdipCreateBitmapFromStream", "ptr", stream, "ptr*", pBitmap:=0)
+      DllCall("gdiplus\GdipCreateBitmapFromStreamICM", "ptr", stream, "ptr*", pBitmap:=0)
       ObjRelease(stream)
       return pBitmap
    }
@@ -1947,10 +1994,9 @@ class ImagePut {
    }
 
    WicBitmapToBitmap(image) {
-      ; IWICBitmapSource::GetSize - https://github.com/iseahound/10/blob/win/10.0.16299.0/um/wincodec.h#L1304
       DllCall(NumGet(NumGet(image+0)+A_PtrSize* 3), "ptr", image, "uint*", width:=0, "uint*", height:=0)
 
-      ; Intialize an empty pBitmap using managed memory.
+      ; Create a destination GDI+ Bitmap that owns its memory. The pixel format is 32-bit ARGB.
       DllCall("gdiplus\GdipCreateBitmapFromScan0"
                , "int", width, "int", height, "int", 0, "int", 0x26200A, "ptr", 0, "ptr*", pBitmap:=0)
 
@@ -1968,7 +2014,6 @@ class ImagePut {
       Scan0 := NumGet(BitmapData, 16, "ptr")
       stride := NumGet(BitmapData, 8, "int")
 
-      ; IWICBitmapSource::CopyPixels - https://github.com/iseahound/10/blob/win/10.0.16299.0/um/wincodec.h#L1322
       DllCall(NumGet(NumGet(image+0)+A_PtrSize* 7), "ptr", image, "ptr", &Rect, "uint", stride, "uint", stride * height, "ptr", Scan0)
 
       ; Write pixels to bitmap.
@@ -2000,10 +2045,12 @@ class ImagePut {
       DllCall("gdiplus\GdipSaveImageToStream", "ptr", pBitmap, "ptr", stream, "ptr", &pCodec, "ptr", 0)
 
       ; Set the rescued HGlobal to the clipboard as a shared object.
-      png := DllCall("RegisterClipboardFormat", "str", "png", "uint") ; case insensitive
       DllCall("ole32\GetHGlobalFromStream", "ptr", stream, "uint*", handle:=0, "uint")
-      DllCall("SetClipboardData", "uint", png, "ptr", handle)
       ObjRelease(stream)
+
+      ; Set the clipboard data. GlobalFree will be called by the system.
+      png := DllCall("RegisterClipboardFormat", "str", "png", "uint") ; case insensitive
+      DllCall("SetClipboardData", "uint", png, "ptr", handle)
 
 
       ; #2 - Fallback to the CF_DIB format (bottom-up bitmap) for maximum compatibility.
@@ -2029,7 +2076,7 @@ class ImagePut {
       DllCall("GlobalUnlock", "ptr", hdib)
       DllCall("DeleteObject", "ptr", hbm)
 
-      ; CF_DIB (8) can be synthesized into CF_BITMAP (2), CF_PALETTE (9), and CF_DIBV5 (17).
+      ; CF_DIB (8) can be synthesized into CF_DIBV5 (17) and CF_BITMAP (2) with delayed rendering.
       DllCall("SetClipboardData", "uint", 8, "ptr", hdib)
 
       ; Close the clipboard.
@@ -2057,7 +2104,7 @@ class ImagePut {
       flags := 0x40000004 ; CRYPT_STRING_NOCRLF | CRYPT_STRING_HEX
       DllCall("crypt32\CryptBinaryToString", "ptr", &bin, "uint", size, "uint", flags, "str", str, "uint*", length)
 
-      ; Determine the file extension using herustics. See: http://fileformats.archiveteam.org
+      ; Determine the extension using herustics. See: http://fileformats.archiveteam.org
       extension := 0                                                              ? ""
       : str ~= "(?i)66 74 79 70 61 76 69 66"                                      ? "avif" ; ftypavif
       : str ~= "(?i)^42 4d (.. ){36}00 00 .. 00 00 00"                            ? "bmp"  ; BM
@@ -2078,7 +2125,7 @@ class ImagePut {
       if !(hwnd := DllCall("FindWindow", "str", "AutoHotkey", "str", "_StreamToClipboard", "ptr")) {
          hwnd := DllCall("CreateWindowEx", "uint", 0, "str", "AutoHotkey", "str", "_StreamToClipboard"
          , "uint", 0, "int", 0, "int", 0, "int", 0, "int", 0, "ptr", 0, "ptr", 0, "ptr", 0, "ptr", 0, "ptr")
-         DllCall("SetWindowLong" (A_PtrSize=8?"Ptr":""), "ptr", hwnd, "int", -4, "ptr", RegisterCallback(this.StreamToClipboardProc,,, &this)) ; GWLP_WNDPROC = -4
+         DllCall("SetWindowLong" (A_PtrSize=8?"Ptr":""), "ptr", hwnd, "int", -4, "ptr", RegisterCallback(this.StreamToClipboardProc,,, &this)) ; GWLP_WNDPROC
       }
 
       ; Open the clipboard with exponential backoff.
@@ -2093,7 +2140,7 @@ class ImagePut {
       ; Requires a valid window handle via OpenClipboard or the next call to OpenClipboard will crash.
       DllCall("EmptyClipboard")
 
-      ; Save PNG directly to the clipboard.
+      ; #1 - Save PNG directly to the clipboard.
       if (extension = "png") {
          ; Clone the stream. Can't use IStream::Clone because the cloned stream must be released.
          DllCall("shlwapi\IStream_Size", "ptr", stream, "uint64*", size:=0, "uint")
@@ -2107,8 +2154,7 @@ class ImagePut {
          DllCall("SetClipboardData", "uint", png, "ptr", handle)
       }
 
-      ; Copy other formats to a file and pass a (15) DROPFILES struct.
-      ; This should be a complete substitute for CF_DIB(8) as some programs don't support PNG.
+      ; #2 - Copy other formats to a file and pass a (15) DROPFILES struct.
       if (extension) {
          filepath := A_ScriptDir "\clipboard." extension
          filepath := RTrim(filepath, ".") ; Remove trailing periods.
@@ -2140,10 +2186,39 @@ class ImagePut {
          DllCall("SetClipboardData", "uint", 15, "ptr", hDropFiles)
 
          ; Clean up the file when EmptyClipboard is called by another program.
-         obj := {filepath: filepath, hDropFiles: hDropFiles}
+         obj := {filepath: filepath}
          ptr := &obj
          ObjAddRef(ptr)
          DllCall("SetWindowLong" (A_PtrSize=8?"Ptr":""), "ptr", hwnd, "int", -21, "ptr", ptr, "ptr") ; GWLP_USERDATA = -21
+      }
+
+      ; #3 - Fallback to (8) CF_DIB format (bottom-up bitmap) for maximum compatibility.
+      if (extension ~= "^(?i:avif|bmp|emf|gif|heic|ico|jpg|png|tif|webp|wmf)$") {
+         ; Convert decodable formats into a DIB.
+         DllCall("gdiplus\GdipCreateBitmapFromStreamICM", "ptr", stream, "ptr*", pBitmap:=0)
+         DllCall("gdiplus\GdipCreateHBITMAPFromBitmap", "ptr", pBitmap, "ptr*", hbm:=0, "uint", 0)
+
+         ; struct DIBSECTION - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-dibsection
+         ; struct BITMAP - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmap
+         VarSetCapacity(dib, size := 64+5*A_PtrSize)              ; sizeof(DIBSECTION) = 84, 104
+         DllCall("GetObject", "ptr", hbm, "int", size, "ptr", &dib)
+            , pBits := NumGet(dib, A_PtrSize = 4 ? 20:24, "ptr")  ; bmBits
+            , size  := NumGet(dib, A_PtrSize = 4 ? 44:52, "uint") ; biSizeImage
+
+         ; Allocate space for a new device independent bitmap on movable memory.
+         hdib := DllCall("GlobalAlloc", "uint", 0x2, "uptr", 40 + size, "ptr") ; sizeof(BITMAPINFOHEADER) = 40
+         pdib := DllCall("GlobalLock", "ptr", hdib, "ptr")
+
+         ; Copy the BITMAPINFOHEADER and pixel data respectively.
+         DllCall("RtlMoveMemory", "ptr", pdib, "ptr", &dib + (A_PtrSize = 4 ? 24:32), "uptr", 40)
+         DllCall("RtlMoveMemory", "ptr", pdib+40, "ptr", pBits, "uptr", size)
+
+         ; Unlock to moveable memory because the clipboard requires it.
+         DllCall("GlobalUnlock", "ptr", hdib)
+         DllCall("DeleteObject", "ptr", hbm)
+
+         ; CF_DIB (8) can be synthesized into CF_DIBV5 (17), and also CF_BITMAP (2) with delayed rendering.
+         DllCall("SetClipboardData", "uint", 8, "ptr", hdib)
       }
 
       ; Close the clipboard.
@@ -2153,14 +2228,9 @@ class ImagePut {
       StreamToClipboardProc(uMsg, wParam, lParam) {
          hwnd := this
          ; WM_DESTROYCLIPBOARD
-         if (uMsg = 0x0307)
-            if ptr := DllCall("GetWindowLong" (A_PtrSize=8?"Ptr":""), "ptr", hwnd, "int", -21, "ptr") {
-               obj := Object(ptr) ; Self-destructs at end of scope.
-               DllCall("GlobalFree", "ptr", obj.hDropFiles)
-               DllCall("DeleteFile", "str", obj.filepath)
-               DllCall("SetWindowLong" (A_PtrSize=8?"Ptr":""), "ptr", hwnd, "int", -21, "ptr", 0, "ptr") ; GWLP_USERDATA = -21
-            }
-         return DllCall("DefWindowProc", "ptr", hwnd, "uint", uMsg, "ptr", wParam, "ptr", lParam, "ptr")
+         if (uMsg = 0x0307) ; ObjFromPtr self-destructs at end of scope.
+            if obj := Object(DllCall("GetWindowLong" (A_PtrSize=8?"Ptr":""), "ptr", hwnd, "int", -21, "ptr"))
+               DllCall("DeleteFile", "str", obj.filepath), ObjRelease(obj)
       }
 
 
@@ -2220,12 +2290,12 @@ class ImagePut {
       DllCall("gdiplus\GdipBitmapUnlockBits", "ptr", pBitmap, "ptr", &BitmapData)
 
       ; Free the pixels later.
-      free := Func("DllCall").bind("GlobalFree", "ptr", ptr)
-
-      return new ImagePut.BitmapBuffer(ptr, size, width, height, free)
+      buf := new ImagePut.BitmapBuffer(ptr, size, width, height)
+      buf.free := [Func("DllCall").bind("GlobalFree", "ptr", ptr)]
+      return buf
    }
 
-   SharedBufferToBuffer(image) {
+   SharedBufferToSharedBuffer(image) {
       hMap := DllCall("OpenFileMapping", "uint", 0x2, "int", 0, "str", image, "ptr")
       pMap := DllCall("MapViewOfFile", "ptr", hMap, "uint", 0x2, "uint", 0, "uint", 0, "uptr", 0, "ptr")
 
@@ -2234,12 +2304,9 @@ class ImagePut {
       size := 4 * width * height
       ptr := pMap + 8
 
-      free := DllCall.bind("UnmapViewOfFile", "ptr", pMap)
-      ;   DllCall("UnmapViewOfFile", "ptr", pMap),
-      ;   DllCall("CloseHandle", "ptr", hMap)
-      ;)
-
-      buf := new ImagePut.BitmapBuffer(ptr, size, width, height, free)
+      ; Free the pixels later.
+      buf := new ImagePut.BitmapBuffer(ptr, size, width, height)
+      buf.free := [Func("DllCall").bind("UnmapViewOfFile", "ptr", pMap), Func("DllCall").bind("CloseHandle", "ptr", hMap)]
       buf.name := image
       return buf
    }
@@ -2253,7 +2320,7 @@ class ImagePut {
       size := 4 * width * height
       ptr := pMap + 8
 
-      ; Create a pBitmap that owns its memory.
+      ; Create a destination GDI+ Bitmap that owns its memory. The pixel format is 32-bit ARGB.
       DllCall("gdiplus\GdipCreateBitmapFromScan0"
                , "int", width, "int", height, "int", 0, "int", 0x26200A, "ptr", 0, "ptr*", pBitmap:=0)
 
@@ -2315,22 +2382,18 @@ class ImagePut {
       DllCall("gdiplus\GdipBitmapUnlockBits", "ptr", pBitmap, "ptr", &BitmapData)
 
       ; Free the pixels later.
-      free := DllCall.bind("UnmapViewOfFile", "ptr", pMap)
-      ;free := () => (
-      ;   DllCall("UnmapViewOfFile", "ptr", pMap),
-      ;)
-
-      buf := new ImagePut.BitmapBuffer(ptr, size, width, height, free)
+      buf := new ImagePut.BitmapBuffer(ptr, size, width, height)
+      buf.free := [Func("DllCall").bind("UnmapViewOfFile", "ptr", pMap), Func("DllCall").bind("CloseHandle", "ptr", hMap)]
       buf.name := name
       return buf
    }
 
    class BitmapBuffer {
 
-      __New(ptr, size, width, height, free:="") {
+      __New(ptr, size, width, height, stride:="") {
          ImagePut.gdiplusStartup()
 
-         ; Create a pBitmap on saved memory.
+         ; Create a source GDI+ Bitmap that owns its memory. The pixel format is 32-bit ARGB.
          DllCall("gdiplus\GdipCreateBitmapFromScan0"
                   , "int", width, "int", height, "int", size // height, "int", 0x26200A, "ptr", ptr, "ptr*", pBitmap:=0)
 
@@ -2339,13 +2402,16 @@ class ImagePut {
          this.size := size
          this.width := width
          this.height := height
-         this.free := free
          this.pBitmap := pBitmap
+
+         ; A series of callbacks to be called in order to free the memory.
+         this.free := []
       }
 
       __Delete() {
          DllCall("gdiplus\GdipDisposeImage", "ptr", this.pBitmap)
-         this.free.call()
+	 for callback in this.free
+            callback.call()
          ImagePut.gdiplusShutdown()
       }
 
@@ -2412,7 +2478,7 @@ class ImagePut {
          this.map := {}
          loop % this.width * this.height
             if c := NumGet(this.ptr + 4*(A_Index-1), "uint")
-               this.map[c] := this.map.haskey(c) ? this.map[c] + 1 : 1
+               this.map[c] := this.map.HasKey(c) ? this.map[c] + 1 : 1
       }
 
       Count(c*) {
@@ -2429,8 +2495,9 @@ class ImagePut {
       Clone() {
          ptr := DllCall("GlobalAlloc", "uint", 0, "uptr", this.size, "ptr")
          DllCall("RtlMoveMemory", "ptr", ptr, "ptr", this.ptr, "uptr", this.size)
-         free := Func("DllCall").bind("GlobalFree", "ptr", ptr)
-         return new ImagePut.BitmapBuffer(ptr, this.size, this.width, this.height, free)
+         buf := new ImagePut.BitmapBuffer(ptr, this.size, this.width, this.height)
+         buf.free := [Func("DllCall").bind("GlobalFree", "ptr", ptr)]
+         return buf
       }
 
       Crop(x, y, w, h) {
@@ -2498,7 +2565,7 @@ class ImagePut {
       Base64Code(b64) {
          static codes := {}
 
-         if codes.haskey(b64)
+         if codes.HasKey(b64)
             return codes[b64]
 
          s64 := StrLen(RTrim(b64, "=")) * 3 // 4
@@ -3475,16 +3542,21 @@ class ImagePut {
       DllCall("SetWindowLong", "ptr", hwnd, "int", 1*A_PtrSize, "ptr", hwnd) ; child window  (same, only 1 window for now)
       DllCall("SetWindowLong", "ptr", hwnd, "int", 2*A_PtrSize, "ptr", hdc)  ; hdc contains a pixel buffer too!
 
+      obj := {scale: 5
+            , scales: [0.125, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12]}
+      ObjAddRef(&obj)        ; Hold onto this object for dear life!
+      DllCall("SetWindowLong" (A_PtrSize=8?"Ptr":""), "ptr", hwnd, "int", 3*A_PtrSize, "ptr", &obj)
+
       ; Check for multiple frames. This can be in either the page (WEBP) or time (GIF) dimension.
       DllCall("gdiplus\GdipImageGetFrameDimensionsCount", "ptr", pBitmap, "uint*", dims:=0)
       DllCall("gdiplus\GdipImageGetFrameDimensionsList", "ptr", pBitmap, "ptr", &dimIDs := VarSetCapacity(dimIDs, 16*dims), "uint", dims)
       DllCall("gdiplus\GdipImageGetFrameCount", "ptr", pBitmap, "ptr", &dimIDs, "uint*", number:=0)
+      DllCall("gdiplus\GdipGetPropertyItemSize", "ptr", pBitmap, "uint", 0x5100, "uint*", nDelays:=0)
 
       ; Animations!
-      if (number > 1) {
+      if (number > 1 && nDelays > 0) {
 
          ; Get the frame delays from PropertyTagFrameDelay.
-         DllCall("gdiplus\GdipGetPropertyItemSize", "ptr", pBitmap, "uint", 0x5100, "uint*", nDelays:=0)
          pDelays := DllCall("GlobalAlloc", "uint", 0, "uptr", nDelays, "ptr")
          DllCall("gdiplus\GdipGetPropertyItem", "ptr", pBitmap, "uint", 0x5100, "uint", nDelays, "ptr", pDelays)
 
@@ -3517,18 +3589,16 @@ class ImagePut {
          pTimeProc := this.SyncWindowProc(hwnd, 0x8000)
 
          ; Create an object to hold all the extra data.
-         obj := {type : type             ; Either "gif" or "webp"
-               , w : w                   ; width
-               , h : h                   ; height
-               , frame : 0               ; current frame (zero-indexed)
-               , number : number         ; max frames
-               , accumulate : 0          ; current wait time
-               , delays : delays         ; array of frame delays
-               , interval : interval     ; timer resolution
-               , pTimeProc : pTimeProc   ; callback address
-               , dimIDs : dimIDs}        ; frame dimension guid (Time or Page)
-         ObjAddRef(&obj)                 ; Hold onto this object for dear life!
-         DllCall("SetWindowLong" (A_PtrSize=8?"Ptr":""), "ptr", hwnd, "int", 3*A_PtrSize, "ptr", &obj)
+         obj.type := type            ; Either "gif" or "webp"
+         obj.w := w                  ; width
+         obj.h := h                  ; height
+         obj.frame := 0              ; current frame (zero-indexed)
+         obj.number := number        ; max frames
+         obj.accumulate := 0         ; current wait time
+         obj.delays := delays        ; array of frame delays
+         obj.interval := interval    ; timer resolution
+         obj.pTimeProc := pTimeProc  ; callback address
+         obj.dimIDs := dimIDs        ; frame dimension guid (Time or Page)
 
          ; Case 1: Image is not scaled.
          if (!cache && w == width && h == height) {
@@ -3666,7 +3736,7 @@ class ImagePut {
             Hotkey % "^+F12", % void, Off ; Cannot disable script persistence, does nothing
 
             ; The child window contains all of the assets to be freed.
-            if hwnd != DllCall("GetWindowLong", "ptr", hwnd, "int", 1*A_PtrSize, "ptr")
+            if (hwnd != DllCall("GetWindowLong", "ptr", hwnd, "int", 1*A_PtrSize, "ptr"))
                return
 
             ; Get stock bitmap.
@@ -3681,7 +3751,7 @@ class ImagePut {
 
             ; The object will self-destruct at end of scope. No need to add a reference!
             if ptr := DllCall("GetWindowLong" (A_PtrSize=8?"Ptr":""), "ptr", hwnd, "int", 3*A_PtrSize, "ptr") {
-               obj := Object(ptr) ; Todo: test reference...
+               obj := Object(ptr), ObjRelease(ptr)
 
                ; Exit GIF animation loop. Ends any triggered WM_APP.
                DllCall("SetWindowLong" (A_PtrSize=8?"Ptr":""), "ptr", hwnd, "int", 3*A_PtrSize, "ptr", 0)
@@ -3689,19 +3759,22 @@ class ImagePut {
                ; Stop Animation loop.
                if timer := DllCall("GetWindowLong", "ptr", hwnd, "int", 4*A_PtrSize, "ptr")
                   DllCall("winmm\timeKillEvent", "uint", timer)
-               DllCall("GlobalFree", "ptr", obj.pTimeProc)
+
+               if obj.HasKey("pTimeProc")
+                  DllCall("GlobalFree", "ptr", obj.pTimeProc)
 
                if obj.HasKey("pBitmap") {
                   DllCall("gdiplus\GdipDisposeImage", "ptr", obj.pBitmap)
                   ImagePut.gdiplusShutdown()
                }
 
-               if obj.HasKey("cache")
+               if obj.HasKey("cache") {
                   for each, hdc in obj.cache { ; Overwrites the hdc and hbm variables.
                      hbm := DllCall("SelectObject", "ptr", hdc, "ptr", obm, "ptr")
                      DllCall("DeleteObject", "ptr", hbm)
                      DllCall("DeleteDC", "ptr", hdc)
                   }
+               }
             }
          }
 
@@ -3712,6 +3785,10 @@ class ImagePut {
          ; Remember the child window contains all the assets.
          parent := DllCall("GetWindowLong", "ptr", hwnd, "int", 0*A_PtrSize, "ptr")
          child := DllCall("GetWindowLong", "ptr", hwnd, "int", 1*A_PtrSize, "ptr")
+         hdc := DllCall("GetWindowLong", "ptr", child, "int", 2*A_PtrSize, "ptr")
+         if ptr := DllCall("GetWindowLong" (A_PtrSize=8?"Ptr":""), "ptr", child, "int", 3*A_PtrSize, "ptr")
+            obj := Object(ptr)
+         timer := DllCall("GetWindowLong", "ptr", child, "int", 4*A_PtrSize, "ptr")
 
          ; For some reason using DefWindowProc or PostMessage to reroute WM_LBUTTONDOWN to WM_NCLBUTTONDOWN
          ; will always disable the complementary WM_LBUTTONUP. However, if the CS_DBLCLKS window style is set,
@@ -3785,20 +3862,98 @@ class ImagePut {
             return
          }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
          ; WM_APP - Animate GIFs
          if (uMsg = 0x8000) {
             ; Thanks tmplinshi, Teadrinker - https://www.autohotkey.com/boards/viewtopic.php?f=76&t=83358
             Critical
-
-            ; Get variables.
-            ptr := DllCall("GetWindowLong" (A_PtrSize=8?"Ptr":""), "ptr", child, "int", 3*A_PtrSize, "ptr")
 
             ; Exit GIF animation loop. Set by WM_Destroy.
             if !ptr
                return
 
             ; Get variables. ObjRelease is automatically called at the end of the scope.
-            obj := Object(ptr)
             type := obj.type
             w := obj.w
             h := obj.h
@@ -3920,11 +4075,8 @@ class ImagePut {
          ; Clears the frame number and wait time.
          if (uMsg = 0x8001 || uMsg = 0x8002) {
             if (wParam) {
-               if ptr := DllCall("GetWindowLong" (A_PtrSize=8?"Ptr":""), "ptr", child, "int", 3*A_PtrSize, "ptr") {
-                  obj := Object(ptr)
-                  obj.frame := 0
-                  obj.accumulate := 0
-               }
+               obj.frame := 0
+               obj.accumulate := 0
             }
          }
 
@@ -3933,8 +4085,7 @@ class ImagePut {
             if timer := DllCall("GetWindowLong", "ptr", child, "int", 4*A_PtrSize, "ptr")
                return
 
-            if ptr := DllCall("GetWindowLong" (A_PtrSize=8?"Ptr":""), "ptr", child, "int", 3*A_PtrSize, "ptr") {
-               obj := Object(ptr)
+            if obj.HasKey("pTimeProc") {
                timer := DllCall("winmm\timeSetEvent"
                         , "uint", obj.interval  ; uDelay
                         , "uint", obj.interval  ; uResolution
@@ -4129,52 +4280,77 @@ class ImagePut {
 
    BitmapToExplorer(pBitmap, default := "") {
 
-      ; Default directory to desktop.
-      (default == "") && default := A_Desktop
-
-      ; Check if the mouse is pointing to the desktop.
-      MouseGetPos,,, hwnd
-      WinGetClass class, ahk_id %hwnd%
-      if (class ~= "(?i)Progman|WorkerW")
-         directory := A_Desktop
-
       ; Get path of active window.
-      else if (hwnd := WinExist("ahk_class ExploreWClass")) || (hwnd := WinExist("ahk_class CabinetWClass")) {
-         for window in ComObjCreate("Shell.Application").Windows {
-            if (window.hwnd == hwnd) {
-               try directory := window.Document.Folder.Self.Path
+      if (hwnd := WinExist("ahk_class ExploreWClass")) || (hwnd := WinExist("ahk_class CabinetWClass")) {
+         ; script from Lexikos: https://www.autohotkey.com/boards/viewtopic.php?f=83&t=109907
+         ; modified for this by: @TheCrether
+         ; useful for windows 11 explorer tabs support (works with windows 10 explorers too)
+         tab := this.GetCurrentExplorerTab(hwnd)
+         if tab {
+            switch ComObjType(tab.Document, "Class") {
+               case "ShellFolderView":
+                  directory := tab.Document.Folder.Self.Path
+               default: ; case "HTMLDocument"
+                  directory := tab.LocationURL
             }
          }
       }
-      else
+      else if (default != "")
          directory := default
+      else
+         return
 
       return this.BitmapToFile(pBitmap, directory)
    }
 
    StreamToExplorer(stream, default := "") {
 
-      ; Default directory to desktop.
-      (default == "") && default := A_Desktop
-
-      ; Check if the mouse is pointing to the desktop.
-      MouseGetPos,,, hwnd
-      WinGetClass class, ahk_id %hwnd%
-      if (class ~= "(?i)Progman|WorkerW")
-         directory := A_Desktop
-
       ; Get path of active window.
-      else if (hwnd := WinExist("ahk_class ExploreWClass")) || (hwnd := WinExist("ahk_class CabinetWClass")) {
-         for window in ComObjCreate("Shell.Application").Windows {
-            if (window.hwnd == hwnd) {
-               try directory := window.Document.Folder.Self.Path
+      if (hwnd := WinExist("ahk_class ExploreWClass")) || (hwnd := WinExist("ahk_class CabinetWClass")) {
+         ; script from Lexikos: https://www.autohotkey.com/boards/viewtopic.php?f=83&t=109907
+         ; modified for this by: @TheCrether
+         ; useful for windows 11 explorer tabs support (works with windows 10 explorers too)
+         tab := this.GetCurrentExplorerTab(hwnd)
+         if tab {
+            switch ComObjType(tab.Document, "Class") {
+               case "ShellFolderView":
+                  directory := tab.Document.Folder.Self.Path
+               default: ; case "HTMLDocument"
+                  directory := tab.LocationURL
             }
          }
       }
-      else
+      else if (default != "")
          directory := default
+      else
+         return
 
       return this.StreamToFile(stream, directory)
+   }
+
+   GetCurrentExplorerTab(hwnd) {
+      ; script from Lexikos: https://www.autohotkey.com/boards/viewtopic.php?f=83&t=109907
+      ; modified for this by: @TheCrether
+      static IID_IShellBrowser := "{000214E2-0000-0000-C000-000000000046}"
+
+      activeTab := 0, hwnd := hwnd ? hwnd : WinExist("A")
+      try
+         ControlGet, activeTab, Hwnd,, ShellTabWindowClass1, ahk_id %hwnd% ; File Explorer (Windows 11)
+      catch
+      try
+         ControlGet, activeTab, Hwnd,, TabWindowClass1, ahk_id %hwnd% ; IE
+      for w in ComObjCreate("Shell.Application").Windows {
+         if (w.hwnd != hwnd)
+               continue
+         if (activeTab) { ; The window has tabs, so make sure this is the right one.
+            shellBrowser := ComObjQuery(w, IID_IShellBrowser, IID_IShellBrowser)
+               DllCall(NumGet(NumGet(shellBrowser+0), 3*A_PtrSize), "UPtr",shellBrowser, "UIntP",thisTab:=0)
+               if (thisTab != activeTab)
+                  continue
+         }
+         return w
+      }
+      return 0
    }
 
    BitmapToFile(pBitmap, filepath := "", quality := "") {
@@ -4215,7 +4391,7 @@ class ImagePut {
       flags := 0x40000004 ; CRYPT_STRING_NOCRLF | CRYPT_STRING_HEX
       DllCall("crypt32\CryptBinaryToString", "ptr", &bin, "uint", size, "uint", flags, "str", str, "uint*", length)
 
-      ; Determine the file extension using herustics. See: http://fileformats.archiveteam.org
+      ; Determine the extension using herustics. See: http://fileformats.archiveteam.org
       extension := 0                                                              ? ""
       : str ~= "(?i)66 74 79 70 61 76 69 66"                                      ? "avif" ; ftypavif
       : str ~= "(?i)^42 4d (.. ){36}00 00 .. 00 00 00"                            ? "bmp"  ; BM
@@ -4435,7 +4611,7 @@ class ImagePut {
       return "data:" mime ";base64," this.StreamToBase64(stream)
    }
 
-   BitmapToDc(pBitmap, alpha := "") {
+   BitmapToDC(pBitmap, alpha := "") {
       ; Revert to built in functionality if a replacement color is declared.
       if (alpha != "") { ; This built-in version is about 25% slower and also preserves transparency.
          DllCall("gdiplus\GdipCreateHBITMAPFromBitmap", "ptr", pBitmap, "ptr*", hbm:=0, "uint", alpha)
@@ -5125,7 +5301,7 @@ class ImageEqual extends ImagePut {
       if (SourceBitmap1 == SourceBitmap2)
          return True
 
-      ; The two bitmaps must be the same size.
+      ; The two bitmaps must be the same size but can have different pixel formats.
       DllCall("gdiplus\GdipGetImageWidth", "ptr", SourceBitmap1, "uint*", width1:=0)
       DllCall("gdiplus\GdipGetImageWidth", "ptr", SourceBitmap2, "uint*", width2:=0)
       DllCall("gdiplus\GdipGetImageHeight", "ptr", SourceBitmap1, "uint*", height1:=0)
@@ -5133,7 +5309,7 @@ class ImageEqual extends ImagePut {
       DllCall("gdiplus\GdipGetImagePixelFormat", "ptr", SourceBitmap1, "int*", format1:=0)
       DllCall("gdiplus\GdipGetImagePixelFormat", "ptr", SourceBitmap2, "int*", format2:=0)
 
-      ; Determine if get width and height failed (as dimensions can never be zero).
+      ; If the dimensions are zero, then get width and height failed.
       if !(width1 && width2 && height1 && height2)
          throw Exception("Get bitmap width and height failed.")
 
@@ -5142,22 +5318,18 @@ class ImageEqual extends ImagePut {
          return False
 
       ; Create clones of the supplied source bitmaps in their original PixelFormat.
-      ; This has the side effect of (1) removing negative stride and solves
-      ; the problem when (2) both bitmaps reference the same stream and only
-      ; one of them is able to retrieve the pixel data through LockBits.
-      ; I assume that instead of locking the stream, the clones lock the originals.
+      ; This has the side effect of solving the problem when both bitmaps reference
+      ; the same stream and only one of them is able to retrieve the pixel data through LockBits.
+      ; This occurs when both streams are fighting over the same seek position.
 
       pBitmap1 := pBitmap2 := 0
       loop 2
-         if DllCall("gdiplus\GdipCloneBitmapAreaI"
-                     ,    "int", 0
-                     ,    "int", 0
-                     ,    "int", width%A_Index%
-                     ,    "int", height%A_Index%
-                     ,    "int", format%A_Index%
-                     ,    "ptr", SourceBitmap%A_Index%
-                     ,   "ptr*", pBitmap%A_Index%)
+         if DllCall("gdiplus\GdipCloneImage", "ptr", SourceBitmap%A_Index%, "ptr*", pBitmap%A_Index%)
             throw Exception("Cloning Bitmap" A_Index " failed.")
+
+      DllCall("gdiplus\GdipGetImagePixelFormat", "ptr", pBitmap1, "int*", format3:=0)
+      if (format1 != format3)
+         throw Exception("Report this error to the developer.")
 
       ; struct RECT - https://referencesource.microsoft.com/#System.Drawing/commonui/System/Drawing/Rectangle.cs,32
       VarSetCapacity(Rect, 16, 0)                 ; sizeof(Rect) = 16
@@ -5168,22 +5340,18 @@ class ImageEqual extends ImagePut {
       VarSetCapacity(BitmapData1, 16+2*A_PtrSize) ; sizeof(BitmapData) = 24, 32
       VarSetCapacity(BitmapData2, 16+2*A_PtrSize) ; sizeof(BitmapData) = 24, 32
 
-      ; Transfer the pixels to a read-only buffer. The user can declare a PixelFormat.
+      ; Force conversion into a pixel buffer. The user can declare a PixelFormat.
       loop 2
          DllCall("gdiplus\GdipBitmapLockBits"
                   ,    "ptr", pBitmap%A_Index%
                   ,    "ptr", &Rect
                   ,   "uint", 1            ; ImageLockMode.ReadOnly
-                  ,    "int", PixelFormat  ; Format32bppArgb is fast.
+                  ,    "int", PixelFormat  ; Defaults to Format32bppArgb for comparison.
                   ,    "ptr", &BitmapData%A_Index%)
 
       ; Get Stride (number of bytes per horizontal line).
       stride1 := NumGet(BitmapData1, 8, "int")
       stride2 := NumGet(BitmapData2, 8, "int")
-
-      ; Well the image has already been cloned, so the stride should never be negative.
-      if (stride1 < 0 || stride2 < 0) ; See: https://stackoverflow.com/a/10341340
-         throw Exception("Negative stride. Please report this error to the developer.")
 
       ; Get Scan0 (top-left pixel at 0,0).
       Scan01 := NumGet(BitmapData1, 16, "ptr")

@@ -1,4 +1,5 @@
 ﻿;|2.5|2024.03.15|1560
+; 来源网址: https://www.autoahk.com/archives/43990
 Persistent
 OnMessage(RegisterCaretMessageHook(true), CaretMsgHandler2)
 CaretMsgHandler2(leftTop, rightBottom, msg, hwnd){
