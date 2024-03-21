@@ -1,4 +1,4 @@
-﻿;|2.1|2023.07.28|1395
+;|2.5|2024.03.20|1395
 /*
 ©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©
 ©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©©© AhkSpy ©©
@@ -31,7 +31,7 @@
 */
 
 
-Global AhkSpyVersion := 5.25
+Global AhkSpyVersion := 5.28
           
 	; ___________________________ Caption _________________________________________________
 
@@ -49,7 +49,7 @@ If (p1 = "Zoom")
 
 If (p1 != "/Another") 
 	SingleInstance()
-
+	
 #NoEnv
 #UseHook
 #KeyHistory 0
@@ -65,6 +65,7 @@ Gosub, CheckAhkVersion
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, Shell32.dll, % A_OSVersion = "WIN_XP" ? 222 : 278
 
+Global PropEnumProcEx := RegisterCallback("PropEnumProcEx", "Fast", 4)
 Global Path_User := A_AppData "\AhkSpy", A_DPI := (A_ScreenDPI / 96)
 If !InStr(FileExist(Path_User), "D")
 	FileCreateDir, % Path_User
@@ -217,7 +218,16 @@ If UseUIA
 
 BLGroup := ["Backlight allways","Backlight disable","Backlight hold shift button"]
 oOther.anchor := {}, oOther.CurrentProcessId := DllCall("GetCurrentProcessId")
+oOther.PEPE := []
+		
 
+oOther.PriorityProc := {0x00008000: "Выше среднего"
+	, 0x00004000: "Ниже среднего"
+	, 0x00000080: "Высокий"
+	, 0x00000040: "Низкий"
+	, 0x00000020: "Обычный"
+	, 0x00000100: "Реального времени"} 
+ 
 If MemoryAnchor
 {
 	If oOther.anchor["Win_text"] := IniRead("Win_Anchor")
@@ -437,12 +447,14 @@ Menu, Sys, Add, % name := "Suspend hotkeys", % oMenu.Sys[name] := "_Suspend"
 Menu, Sys, Add, % name := "Default size", % oMenu.Sys[name] := "DefaultSize"
 Menu, Sys, Add, % name := "Full screen", % oMenu.Sys[name] := "FullScreenMode"
 Menu, Sys, Add, % name := "Find to page", % oMenu.Sys[name] := "_FindView"
+Menu, Sys, Add, % name := "Save report to desktop", % oMenu.Sys[name] := "SaveReport"
 Menu, Sys, Add
-Menu, Sys, Add, Another one AhkSpy, Menu_Another_AhkSpy 
+Menu, Sys, Add, Another one AhkSpy, Menu_Another_AhkSpy  
 Menu, Sys, Add
 Menu, Sys, Add, Open window from clipboard, Menu_LocalOpenWin
 Menu, Sys, Add, Open control from clipboard, Menu_LocalOpenChild
 
+	
 If DarkTheme
 { 
 	Menu, Sys, Color, %MenuDarkColor% 
@@ -775,7 +787,7 @@ Repeat_Loop_Win:
 	Return 
 
 Spot_Win(NotHTML = 0) {
-	Static PrWinPID, ExeFileSize, ComLine, _ComLine, ProcessBitSize, IsAdmin
+	Static PrWinPID, ExeFileSize, ComLine, _ComLine, ProcessBitSize, IsAdmin, PriorityProc
 		, WinProcessPath, WinProcessName, ProcessUserName
 	
 	If NotHTML
@@ -796,8 +808,9 @@ Spot_Win(NotHTML = 0) {
 	oOther.WinClass := WinClass
 	WinGet, WinPID, PID, ahk_id %WinID%
 	If (WinPID != PrWinPID) {
-		GetCommandLineProc(WinPID, _ComLine, ProcessBitSize, IsAdmin)
+		GetCommandLineProc(WinPID, _ComLine, ProcessBitSize, IsAdmin, nPriority)
 		ProcessUserName := GetProcessOwner(WinPID, "user")
+
 		ComLine := TransformHTML(_ComLine), PrWinPID := WinPID
 		WinGet, WinProcessPath, ProcessPath, ahk_id %WinID%
 		Loop, %WinProcessPath%
@@ -806,6 +819,7 @@ Spot_Win(NotHTML = 0) {
 		FileGetSize, ExeFileSize, %WinProcessPath%, k
 		; ExeFileSize := StrReplace(Round(ExeFileSize * 0.001, 3), ".", ",") 
 		ExeFileSize := StrSplit(Round(ExeFileSize * 0.001, 3), ".") 
+		PriorityProc := oOther.PriorityProc[nPriority]
 	}
 	If (WinClass ~= "(Cabinet|Explore)WClass")
 		CLSID := GetCLSIDExplorer(WinID)
@@ -859,6 +873,8 @@ Spot_Win(NotHTML = 0) {
 	IsWindowUnicodeStr := _DP "<span class='param' name='MS:N'>Is unicode:</span>  <span name='MS:'>" (DllCall("user32\IsWindowUnicode", "UPtr", WinID) ? "true" : "false") "</span>"
 	If (ProcessUserName != "")
 		ProcessUserNameStr := _DP "<span class='param' name='MS:N'>User name:</span>  <span name='MS:'>" ProcessUserName "</span>"
+	If (PriorityProc != "")
+		PriorityProcStr := _DP "<span class='param' name='MS:N'>Priority:</span>  <span name='MS:'>" PriorityProc "</span>"
 
 	If !gLocalData
 	{
@@ -922,6 +938,18 @@ Spot_Win(NotHTML = 0) {
 	_Arr_Recent_windows.hwnd[WinID] := {Class: WinClass, Exe: WinProcessName, Title: SubStr(_WinTitle, 1, 20)}
 	_Arr_Recent_windows.Order.InsertAt(1, WinID)
 	
+	oOther.PEPE := [], PEPEText := ""
+	DllCall("EnumPropsEx", "uptr", WinID, "ptr", PropEnumProcEx, "uint", 0)
+	for k, v in oOther.PEPE
+	{
+		PEPEText .= "<span name='MS:' class='param'>" v.Property ":</span> <span name='MS:'>" v.hData "</span>`n"
+	}
+	If PEPEText != 
+	{
+		PEPEText := _T1 " id='__PEPEText'> ( Window properties ) </span>" _T2 _PRE1 "<span>" PEPEText "</span></span>" _PRE2 
+	}  
+	
+	
 	; ___________________________ HTML_Win _________________________________________________
 
 HTML_Win:
@@ -930,7 +958,8 @@ HTML_Win:
 		 
 	If gLocalData
 		back_openwin := _DB _BT1 " id='b_back_openwin'> return " _BT2
-		
+		 
+		 
 	HTML_Win := ""
 	. _T1 " id='__Title'> ( Title ) </span>" _BT1 " id='b__set_wintitle'> set title " _BT2
 	. _DB _BT1 " id='pause_button'> pause " _BT2
@@ -954,7 +983,7 @@ HTML_Win:
 	. _T1 " id='__CommandLine'> ( CommandLine ) </span>" _BT1 " id='w_command_line'> launch " _BT2  _DB  
 		. _BT1 " id='paste_command_line'> paste " _BT2  _DB  _BT1 " id='clean_command_line'> clean " _BT2  _DB  _BT1 " id='command_line_infolder'> in folder " _BT2  _T2 
 	
-	. _PRE1 "<span id='c_command_line' name='MS:'>" ComLine "</span>" _PRE2
+	HTML_Win .= _PRE1 "<span id='c_command_line' name='MS:'>" ComLine "</span>" _PRE2
 	
 	. AhkScriptStringCode
 	
@@ -968,18 +997,21 @@ HTML_Win:
 		. _DP "<span class='param'>left</span> " caX " <span class='param'>top</span> " caY 
 		. " <span class='param'>right</span> " caWinRight " <span class='param'>bottom</span> " caWinBottom  _PRE2 
 
-	. _T1 " id='__Other'> ( Other ) </span>" _BT1 " id='flash_window'> flash " _BT2  _ButWindow_Detective  _T2 
+	HTML_Win .= _T1 " id='__Other'> ( Other ) </span>" _BT1 " id='flash_window'> flash " _BT2  _ButWindow_Detective  _T2 
 
 	. _PRE1 "<span class='param' name='MS:N'>PID:</span>  <span name='MS:'>" WinPID "</span>" 
 		. _DP  ProcessBitSize _BP1 " id='view_WindowCount'>Window count:" _BP2 "  <span name='MS:'>" WinCountProcess "</span>"    
 		. _DP _BP1 " id='view_ControlCount'>Control count:" _BP2 "  <span name='MS:'>" CountControl "</span>" 
+		. _DP  "<span>process</span>" _DP  _BB1 " id='process_close'> close " _BB2 
+		. _DP  _BB1 " id='process_suspend'> suspend " _BB2 
+		. _DP  _BB1 " id='process_resume'> resume " _BB2 
 		. _DP "<span class='param' name='MS:N'>FileSize MB:</span>  <span name='MS:'>" ExeFileSize[1]  
 		. "<span class='param' style='font-size: 0.75em'>." ExeFileSize[2] "</span></span>"
-
+		
 	. "`n<span class='param' name='MS:N'>HWND:</span>  <span name='MS:'>" WinID "</span>" 
-		. _DP  _BB1 " id='win_close'> close " _BB2   
-		. _DP  _BB1 " id='process_close'> process close " _BB2 
-		. _DP  _BB1 " id='window_show_hide'> show / hide " _BB2 
+		. _DP  _BB1 " id='window_show_show'> show " _BB2 
+		. _DP  _BB1 " id='window_hide_hide'> hide " _BB2 
+		. _DP  _BB1 " id='win_close'> win close " _BB2   
 		. _DP  _BB1 " id='window_minimize'> minimize " _BB2
 		. _DP  _BB1 " id='window_maxmize'> maxmize " _BB2
 		. _DP  _BB1 " id='window_restore'> restore " _BB2
@@ -987,12 +1019,12 @@ HTML_Win:
 		. _DP  _BB1 " id='window_redraw'> redraw " _BB2
 	
 	. "`n<span class='param' name='MS:N'>IsAdmin:</span>  <span name='MS:' id='w_IsAdmin'>" IsAdmin "</span>"
-		. IsWindowUnicodeStr ProcessUserNameStr WindowBand 
+		. IsWindowUnicodeStr ProcessUserNameStr PriorityProcStr WindowBand 
 		. _ParentWindow EX1Str CLSID 
 		. _DP "<span class='param'>Create info time:  </span><span name='MS:'>" A_Hour ":" A_Min ":" A_Sec 
 		. ".<span class='param' style='font-size: 0.75em'>" A_MSec "</span></span>"
   
-	. "`n<span class='param'>Style:  </span><span id='w_Style' name='MS:'>" WinStyle "</span>" 
+	HTML_Win .= "`n<span class='param'>Style:  </span><span id='w_Style' name='MS:'>" WinStyle "</span>" 
 		. _DP "<span class='param'>ExStyle:  </span><span id='w_ExStyle' name='MS:'>" WinExStyle "</span>" 
 		. _DP _BB1 " id='get_styles_w'> " (!w_ShowStyles ? "show" : "hide" ) " styles " _BB2
 		. _DP _BB1 " id='update_styles_w'> update styles " _BB2 _PRE2 
@@ -1000,8 +1032,9 @@ HTML_Win:
 	. "`n<span id=WinStyles>" WinStyles "</span>" 
 	. "`n<span id='view_WindowCount_value'></span>"
 	. "`n<span id='view_ControlCount_value'></span>"
-	. SBText  WinText  MenuText "<a></a>" _T0  
- 
+	
+	HTML_Win .= SBText WinText MenuText PEPEText "<a></a>" _T0  
+
 	oOther.WinPID := WinPID
 	oOther.WinID := WinID
 	oOther.ChildID := hChild
@@ -1020,6 +1053,7 @@ Write_Win(scroll = 0) {
 	DivWorkIndex := DivWorkIndex = 1 ? 2 : 1
 	oDivNew := oDivWork%DivWorkIndex%  
 	oDivNew.innerHTML := HTML_Win 
+
 	If oOther.anchor[ThisMode]
 		AnchorScroll(AnchorColor())
 	Else
@@ -1201,6 +1235,17 @@ Spot_Control(NotHTML = 0) {
 			ChildToPath(ControlID), control_path_value := SaveChildPath()
 		If (0 && view_control_child && ChildList(ControlID) = 1)
 			control_child_value := oOther.ChildList
+		
+		oOther.PEPE := [], PEPEText := ""
+		DllCall("EnumPropsEx", "uptr", ControlID, "ptr", PropEnumProcEx, "uint", 0)
+		for k, v in oOther.PEPE
+		{
+			PEPEText .= "<span name='MS:' class='param'>" v.Property ":</span> <span name='MS:'>" v.hData "</span>`n"
+		}
+		If PEPEText != 
+		{
+			PEPEText := _T1 " id='__PEPEText'> ( Window properties ) </span>" _T2 _PRE1 "<span>" PEPEText "</span></span>" _PRE2
+		} 
 	} 
 	If ControlNN !=
 	{
@@ -1325,7 +1370,7 @@ Spot_Control(NotHTML = 0) {
 		CaretPosStr = <span class='error'>Caret position undefined</span>
 		 
 	NCHITTESTStr :=_DP "<span class='param'>WM_NCHITTEST:</span>  <span name='MS:'>" WM_NCHITTEST(MXS, MYS, WinID) "</span>" 
-		
+
 	
 	; ___________________________ HTML_Control _________________________________________________
  
@@ -1358,7 +1403,9 @@ HTML_Control:
 		. _DP _BB1 " id='get_styles_c'> " (!c_ShowStyles ? "show styles" : "hide styles") " " _BB2
 		. _DP _BB1 " id='update_styles_c'> update styles " _BB2  
 		 
-		. "`n" _BB1 " id='control_show_hide'> show / hide " _BB2 
+		. "`n" _BB1 " id='control_show_show'> show " _BB2 
+		. _DP  _BB1 " id='control_hide_hide'> hide " _BB2 
+		
 		. _DP  _BB1 " id='control_destroy'> close " _BB2  
 		. _DP  _BP1 " id='control_totree'> View to tree " _BP2
 		. _DP  _BP1 " id='control_child'> Get child " _BP2 
@@ -1414,7 +1461,7 @@ HTML_Control:
 		. _DP "<span class='param'>Invert RGB: </span> <span name='MS:' id='sInvert_RGB0'>0x" sInvert_RGB "</span>" 
 		. _DP "#<span name='MS:' id='sInvert_RGB'>" sInvert_RGB "</span>" _DP "<span style='background-color: #" sInvert_RGB "' id='RenderInvert_RGB'>          </span>" _PRE2 
 	
-	. _T1 " id='__Window'> ( Window ) </span>" _BT1 " id='flash_ctrl_window'> flash " _BT2  _T2 
+	HTML_Control .= _T1 " id='__Window'> ( Window ) </span>" _BT1 " id='flash_ctrl_window'> flash " _BT2  _T2 
 	 
 	. _PRE1 "<span><span class='param' name='MS:S'>ahk_class</span> <span name='MS:'>" WinClass "</span></span> "
 		. "<span><span class='param' name='MS:S'>ahk_exe</span> <span name='MS:'>" ProcessName "</span></span> "
@@ -1428,9 +1475,7 @@ HTML_Control:
 		. NCHITTESTStr
 	. "`n" _BP1 " id='set_button_focus_ctrl'>Focus control:" _BP2 "  <span name='MS:'>" CtrlFocus "</span>" _PRE2 
 
-	. "`n" HTML_ControlExist 
-
-	. "`n" CtrlInfo CtrlText UseUIAStr AccText "<a></a>" _T0
+	HTML_Control .= "`n" HTML_ControlExist "`n" CtrlInfo CtrlText UseUIAStr AccText PEPEText "<a></a>" _T0
 	
 	oOther.ControlID := ControlID
 	oOther.MouseWinID := WinID
@@ -1906,7 +1951,8 @@ AccInfoUnderMouse(mx, my, wx, wy, cx, cy, caX, caY, WinID, ControlID, fromhandle
 	pathbutton := _DP _BP1 " id='acc_path'> Get path " _BP2 "</span><span id='acc_path_error'>" error "</span>" 
 	code := _PRE1 "<span class='param'>Type:</span>  " Var pathbutton 
 	. _DP _BP1 " id='acc_DoDefaultAction2'> DoDefaultAction " _BP2 "</span>"
-	. _PRE2 "<span id='acc_path_value'>" acc_path_value "</span>" 
+	. _DP _BP1 " id='acc_accDoaccSelect'> accSelect " _BP2 "</span>"
+	. _PRE2 "<span id='acc_path_value'>" acc_path_value "</span>"
 
 	AccGetLocation(AccObj, child)
 	x := AccCoord[1], y := AccCoord[2], w := AccCoord[3], h := AccCoord[4] 
@@ -1953,7 +1999,7 @@ AccInfoUnderMouse(mx, my, wx, wy, cx, cy, caX, caY, WinID, ControlID, fromhandle
 	}
 	If ((Var := AccObj.accName(child)) != "")
 		code .= _T1 " id='P__Name_Acc'" _T1P "> ( Name ) </span><a></a>" _BT1 " id='copy_button'> copy " _BT2 _T2 _LPRE ">" TransformHTML(Var) _PRE2
-		
+ 
 	If ((Var := AccObj.accValue(child)) != "")
 		code .= _T1 " id='P__Value_Acc'" _T1P "> ( Value ) </span><a></a>" _BT1 " id='copy_button_Value_Acc'> copy " _BT2 
 		. _DB _BT1 " id='set_accvalue'> set " _BT2 _T2 _LPRE " id='get_accvalue'>" TransformHTML(Var) _PRE2
@@ -2031,7 +2077,7 @@ EVENT_OBJECT_UNCLOAKED(hWinEventHook, event, hwnd, idObject, idChild) {
 accset_accvalue() { 
 	If oPubObj.Acc.CLOAKED
 		Return 0, ToolTip("CLOAKED", 500)
-	Acc := Object(oPubObj.Acc.AccObj)   
+	Acc := Object(oPubObj.Acc.AccObj)    
 	Acc.accValue := oDoc.getElementById("get_accvalue").innerText 
 } 
 
@@ -2039,10 +2085,15 @@ accDoDefaultAction() {
 	If oPubObj.Acc.CLOAKED
 		Return 0, ToolTip("CLOAKED", 500)
 	Acc := Object(oPubObj.Acc.AccObj) 
-	Acc.accDoDefaultAction(oPubObj.Acc.child) 
-	
+	Acc.accDoDefaultAction(oPubObj.Acc.child)  
+} 
+
+accDoaccSelect() { 
+	If oPubObj.Acc.CLOAKED
+		Return 0, ToolTip("CLOAKED", 500)
+	Acc := Object(oPubObj.Acc.AccObj)
 	; https://learn.microsoft.com/ru-ru/windows/win32/winauto/selflag
-	; Acc.accSelect(0x00000002, oPubObj.Acc.child) 
+	Acc.accSelect(0x00000002, oPubObj.Acc.child) 
 } 
 	
 	;;	https://docs.microsoft.com/ru-ru/windows/desktop/WinAuto/object-state-constants
@@ -3767,6 +3818,37 @@ WM_NCHITTEST(x, y, hWnd) {
 	Return arr[ErrorLevel] " := " ErrorLevel
 }
 
+suspendProcess(pid) { 
+    If !pid 
+        Return 
+	If !(procHWND := DllCall("OpenProcess", "uInt", 0x1F0FFF, "Int", 0, "Int", pid))
+		Return -1
+	DllCall("ntdll.dll\NtSuspendProcess", "Int", procHWND)
+	DllCall("CloseHandle", "Int", procHWND) 
+}
+
+resumeProcess(pid) { 
+    If !pid 
+        Return 
+	If !(procHWND := DllCall("OpenProcess", "uInt", 0x1F0FFF, "Int", 0, "Int", pid))
+		Return -1
+	DllCall("ntdll.dll\NtResumeProcess", "Int", procHWND)
+	DllCall("CloseHandle", "Int", procHWND) 
+}
+
+; Свойства окна
+; https://learn.microsoft.com/ru-ru/windows/win32/winmsg/window-properties
+; https://forum.script-coding.com/viewtopic.php?pid=159363#p159363
+
+PropEnumProcEx(hWnd, lpszString, hData, dwData) {
+   Property := StrGet(lpszString, "UTF-16")
+   If (Property = "")
+      Property := lpszString . " (Atom)"
+   oOther.PEPE.Push({Property: Property, hData: hData})
+   return true
+}
+
+
 	; ___________________________ List Window _________________________________________________
 
 
@@ -4607,7 +4689,7 @@ Add_DP(addN, Items*) {
 
 	;;  http://forum.script-coding.com/viewtopic.php?pid=111775#p111775
 
-GetCommandLineProc(PID, ByRef Cmd, ByRef Bit, ByRef IsAdmin) {
+GetCommandLineProc(PID, ByRef Cmd, ByRef Bit, ByRef IsAdmin, ByRef nPriority) {
 	Static PROCESS_QUERY_INFORMATION := 0x400, PROCESS_VM_READ := 0x10, STATUS_SUCCESS := 0
 
 	hProc := DllCall("OpenProcess", UInt, PROCESS_QUERY_INFORMATION|PROCESS_VM_READ, Int, 0, UInt, PID, Ptr)
@@ -4617,6 +4699,7 @@ GetCommandLineProc(PID, ByRef Cmd, ByRef Bit, ByRef IsAdmin) {
 		PtrSize := 4, PtrType := "UInt", pPtr := "UIntP", offsetCMD := 0x40
 	else
 		PtrSize := 8, PtrType := "Int64", pPtr := "Int64P", offsetCMD := 0x70
+	nPriority   := DllCall("GetPriorityClass", Ptr, hProc) 
 	hModule := DllCall("GetModuleHandle", "str", "Ntdll", Ptr)
 	if (A_PtrSize < PtrSize) {            ;; скрипт 32, целевой процесс 64
 		if !QueryInformationProcess := DllCall("GetProcAddress", Ptr, hModule, AStr, "NtWow64QueryInformationProcess64", Ptr)
@@ -6223,6 +6306,16 @@ _FindView() {
 	AnchorFitScroll()
 }
 
+SaveReport() { 
+	File := FileOpen(A_Desktop "\AhkSpy report.html", "rw")
+	File.Length := 0
+	File.Pos := 0       
+	File.Write(HTML_Win HTML_Control)
+	File.Close() 
+	run % A_Desktop "\AhkSpy report.html"
+}
+
+
 FindHide() {
 	Gui, F: Show, Hide
 	GuiControlGet, a, 1:Pos, %hActiveX%
@@ -6375,9 +6468,9 @@ MS_Selected() {
 	range.select()  
 }
 
-MS_Select(EL) {  
+MS_Select(EL) {   
 	If EL.Name = "MS:S" || EL.Name = "MS:SP"
-		oMS.ELSel := EL.ParentElement 
+		oMS.ELSel := EL.ParentElement
 	Else If EL.Name = "MS:N"
 		oMS.ELSel := oDoc.all.item(EL.sourceIndex + 1)
 	Else If EL.Name = "MS:P"
@@ -6820,13 +6913,23 @@ Class Events {  ;;	http://forum.script-coding.com/viewtopic.php?pid=82283#p82283
 		cl := oDoc.getElementById("c_command_line").OuterText
 		StringReplace, cl, cl, ", , 1 
 		process := oDoc.getElementById("copy_processpath").OuterText
-		cl := RegExReplace(cl, "i)\Q" process "\E(.*)", "$1", , 1)
+		cl := RegExReplace(cl, "i)\Q" literalRegex(process) "\E(.*)", "$1", , 1)
 		StringReplace, cl, cl, /CP65001, , 1  
 		cl := Trim(cl, " ")
-		oDoc.getElementById("c_command_line").innerText :=  RegExReplace(cl, "i)\Q" process "\E(.*)", "$1", , 1)
+		oDoc.getElementById("c_command_line").innerText :=  RegExReplace(cl, "i)\Q" literalRegex(process) "\E(.*)", "$1", , 1)
 	}
 }
-
+literalRegex(str)
+{
+   if InStr(str, "\E", 1)
+   {
+      StringCaseSenseOld := A_StringCaseSense
+      StringCaseSense, On
+      str := StrReplace(str, "\E", "\E\\E\Q")
+      StringCaseSense, % StringCaseSenseOld
+   }
+   return str
+}
 ButtonClick(oevent) { 
 	thisid := oevent.id
 	If (thisid = "copy_wintext") {
@@ -7010,15 +7113,22 @@ ButtonClick(oevent) {
 		oDoc.getElementById("content_Control_Text").innerText := Clipboard
 	Else If (thisid = "process_close" && (oOther.WinPID || !ToolTip("Invalid parametrs", 500)) && ConfirmAction("Process close?"))
 		Process, Close, % oOther.WinPID
+	; Else If (thisid = "process_suspend" && (oOther.WinPID || !ToolTip("Invalid parametrs", 500)) && ConfirmAction("Process suspend?"))
+	Else If (thisid = "process_suspend" && (oOther.WinPID || !ToolTip("Invalid parametrs", 500)))
+		suspendProcess(oOther.WinPID), ToolTip("suspend", 500)
+	Else If (thisid = "process_resume" && (oOther.WinPID || !ToolTip("Invalid parametrs", 500)))
+		resumeProcess(oOther.WinPID), ToolTip("resume", 500)
 	Else If (thisid = "win_close" && (oOther.WinPID || !ToolTip("Invalid parametrs", 500)) && ConfirmAction("Window close?"))
 		WinClose, % "ahk_id" oOther.WinID
 	Else If (thisid = "control_destroy" && (WinExist("ahk_id" oOther.ControlID) || !ToolTip("window not exist", 500)) && ConfirmAction("Window close?"))
 			WinClose, % "ahk_id" oOther.ControlID     ;; DllCall("DestroyWindow", "Ptr", oOther.ControlID)   ;;  не работает
-	Else If (thisid = "control_show_hide" || thisid = "window_show_hide") {
-		Hwnd := thisid = "window_show_hide" ? oOther.WinID : oOther.ControlID
+	Else If (InStr(thisid, "_show_show") || InStr(thisid, "_hide_hide")) {
+		Hwnd := InStr(thisid, "window_") ? oOther.WinID : oOther.ControlID 
+		
 		If !WinExist("ahk_id" Hwnd)  
 			Return ToolTip("window not exist", 500)
-		If b := DllCall("IsWindowVisible", "UPtr", Hwnd) 
+		; If b := DllCall("IsWindowVisible", "UPtr", Hwnd) 
+		If b := InStr(thisid, "hide_hide")
 			WinHide, % "ahk_id" Hwnd
 		Else 
 			WinShow, % "ahk_id" Hwnd
@@ -7195,14 +7305,14 @@ ButtonClick(oevent) {
 		WinSet, TransColor, % oDoc.getElementById("get_win_TransColor").innerText, % "ahk_id" oOther.WinID
 	Else If (thisid = "set_button_OwnedId")   
 	{
-		; ToolTip % oOther.WinID "`n" oDoc.getElementById("get_win_OwnedId").innerText
+		; MsgBox %  oOther.WinID "`n" oDoc.getElementById("get_win_OwnedId").innerText
 		If (oDoc.getElementById("get_win_OwnedId").innerText + 0 = "" || oOther.WinID + 0 = "")
 			Return ToolTip("ERROR", 500)
 		SetOwner(oOther.WinID, oDoc.getElementById("get_win_OwnedId").innerText) 
 		ToolTip("OK", 500)
 	}
 	Else If (thisid = "set_button_ParentWindow")   
-	{
+	{ 
 		If (oDoc.getElementById("get_win_ParentWindow").innerText + 0 = "" || oOther.WinID + 0 = "")
 			Return ToolTip("ERROR", 500) 
 		DllCall("SetParent", "Ptr", oOther.WinID, "Ptr", oDoc.getElementById("get_win_ParentWindow").innerText)
@@ -7315,6 +7425,8 @@ ButtonClick(oevent) {
 		accset_accvalue()  
 	Else If (thisid = "acc_DoDefaultAction" || thisid = "acc_DoDefaultAction2")
 		accDoDefaultAction()   
+	Else If (thisid = "acc_accDoaccSelect")
+		accDoaccSelect()  
 	Else If thisid = b_hwnd_flash
 	{ 
 		WinGetPos, X, Y, W, H, % "ahk_id" oevent.value
