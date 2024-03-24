@@ -1,4 +1,4 @@
-﻿;|2.4|2023.10.11|1239
+﻿;|2.5|2024.03.24|1239
 ; 这里只是展示 TV 定位函数
 ; 注意 64 位主程序对 64 位程序打开的对话框有效, 对 32 位程序打开的对话框无效
 Menu, Tray, UseErrorLevel
@@ -75,15 +75,17 @@ hdrive := SubStr(dpath, 1, 2)
 If WinExist("ahk_class #32770")
 {
 	DriveGet, OutputVar, Label, %hdrive%
-	dpath := StrReplace(dpath, hdrive, OutputVar " (" hdrive ")" )
+	dpath := StrReplace(dpath, hdrive, ((OutputVar = "")?"本地磁盘 (" hdrive ")" : OutputVar " (" hdrive ")"))
 	dpath := StrReplace(dpath, "\users\", "\用户\")
 	dpath := StrReplace(dpath, "\desktop", "\桌面")
+	dpath := StrReplace(dpath, "\Documents and Settings", "\用户")
 }
-;tooltip % dpath
 if (A_OSVersion = "WIN_7")
 	TVPath_Set(hTreeView, (hdialogedit?"计算机\":instr(dpath, "桌面")?"":"桌面\计算机\") dpath, outMatchPath,,,10)
 else ; 适配 Win10
-	TVPath_Set(hTreeView, (hdialogedit=0?"桌面\此电脑\":instr(dpath, "桌面")?"":"桌面\此电脑\") dpath, outMatchPath,,,10)
+	TVPath_Set(hTreeView, (hdialogedit=0?"此电脑\":"此电脑\") dpath, outMatchPath,,,20)
+
+;msgbox % (hdialogedit=0?"桌面\此电脑\":instr(dpath, "桌面")?"":"桌面\此电脑\") dpath
 ControlFocus, , ahk_id %hTreeView%
 if hdialogedit
 	ControlSend, , {Enter}, ahk_id %hTreeView%
@@ -102,19 +104,19 @@ If WinExist("ahk_class #32770")
 {
 	hdrive := SubStr(dpath, 1, 2)
 	DriveGet, OutputVar, Label, %hdrive%
-	dpath := StrReplace(dpath, hdrive, OutputVar " (" hdrive ")" )
+	dpath := StrReplace(dpath, hdrive, OutputVar = ""?"本地磁盘 (" hdrive ")" : OutputVar " (" hdrive ")" )
 	dpath := StrReplace(dpath, "\users\", "\用户\")
 	dpath := StrReplace(dpath, "\desktop", "\桌面")
-;tooltip % dpath " - " hTreeView
+	dpath := StrReplace(dpath, "\Documents and Settings", "\用户")
+;msgbox % dpath " - " hTreeView
 ;msgbox % (hdialogedit=0?"此电脑\":instr(dpath, "桌面")?"":"桌面\此电脑\") "`n" hdialogedit
 if (A_OSVersion = "WIN_7")
 	TVPath_Set(hTreeView, (hdialogedit?"计算机\":instr(dpath, "桌面")?"":"桌面\计算机\") dpath, outMatchPath,,,10)
 else ; 适配 Win10
-	TVPath_Set(hTreeView, (hdialogedit=0?"此电脑\":instr(dpath, "桌面")?"":"桌面\此电脑\") dpath, outMatchPath,,,10)
+	TVPath_Set(hTreeView, (hdialogedit=0?"此电脑\":"此电脑\") dpath, outMatchPath,,,10)
 ControlFocus, , ahk_id %hTreeView%
 if hdialogedit
 	ControlSend, , {Enter}, ahk_id %hTreeView%
-
 }
 If WinExist("ahk_class RegEdit_RegEdit")
 {
@@ -141,6 +143,12 @@ ProcessGetBits(vPID){   ;;获取进程位数
 		Return 86
 	Return 64
 }
+
+!q::
+ControlGet, hTreeView, Hwnd,, SysTreeView321, A
+TVPath_Get(hTreeView, outPath)
+msgbox % outPath
+return
 
 ini2obj(file){
 	iniobj := {}
@@ -451,6 +459,7 @@ TVPath_Set(hTreeView, inPath, ByRef outMatchPath,  EscapeChar="", Delimiter="\",
 		hSelItem:=errorlevel
 
 		htext := TVPath_GetText(hTreeView, hSelItem)
+		;msgbox % htext
 		CF_tooltip(htext, 2000)
 		;if (htext = "收藏夹") || (htext = "快速访问") ; 资源管理器 首个节点为收藏夹
 		if (htext != "此电脑") && (htext != "计算机")     ;or (htext != "桌面")

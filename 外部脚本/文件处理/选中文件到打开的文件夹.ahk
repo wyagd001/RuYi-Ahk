@@ -1,4 +1,4 @@
-﻿;|2.0|2023.07.01|1109
+﻿;|2.5|2024.03.23|1109
 CandySel := A_Args[1]
 if !CandySel
 {
@@ -8,21 +8,39 @@ if !CandySel
 	if !CandySel
 		exitapp
 }
+SplitPath CandySel, CandySel_FileName, CandySel_ParentPath
+SplitPath CandySel_ParentPath,, CandySel_YeYePath
 CandySel2 := A_Args[2]
-;msgbox % CandySel " - " CandySel2
-;Return
-
 if CandySel2
-	goto SendToFolder
-;msgbox % CandySel
+{
+	if instr(CandySel2, ",")
+		FavFolderArr := StrSplit(CandySel2, ",")
+	else
+		FavFolderArr := [CandySel2]
+}
+
 ; 1109
 Cando_CopyToOpenedFolder:
 AllOpenFolder := GetAllWindowOpenFolder()
 Menu SendToOpenedFolder, Add, 发送到打开的文件夹, nul
 Menu SendToOpenedFolder, Add
+Menu SendToOpenedFolder, add, %CandySel_YeYePath%, Cando_SendToFolder
+Menu SendToOpenedFolder, Add
 for k, v in AllOpenFolder
 {
+	if (v = CandySel_ParentPath)
+		continue
 	Menu SendToOpenedFolder, add, %v%, Cando_SendToFolder
+}
+if FavFolderArr
+{
+	Menu SendToOpenedFolder, Add
+	for k, v in FavFolderArr
+	{
+		if (v = CandySel_ParentPath)
+			continue
+		Menu SendToOpenedFolder, add, %v%, Cando_SendToFolder
+	}
 }
 Menu SendToOpenedFolder, Show
 Menu, SendToOpenedFolder, DeleteAll
@@ -34,7 +52,6 @@ return
 Cando_SendToFolder:
 if !instr(CandySel, "`n")   ; 单文件
 {
-	SplitPath, CandySel, CandySel_FileName
 	TargetFile := PathU(A_ThisMenuItem "\" CandySel_FileName)
 	if GetKeyState("Shift")
 		FileMove %CandySel%, %TargetFile%
@@ -47,30 +64,6 @@ else
 	{
 		SplitPath, A_LoopField, Tmp_FileName
 		TargetFile := PathU(A_ThisMenuItem "\" Tmp_FileName)
-		if GetKeyState("Shift")
-			FileMove %A_LoopField%, %TargetFile%
-		else
-			FileCopy %A_LoopField%, %TargetFile%
-	}
-}
-Return
-
-SendToFolder:
-if !instr(CandySel, "`n")
-{
-	SplitPath, CandySel, CandySel_FileName
-	TargetFile := PathU(CandySel2 "\" CandySel_FileName)
-	if GetKeyState("Shift")
-		FileMove %CandySel%, %TargetFile%
-	else
-		FileCopy %CandySel%, %TargetFile%
-}
-else
-{
-	Loop, Parse, CandySel, `n,`r
-	{
-		SplitPath, A_LoopField, Tmp_FileName
-		TargetFile := PathU(CandySel2 "\" Tmp_FileName)
 		if GetKeyState("Shift")
 			FileMove %A_LoopField%, %TargetFile%
 		else
