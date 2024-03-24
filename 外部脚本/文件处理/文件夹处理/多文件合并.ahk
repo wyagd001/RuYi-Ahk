@@ -1,4 +1,4 @@
-﻿;|2.5|2023.10.20|1220
+﻿;|2.5|2024.03.24|1548
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\f17f.ico"
 
@@ -10,7 +10,7 @@ Gui, Add, Edit, xp+80 yp-5 w550 h25 vsfolder, % CandySel
 Gui, Add, Button, xp+560 yp-2 w60 h30 gstartsearch, 载入
 Gui, Add, Text, x10 yp+40 h25, 指定扩展名:
 Gui, Add, Edit, xp+80 yp-5 w550 h25 vsExt, % "txt,ahk,md"
-Gui, Add, Button, xp+560 yp w60 h30 gnull, 执行
+Gui, Add, Button, xp+560 yp w60 h30 gexemerge, 执行
 
 Gui, Add, Text, x10 yp+40  w60, 文件名:
 Gui, Add, Edit, xp+80 yp-3 w150 h25 vofilename,
@@ -19,11 +19,7 @@ gui, add, ComboBox, xp+80 yp-3 w100  vOut_Code, ANSI(中文简体)|UTF-8 Raw|UTF
 Gui, Add, CheckBox, xp+110 yp h30 vaddfilepath, 合并时添加文件名到首行
 
 Gui, Add, ListView, x10 yp+40 w700 h500 vfilelist hwndHLV Checked AltSubmit, 序号|文件名|相对路径|扩展名|文件编码|大小(KB)|修改日期|完整路径   ;
-Gui, Add, Button, xp+710 yp w60 geditnewrow, 新增
-Gui, Add, Button, xp yp+28 w60 geditrow, 编辑
-Gui, Add, Button, xp yp+28 w60 gDelListItem, 删除
-
-Gui, Add, Button, xp yp+40 w60 gMoveRow_Up, 向上
+Gui, Add, Button, xp+710 yp w60 gMoveRow_Up, 向上
 Gui, Add, Button, xp yp+28 w60 gMoveRow_Down, 向下
 
 Gui, Add, Button, x10 y630 w60 h30 gcheckall, 全选
@@ -78,8 +74,7 @@ LV_ModifyCol(4, 60)
 LV_ModifyCol(6, 75)
 Return
 
-null:
-
+exemerge:
 gui, Submit, NoHide
 RowNumber := 0
 ofilecode := valuetocp[out_code]
@@ -99,15 +94,6 @@ Loop
 ofilename := ofilename ? ofilename : "合并_" A_Now ".txt"
 FileAppend, %Tmp_Str%, %sfolder%\%ofilename%, % ofilecode
 Return
-
-
-settingInifile := A_ScriptDir "\股票当天行情.ini"
-settingobj := ini2obj(settingInifile)
-Global settingobj, settingInifile
-ColorsOn := settingobj["选项"]["显示颜色"]
-speccolor := settingobj["选项"]["仅五六列显示颜色"]
-
-return
 
 GuiClose:
 ExitApp
@@ -172,60 +158,6 @@ GetStringIndex(String, Index := "")
 	else
 		return arrCandy_Cmd_Str
 }
-
-editrow:
-RF := LV_GetNext(0, "F")
-if RF
-{
-	LV_GetText(R_index, RF, 1)
-	LV_GetText(R_Code, RF, 2)
-	LV_GetText(R_Name, RF, 3)
-	LV_GetText(R_Share, RF, 8)
-	LV_GetText(R_Price, RF, 9)
-}
-editnewrow:
-Gui, 98:Destroy
-Gui, 98:+Owner1
-Gui, 1:+Disabled
-Gui, 98:Default
-Gui, Submit, NoHide
-if !R_index && !R_Code
-	R_index := settingobj["股票"].Count()+1
-Gui, Add, Text, x20 y20 w50 h20, 编号：
-Gui, Add, Text, x20 y50 w60 h20, 股票代码：
-Gui, Add, Text, x20 y80 w80 h20, 股票名称：
-Gui, Add, Text, x20 y110 w80 h20, 持有份额：
-Gui, Add, Text, x20 y140 w80 h20, 成本价格：
-
-Gui, Add, Edit, x110 y20 w100 h20 readonly vR_index, %R_index%
-Gui, Add, Edit, x110 y50 w100 h20 vR_Code, %R_Code%
-Gui, Add, Edit, x110 y80 w100 h20 vR_Name, %R_Name%
-Gui, Add, Edit, x110 y110 w100 h20 vR_Share, %R_Share%
-Gui, Add, Edit, x110 y140 w100 h20 vR_Price, %R_Price%
-
-Gui, Add, Button, x200 y170 w70 h30 g98ButtonOK, 确定
-Gui, Add, Button, x280 y170 w70 h30 g98GuiClose Default, 取消
-Gui, Show,, 股票基金项目编辑
-Return
-
-98ButtonOK:
-Gui, 98:Submit
-Gui, 98:Destroy
-Gui, 1:Default
-Gui, 1:-Disabled
-Gui, Submit, NoHide
-settingobj["股票"][R_index] := R_Code "|" R_Name "|" R_Share "|" R_Price
-obj2ini(settingobj, settingInifile)
-;RefreshData("股票")
-R_index := R_Code := R_Name := R_Share := R_Price := ""
-return
-
-98GuiEscape:
-98GuiClose:
-Gui, 1:-Disabled
-Gui, 98:Destroy
-R_index := R_Code := R_Name := R_Share := R_Price := ""
-Return
 
 MoveRow_Up:
 Gui, Submit, NoHide
@@ -391,7 +323,7 @@ Editfilefromlist:
 RF := LV_GetNext("F")
 if RF
 {
-	LV_GetText(Tmp_file, RF, 7)
+	LV_GetText(Tmp_file, RF, 8)
 }
 run notepad  %Tmp_file%
 return
@@ -400,7 +332,7 @@ openfilefromlist:
 RF := LV_GetNext("F")
 if RF
 {
-	LV_GetText(Tmp_file, RF, 7)
+	LV_GetText(Tmp_file, RF, 8)
 }
 run %Tmp_file%
 return
@@ -409,7 +341,7 @@ openfilepfromlist:
 RF := LV_GetNext("F")
 if RF
 {
-	LV_GetText(Tmp_file, RF, 7)
+	LV_GetText(Tmp_file, RF, 8)
 }
 SplitPath, Tmp_file,, OutDir
 Run, %OutDir%

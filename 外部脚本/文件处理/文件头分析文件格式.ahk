@@ -11,8 +11,7 @@ File_GetExt(aFile, aNumBytes = 0, aMinimum = 4)
 	_hFile := FileOpen(aFile, "r")
 	; force position to 0 (zero)
 	_hFile.Position := 0
-	; 文件小于100k, 则读取整个文件
-	_nBytes := (_hFile.length < 102400) ? (_hFile.RawRead(_rawBytes, _hFile.length)) : (aNumBytes = 0) ? (_hFile.RawRead(_rawBytes, 102402)) : (_hFile.RawRead(_rawBytes, aNumBytes))
+	_nBytes := (_hFile.length < 1024) ? (_hFile.RawRead(_rawBytes, _hFile.length)) : (aNumBytes = 0) ? (_hFile.RawRead(_rawBytes, 1026)) : (_hFile.RawRead(_rawBytes, aNumBytes))
 	_hFile.Close()
 
 	; Initialize vars
@@ -47,8 +46,6 @@ File_GetExt(aFile, aNumBytes = 0, aMinimum = 4)
 	{
 		return "3gp"
 	}
-
-
 	else if ((_bytesArr[0] = 0x37) && (_bytesArr[1] = 0x7A) && (_bytesArr[2] = 0xBC) && (_bytesArr[3] = 0xAF))
 	&& ((_bytesArr[4] = 0x27) && (_bytesArr[5] = 0x1C))
 	{
