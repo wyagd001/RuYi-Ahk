@@ -11,7 +11,7 @@ if checkSoftlink
 	return
 }
 if !checkhardlink && !checkSoftlink
-	msgbox % "文件没有硬链接文件, 也不是软连接文件."
+	msgbox % "文件没有硬链接文件, 也不是软链接文件."
 return
 
 ListHardLinks(sFile)

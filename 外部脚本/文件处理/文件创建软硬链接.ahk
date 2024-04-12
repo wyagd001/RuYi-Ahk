@@ -17,7 +17,7 @@ Gui, Add, Edit, x90 y15 h40 w350 readonly vSHHL_TGPath, % CandySel
 Gui, Add, Text, x10 y65, 链接文件(&P)
 Gui, Add, Edit, x90 y63 h40 w350 vSHHL_Path gupdate_descr,
 Gui, Add, Radio, x90 y110 w120 h30 vSHHL_Type_Hardlink Checked gupdate_descr, 硬链接(仅文件)
-Gui, Add, Radio, x240 y110 w120 h30 vSHHL_Type_SymbolicLink gupdate_descr, 符号链接(软连接)
+Gui, Add, Radio, x240 y110 w120 h30 vSHHL_Type_SymbolicLink gupdate_descr, 符号链接(软链接)
 Gui, Add, Text, x10 y150, 说明(&P)
 Gui, Add, Edit, x90 y148 h40 w350 readonly vSHHL_descr,
 Gui, Add, Button, x280 y200 w80 h25 Default gSHHL_OK, 确定(&S)

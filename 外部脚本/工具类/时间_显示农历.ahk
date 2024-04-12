@@ -1,4 +1,4 @@
-﻿;|2.5|2024.02.23|1555
+﻿;|2.6|2024.04.08|1555
 ;Menu, Tray, UseErrorLevel
 ;Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\f739.ico"
 
@@ -54,6 +54,12 @@ JCTF:
 	dongzhidata := A_YYYY "12" dongzhi(A_YYYY)
 	if (dongzhidata = today)
 		TX .= "冬至"
+
+	if !TX
+	{
+		FormatTime, 返回周几, %A_YYYY%%A_MM%%A_DD%, ddd
+		TX := 返回周几
+	}
 
 if WinExist("AppBarWin ahk_class AutoHotkeyGUI")
 {

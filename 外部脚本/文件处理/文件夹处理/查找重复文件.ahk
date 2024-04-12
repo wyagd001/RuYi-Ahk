@@ -1,4 +1,4 @@
-﻿;|2.5|2023.11.18|1229
+﻿;|2.6|2024.03.29|1229
 CandySel :=  A_Args[1]
 ;CandySel := "C:\Documents and Settings\Administrator\Desktop\文本碎片小脚本"
 Menu, Tray, UseErrorLevel
@@ -12,15 +12,16 @@ Gui, Add, Text, x10 yp+40 h25, 目标文件夹:
 Gui, Add, Edit, xp+80 yp-5 w550 h25 vtfolder,
 Gui, Add, Button, xp+560 yp h25 gseltfolder, ...
 Gui, Add, ListView, x10 yp+40 w700 h500 vfilelist Checked hwndHLV AltSubmit, 分组|序号|文件名|相对路径|大小|修改日期|完整路径|md5
-Gui, Add, Button, xp yp+510 w60 h30 guncheckall, 全不选
-Gui, Add, Button, xp+70 yp w60 h30 gEditfilefromlist, 编辑文件
-Gui, Add, Button, xp+70 yp w60 h30 gopenfilefromlist, 打开文件
-Gui, Add, Button, xp+70 yp w60 h30 gopenfilepfromlist, 打开路径
+Gui, Add, Button, xp yp+510 w50 h30 guncheckall, 全不选
+Gui, Add, Button, xp+55 yp w50 h30 gswitchcheck, 反选
+Gui, Add, Button, xp+55 yp w60 h30 gEditfilefromlist, 编辑文件
+Gui, Add, Button, xp+65 yp w60 h30 gopenfilefromlist, 打开文件
+Gui, Add, Button, xp+65 yp w60 h30 gopenfilepfromlist, 打开路径
 
-Gui, Add, Radio, xp+120 yp w70 h30 Checked1 vactionmode, 删除勾选
-Gui, Add, Radio, xp+70 yp w160 h30 , 移动勾选到目标文件夹
+Gui, Add, Radio, xp+100 yp w70 h30 Checked1 vactionmode, 删除勾选
+Gui, Add, Radio, xp+75 yp w160 h30 , 移动勾选到目标文件夹
 Gui, Add, Button, xp+170 yp w60 h30 grpview, 预览结果
-Gui, Add, Button, xp+70 yp w60 h30 grundel, 执行
+Gui, Add, Button, xp+65 yp w50 h30 grundel, 执行
 gui, Show,, 查找文件夹中的重复文件
 
 if FileExist(CandySel)
@@ -32,14 +33,15 @@ gui, Submit, NoHide
 folderobj := {}, fsizeobj := {}, fMD5obj := {}, md5obj := {}
 ToolTip, % "正在查找重复文件, 请稍候..."
 LV_Delete()
+; 查找文件夹, 最多支持3个文件夹, 文件夹以 "|" 或 ";" 分隔
 Loop, parse, sfolder, |;
 {
 	;msgbox % A_LoopField
 	Loop, Files, %A_LoopField%\*.*, FR
 	{
-		if A_LoopFileSize = 0
+		if A_LoopFileSize = 0   ; 忽略零字节的文件
 			continue
-		if sExt
+		if sExt                 ; 如果指定了扩展名, 忽略其他扩展名文件
 		{
 			if A_LoopFileExt not in %sExt%
 				continue
@@ -148,6 +150,18 @@ uncheckall:
 LV_Modify(0, "-check")
 return
 
+switchcheck:
+Loop % LV_GetCount()
+{
+	SendMessage, 0x102C, A_index - 1, 0xF000, SysListView321
+	IsChecked := (ErrorLevel >> 12) - 1
+	if IsChecked
+		LV_Modify(A_index, "-check")
+	else
+		LV_Modify(A_index, "check")
+}
+return
+
 Editfilefromlist:
 RF := LV_GetNext("F")
 if RF
@@ -179,6 +193,9 @@ return
 
 rpview:
 gui, Submit, NoHide
+folder1 := GetStringIndex(sfolder, 1)
+folder2 := GetStringIndex(sfolder, 2)
+folder3 := GetStringIndex(sfolder, 3)
 if (actionmode = 1)
 	tipStr := " 删除文件: "
 if (actionmode = 2)
@@ -199,20 +216,29 @@ Loop
 	if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
 		break
 
+	LV_GetText(Tmp_Path, RowNumber, 7)
 	LV_GetText(Tmp_Rel, RowNumber, 4)
 	LV_GetText(Tmp_Name, RowNumber, 3)
+	if instr(sfolder, "|")
+	{
+		Tmp_Rel := StrReplace(Tmp_Rel, folder1)
+		if folder2
+			Tmp_Rel := StrReplace(Tmp_Rel, folder2)
+		if folder3
+			Tmp_Rel := StrReplace(Tmp_Rel, folder3)
+	}
 	Tmp_index := Format("{:04}", A_Index)
 	
-	Tmp_Str .= Tmp_index tipStr Tmp_Rel Tmp_Name "`n"
+	Tmp_Str .= Tmp_index tipStr Tmp_Path (actionmode = 2 ? " 到 " Tmp_Rel Tmp_Name : "") "`n"
 }
-GuiText(Tmp_Str, "文件夹重复文件操作预览", 500, 20)
+GuiText(Tmp_Str, "文件夹重复文件操作预览", 780, 20)
 return
 
 rundel:
 gui, Submit, NoHide
 
 RowNumber := 0  ; 这样使得首次循环从列表的顶部开始搜索.
-if (actionmode = 1)
+if (actionmode = 1)    ; 删除
 {
 	Loop
 	{
@@ -223,10 +249,14 @@ if (actionmode = 1)
 		FileRecycle, % Tmp_Path
 	}
 }
-if (actionmode = 2)
+if (actionmode = 2)   ; 移动
 {
 	if !tfolder
 		return
+	folder1 := GetStringIndex(sfolder, 1)
+	folder2 := GetStringIndex(sfolder, 2)
+	folder3 := GetStringIndex(sfolder, 3)
+	ErrMoveFileCount := 0
 	Loop
 	{
 		RowNumber := LV_GetNext(RowNumber, "C")  ; 在前一次找到的位置后继续搜索.
@@ -235,11 +265,21 @@ if (actionmode = 2)
 		LV_GetText(Tmp_Path, RowNumber, 7)
 		LV_GetText(Tmp_Rel, RowNumber, 4)
 		LV_GetText(Tmp_Name, RowNumber, 3)
+		Tmp_Rel := StrReplace(Tmp_Rel, folder1)
+		if folder2
+			Tmp_Rel := StrReplace(Tmp_Rel, folder2)
+		if folder3
+			Tmp_Rel := StrReplace(Tmp_Rel, folder3)
 		FileCreateDir, % tfolder Tmp_Rel
-		FileMove, % Tmp_Path, % tfolder  Tmp_Rel Tmp_Name
+		FileMove, % Tmp_Path, % tfolder Tmp_Rel Tmp_Name, 1
+		if errorlevel
+			ErrMoveFileCount++
 	}
 }
-CF_ToolTip("文件处理完成.", 3000)
+if !ErrMoveFileCount
+	CF_ToolTip("文件处理完成.", 3000)
+else
+	CF_ToolTip("文件处理完成. 但是有 " ErrMoveFileCount " 文件移动失败.", 3000)
 Return
 
 GuiClose:
@@ -268,7 +308,7 @@ GuiText(Gtext, Title:="", w:=300, l:=20)
 	global myedit, TextGuiHwnd
 	Gui,GuiText: Destroy
 	Gui,GuiText: Default
-	Gui, +HwndTextGuiHwnd
+	Gui, +HwndTextGuiHwnd +Resize
 	Gui, Add, Edit, Multi readonly w%w% r%l% vmyedit
 	GuiControl,, myedit, %Gtext%
 	gui, Show, AutoSize, % Title
@@ -278,6 +318,10 @@ GuiText(Gtext, Title:="", w:=300, l:=20)
 	GuiTextGuiescape:
 	Gui, GuiText: Destroy
 	Return
+
+	GuiTextGuiSize:
+	AutoXYWH("wh", "myedit")
+	return
 }
 
 MD5_File( sFile="", cSz=4 ) { ; www.autohotkey.com/forum/viewtopic.php?p=275910#275910
@@ -374,4 +418,58 @@ SelectFolderEx(StartingFolder := "", Prompt := "", OwnerHwnd := 0, OkBtnLabel :=
       ObjRelease(FolderItem)
    ObjRelease(FileDialog)
    Return SelectedFolder
+}
+
+; =================================================================================
+; Function: AutoXYWH
+;   Move and resize control automatically when GUI resizes.
+; Parameters:
+;   DimSize - Can be one or more of x/y/w/h  optional followed by a fraction
+;             add a '*' to DimSize to 'MoveDraw' the controls rather then just 'Move', this is recommended for Groupboxes
+;   cList   - variadic list of ControlIDs
+;             ControlID can be a control HWND, associated variable name, ClassNN or displayed text.
+;             The later (displayed text) is possible but not recommend since not very reliable 
+; Examples:
+;   AutoXYWH("xy", "Btn1", "Btn2")
+;   AutoXYWH("w0.5 h 0.75", hEdit, "displayed text", "vLabel", "Button1")
+;   AutoXYWH("*w0.5 h 0.75", hGroupbox1, "GrbChoices")
+; ---------------------------------------------------------------------------------
+; Version: 2015-5-29 / Added 'reset' option (by tmplinshi)
+;          2014-7-03 / toralf
+;          2014-1-2  / tmplinshi
+; requires AHK version : 1.1.13.01+
+; =================================================================================
+AutoXYWH(DimSize, cList*){       ; http://ahkscript.org/boards/viewtopic.php?t=1079
+  static cInfo := {}
+ 
+  If (DimSize = "reset")
+    Return cInfo := {}
+ 
+  For i, ctrl in cList {
+    ctrlID := A_Gui ":" ctrl
+    If ( cInfo[ctrlID].x = "" ){
+        GuiControlGet, i, %A_Gui%:Pos, %ctrl%
+        MMD := InStr(DimSize, "*") ? "MoveDraw" : "Move"
+        fx := fy := fw := fh := 0
+        For i, dim in (a := StrSplit(RegExReplace(DimSize, "i)[^xywh]")))
+            If !RegExMatch(DimSize, "i)" dim "\s*\K[\d.-]+", f%dim%)
+              f%dim% := 1
+        cInfo[ctrlID] := { x:ix, fx:fx, y:iy, fy:fy, w:iw, fw:fw, h:ih, fh:fh, gw:A_GuiWidth, gh:A_GuiHeight, a:a , m:MMD}
+    }Else If ( cInfo[ctrlID].a.1) {
+        dgx := dgw := A_GuiWidth  - cInfo[ctrlID].gw  , dgy := dgh := A_GuiHeight - cInfo[ctrlID].gh
+        For i, dim in cInfo[ctrlID]["a"]
+            Options .= dim (dg%dim% * cInfo[ctrlID]["f" dim] + cInfo[ctrlID][dim]) A_Space
+        GuiControl, % A_Gui ":" cInfo[ctrlID].m , % ctrl, % Options
+} } }
+
+GetStringIndex(String, Index := "")
+{
+	arrCandy_Cmd_Str := StrSplit(String, "|", " `t")
+	if Index
+	{
+		NewStr := arrCandy_Cmd_Str[Index]
+		return NewStr
+	}
+	else
+		return arrCandy_Cmd_Str
 }

@@ -1,4 +1,4 @@
-﻿;|2.5|2024.02.03|1096
+﻿;|2.6|2024.04.03|1096
 ; Script Information ===========================================================
 ; Name:         File String Search
 ; Description:  Search files for a specific string (Inspired by TLM)
@@ -99,17 +99,22 @@ OpenFile:
 LV_GetText(FileFullPath, LV_GetNext("F"), 2)
 If Fileexist(FileFullPath)
 {
-	FileEncoding % File_GetEncoding(FileFullPath)
-	Loop, Read, % FileFullPath
+	if instr(notepad2, "notepad2.exe")
 	{
-		if instr(A_LoopReadLine, EditString)
+		FileEncoding % File_GetEncoding(FileFullPath)
+		Loop, Read, % FileFullPath
 		{
-			tmp_linenum := A_index
-			;tooltip % EditString "-" tmp_linenum
-			break
+			if instr(A_LoopReadLine, EditString)
+			{
+				tmp_linenum := A_index
+				;tooltip % EditString "-" tmp_linenum
+				break
+			}
 		}
+		Run, "%notepad2%" /g %tmp_linenum% "%FileFullPath%"
 	}
-	Run, "%notepad2%" /g %tmp_linenum% "%FileFullPath%" 
+	else
+		Run, "%notepad2%" "%FileFullPath%"
 }
 else
 	msgbox, 未选中或文件不存在。
@@ -165,6 +170,7 @@ OnLoad() {
 			RY_Dir := Deref("%A_ScriptDir%")
 			RY_Dir := SubStr(RY_Dir, 1, InStr(RY_Dir, "\", 0, 0, 3) - 1)
    		notepad2 := StrReplace(notepad2, "%A_ScriptDir%", RY_Dir)
+			notepad2 := FileExist(notepad2) ? notepad2 : "notepad.exe"
    		;msgbox % notepad2
 		}
     SearchStop := 0

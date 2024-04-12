@@ -1,4 +1,4 @@
-﻿;|2.0|2023.07.01|1262
+﻿;|2.6|2024.04.12|1262
 #SingleInstance force
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\脚本图标\如意\e8e8.ico"
@@ -6,7 +6,7 @@ B_adb := A_ScriptDir "\..\引用程序\adb.exe"
 CandySel := A_Args[1]
 gui +hwndGuiID
 gui, font, s11, 宋体
-gui, add, listbox, x5 y5 vcomm w160 h630 gupdatemode, ADB服务|USB调试|网络调试||电脑端文件|手机端文件|App包管理|控制手机|调试命令|信息获取|其他Android命令
+gui, add, listbox, x5 y5 vcomm w160 h630 gupdatemode, ADB服务|USB调试|网络调试||电脑端文件|手机端文件|App包管理|控制手机|调试命令|信息获取|其他Android命令|开启App权限
 gui, add, Text, x170 yp w140 vmyparam1, 参数1:
 gui, add, ComboBox, xp+140 yp w450 vmyedit1 gupdatecomm, 
 gui, add, Text, xp-140 yp+40 w140 vmyparam2, 参数2:
@@ -91,6 +91,11 @@ else if (comm = "信息获取")
 {
 	commmode("预设命令:", "参数:", "enable", "enable")
 	GuiControl,, myedit1, 简单信息获取||
+}
+else if (comm = "开启App权限")
+{
+	commmode("预设命令:", "参数:", "enable")
+	GuiControl,, myedit1, Shizuku||黑阈|
 }
 gosub updatecomm
 return
@@ -378,6 +383,15 @@ else if (myedit1 = "简单信息获取")
 	myedit2 := SubStr(myedit2, 1, (pos := InStr(myedit2, "❤❤❤")) ? pos - 1 : 30)
 	GuiControl,, myedit3, shell %myedit2%
 }
+else if (myedit1 = "Shizuku")
+{
+	GuiControl,, myedit3, shell sh /storage/emulated/0/Android/data/moe.shizuku.privileged.api/start.sh
+}
+else if (myedit1 = "黑阈")
+{
+	GuiControl,, myedit3, shell sh /data/data/me.piebridge.brevent/brevent.sh
+}
+
 
 return
 

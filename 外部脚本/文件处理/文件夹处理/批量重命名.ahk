@@ -1,4 +1,4 @@
-﻿;|2.1|2023.07.12|1352
+﻿;|2.6|2024.03.27|1352
 #SingleInstance force
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\f17f.ico"
@@ -26,18 +26,18 @@ gui, add, listbox, x5 y5 vcomm w160 h635 gupdateparam,
 gui, add, Text, x170 y12 w140, 文件夹路径:
 gui, add, Edit, xp+140 y10 w450 vmyfolderpath, % myfolderpath
 gui, add, Button, xp+460 y8 w80 greloadfolder, 重载文件
-gui, add, Text, xp+90 y12 w90, 扩展名过滤(例 txt):
-gui, add, Edit, xp+100 y10 w100 vfext, 
+gui, add, Text, xp+85 yp w80, 扩展名过滤(例 txt):
+gui, add, Edit, xp+90 yp w100 vfext, 
 
 gui, add, Text, x170 yp+40 w140 vmyparam1, 参数1:
-gui, add, ComboBox, xp+140 yp w450 vmyedit1, 
+gui, add, ComboBox, xp+140 yp+5 w450 vmyedit1, 
 gui, add, Button, xp+460 yp w80 gruncomm default, 预览
 
 gui, add, Text, x170 yp+40 w140 vmyparam2, 参数2:
-gui, add, ComboBox, xp+140 yp w450 vmyedit2,
+gui, add, ComboBox, xp+140 yp w240 vmyedit2,
 
 gui, add, Text, x170 yp+40 w140 vmyparam3, 参数3:
-gui, add, Edit, xp+140 yp w450 vmyedit3,
+gui, add, Edit, xp+140 yp w240 vmyedit3,
 
 Gui, Add, ListView, x170 y165 w900 h445 -Readonly Grid Checked hwndHLV, 序号`n文件名`n相对路径`n新文件名
 gui, add, Button, xp+170 yp+455 w80 gcheckallfile default, 全选
@@ -69,24 +69,39 @@ guiclose:
 exitapp
 
 reloadfolder:
+Gui Submit, nohide
 LV_Delete()
+R_index := 0
 Loop, Files, %myfolderpath%\*.*, FR
 {
-	LV_Add("", A_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName))
+	if fext
+	{
+		if A_LoopFileExt not in %fext%
+			continue
+	}
+	R_index++
+	LV_Add("", R_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName))
 }
 LV_ModifyCol()
+LV_ModifyCol(2, "Logical")
+LV_ModifyCol(3, 60)
+LV_ModifyCol(4, 150)
 modified := 0
 return
 
 runcomm:
 Gui Submit, nohide
+if modified && (last_myedit1 != myedit1)
+{
+	;msgbox % last_myedit1 " - " myedit1
+	gosub reloadfolder
+}
 if IsLabel(comm)
 {
-	LV_Delete()
-	R_index := 0
+	last_myedit1 := myedit1
 	gosub % comm
+	modified := 1
 }
-modified := 1
 return
 
 updateparam:
@@ -196,6 +211,7 @@ modify:
 Gui, 1: Default
 ControlGet, oldname, List, col2, SysListView321, ahk_id %GuiID%
 ControlGet, newname, List, col4, SysListView321
+
 Gui +Disabled 
 Gui, MyeditGui: default
 Gui, MyeditGui: +Owner%GuiID%
@@ -205,6 +221,7 @@ Gui, Add, Edit, xp+310  vnewnameEdit w300 h300 -Wrap vmodifiednewname -WantRetur
 Gui, Add, Button, xp+140 yp+310 w80 gsumbitlistview, 保存
 Gui, Add, Button, xp+80  w80 gMyeditGuiGuiClose, 取消
 gui show,, 手动编辑文件名
+SetTimer, WatchScrollBar, 100
 return
 
 sumbitlistview:
@@ -218,7 +235,52 @@ Loop, Parse, modifiednewname, `n
 	;msgbox % A_LoopField
 }
 Gui, MyeditGui: Destroy
+modified := 1
 return
+
+WatchScrollBar:
+IfWinActive, 手动编辑文件名
+{
+	ControlGet, hEdit2, hwnd,, Edit2, 手动编辑文件名
+	target := SB_GetPos(hEdit2, "V")
+	gosub synchronism
+}
+IfWinNotExist, 手动编辑文件名
+{
+	SetTimer, WatchScrollBar, off
+}
+return
+
+synchronism:
+ControlGet, hEdit1, hwnd,, Edit1, 手动编辑文件名
+if (SB_GetPos(hEdit1, "V") = target)
+	return
+if (SB_GetPos(hEdit1, "V") > target)
+	key := "WheelUp"
+else
+	key := "WheelDown"
+
+loop 500
+{
+	if (key = "WheelDown")
+	{
+		SendMessage, 0x0115, 1, 0, ,  ahk_id %hEdit1%
+		if (SB_GetPos(hEdit1, "V") >= target)
+			break
+	}
+	else
+	{
+		SendMessage, 0x0115, 0, 0, ,  ahk_id %hEdit1%
+		if (SB_GetPos(hEdit1, "V") <= target)
+			break
+	}
+}
+return
+
+SB_GetPos(hwnd, Which="V"){
+    Which := (Which="V" || Which=1) ? 1 : (Which="H" || Which=0) ? 0 : 1
+    Return DllCall("GetScrollPos", "UInt", Hwnd, "Int", Which)                
+}
 
 MyeditGuiGuiClose:
 Gui, MyeditGui: Destroy
@@ -272,49 +334,43 @@ Return A_IsUnicode ? OutFile : StrGet(&OutFile, "UTF-16")
 查找替换:
 if InStr(myedit2, "\")
 	prams_arr2 := getxproprams(myedit2)
-Loop, Files, %myfolderpath%\*.*, FR
+Loop % LV_GetCount()
 {
-	if fext
-	{
-		if A_LoopFileExt not in %fext%
-			continue
-	}
-
+	LV_GetText(A_LvFileName, A_index, 2)
+	LV_GetText(A_LvRelPath, A_index, 3)
+	A_LvFilePath := myfolderpath A_LvRelPath A_LvFileName
 	if InStr(myedit2, "\")
 	{
 		ModeS2 := myedit2
-		xpro_obj2 := Filexpro(A_LoopFilePath,, prams_arr2*)
+		xpro_obj2 := Filexpro(A_LvFilePath,, prams_arr2*)
 		for k,v in prams_arr2
 		{
 			ModeS2 := StrReplace(ModeS2, "\" v "\", xpro_obj2[v])
 		}
-		newname := SafeFileName(StrReplace(A_LoopFileName, myedit1, ModeS2, OutputVarCount))
+		newname := SafeFileName(StrReplace(A_LvFileName, myedit1, ModeS2, OutputVarCount))
 	}
 	else
-		newname := SafeFileName(StrReplace(A_LoopFileName, myedit1, myedit2, OutputVarCount))
+		newname := SafeFileName(StrReplace(A_LvFileName, myedit1, myedit2, OutputVarCount))
 	if OutputVarCount
 	{
-		R_index++
-		LV_Add("Check", R_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), newname)
+		LV_Modify(A_index, "Check", A_index, A_LvFileName, A_LvRelPath, newname)
 	}
 }
 LV_ModifyCol()
 return
 
 正则替换:
-Loop, Files, %myfolderpath%\*.*, FR
+Loop % LV_GetCount()
 {
-	if fext
-	{
-		if A_LoopFileExt not in %fext%
-			continue
-	}
-	newname := SafeFileName(RegExReplace(A_LoopFileName, myedit1, myedit2, OutputVarCount))
+	LV_GetText(A_LvFileName, A_index, 2)
+	LV_GetText(A_LvRelPath, A_index, 3)
+	;A_LvFilePath := myfolderpath A_LvRelPath A_LvFileName
+
+	newname := SafeFileName(RegExReplace(A_LvFileName, myedit1, myedit2, OutputVarCount))
 	;MsgBox % myedit1 " - " A_LoopFileName " - " myedit2 " - " OutputVarCount
 	if OutputVarCount
 	{
-		R_index++
-		LV_Add("Check", R_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), newname)
+		LV_Modify(A_index, "Check", A_index, A_LvFileName, A_LvRelPath, newname)
 	}
 }
 LV_ModifyCol()
@@ -327,14 +383,13 @@ if InStr(myedit2, "\")
 	prams_arr2 := getxproprams(myedit2)
 if !RegExMatch(myedit3, "(\d)+\|")
 {
-	Loop, Files, %myfolderpath%\*.*, FR
+	Loop % LV_GetCount()
 	{
-		if fext
-		{
-			if A_LoopFileExt not in %fext%
-				continue
-		}
-		A_LoopFileNameNoext := StrReplace(A_LoopFileName, "." A_LoopFileExt)
+		LV_GetText(A_LvFileName, A_index, 2)
+		LV_GetText(A_LvRelPath, A_index, 3)
+		;A_LvFilePath := myfolderpath A_LvRelPath A_LvFileName
+		SplitPath, A_LvFileName,,, A_LvFileExt, A_LvFileNameNoext
+
 		if InStr(myedit1, "\")
 		{
 			ModeS1 := myedit1
@@ -354,32 +409,30 @@ if !RegExMatch(myedit3, "(\d)+\|")
 			}
 		}
 		if InStr(myedit1, "\") and !InStr(myedit2, "\")
-			newname := SafeFileName(ModeS1 A_LoopFileNameNoext myedit2)
+			newname := SafeFileName(ModeS1 A_LvFileNameNoext myedit2)
 		if !InStr(myedit1, "\") and InStr(myedit2, "\")
-			newname := SafeFileName(myedit1 A_LoopFileNameNoext ModeS2)
+			newname := SafeFileName(myedit1 A_LvFileNameNoext ModeS2)
 		if InStr(myedit1, "\") and InStr(myedit2, "\")
-			newname := SafeFileName(ModeS1 A_LoopFileNameNoext ModeS2)
+			newname := SafeFileName(ModeS1 A_LvFileNameNoext ModeS2)
 		if !InStr(myedit1, "\") and !InStr(myedit2, "\")
-			newname := SafeFileName(myedit1 A_LoopFileNameNoext myedit2)
-		LV_Add("Check", A_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), newname "." A_LoopFileExt)
+			newname := SafeFileName(myedit1 A_LvFileNameNoext myedit2)
+		LV_Modify(A_index, "Check", A_index, A_LvFileName, A_LvRelPath, newname "." A_LvFileExt)
 	}
 }
 Else
 {
-	Loop, Files, %myfolderpath%\*.*, FR
+	Loop % LV_GetCount()
 	{
-		if fext
-		{
-			if A_LoopFileExt not in %fext%
-				continue
-		}
+		LV_GetText(A_LvFileName, A_index, 2)
+		LV_GetText(A_LvRelPath, A_index, 3)
+		;A_LvFilePath := myfolderpath A_LvRelPath A_LvFileName
+		SplitPath, A_LvFileName,,, A_LvFileExt, A_LvFileNameNoext
+
 		Tmp_Arr := StrSplit(myedit3, "|")
-		A_LoopFileNameNoExt := StrReplace(A_LoopFileName, "." A_LoopFileExt)
-		Name1 := SubStr(A_LoopFileNameNoExt, 1, Tmp_Arr[1])
-		Name2 := SubStr(A_LoopFileNameNoExt, Tmp_Arr[1]+1)
+		Name1 := SubStr(A_LvFileNameNoext, 1, Tmp_Arr[1])
+		Name2 := SubStr(A_LvFileNameNoext, Tmp_Arr[1]+1)
 		newname := SafeFileName(Name1 Tmp_Arr[2] Name2)
-		R_index++
-		LV_Add("Check", R_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), newname "." A_LoopFileExt)
+		LV_Modify(A_index, "Check", A_index, A_LvFileName, A_LvRelPath, newname "." A_LvFileExt)
 	}
 }
 LV_ModifyCol()
@@ -389,39 +442,35 @@ return
 myedit1 := SubStr(myedit1, 1, (pos := InStr(myedit1, "❤❤❤")) ? pos - 1 : 20)
 if (myedit1 = "清除开头数字序号")
 {
-	Loop, Files, %myfolderpath%\*.*, FR
+	Loop % LV_GetCount()
 	{
-		if fext
-		{
-			if A_LoopFileExt not in %fext%
-				continue
-		}
-		A_LoopFileNameNoExt := StrReplace(A_LoopFileName, "." A_LoopFileExt)
-		newname := SafeFileName(RegExReplace(A_LoopFileNameNoExt, "^(\d+)",, OutputVarCount))
+		LV_GetText(A_LvFileName, A_index, 2)
+		LV_GetText(A_LvRelPath, A_index, 3)
+		;A_LvFilePath := myfolderpath A_LvRelPath A_LvFileName
+		SplitPath, A_LvFileName,,, A_LvFileExt, A_LvFileNameNoext
+
+		newname := SafeFileName(RegExReplace(A_LvFileNameNoext, "^(\d+)",, OutputVarCount))
 		if OutputVarCount && newname
 		{
-			R_index++
-			LV_Add("Check", R_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), newname "." A_LoopFileExt)
+			LV_Modify(A_index, "Check", A_index, A_LvFileName, A_LvRelPath, newname "." A_LvFileExt)
 		}
 	}
 }
 Else if (myedit1 = "清除结尾数字序号")
 {
-	Loop, Files, %myfolderpath%\*.*, FR
+	Loop % LV_GetCount()
 	{
-		if fext
-		{
-			if A_LoopFileExt not in %fext%
-				continue
-		}
-		A_LoopFileNameNoExt := StrReplace(A_LoopFileName, "." A_LoopFileExt)
-		newname := SafeFileName(RegExReplace(A_LoopFileNameNoExt, "(\d+)$",, OutputVarCount))
+		LV_GetText(A_LvFileName, A_index, 2)
+		LV_GetText(A_LvRelPath, A_index, 3)
+		;A_LvFilePath := myfolderpath A_LvRelPath A_LvFileName
+		SplitPath, A_LvFileName,,, A_LvFileExt, A_LvFileNameNoext
+
+		newname := SafeFileName(RegExReplace(A_LvFileNameNoext, "(\d+)$",, OutputVarCount))
 		if (newname = "")
-			newname := A_LoopFileNameNoExt
+			newname := A_LvFileNameNoext
 		if OutputVarCount
 		{
-			R_index++
-			LV_Add("Check", R_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), newname "." A_LoopFileExt)
+			LV_Modify(A_index, "Check", A_index, A_LvFileName, A_LvRelPath, newname "." A_LvFileExt)
 		}
 	}
 }
@@ -429,10 +478,14 @@ Else
 {
 	if !myedit1
 	{
-		Loop, Files, % myfolderpath "\*." (fext ? fext : "*"), FR
+		Loop % LV_GetCount()
 		{
-			newname := SafeFileName(myedit2 A_index myedit3 A_LoopFileName)
-			LV_Add("Check", A_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), newname)
+			LV_GetText(A_LvFileName, A_index, 2)
+			LV_GetText(A_LvRelPath, A_index, 3)
+			;A_LvFilePath := myfolderpath A_LvRelPath A_LvFileName
+
+			newname := SafeFileName(myedit2 A_index myedit3 A_LvFileName)
+			LV_Modify(A_index, "Check", A_index, A_LvFileName, A_LvRelPath, newname)
 		}
 	}
 	Else
@@ -445,25 +498,27 @@ Else
 		specifyName := MEArr[4] ? MEArr[4] : ""
 		;ToolTip % IndexPos
 		;MsgBox % myfolderpath "\*." (fext ? fext : "*")
-		Loop, Files, % myfolderpath "\*." (fext ? fext : "*"), FR
+		Loop % LV_GetCount()
 		{
-			;MsgBox % A_LoopFileName
+			LV_GetText(A_LvFileName, A_index, 2)
+			LV_GetText(A_LvRelPath, A_index, 3)
+			;A_LvFilePath := myfolderpath A_LvRelPath A_LvFileName
+			SplitPath, A_LvFileName,,, A_LvFileExt, A_LvFileNameNoext
 			if (IndexPos = 1)
 			{
 				if specifyName
-					newname := SafeFileName(myedit2 Format("{:" Indexwidth "}", StartIndex+A_index) myedit3 specifyName "." A_LoopFileExt)
+					newname := SafeFileName(myedit2 Format("{:" Indexwidth "}", StartIndex+A_index) myedit3 specifyName "." A_LvFileExt)
 				Else
-					newname := SafeFileName(myedit2 Format("{:" Indexwidth "}", StartIndex+A_index) myedit3 A_LoopFileName)
+					newname := SafeFileName(myedit2 Format("{:" Indexwidth "}", StartIndex+A_index) myedit3 A_LvFileName)
 			}
 			if (IndexPos = 2)
 			{
-				A_LoopFileNameNoExt := StrReplace(A_LoopFileName, "." A_LoopFileExt)
 				if specifyName
-					newname := SafeFileName(specifyName myedit2 Format("{:" Indexwidth "}", StartIndex+A_index) myedit3 "." A_LoopFileExt)
+					newname := SafeFileName(specifyName myedit2 Format("{:" Indexwidth "}", StartIndex+A_index) myedit3 "." A_LvFileExt)
 				Else
-					newname := SafeFileName(A_LoopFileNameNoExt myedit2 Format("{:" Indexwidth "}", StartIndex+A_index) myedit3 "." A_LoopFileExt)
+					newname := SafeFileName(A_LvFileNameNoext myedit2 Format("{:" Indexwidth "}", StartIndex+A_index) myedit3 "." A_LvFileExt)
 			}
-			LV_Add("Check", A_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), newname)
+			LV_Modify(A_index, "Check", A_index, A_LvFileName, A_LvRelPath, newname)
 		}
 	}
 }
@@ -473,27 +528,25 @@ return
 按位置删除:
 myedit1 := SubStr(myedit1, 1, (pos := InStr(myedit1, "❤❤❤")) ? pos - 1 : 20)
 myedit2:= SubStr(myedit2, 1, (pos := InStr(myedit1, "❤❤❤")) ? pos - 1 : 20)
-Loop, Files, %myfolderpath%\*.*, FR
+Loop % LV_GetCount()
 {
-	if fext
-	{
-		if A_LoopFileExt not in %fext%
-			continue
-	}
-	A_LoopFileNameNoExt := StrReplace(A_LoopFileName, "." A_LoopFileExt)
+	LV_GetText(A_LvFileName, A_index, 2)
+	LV_GetText(A_LvRelPath, A_index, 3)
+	;A_LvFilePath := myfolderpath A_LvRelPath A_LvFileName
+	SplitPath, A_LvFileName,,, A_LvFileExt, A_LvFileNameNoext
+
 	if myedit2
-		newname := SafeFileName(StrReplace(A_LoopFileNameNoExt, SubStr(A_LoopFileNameNoExt, myedit1, myedit2),,, 1))
+		newname := SafeFileName(StrReplace(A_LvFileNameNoext, SubStr(A_LvFileNameNoext, myedit1, myedit2),,, 1))
 	Else
 	{
 		if (myedit1 > 0)
-			newname := SafeFileName(StrReplace(A_LoopFileNameNoExt, SubStr(A_LoopFileNameNoExt, myedit1),,, 1))
+			newname := SafeFileName(StrReplace(A_LvFileNameNoext, SubStr(A_LvFileNameNoext, myedit1),,, 1))
 		Else
-			newname := SafeFileName(SubStr(A_LoopFileNameNoExt, 1, myedit1))
+			newname := SafeFileName(SubStr(A_LvFileNameNoext, 1, myedit1))
 	}
 	if newname
 	{
-		R_index++
-		LV_Add("Check", R_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), newname "." A_LoopFileExt)
+		LV_Modify(A_index, "Check", A_index, A_LvFileName, A_LvRelPath, newname "." A_LvFileExt)
 	}
 }
 LV_ModifyCol()
@@ -502,55 +555,52 @@ return
 属性标签覆盖:
 myedit1 := SubStr(myedit1, 1, (pos := InStr(myedit1, "❤❤❤")) ? pos - 1 : 30)
 prams_arr1 := getxproprams(myedit1)  ; 最多支持 3 个属性标签
-Loop, Files, %myfolderpath%\*.*, FR
+Loop % LV_GetCount()
 {
-	if fext
-	{
-		if A_LoopFileExt not in %fext%
-			continue
-	}
+	LV_GetText(A_LvFileName, A_index, 2)
+	LV_GetText(A_LvRelPath, A_index, 3)
+	A_LvFilePath := myfolderpath A_LvRelPath A_LvFileName
+	;msgbox % A_LvFilePath
+	SplitPath, A_LvFileName,,, A_LvFileExt, A_LvFileNameNoext
+
 	ModeS := myedit1
-	A_LoopFileNameNoext := StrReplace(A_LoopFileName, "." A_LoopFileExt)
-	xpro_obj1 := Filexpro(A_LoopFilePath,, prams_arr1*)
+	xpro_obj1 := Filexpro(A_LvFilePath,, prams_arr1*)
 	for k,v in prams_arr1
 	{
 		if xpro_obj1[v]
 			ModeS := StrReplace(ModeS, "\" v "\", xpro_obj1[v])
 	}
 	newname := SafeFileName(ModeS)
-	if (newname != A_LoopFileNameNoext) && (ModeS != myedit1)
+	if (newname != A_LvFileNameNoext) && (ModeS != myedit1)
 	{
-		R_index++
-		LV_Add("Check", R_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), newname "." A_LoopFileExt)
+		LV_Modify(A_index, "Check", A_index, A_LvFileName, A_LvRelPath, newname "." A_LvFileExt)
 	}
 }
 LV_ModifyCol()
 return
 
 按符号分割后重排:
-Loop, Files, %myfolderpath%\*.*, FR
+Loop % LV_GetCount()
 {
-	if fext
-	{
-		if A_LoopFileExt not in %fext%
-			continue
-	}
-	if InStr(A_LoopFileName, myedit1)
+	LV_GetText(A_LvFileName, A_index, 2)
+	LV_GetText(A_LvRelPath, A_index, 3)
+	;A_LvFilePath := myfolderpath A_LvRelPath A_LvFileName
+	SplitPath, A_LvFileName,,, A_LvFileExt, A_LvFileNameNoext
+
+	if InStr(A_LvFileName, myedit1)
 	{
 		ModeS := myedit2
-		A_LoopFileNameNoext := StrReplace(A_LoopFileName, "." A_LoopFileExt)
-		Array := StrSplit(A_LoopFileNameNoext, myedit1)
+		Array := StrSplit(A_LvFileNameNoext, myedit1)
 		prams_arr := getxproprams(myedit2)
 		for k,v in prams_arr
 		{
 			ModeS := StrReplace(ModeS, "\" v "\", trim(Array[v]))
 			;MsgBox % v " - " Array[v]
 		}
-		newname := ModeS "." A_LoopFileExt
-		if (newname != A_LoopFileNameNoext)
+		newname := ModeS "." A_LvFileExt
+		if (newname != A_LvFileNameNoext)
 		{
-			R_index++
-			LV_Add("Check", R_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), newname)
+			LV_Modify(A_index, "Check", A_index, A_LvFileName, A_LvRelPath, newname)
 		}
 	}
 }
@@ -558,40 +608,36 @@ LV_ModifyCol()
 return
 
 删除数字或字母:
-Loop, Files, %myfolderpath%\*.*, FR
+Loop % LV_GetCount()
 {
-	if fext
-	{
-		if A_LoopFileExt not in %fext%
-			continue
-	}
-	A_LoopFileNameNoext := StrReplace(A_LoopFileName, "." A_LoopFileExt)
+	LV_GetText(A_LvFileName, A_index, 2)
+	LV_GetText(A_LvRelPath, A_index, 3)
+	;A_LvFilePath := myfolderpath A_LvRelPath A_LvFileName
+	SplitPath, A_LvFileName,,, A_LvFileExt, A_LvFileNameNoext
+
 	if (myedit1 = "删除数字")
 	{
-		newname := RegExReplace(A_LoopFileNameNoext, "[0-9]", "", OutputVarCount)
+		newname := RegExReplace(A_LvFileNameNoext, "[0-9]", "", OutputVarCount)
 		if OutputVarCount && trim(newname)
 		{
-			R_index++
-			LV_Add("Check", R_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), newname "." A_LoopFileExt)
+			LV_Modify(A_index, "Check", A_index, A_LvFileName, A_LvRelPath, newname "." A_LvFileExt)
 		}
 	}
 	Else if (myedit1 = "删除英文字母")
 	{
-		newname := RegExReplace(A_LoopFileNameNoext, "[a-zA-Z]", "", OutputVarCount)
+		newname := RegExReplace(A_LvFileNameNoext, "[a-zA-Z]", "", OutputVarCount)
 		if OutputVarCount && trim(newname)
 		{
-			R_index++
-			LV_Add("Check", R_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), newname "." A_LoopFileExt)
+			LV_Modify(A_index, "Check", A_index, A_LvFileName, A_LvRelPath, newname "." A_LvFileExt)
 		}
 	}
 	Else if (myedit1 = "删除数字和字母")
 	{
-		newname := RegExReplace(A_LoopFileNameNoext, "[0-9]", "", OutputVarCount1)
+		newname := RegExReplace(A_LvFileNameNoext, "[0-9]", "", OutputVarCount1)
 		newname := RegExReplace(newname, "[a-zA-Z]", "", OutputVarCount2)
 		if (OutputVarCount1 or OutputVarCount2) && trim(newname)
 		{
-			R_index++
-			LV_Add("Check", R_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), newname "." A_LoopFileExt)
+			LV_Modify(A_index, "Check", A_index, A_LvFileName, A_LvRelPath, newname "." A_LvFileExt)
 		}
 	}
 }
@@ -599,148 +645,142 @@ LV_ModifyCol()
 return
 
 英文首字母大写:
-Loop, Files, %myfolderpath%\*.*, FR
+Loop % LV_GetCount()
 {
-	if fext
-	{
-		if A_LoopFileExt not in %fext%
-			continue
-	}
-	A_LoopFileNameNoext := StrReplace(A_LoopFileName, "." A_LoopFileExt)
+	LV_GetText(A_LvFileName, A_index, 2)
+	LV_GetText(A_LvRelPath, A_index, 3)
+	;A_LvFilePath := myfolderpath A_LvRelPath A_LvFileName
+	SplitPath, A_LvFileName,,, A_LvFileExt, A_LvFileNameNoext
+
 	str1 := newname := Position := ""
-	Loop, Parse, A_LoopFileNameNoext, %A_Space%_-()[]{}
+	Loop, Parse, A_LvFileNameNoext, %A_Space%_-()[]{}
 	{
 		; 计算分隔符的位置.  
 		Position += StrLen(A_LoopField) + 1
 		; 获取解析循环中找到的分隔符.
-		Delimiter := SubStr(A_LoopFileNameNoext, Position, 1)
+		Delimiter := SubStr(A_LvFileNameNoext, Position, 1)
 		;msgbox % Position " - " Delimiter
 		str1 := Format("{:T}", A_LoopField)
 		newname .= str1 . Delimiter 
 	}
-	if (newname != A_LoopFileNameNoext)
+	if (newname !== A_LvFileNameNoext)
 	{
-		R_index++
-		LV_Add("Check", R_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), newname "." A_LoopFileExt)
+		LV_Modify(A_index, "Check", A_index, A_LvFileName, A_LvRelPath, newname "." A_LvFileExt)
 	}
 }
 LV_ModifyCol()
 return
 
 逆序:
-Loop, Files, %myfolderpath%\*.*, FR
+Loop % LV_GetCount()
 {
-	if fext
-	{
-		if A_LoopFileExt not in %fext%
-			continue
-	}
-	A_LoopFileNameNoext := StrReplace(A_LoopFileName, "." A_LoopFileExt)
+	LV_GetText(A_LvFileName, A_index, 2)
+	LV_GetText(A_LvRelPath, A_index, 3)
+	;A_LvFilePath := myfolderpath A_LvRelPath A_LvFileName
+	SplitPath, A_LvFileName,,, A_LvFileExt, A_LvFileNameNoext
+
 	newStr := ""
-	Loop, Parse, A_LoopFileNameNoext
+	Loop, Parse, A_LvFileNameNoext
 	{
 		newStr := A_LoopField newStr
 	}
 	newname := newStr
-	LV_Add("Check", A_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), newname "." A_LoopFileExt)
+	LV_Modify(A_index, "Check", A_index, A_LvFileName, A_LvRelPath, newname "." A_LvFileExt)
 }
 LV_ModifyCol()
 return
 
 简体与繁体:
 R_index := 0
-Loop, Files, %myfolderpath%\*.*, FR
+Loop % LV_GetCount()
 {
-	if fext
-	{
-		if A_LoopFileExt not in %fext%
-			continue
-	}
-	A_LoopFileNameNoext := StrReplace(A_LoopFileName, "." A_LoopFileExt)
+	LV_GetText(A_LvFileName, A_index, 2)
+	LV_GetText(A_LvRelPath, A_index, 3)
+	;A_LvFilePath := myfolderpath A_LvRelPath A_LvFileName
+	SplitPath, A_LvFileName,,, A_LvFileExt, A_LvFileNameNoext
+
 	if (myedit1 = "转繁体")
-		newname := Simplified2Traditional(A_LoopFileNameNoext, 0)
+		newname := Simplified2Traditional(A_LvFileNameNoext, 0)
 	else if (myedit1 = "转简体")
-		newname := Simplified2Traditional(A_LoopFileNameNoext, 1)
-	if (newname != A_LoopFileNameNoext)
+		newname := Simplified2Traditional(A_LvFileNameNoext, 1)
+	if (newname != A_LvFileNameNoext)
 	{
-		R_index++
-		LV_Add("Check", R_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), newname "." A_LoopFileExt)
+		LV_Modify(A_index, "Check", A_index, A_LvFileName, A_LvRelPath, newname "." A_LvFileExt)
 	}
 }
 LV_ModifyCol()
 return
 
 中文转拼音:
-Loop, Files, %myfolderpath%\*.*, FR
+Loop % LV_GetCount()
 {
-	if fext
-	{
-		if A_LoopFileExt not in %fext%
-			continue
-	}
-	A_LoopFileNameNoext := StrReplace(A_LoopFileName, "." A_LoopFileExt)
+	LV_GetText(A_LvFileName, A_index, 2)
+	LV_GetText(A_LvRelPath, A_index, 3)
+	;A_LvFilePath := myfolderpath A_LvRelPath A_LvFileName
+	SplitPath, A_LvFileName,,, A_LvFileExt, A_LvFileNameNoext
+
 	if (myedit1 = "有声调")
-		newname := getpinyin(A_LoopFileNameNoext)
+		newname := getpinyin(A_LvFileNameNoext)
 	Else if (myedit1 = "无声调")
-		newname := getpinyin(A_LoopFileNameNoext, 0)
+		newname := getpinyin(A_LvFileNameNoext, 0)
 	Else if (myedit1 = "首字母")
-		newname := getpinyin(A_LoopFileNameNoext, 1, 1)
-	if (newname != A_LoopFileNameNoext)
+		newname := getpinyin(A_LvFileNameNoext, 1, 1)
+	if (newname != A_LvFileNameNoext)
 	{
-		R_index++
-		LV_Add("Check", R_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), newname "." A_LoopFileExt)
+		LV_Modify(A_index, "Check", A_index, A_LvFileName, A_LvRelPath, newname "." A_LvFileExt)
 	}
 }
 LV_ModifyCol()
 return
 
 修改扩展名:
-Loop, Files, % myfolderpath "\*." (myedit1 ? myedit1 : "*"), FR
+Loop % LV_GetCount()
 {
-	A_LoopFileNameNoext := StrReplace(A_LoopFileName, "." A_LoopFileExt)
-	LV_Add("Check", A_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), A_LoopFileNameNoext "." myedit2)
+	LV_GetText(A_LvFileName, A_index, 2)
+	LV_GetText(A_LvRelPath, A_index, 3)
+	;A_LvFilePath := myfolderpath A_LvRelPath A_LvFileName
+	SplitPath, A_LvFileName,,, A_LvFileExt, A_LvFileNameNoext
+
+	if (A_LvFileExt = myedit1)
+		LV_Modify(A_index, "Check", A_index, A_LvFileName, A_LvRelPath, A_LvFileNameNoext "." myedit2)
 }
 LV_ModifyCol()
 Return
 
 半角与全角:
-Loop, Files, %myfolderpath%\*.*, FR
+Loop % LV_GetCount()
 {
-	if fext
-	{
-		if A_LoopFileExt not in %fext%
-			continue
-	}
-	A_LoopFileNameNoext := StrReplace(A_LoopFileName, "." A_LoopFileExt)
+	LV_GetText(A_LvFileName, A_index, 2)
+	LV_GetText(A_LvRelPath, A_index, 3)
+	;A_LvFilePath := myfolderpath A_LvRelPath A_LvFileName
+	SplitPath, A_LvFileName,,, A_LvFileExt, A_LvFileNameNoext
+
 	if (myedit1 = "转半角")
-		newname := K3_StrQJ2BJ(A_LoopFileNameNoext)
+		newname := K3_StrQJ2BJ(A_LvFileNameNoext)
 	Else if (myedit1 = "转全角")
-		newname := K3_StrBJ2QJ(A_LoopFileNameNoext)
-	if (newname != A_LoopFileNameNoext)
+		newname := K3_StrBJ2QJ(A_LvFileNameNoext)
+	if (newname != A_LvFileNameNoext)
 	{
-		R_index++
-		LV_Add("Check", R_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), newname "." A_LoopFileExt)
+		LV_Modify(A_index, "Check", A_index, A_LvFileName, A_LvRelPath, newname "." A_LvFileExt)
 	}
 }
 LV_ModifyCol()
 Return
 
 uri编码转中文字符:
-Loop, Files, %myfolderpath%\*.*, FR
+Loop % LV_GetCount()
 {
-	if fext
+	LV_GetText(A_LvFileName, A_index, 2)
+	LV_GetText(A_LvRelPath, A_index, 3)
+	;A_LvFilePath := myfolderpath A_LvRelPath A_LvFileName
+	SplitPath, A_LvFileName,,, A_LvFileExt, A_LvFileNameNoext
+
+	if InStr(A_LvFileNameNoext, "%")
 	{
-		if A_LoopFileExt not in %fext%
-			continue
-	}
-	A_LoopFileNameNoext := StrReplace(A_LoopFileName, "." A_LoopFileExt)
-	if InStr(A_LoopFileNameNoext, "%")
-	{
-		newname := SafeFileName(UrlDecode(A_LoopFileNameNoext))
-		if (newname != A_LoopFileNameNoext)
+		newname := SafeFileName(UrlDecode(A_LvFileNameNoext))
+		if (newname != A_LvFileNameNoext)
 		{
-			R_index++
-			LV_Add("Check", R_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName), newname "." A_LoopFileExt)
+			LV_Modify(A_index, "Check", A_index, A_LvFileName, A_LvRelPath, newname "." A_LvFileExt)
 		}
 	}
 }

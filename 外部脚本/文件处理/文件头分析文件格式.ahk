@@ -1,4 +1,4 @@
-;|2.5|2024.03.24|1567
+﻿;|2.5|2024.03.24|1567
 CandySel := A_Args[1]
 msgbox % File_GetExt(CandySel)
 

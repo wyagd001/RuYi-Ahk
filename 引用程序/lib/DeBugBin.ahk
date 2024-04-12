@@ -2,7 +2,7 @@
 {
 	if !FileName
 		FileName := A_Desktop "\debug.bin"
-	file := FileOpen(FileName, "rw")
+	File := FileOpen(FileName, "rw")
 	hSize := File.RawWrite(Var, Size)
 	File.Close()
 	return hSize

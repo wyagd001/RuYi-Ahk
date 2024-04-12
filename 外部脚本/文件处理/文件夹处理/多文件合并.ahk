@@ -163,14 +163,12 @@ MoveRow_Up:
 Gui, Submit, NoHide
 LV_MoveRow()
 LV_RowIndexOrder()
-LV_ListToObj("股票")
 Return
 
 MoveRow_Down:
 Gui, Submit, NoHide
 LV_MoveRow(0)
 LV_RowIndexOrder()
-LV_ListToObj("股票")
 Return
 
 LV_MoveRow(moveup = true) {
@@ -271,20 +269,6 @@ LV_RowIndexOrder()
 	{
 		LV_Modify(A_index, , A_index)
 	}
-}
-
-LV_ListToObj(SubObjName)
-{
-	loop % LV_GetCount()
-	{
-		LV_GetText(R_index, A_index, 1)
-		LV_GetText(R_Code, A_index, 2)
-		LV_GetText(R_Name, A_index, 3)
-		LV_GetText(R_Share, A_index, 8)
-		LV_GetText(R_Price, A_index, 9)
-		settingobj[SubObjName][R_index] := R_Code "|" R_Name "|" R_Share "|" R_Price
-	}
-	obj2ini(settingobj, settingInifile)
 }
 
 DelListItem:
