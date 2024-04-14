@@ -38,7 +38,7 @@ Loop, Files, %sfolder%\*.*, FR
 		if A_LoopFileExt not in %sExt%
 			continue
 	}
-	LV_Add("", A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, sfolder), A_LoopFileName), A_LoopFileExt, File_GetEncoding(A_LoopFileFullPath), A_LoopFileSizeKB+1, A_LoopFileTimeModified, A_LoopFilePath)
+	LV_Add("", A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, sfolder), A_LoopFileName), A_LoopFileExt, File_GetEncoding(A_LoopFileFullPath), Ceil(A_LoopFileSize / 1024), A_LoopFileTimeModified, A_LoopFilePath)
 }
 ;msgbox % "文件遍历完成. 用时: " A_TickCount - st
 ToolTip
@@ -47,7 +47,7 @@ LV_ModifyCol()
 LV_ModifyCol(1, 200)
 LV_ModifyCol(2, 250)
 LV_ModifyCol(3, 60)
-LV_ModifyCol(5, 75)
+LV_ModifyCol(5, "75 Logical")
 
 ;FileAppend, % Array_ToString(folderobj) , %A_desktop%\123.txt
 return

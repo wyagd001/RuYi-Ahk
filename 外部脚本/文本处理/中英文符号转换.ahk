@@ -2,7 +2,7 @@
 CandySel := A_Args[1]
 Engzh := {",":"，", ".":"。", ":": "：", "?": "？", "!": "！", "(": "（", ")": "）", " ":"　"}
 zhEng := {"，":",", "。":".", "：": ":", "？": "?", "！": "!", "（": "(", "）": ")", "　": " "}
-if CandySel or (strlen(CandySel) = 1)
+if CandySel and (strlen(CandySel) = 1)
 {
 	if zhEng[CandySel]
 		send % zhEng[CandySel]

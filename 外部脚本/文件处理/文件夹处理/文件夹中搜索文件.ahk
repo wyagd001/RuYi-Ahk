@@ -436,7 +436,7 @@ OnGetDispInfo(pnmv)
 		StrPutVar(A_LoopFileExt, %arrResultName%%nIndex%_Ext, "UTF-16")
 		StrPutVar(A_LoopFileDir, %arrResultName%%nIndex%_Folder, "UTF-16")
 		StrPutVar(FileTimeModified, %arrResultName%%nIndex%_Modified, "UTF-16")
-		StrPutVar(A_LoopFileSizeKB, %arrResultName%%nIndex%_SizeKB, "UTF-16")
+		StrPutVar(Ceil(A_LoopFileSize / 1024), %arrResultName%%nIndex%_SizeKB, "UTF-16")
 
           ; We need this for pattern matching
           %arrResultName%%nIndex%_NameAnsi := A_LoopFileName

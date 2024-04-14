@@ -150,9 +150,9 @@ Loop, Files, %sfolder%\*.*, FR
 	}
 
 	if (command = "查找替换") && repalcecount
-		LV_Add("", A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, sfolder), A_LoopFileName), A_LoopFileExt, A_LoopFileSizeKB+1, A_LoopFileTimeModified, repalcecount, A_LoopFilePath)
+		LV_Add("", A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, sfolder), A_LoopFileName), A_LoopFileExt, Ceil(A_LoopFileSize / 1024), A_LoopFileTimeModified, repalcecount, A_LoopFilePath)
 	else
-		LV_Add("", A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, sfolder), A_LoopFileName), A_LoopFileExt, A_LoopFileSizeKB+1, A_LoopFileTimeModified, 0, A_LoopFilePath)
+		LV_Add("", A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, sfolder), A_LoopFileName), A_LoopFileExt, Ceil(A_LoopFileSize / 1024), A_LoopFileTimeModified, 0, A_LoopFilePath)
 }
 LV_ModifyCol(1, 200)
 LV_ModifyCol(2, 250)

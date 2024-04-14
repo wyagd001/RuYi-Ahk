@@ -62,7 +62,7 @@ Loop, Files, %sfolder%\*.*, FR
 			continue
 	}
 	B_Index ++
-	LV_Add("", B_Index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, sfolder), A_LoopFileName), A_LoopFileExt, File_GetEncoding(A_LoopFileFullPath), A_LoopFileSizeKB+1, A_LoopFileTimeModified, A_LoopFilePath)
+	LV_Add("", B_Index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, sfolder), A_LoopFileName), A_LoopFileExt, File_GetEncoding(A_LoopFileFullPath), Ceil(A_LoopFileSize / 1024), A_LoopFileTimeModified, A_LoopFilePath)
 }
 ;msgbox % "文件遍历完成. 用时: " A_TickCount - st
 ToolTip

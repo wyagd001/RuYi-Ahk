@@ -38,7 +38,6 @@ CandySel := StrReplace(CandySel, "?", "？")
 CandySel := StrReplace(CandySel, "(", "（")
 CandySel := StrReplace(CandySel, ")", "）")
 
-
 Clipboard := CandySel
 WinActivate, ahk_id %Windy_CurWin_id%
 Send ^v
