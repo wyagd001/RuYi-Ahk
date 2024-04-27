@@ -25,5 +25,5 @@ if tmp_str
 	sleep 10
 	send % tmp_str
 }
-newStr := CandySel := ""
+tmp_str := CandySel := ""
 return

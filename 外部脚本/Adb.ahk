@@ -70,7 +70,7 @@ else if (comm = "手机端文件")
 else if (comm = "App包管理")
 {
 	commmode("预设命令:", "包名:", "enable", "enable")
-	GuiControl,, myedit1, App列表||启动App|强制停止App|App打开指定网页|禁用App|启用App|卸载App|查看包信息
+	GuiControl,, myedit1, App列表||启动App|强制停止App|App打开指定网页|清空App缓存|禁用App|启用App|卸载App|查看包信息
 }
 else if (comm = "控制手机")
 {
@@ -251,6 +251,16 @@ else if (myedit1 = "App打开指定网页")
 	}
 	myedit2 := SubStr(myedit2, 1, (pos := InStr(myedit2, "❤❤❤")) ? pos - 1 : 60)
 	GuiControl,, myedit3, shell am start -a android.intent.action.VIEW -p %myedit2%
+}
+else if (myedit1 = "清空App缓存")
+{
+	if (A_GuiControl != "myedit2")
+	{
+		GuiControl,, myedit2, com.eg.android.AlipayGphone❤❤❤支付宝||com.tencent.mm❤❤❤微信
+		Gui Submit, nohide
+	}
+	myedit2 := SubStr(myedit2, 1, (pos := InStr(myedit2, "❤❤❤")) ? pos - 1 : 30)
+	GuiControl,, myedit3, shell pm clear %myedit2%
 }
 else if (myedit1 = "禁用App")
 {

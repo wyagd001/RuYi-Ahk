@@ -1,4 +1,4 @@
-﻿;|2.5|2023.10.20|1220
+﻿;|2.6|2024.04.17|1220
 SetFormat, float, 10.4
 
 ; <title>上证指数 3167.24 +1.08%(33.99)股票价格-行情-走势图-行情-金融界</title>
@@ -39,9 +39,9 @@ LV_Delete()
 for k,v in settingobj["股票"]
 {
 	;msgbox % v
-	code := GetStringIndex(v, 1), fene := GetStringIndex(v, 3), chengben := GetStringIndex(v, 4)
+	code := GetStringIndex(v, 1), name := GetStringIndex(v, 2), fene := GetStringIndex(v, 3), chengben := GetStringIndex(v, 4)
 	Tmp_Obj := Gupiao(code)
-	LV_Add("", A_Index, code, Tmp_Obj["名称"], Tmp_Obj["价格"], Tmp_Obj["涨跌"], Tmp_Obj["涨幅"], fene * Tmp_Obj["涨跌"], fene, chengben, fene * Tmp_Obj["价格"] - fene * chengben)
+	LV_Add("", A_Index, code, name?name:Tmp_Obj["名称"], Tmp_Obj["价格"], Tmp_Obj["涨跌"], Tmp_Obj["涨幅"], fene * Tmp_Obj["涨跌"], fene, chengben, fene * Tmp_Obj["价格"] - fene * chengben)
 }
 LV_ModifyCol()
 LV_ModifyCol(1, "Logical 40")
@@ -251,6 +251,8 @@ Gui, 1:Default
 Gui, 1:-Disabled
 Gui, Submit, NoHide
 settingobj["股票"][R_index] := R_Code "|" R_Name "|" R_Share "|" R_Price
+Tmp_Obj := Gupiao(R_Code)
+LV_Modify(R_index, "", R_index, R_Code, R_Name, Tmp_Obj["价格"], Tmp_Obj["涨跌"], Tmp_Obj["涨幅"], R_Share * Tmp_Obj["涨跌"], R_Share, R_Price, R_Share * Tmp_Obj["价格"] - R_Share * R_Price)
 obj2ini(settingobj, settingInifile)
 ;RefreshData("股票")
 R_index := R_Code := R_Name := R_Share := R_Price := ""

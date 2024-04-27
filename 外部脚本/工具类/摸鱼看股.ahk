@@ -6,16 +6,21 @@ Tmp_Obj := Gupiao(CandySel)
 Tmp_涨幅 := Tmp_Obj["涨幅"]
 Tmp_价格 := Tmp_Obj["价格"]
 Tmp_涨幅 := SubStr(trim(Tmp_涨幅), 1, -1)
-if (Tmp_涨幅+0>=0)
+if WinExist("AppBarWin ahk_class AutoHotkeyGUI")
 {
-	;msgbox % Tmp_涨幅
-	ExecSendToRuyi("A" SubStr(Tmp_价格, 1, 4) "`n" SubStr(Tmp_涨幅, 1, 5) "|red",, 1527)
+	if (Tmp_涨幅+0>=0)
+	{
+		;msgbox % Tmp_涨幅
+		ExecSendToRuyi("A`n" SubStr(Tmp_价格, 1, 4) "`n" SubStr(Tmp_涨幅, 1, 5) "|red",, 1527)
+	}
+	if (Tmp_涨幅+0<0)
+	{
+		;msgbox % Tmp_涨幅+0 "小于0"
+		ExecSendToRuyi("A`n" SubStr(Tmp_价格, 1, 4) "`n" SubStr(Tmp_涨幅, 1, 5) "|GREEN",, 1527)
+	}
 }
-if (Tmp_涨幅+0<0)
-{
-	;msgbox % Tmp_涨幅+0 "小于0"
-	ExecSendToRuyi("A" SubStr(Tmp_价格, 1, 4) "`n" SubStr(Tmp_涨幅, 1, 5) "|GREEN",, 1527)
-}
+else
+	msgbox, %  Tmp_Obj["名称"] "`n" Tmp_价格 "`n" Tmp_涨幅
 Return
 
 Gupiao(Code)

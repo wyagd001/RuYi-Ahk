@@ -1,5 +1,5 @@
 ﻿;|2.5|2024.01.22|1327
-;来源网址: https://blog.csdn.net/liuyukuan/article/details/73656922
+; 来源网址: https://blog.csdn.net/liuyukuan/article/details/73656922
 ComObjError(0)
 Today := SubStr(A_Now, 1, 8)
 TodayWallpaper := 0
@@ -36,7 +36,7 @@ BingWallpapers(ByRef imgpath := "")
 	Winhttp.WaitForResponse()
 	sleep 1200
 	r := Winhttp.ResponseText
-	msgbox % r
+	;msgbox % r
 	if !r
 	{
 		UrlDownloadToFile, https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1, % A_ScriptDir . "\..\..\临时目录\bing.txt"

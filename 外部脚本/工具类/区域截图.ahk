@@ -1,4 +1,4 @@
-﻿;|2.5|2024.01.27|1530
+﻿;|2.6|2024.04.22|1530
 区域选择方式 = 1
 pToken := Gdip_Startup()
 
@@ -31,17 +31,17 @@ Rbutton:: ExitApp
 SelectCaptureArea:
 CoordMode, Mouse, Screen
 ; 区域截图选取截图区域方法1
-if(区域选择方式 = 1) {
-selobj := GetArea()
-aRect := selobj.x "|" selobj.y "|" selobj.w "|" selobj.h
+if(区域选择方式 = 1)
+{
+	selobj := GetArea()
+	aRect := selobj.x "|" selobj.y "|" selobj.w "|" selobj.h
 
-;~ ;快门声音
-IfExist, %A_ScriptDir%\..\..\脚本图标\shutter.wav
-	SoundPlay, %A_ScriptDir%\..\..\脚本图标\shutter.wav
+	;~ ;快门声音
+	IfExist, %A_ScriptDir%\..\..\脚本图标\shutter.wav
+		SoundPlay, %A_ScriptDir%\..\..\脚本图标\shutter.wav
 
-;Tooltip %aRect%
-sleep,100
-
+	;Tooltip %aRect%
+	sleep,100
 }
 ; 区域截图选取截图区域方法2
 else if(区域选择方式 = 2)
@@ -102,13 +102,14 @@ hw := GetStringIndex(aRect, 3), hh := GetStringIndex(aRect, 4), bhh := hh+5
 ;Gui, +hwndquyujt
 Gui, Add, Picture, w%hw% h%hh% vprev_pic, HBITMAP:%hBitmap%
 Gui, Add, Button, x5 yp+%bhh% gocr w40 vocr, OCR
-Gui, Add, Button, xp+50 yp gOCR2 w60 vocr2, 本地OCR
-Gui, Add, Button, xp+70 yp gmspaint w40, 画图
-Gui, Add, Button, xp+50 yp gsave w40, 保存
-Gui, Add, Button, xp+50 yp gsavas w60, 另存为
-Gui, Add, Button, xp+70 yp gclip w60, 剪贴板
-Gui, Add, Button, xp+70 yp gBreload w40, 重启
-Gui, Add, Button, xp+50 yp gguiclose w40, 取消
+Gui, Add, Button, xp+45 yp gOCR2 w60 vocr2, 本地OCR
+Gui, Add, Button, xp+65 yp gmspaint w40, 画图
+Gui, Add, Button, xp+45 yp gsave w40, 保存
+Gui, Add, Button, xp+45 yp gsavas w50, 另存为
+Gui, Add, Button, xp+55 yp gclip w50, 剪贴板
+Gui, Add, Button, xp+55 yp gRCap w55, 重新截图
+Gui, Add, Button, xp+60 yp gBreload w40, 重启
+Gui, Add, Button, xp+45 yp gguiclose w40, 退出
 Gui, Add, text, x5 yp+30 w60, 文件名:
 Gui, Add, Edit, xp+50 yp vjtfn w300, 
 Gui Show
@@ -183,6 +184,11 @@ DeleteObject(hBitmap)
 gosub guiclose
 Return
 
+RCap:
+gui, Destroy
+gosub SelectCaptureArea
+return
+
 Breload:
 reload
 return
@@ -216,17 +222,21 @@ StartSelection(area) {
 }
 
 Select(area) {
-   static hGui := CreateSelectionGui()
-   Hook := new WindowsHook(WH_MOUSE_LL := 14, "LowLevelMouseProc", hGui)  ;  鼠标钩子
-   Loop {
-      KeyWait, LButton
-      WinGetPos, X, Y, W, H, ahk_id %hGui%
-   } until w > 0
-   ReplaceSystemCursors("")
-   Hotkey, LButton, Off
-   Hook := ""
-   ;Gui, %hGui%:Color, 0058EE
-   Gui, %hGui%: Destroy
+	static hGui
+	if !hGui
+		hGui := CreateSelectionGui()
+	;tooltip % hGui
+	Hook := new WindowsHook(WH_MOUSE_LL := 14, "LowLevelMouseProc", hGui)  ;  鼠标钩子
+	Loop {
+		KeyWait, LButton
+		WinGetPos, X, Y, W, H, ahk_id %hGui%
+	} until w > 0
+	ReplaceSystemCursors("")
+	Hotkey, LButton, Off
+	Hook := ""
+	;Gui, %hGui%:Color, 0058EE
+	Gui, %hGui%: Destroy
+	hGui := 0
    for k, v in ["x", "y", "w", "h"]
       area[v] := %v%
 }
@@ -272,9 +282,9 @@ CreateSelectionGui() {
 
 LowLevelMouseProc(nCode, wParam, lParam) {
    static WM_MOUSEMOVE := 0x200, WM_LBUTTONUP := 0x202
-        , coords := [], startMouseX, startMouseY, hGui
         , timer := Func("LowLevelMouseProc").Bind("timer", "", "")
-   
+        , coords := [], startMouseX, startMouseY, hGui
+
    if (nCode = "timer") {
       while coords[1] {
          point := coords.RemoveAt(1)
@@ -289,7 +299,7 @@ LowLevelMouseProc(nCode, wParam, lParam) {
    else {
       (!hGui && hGui := A_EventInfo)
       if (wParam = WM_LBUTTONUP)
-         startMouseX := startMouseY := ""
+         startMouseX := startMouseY := "", hGui := ""
       if (wParam = WM_MOUSEMOVE)  {
          mouseX := NumGet(lParam + 0, "Int")
          mouseY := NumGet(lParam + 4, "Int")
@@ -310,10 +320,12 @@ class WindowsHook {
       this.hHook := DllCall("SetWindowsHookEx", "Int", type, "Ptr", this.callbackPtr
                                               , "Ptr", !isGlobal ? 0 : DllCall("GetModuleHandle", "UInt", 0, "Ptr")
                                               , "UInt", isGlobal ? 0 : DllCall("GetCurrentThreadId"), "Ptr")
+;tooltip  新建
    }
    __Delete() {
       DllCall("UnhookWindowsHookEx", "Ptr", this.hHook)
       DllCall("GlobalFree", "Ptr", this.callBackPtr, "Ptr")
+;tooltip  注销
    }
 }
 

@@ -48,7 +48,7 @@ PasteToPath(path)
             try {
                 FileDelete, %fullname%
                 if (paste_type == "文本文件") {
-                    FileAppend, %clip%, %fullname%, CP936
+                    FileAppend, %clip%, %fullname%, UTF-8
                 } else {
                     SaveImage(clip, fullname)
                 }
@@ -62,7 +62,7 @@ PasteToPath(path)
         } else {
             try {
                 if (paste_type == "文本文件") {
-                    FileAppend, %clip%, %fullname%, CP936
+                    FileAppend, %clip%, %fullname%, UTF-8
                 } else {
                     SaveImage(clip, fullname)
                 }

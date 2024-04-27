@@ -1,4 +1,4 @@
-﻿;|2.6|2024.03.29|1229
+﻿;|2.6|2024.04.24|1229
 CandySel :=  A_Args[1]
 ;CandySel := "C:\Documents and Settings\Administrator\Desktop\文本碎片小脚本"
 Menu, Tray, UseErrorLevel
@@ -8,6 +8,7 @@ Gui, Add, Edit, xp+80 yp-5 w550 h25 vsfolder, % CandySel
 Gui, Add, Button, xp+560 yp-2 w60 h30 gstartsearch, 开始查找
 Gui, Add, Text, x10 yp+40 h25, 指定扩展名:
 Gui, Add, Edit, xp+80 yp-5 w550 h25 vsExt,
+Gui, Add, Button, xp+560 yp-2 w60 h30 gstartsearch2, 同名查找
 Gui, Add, Text, x10 yp+40 h25, 目标文件夹:
 Gui, Add, Edit, xp+80 yp-5 w550 h25 vtfolder,
 Gui, Add, Button, xp+560 yp h25 gseltfolder, ...
@@ -28,9 +29,17 @@ if FileExist(CandySel)
 	gosub startsearch
 Return
 
+startsearch2:
+mode := "samename"
+gosub listfile
+return
 startsearch:
+mode := "Md5"
+gosub listfile
+return
+listfile:
 gui, Submit, NoHide
-folderobj := {}, fsizeobj := {}, fMD5obj := {}, md5obj := {}
+folderobj := {}, fsizeobj := {}, fMD5obj := {}, md5obj := {}, fnameobj := {}, nameobj := {}
 ToolTip, % "正在查找重复文件, 请稍候..."
 LV_Delete()
 ; 查找文件夹, 最多支持3个文件夹, 文件夹以 "|" 或 ";" 分隔
@@ -46,13 +55,42 @@ Loop, parse, sfolder, |;
 			if A_LoopFileExt not in %sExt%
 				continue
 		}
-		if !fsizeobj[A_LoopFileSize]
+		if (mode = "Md5") && !fsizeobj[A_LoopFileSize]
 		{
 			fsizeobj[A_LoopFileSize] := A_LoopFilePath  ; 将文件的大小记入大小库中
 			continue
 		}
+		if (mode = "samename") && !fnameobj[A_LoopFileName]
+		{
+			fnameobj[A_LoopFileName] := A_LoopFilePath  ; 将文件名记入文件名库中
+			continue
+		}
 
-		if fsizeobj[A_LoopFileSize]    ; 大小有重复的情况
+		if (mode = "samename") && fnameobj[A_LoopFileName]
+		{
+			prefilepath := fnameobj[A_LoopFileName]
+				currfileMD5 := MD5_File(A_LoopFilePath)
+				folderobj[A_LoopFilePath] := {}
+				folderobj[A_LoopFilePath]["fname"] := A_LoopFileName
+				folderobj[A_LoopFilePath]["relPath"] := StrReplace(StrReplace(A_LoopFilePath, A_LoopField), A_LoopFileName)
+				folderobj[A_LoopFilePath]["fTMod"] := A_LoopFileTimeModified
+				folderobj[A_LoopFilePath]["fsize"] := A_LoopFileSize
+				folderobj[A_LoopFilePath]["fmd5"] := currfileMD5
+			if !folderobj[prefilepath]
+			{
+					FileGetTime, fTMod, % prefilepath, M
+					SplitPath, prefilepath, fname
+					prefileMD5 := MD5_File(prefilepath)
+					folderobj[prefilepath] := {}
+					folderobj[prefilepath]["fname"] := fname
+					folderobj[prefilepath]["relPath"] := StrReplace(StrReplace(prefilepath, A_LoopField), fname)
+					folderobj[prefilepath]["fTMod"] := fTMod
+					folderobj[prefilepath]["fsize"] := A_LoopFileSize
+					folderobj[prefilepath]["fmd5"] := prefileMD5
+			}
+
+}
+		if (mode = "Md5") && fsizeobj[A_LoopFileSize]    ; 大小有重复的情况
 		{
 			currfileMD5 := MD5_File(A_LoopFilePath)
 			sprefilepath := fsizeobj[A_LoopFileSize]
@@ -67,7 +105,7 @@ Loop, parse, sfolder, |;
 			{
 				folderobj[A_LoopFilePath] := {}
 				folderobj[A_LoopFilePath]["fname"] := A_LoopFileName
-				folderobj[A_LoopFilePath]["relPath"] := StrReplace(StrReplace(A_LoopFilePath, sfolder), A_LoopFileName)
+				folderobj[A_LoopFilePath]["relPath"] := StrReplace(StrReplace(A_LoopFilePath, A_LoopField), A_LoopFileName)
 				folderobj[A_LoopFilePath]["fTMod"] := A_LoopFileTimeModified
 				folderobj[A_LoopFilePath]["fsize"] := A_LoopFileSize
 				folderobj[A_LoopFilePath]["fmd5"] := currfileMD5
@@ -80,7 +118,7 @@ Loop, parse, sfolder, |;
 					SplitPath, mprefilepath, fname
 					folderobj[mprefilepath] := {}
 					folderobj[mprefilepath]["fname"] := fname
-					folderobj[mprefilepath]["relPath"] := StrReplace(StrReplace(mprefilepath, sfolder), fname)
+					folderobj[mprefilepath]["relPath"] := StrReplace(StrReplace(mprefilepath, A_LoopField), fname)
 					folderobj[mprefilepath]["fTMod"] := fTMod
 					folderobj[mprefilepath]["fsize"] := A_LoopFileSize
 					folderobj[mprefilepath]["fmd5"] := currfileMD5
@@ -101,7 +139,10 @@ CF_ToolTip("文件遍历完成.", 2500)
 GuiControl, -redraw, filelist
 for nFile in folderobj
 {
-	LV_Add("", "", "", folderobj[nFile].fname, folderobj[nFile].relPath, folderobj[nFile].fsize, folderobj[nFile].fTmod, nFile, folderobj[nFile].fmd5)
+	;if (mode = "Md5")
+		LV_Add("", "", "", folderobj[nFile].fname, folderobj[nFile].relPath, folderobj[nFile].fsize, folderobj[nFile].fTmod, nFile, folderobj[nFile].fmd5)
+	;if (mode = "samename")
+		;LV_Add("", "", "", folderobj[nFile].fname, folderobj[nFile].relPath, folderobj[nFile].fsize, folderobj[nFile].fTmod, nFile)	
 }
 LV_ModifyCol()
 LV_ModifyCol(1, 40)
@@ -110,34 +151,61 @@ LV_ModifyCol(3, 200)
 LV_ModifyCol(4, 300)
 LV_ModifyCol(5, "Logical")  ; 按大小排序, 如果有大量文件大小一致的文件会显示混乱
 LV_ModifyCol(7, 200)
-LV_ModifyCol(8, "SortDesc")
-colorou := 0
-Loop % LV_GetCount()
+if (mode = "samename")
+	LV_ModifyCol(3, "Sort")
+if (mode = "Md5")
+	LV_ModifyCol(8, "SortDesc")
+
+if (mode = "samename")
 {
-	LV_Modify(A_Index, "", "", A_Index)
-	LV_GetText(RetrievedText, A_Index, 7)
-	LV_GetText(md5value, A_Index, 8)
-	if (A_Index = 1)
-		premd5value := md5value
-	if (md5value != premd5value)
+	colorou := 0
+	Loop % LV_GetCount()
 	{
-		colorou := !colorou
+		LV_Modify(A_Index, "", "", A_Index)
+		LV_GetText(RetrievedText, A_Index, 3)
+		if (A_Index = 1)
+			preText := RetrievedText
+		if (RetrievedText != preText)
+		{
+			colorou := !colorou
+			preText := RetrievedText
+		}
+		if colorou
+			LV_Modify(A_Index, "", "☆_" A_Index)
 	}
-	if colorou
-		LV_Modify(A_Index, "", "☆_" A_Index)
-	if folderobj[RetrievedText].unchecked
+}
+
+if (mode = "Md5")
+{
+	colorou := 0
+	Loop % LV_GetCount()
 	{
-		premd5value := md5value
-	}
-	Else
-	{
-		LV_Modify(A_Index, "check")
-		premd5value := md5value
+		LV_Modify(A_Index, "", "", A_Index)
+		LV_GetText(RetrievedText, A_Index, 7)
+		LV_GetText(md5value, A_Index, 8)
+		if (A_Index = 1)
+			premd5value := md5value
+		if (md5value != premd5value)
+		{
+			colorou := !colorou
+		}
+		if colorou
+			LV_Modify(A_Index, "", "☆_" A_Index)
+		if folderobj[RetrievedText].unchecked
+		{
+			premd5value := md5value
+		}
+		Else
+		{
+			LV_Modify(A_Index, "check")
+			premd5value := md5value
+		}
 	}
 }
 GuiControl, +redraw, filelist
 ;FileAppend, % Array_ToString(folderobj) , %A_desktop%\123.txt
 folderobj := {}
+mode := ""
 return
 
 seltfolder:

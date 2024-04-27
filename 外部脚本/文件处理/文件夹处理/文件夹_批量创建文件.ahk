@@ -1,4 +1,4 @@
-﻿;|2.5|2024.01.18|1543
+﻿;|2.6|2024.04.22|1543
 CandySel := A_Args[1]
 tmp_Str := ""
 GuiText(tmp_Str, "根据文件列表批量创建文件, 一行一个", "qq", 500)
@@ -6,25 +6,37 @@ return
 
 GuiText(Gtext, Title:="", Label:="", w:=300, l:=20)
 {
-	global myedit, TextGuiHwnd, gp, st, end, step, long, pref, suff
+	global myedit, TextGuiHwnd, gp, st, end, step, long, pref, suff, gp2, dstep, stt, edt, dstep, tstyle
 	Gui,GuiText: Destroy
 	Gui,GuiText: Default
 	Gui, +HwndTextGuiHwnd +Resize
 	Gui, Add, Edit, Multi w%w% r%l% vmyedit ;-WantReturn
 	;tooltip % "xp yp+30+" 20*l
 	Gui, Add, Radio, % "xp h25 vgp yp+" 15*l, 阿拉伯数字
+	Gui, Add, Radio, xp+180 h25 vgp2 yp, 日期
 	Gui, Add, text, x10 yp+30 w60, 起始:
 	Gui, Add, Edit, xp+60 yp w80 gwline
 	Gui, Add, updown, gwline vst, 1
+	Gui, Add, text, xp+120 yp w80 ggetnow cblue, 起始日期:
+	Gui, Add, Edit, xp+80 yp w120 vstt
 	Gui, Add, text, x10 yp+30 w60, 结束:
 	Gui, Add, Edit, xp+60 yp w80 gwline
 	Gui, Add, updown, gwline vend, 10
+	Gui, Add, text, xp+120 yp w80 cblue, 结束日期:
+	Gui, Add, Edit, xp+80 yp w120 vedt 
 	Gui, Add, text, x10 yp+30 w60, 增量:
 	Gui, Add, Edit, xp+60 yp w80 gwline
 	Gui, Add, updown, gwline vstep, 1
+	Gui, Add, text, xp+120 yp w80, 增量天数:
+	Gui, Add, Edit, xp+80 yp w120 gwline
+	Gui, Add, updown, gwline2 vdstep, 0
+
 	Gui, Add, text, x10 yp+30 w60, 数值长度:
 	Gui, Add, Edit, xp+60 yp w80 gwline
 	Gui, Add, updown, gwline vlong, 1
+
+	Gui, Add, text, xp+120 yp w80, 格式化样式:
+	Gui, Add, ComboBox, xp+80 yp w120 vtstyle, yyyyMMdd||yyyy年MM月dd日|yyyy-MM-dd
 	Gui, Add, text, x10 yp+30 w60, 前缀:
 	Gui, Add, Edit, xp+60 yp w80 gwline vpref, 
 	Gui, Add, text, x10 yp+30 w60, 后缀:
@@ -72,23 +84,77 @@ Return
 
 wline:
 Gui, GuiText: Submit, NoHide
-if !gp
-	return
-if !st or !end or !step
-	return
-tmp_str := ""
-loop
+if gp
 {
-	cur_num := st + (A_index - 1) * step
-	if (cur_num > end)
-		break
-	cur_num := Format("{:0" long "}", cur_num)
-	line_str := pref cur_num suff
-	tmp_str .= line_str "`r`n"
+	if !st or !end or !step
+		return
+	tmp_str := ""
+	loop
+	{
+		cur_num := st + (A_index - 1) * step
+		if (cur_num > end)
+			break
+		cur_num := Format("{:0" long "}", cur_num)
+		line_str := pref cur_num suff
+		tmp_str .= line_str "`r`n"
+	}
+	GuiControl,, myedit, % tmp_str
 }
-GuiControl,, myedit, % tmp_str
+if gp2
+{
+	if !stt or !edt or !dstep
+		return
+
+	tmp_str := AutoDate(stt, edt, dstep, tstyle)
+	;msgbox % tmp_str
+	GuiControl,, myedit, % tmp_str
+}
 return
 
+wline2:
+Gui, GuiText: Submit, NoHide
+if gp2
+{
+	if !stt or !edt or !dstep
+		return
+
+	tmp_str := AutoDate(stt, edt, dstep, tstyle)
+	;msgbox % tmp_str
+	GuiControl,, myedit, % tmp_str
+}
+return
+
+getnow:
+GuiControl,, stt, % substr(A_now, 1, 8)
+GuiControl,, edt, % substr(A_now, 1, 8)
+return
+
+AutoDate(StartLongDate := "", EndLongDate := "", step := 1, DateFormat := "yyyy年MM月dd日-dddd"){
+global pref, suff
+	If !(StartLongDate)
+		StartLongDate := A_Now
+	If !(EndLongDate)
+		EndLongDate := A_Now
+	If (RegExMatch(StartLongDate, "[^\d]")){
+		MsgBox 请输入正确的待格式化日期格式：`n20001010
+		Return 
+	}
+	FormatTime, StartTime, % StartLongDate, yyyyMMdd
+	FormatTime, EndTime, % EndLongDate, yyyyMMdd
+	StartLongDate += -step, days
+	Loop {
+		StartLongDate += step, days
+		FormatTime, AutoTime, % StartLongDate, % DateFormat
+		FormatTime, OutTime, % StartLongDate, yyyyMMdd
+			;If (RegExReplace(Out,"^(\d{4}).+$","$1") != RegExReplace(OutTime,"^(\d{4}).+$","$1"))
+			;If (RegExReplace(Out,"^\d{4}(\d{2}).+$","$1") != RegExReplace(OutTime,"^\d{4}(\d{2}).+$","$1"))
+			;If (RegExReplace(Out,"^\d{6}(\d{2}).+$","$1") != RegExReplace(OutTime,"^\d{6}(\d{2}).+$","$1"))
+		if (OutTime > EndTime)
+				Break
+		RDate .= "`n" pref AutoTime suff
+	}
+	Return Trim(RDate, "`n")
+}
 
 ; =================================================================================
 ; Function: AutoXYWH
