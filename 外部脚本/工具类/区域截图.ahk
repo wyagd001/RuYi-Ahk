@@ -112,6 +112,7 @@ Gui, Add, Button, xp+60 yp gBreload w40, 重启
 Gui, Add, Button, xp+45 yp gguiclose w40, 退出
 Gui, Add, text, x5 yp+30 w60, 文件名:
 Gui, Add, Edit, xp+50 yp vjtfn w300, 
+Gui, Add, Button, xp+310 yp gQRcodeReader w80, 二维码识别
 Gui Show
 if A_OSVersion in Win_7,Win_8,Win_8.1
 	GuiControl, Disable, ocr
@@ -157,6 +158,13 @@ JTFilePath := A_temp "\Vis2_123.bmp"
 Gdip_SaveBitmapToFile(pBitmap, JTFilePath)
 B_Autohotkey := A_ScriptDir "\..\..\引用程序\" (A_PtrSize = 8 ? "AutoHotkeyU64.exe" : "AutoHotkeyU32.exe")
 run %B_Autohotkey% "%A_ScriptDir%\..\文件处理\本地OCR(Vis2).ahk" "%JTFilePath%"
+return
+
+QRcodeReader:
+JTFilePath := A_temp "\ewm_123.png"
+Gdip_SaveBitmapToFile(pBitmap, JTFilePath)
+QRText := RunCmd(A_ScriptDir "\..\..\引用程序\x32\ewm.exe """ JTFilePath """")
+GuiText(QRText, "区域截图 - 二维码识别结果")
 return
 
 mspaint:
@@ -594,3 +602,36 @@ AutoXYWH(DimSize, cList*){       ; http://ahkscript.org/boards/viewtopic.php?t=1
             Options .= dim (dg%dim% * cInfo[ctrlID]["f" dim] + cInfo[ctrlID][dim]) A_Space
         GuiControl, % A_Gui ":" cInfo[ctrlID].m , % ctrl, % Options
 } } }
+
+RunCmd(CmdLine, WorkingDir:="", Cp:="CP0") { ; Thanks Sean!  SKAN on D34E @ tiny.cc/runcmd 
+  Local P8 := (A_PtrSize=8),  pWorkingDir := (WorkingDir ? &WorkingDir : 0)                                                
+  Local SI, PI,  hPipeR:=0, hPipeW:=0, Buff, sOutput:="",  ExitCode:=0,  hProcess, hThread
+                   
+  DllCall("CreatePipe", "PtrP",hPipeR, "PtrP",hPipeW, "Ptr",0, "UInt",0)
+, DllCall("SetHandleInformation", "Ptr",hPipeW, "UInt",1, "UInt",1)
+    
+  VarSetCapacity(SI, P8? 104:68,0),      NumPut(P8? 104:68, SI)
+, NumPut(0x100, SI,  P8? 60:44,"UInt"),  NumPut(hPipeW, SI, P8? 88:60)
+, NumPut(hPipeW, SI, P8? 96:64)   
+
+, VarSetCapacity(PI, P8? 24:16)               
+
+  If not DllCall("CreateProcess", "Ptr",0, "Str",CmdLine, "Ptr",0, "UInt",0, "UInt",True
+              , "UInt",0x08000000 | DllCall("GetPriorityClass", "Ptr",-1,"UInt"), "UInt",0
+              , "Ptr",pWorkingDir, "Ptr",&SI, "Ptr",&PI )  
+     Return Format( "{1:}", "" 
+          , DllCall("CloseHandle", "Ptr",hPipeW)
+          , DllCall("CloseHandle", "Ptr",hPipeR)
+          , ErrorLevel := -1 )
+  DllCall( "CloseHandle", "Ptr",hPipeW)
+
+, VarSetCapacity(Buff, 4096, 0), nSz:=0   
+  While DllCall("ReadFile",  "Ptr",hPipeR, "Ptr",&Buff, "UInt",4094, "PtrP",nSz, "UInt",0)
+    sOutput .= StrGet(&Buff, nSz, Cp)
+
+  hProcess := NumGet(PI, 0),  hThread := NumGet(PI,4)
+, DllCall("GetExitCodeProcess", "Ptr",hProcess, "PtrP",ExitCode)
+, DllCall("CloseHandle", "Ptr",hProcess),    DllCall("CloseHandle", "Ptr",hThread)
+, DllCall("CloseHandle", "Ptr",hPipeR),      ErrorLevel := ExitCode  
+Return sOutput  
+}

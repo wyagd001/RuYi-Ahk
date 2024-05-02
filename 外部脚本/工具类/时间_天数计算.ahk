@@ -1,5 +1,12 @@
-﻿;|2.5|2024.03.20|1565
-CandySel := DateParse(A_Args[1])
+﻿;|2.6|2024.04.28|1565
+CandySel := A_Args[1]
+if RegExMatch(CandySel, "^\d{14}$|^\d{8}$")
+{
+	FormatTime, CandySel, % CandySel, yyyyMMdd
+	;msgbox % CandySel
+}
+else
+	CandySel := DateParse(CandySel)
 Gui, Add, Text, x10 y10 cBlue ggetNowT, 时间
 Gui, Add, Edit, xp+60 yp w160 vTime1, %CandySel%
 Gui, add, text, xp+165 yp cBlue gcutday, 去掉时间
@@ -12,6 +19,7 @@ Gui, Add, Edit, xp+60 yp w160 vAddedDays, -280
 Gui, Add, Text, x10 yp+30, 结果
 Gui, Add, Edit, xp+60 yp w160 vresult
 Gui, add, button, xp+165 yp w60 h25 gjisuan Default, 执行计算
+Gui, Add, Text, x70 yp+30 w160 vYearText,
 Gui, show,, 天数计算
 Return
 
@@ -19,23 +27,46 @@ jisuan:
 Gui, Submit, NoHide
 if Time2
 {
+	orgT := Time1
 	EnvSub, Time1, %Time2%, days
 	GuiControl,, result, % Time1
+	nian := Time1//365
+	if (nian != 0)
+	{
+		DaysLeft := orgT
+		Time2 := Substr(orgT, 1, 4) - nian
+		Time2 := Time2 Substr(orgT, 5, 8)
+		EnvSub, DaysLeft, %Time2%, days
+		;msgbox % Time2 "|" DaysLeft "|" Time1
+		if (Time1 > 0)
+			tian := Time1 -DaysLeft
+		else
+			tian := DaysLeft - Time1
+		nian := abs(nian)
+	}
+	else
+		tian := abs(Time1)
+	if (Time1 > 0)
+		tips = 已过去%nian%年，又%tian%天
+	else
+		tips = 还剩%nian%年，又%tian%天
+	GuiControl,, YearText, %tips%
 	return
 }
 if AddedDays
 {
 	Time1 += AddedDays, days
+	FormatTime, Time1, % Time1, yyyyMMdd
 	GuiControl,, result, % Time1
 }
 return
 
 getNowT:
-GuiControl,, Time1, % A_Now
+GuiControl,, Time1, % SubStr(A_Now, 1, 8)
 return
 
 getNowT2:
-GuiControl,, Time2, % A_Now
+GuiControl,, Time2, % SubStr(A_Now, 1, 8)
 return
 
 switcht:
@@ -45,14 +76,16 @@ GuiControl,, Time1, % Time2
 return
 
 cutday:
+Gui, 66: Default
 Gui, Submit, NoHide
-FormatTime, Time1, Time1, yyyyMMdd
+FormatTime, Time1, % Time1, yyyyMMdd
 GuiControl,, Time1, % Time1
 return
 
 cutday2:
+Gui, 66: Default
 Gui, Submit, NoHide
-FormatTime, Time2, Time2, yyyyMMdd
+FormatTime, Time2, % Time2, yyyyMMdd
 GuiControl,, Time2, % Time2
 return
 

@@ -17,7 +17,7 @@ txtFocusCtrl := "Focused Control"
 Gui, New, hwndhGui AlwaysOnTop Resize MinSize
 Gui, Add, Text,, Window Title, Class and Process:
 Gui, Add, Checkbox, yp xp+200 w120 Right vCtrl_FollowMouse, Follow Mouse
-Gui, Add, Edit, xm w320 r4 ReadOnly -Wrap vCtrl_Title
+Gui, Add, Edit, xm w320 r5 ReadOnly -Wrap vCtrl_Title
 Gui, Add, Text,, Mouse Position:
 Gui, Add, Edit, w320 r4 ReadOnly vCtrl_MousePos
 Gui, Add, Text, w320 vCtrl_CtrlLabel, % txtFocusCtrl ":"
@@ -76,7 +76,7 @@ if (curWin = hGui || t2 = "MultitaskingViewFrame") ; Our Gui || Alt-tab
 UpdateText("Ctrl_Freeze", txtNotFrozen)
 WinGet, t3, ProcessName
 WinGet, t4, PID
-UpdateText("Ctrl_Title", t1 "`nahk_class " t2 "`nahk_exe " t3 "`nahk_pid " t4)
+UpdateText("Ctrl_Title", t1 "`nahk_class " t2 "`nahk_exe " t3 "`nahk_pid " t4 "`nahk_id " curWin)
 CoordMode, Mouse, Relative
 MouseGetPos, mrX, mrY
 CoordMode, Mouse, Client

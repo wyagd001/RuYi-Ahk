@@ -5,7 +5,7 @@ SetWorkingDir %A_ScriptDir%
 ;URLDownloadToFile, %URL%, Image.png
 
 CandySel := A_Args[1]
-counterSeconds := CandySel
+counterSeconds := CandySel ? CandySel : 60
 counterSecondsAdjusted := counterSeconds + 1
 
 counter:=0
