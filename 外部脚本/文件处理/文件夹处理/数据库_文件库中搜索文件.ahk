@@ -1,4 +1,4 @@
-﻿;|2.0|2023.07.01|1225
+﻿;|2.6|2024.05.03|1225
 #SingleInstance force
 #InputLevel 10   ; 优先级设置比如意中的高, 按下相同热键后先触发脚本自身的
 Menu, Tray, UseErrorLevel
@@ -44,7 +44,8 @@ Gui, Add, Button, xs+1 h30 gOpenFile, 打开文件
 Gui, Add, Button, xp+70 yp h30 gEditFile, 编辑文件
 Gui, Add, Button, xp+70 yp h30 gOpenFolder, 打开路径
 Gui, Add, Button, xp+70 yp h30 gcheckmd5, 计算Md5
-Gui, Add, Button, xp+368 yp h30 gupdateMlib, 更新文件库
+Gui, Add, Button, xp+70 yp h30 gfiletoclip, 复制文件
+Gui, Add, Button, xp+300 yp h30 gupdateMlib, 更新文件库
 Gui, Add, StatusBar,, 
 Gui, Show, w670 h500, 文件库中搜索文件
 if flib_SearchText
@@ -280,6 +281,62 @@ if fileexist(CandySel)
 		CF_ToolTip("两文件 md5 不一致", 3000)
 }
 return
+
+filetoclip:
+ControlGet, selfiles, List, Col2 Selected, SysListView321, 文件库中搜索文件
+FileToClipboard(selfiles)
+return
+
+
+FileToClipboard(FilesPath, DropEffect := "Copy")
+{
+	Static TCS := A_IsUnicode ? 2 : 1 ; size of a TCHAR
+	Static PreferredDropEffect := DllCall("RegisterClipboardFormat", "Str", "Preferred DropEffect")
+	Static DropEffects := {1: 1, 2: 2, Copy: 1, Move: 2}
+	; -------------------------------------------------------------------------------------------------------------------
+	; Count files and total string length
+	TotalLength := 0
+	FileArray := []
+	Loop, Parse, FilesPath, `n, `r
+	{
+		If (Length := StrLen(A_LoopField))
+			FileArray.Push({Path: A_LoopField, Len: Length + 1})
+		TotalLength += Length
+	}
+	FileCount := FileArray.Length()
+	If !(FileCount && TotalLength)
+		Return False
+	; -------------------------------------------------------------------------------------------------------------------
+	; Add files to the clipboard
+	If DllCall("OpenClipboard", "Ptr", A_ScriptHwnd) && DllCall("EmptyClipboard")
+	{
+		; HDROP format ---------------------------------------------------------------------------------------------------
+		; 0x42 = GMEM_MOVEABLE (0x02) | GMEM_ZEROINIT (0x40)
+		hDrop := DllCall("GlobalAlloc", "UInt", 0x42, "UInt", 20 + (TotalLength + FileCount + 1) * TCS, "UPtr")
+		pDrop := DllCall("GlobalLock", "Ptr" , hDrop)
+		Offset := 20
+		NumPut(Offset, pDrop + 0, "UInt")         ; DROPFILES.pFiles = offset of file list
+		NumPut(!!A_IsUnicode, pDrop + 16, "UInt") ; DROPFILES.fWide = 0 --> ANSI, fWide = 1 --> Unicode
+		For Each, File In FileArray
+			Offset += StrPut(File.Path, pDrop + Offset, File.Len) * TCS
+		DllCall("GlobalUnlock", "Ptr", hDrop)
+		DllCall("SetClipboardData","UInt", 0x0F, "UPtr", hDrop) ; 0x0F = CF_HDROP
+		; Preferred DropEffect format ------------------------------------------------------------------------------------
+		If (DropEffect := DropEffects[DropEffect])
+		{
+			; Write Preferred DropEffect structure to clipboard to switch between copy/cut operations
+			; 0x42 = GMEM_MOVEABLE (0x02) | GMEM_ZEROINIT (0x40)
+			hMem := DllCall("GlobalAlloc", "UInt", 0x42, "UInt", 4, "UPtr")
+			pMem := DllCall("GlobalLock", "Ptr", hMem)
+			NumPut(DropEffect, pMem + 0, "UChar")
+			DllCall("GlobalUnlock", "Ptr", hMem)
+			DllCall("SetClipboardData", "UInt", PreferredDropEffect, "Ptr", hMem)
+		}
+		DllCall("CloseClipboard")
+		Return True
+	}
+	Return False
+}
 
 searchdb(crit="", partial=false)
 {

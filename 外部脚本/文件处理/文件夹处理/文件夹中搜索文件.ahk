@@ -72,6 +72,7 @@ if InStr(notepad2, "%A_ScriptDir%")
   Gui, Add, Button, x+15 gopenfile, 打开文件(&O)
   Gui, Add, Button, x+15 geditfile, 编辑文件(记事本)(&E)
   Gui, Add, Button, x+15 gporse, 属性(&R)
+	Gui, Add, Button, x+15 gfiletoclip, 复制(&C)
   Gui, Add, Button, x+15 gdelfile, 删除(&D)
 
   ; Create the ListView with two columns, Name and Size:
@@ -479,46 +480,105 @@ slectrowfolder:
 FocusedRowNumber := LV_GetNext(0, "F")
 if not FocusedRowNumber
  Return
-LV_GetText(varvalue, FocusedRowNumber, 2)
-LV_GetText(varvalue1, FocusedRowNumber, 1)
-IfInString, varvalue, `%USERPROFILE`%
+LV_GetText(FileDir, FocusedRowNumber, 2)
+LV_GetText(FileName, FocusedRowNumber, 1)
+IfInString, FileDir, `%USERPROFILE`%
 {
   EnvGet, Profile, USERPROFILE
-  StringReplace,varvalue,varvalue,`% ,,1
-  StringReplace,varvalue,varvalue,USERPROFILE,%Profile%
+  StringReplace, FileDir, FileDir, `% ,, 1
+  StringReplace, FileDir, FileDir, USERPROFILE, %Profile%
 }
 Return
 
 openfolder:
-gosub,slectrowfolder
-Run, %varvalue% ;,,UseErrorLevel
+gosub, slectrowfolder
+Run, %FileDir% ;,,UseErrorLevel
 Return
 
 openfile:
-gosub,slectrowfolder
-varvalue := varvalue . "\" . varvalue1
-Run, %varvalue% ;,,UseErrorLevel
+gosub, slectrowfolder
+FilePath := FileDir . "\" . FileName
+Run, %FilePath% ;,,UseErrorLevel
 Return
 
 Editfile:
-gosub,slectrowfolder
-varvalue:=varvalue . "\" . varvalue1
-run,edit %varvalue%,,UseErrorLevel
+gosub, slectrowfolder
+FilePath := FileDir . "\" . FileName
+run, edit %FilePath%,, UseErrorLevel
 if ErrorLevel
-Run, "%notepad2%" %varvalue% ;,,UseErrorLevel
+Run, "%notepad2%" %FilePath% ;,,UseErrorLevel
 Return
 
 porse:
-gosub,slectrowfolder
-varvalue:=varvalue . "\" . varvalue1
-Run,properties %varvalue%
+gosub, slectrowfolder
+FilePath := FileDir . "\" . FileName
+Run, properties %FilePath%
+Return
+
+filetoclip:
+gosub, slectrowfolder
+FilePath := FileDir . "\" . FileName
+if GetKeyState("Shift")
+	FileToClipboard(FilePath, "Move")
+else
+	FileToClipboard(FilePath)
 Return
 
 DelFile:
-gosub,slectrowfolder
-varvalue:=varvalue . "\" . varvalue1
-FileRecycle %varvalue%
+gosub, slectrowfolder
+FilePath := FileDir . "\" . FileName
+FileRecycle %FilePath%
 return
+
+FileToClipboard(FilesPath, DropEffect := "Copy")
+{
+	Static TCS := A_IsUnicode ? 2 : 1 ; size of a TCHAR
+	Static PreferredDropEffect := DllCall("RegisterClipboardFormat", "Str", "Preferred DropEffect")
+	Static DropEffects := {1: 1, 2: 2, Copy: 1, Move: 2}
+	; -------------------------------------------------------------------------------------------------------------------
+	; Count files and total string length
+	TotalLength := 0
+	FileArray := []
+	Loop, Parse, FilesPath, `n, `r
+	{
+		If (Length := StrLen(A_LoopField))
+			FileArray.Push({Path: A_LoopField, Len: Length + 1})
+		TotalLength += Length
+	}
+	FileCount := FileArray.Length()
+	If !(FileCount && TotalLength)
+		Return False
+	; -------------------------------------------------------------------------------------------------------------------
+	; Add files to the clipboard
+	If DllCall("OpenClipboard", "Ptr", A_ScriptHwnd) && DllCall("EmptyClipboard")
+	{
+		; HDROP format ---------------------------------------------------------------------------------------------------
+		; 0x42 = GMEM_MOVEABLE (0x02) | GMEM_ZEROINIT (0x40)
+		hDrop := DllCall("GlobalAlloc", "UInt", 0x42, "UInt", 20 + (TotalLength + FileCount + 1) * TCS, "UPtr")
+		pDrop := DllCall("GlobalLock", "Ptr" , hDrop)
+		Offset := 20
+		NumPut(Offset, pDrop + 0, "UInt")         ; DROPFILES.pFiles = offset of file list
+		NumPut(!!A_IsUnicode, pDrop + 16, "UInt") ; DROPFILES.fWide = 0 --> ANSI, fWide = 1 --> Unicode
+		For Each, File In FileArray
+			Offset += StrPut(File.Path, pDrop + Offset, File.Len) * TCS
+		DllCall("GlobalUnlock", "Ptr", hDrop)
+		DllCall("SetClipboardData","UInt", 0x0F, "UPtr", hDrop) ; 0x0F = CF_HDROP
+		; Preferred DropEffect format ------------------------------------------------------------------------------------
+		If (DropEffect := DropEffects[DropEffect])
+		{
+			; Write Preferred DropEffect structure to clipboard to switch between copy/cut operations
+			; 0x42 = GMEM_MOVEABLE (0x02) | GMEM_ZEROINIT (0x40)
+			hMem := DllCall("GlobalAlloc", "UInt", 0x42, "UInt", 4, "UPtr")
+			pMem := DllCall("GlobalLock", "Ptr", hMem)
+			NumPut(DropEffect, pMem + 0, "UChar")
+			DllCall("GlobalUnlock", "Ptr", hMem)
+			DllCall("SetClipboardData", "UInt", PreferredDropEffect, "Ptr", hMem)
+		}
+		DllCall("CloseClipboard")
+		Return True
+	}
+	Return False
+}
 
   ;;;;;;;;;;;;;;;;;;; Helper Functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
