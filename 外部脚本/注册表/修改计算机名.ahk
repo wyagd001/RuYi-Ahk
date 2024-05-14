@@ -1,7 +1,7 @@
 ﻿;|2.6|2024.04.28|1585
 ; 来源网址: https://www.autohotkey.com/board/topic/54220-how-to-change-netbios-computer-name/
 
-InputBox, NewComputerName, 修改计算机名, 当前计算机名为: %A_ComputerName%`n`n请输入新计算机名称:, , , 170
+InputBox, NewComputerName, 修改计算机名, 当前计算机名为: %A_ComputerName%`n`n请输入新的计算机名称:, , , 170
 if ErrorLevel
 	exitapp
 else
