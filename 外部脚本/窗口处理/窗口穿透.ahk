@@ -1,4 +1,5 @@
 ﻿;|2.6|2024.04.30|1586
+; 来源网址: https://www.autohotkey.com/boards/viewtopic.php?style=2&t=30622
 ; Note: Exit script with Esc::
 #SingleInstance Ignore
 OnExit("exit")

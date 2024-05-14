@@ -1,12 +1,16 @@
-﻿;|2.0|2023.07.01|1033,1034
-CandySel := A_Args[1]
-DetectHiddenWindows, On
-WinGetTitle, h_hwnd, 获取当前窗口信息
-Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")
+﻿;|2.6|2024.05.05|1033,1034
+Windy_CurWin_id := A_Args[1]
+CandySel := A_Args[2]
 if !Windy_CurWin_id
-	Windy_CurWin_id := WinExist("A")
-if !Windy_CurWin_id
-	exitapp
+{
+	DetectHiddenWindows, On
+	WinGetTitle, h_hwnd, 获取当前窗口信息
+	Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")
+	if !Windy_CurWin_id
+		Windy_CurWin_id := WinExist("A")
+	if !Windy_CurWin_id
+		exitapp
+}
 SysGet, OutputVar, MonitorWorkArea
 
 if (CandySel = "垂直最大化")

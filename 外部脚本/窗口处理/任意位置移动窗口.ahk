@@ -3,7 +3,7 @@
 ; MoveInactiveWin.ahk
 ; http://www.1hoursoftware.com
 ; Easy Window Dragging -- KDE style (requires XP/2k/NT) -- by Jonny
-; http://www.autohotkey.com/forum/topic2062.html 和  帮助文件里的脚本实例中有收录
+; http://www.autohotkey.com/forum/topic2062.html 和 帮助文件里的脚本实例中有收录
 #SingleInstance Ignore
 ;#InstallMouseHook
 ;#InputLevel 3
@@ -13,9 +13,8 @@
 ;CoordMode,Mouse,Screen
 
 ;#ifWinNotActive,Warcraft III
-
-CandySel := A_Args[1]
-Windy_CurWin_id := A_Args[2]
+Windy_CurWin_id := A_Args[1]
+CandySel := A_Args[2]
 
 if (CandySel = "移动窗口")
 	gosub Alt和左键移动窗口
@@ -24,7 +23,7 @@ if (CandySel = "窗口大小")
 ExitApp
 
 Alt和左键移动窗口:
-CoordMode,Mouse,Screen
+CoordMode, Mouse, Screen
 ;ifWinActive,ahk_class Valve001
 ;{
 ;    Send !{LButton}

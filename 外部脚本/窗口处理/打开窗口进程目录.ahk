@@ -1,14 +1,18 @@
-﻿;|2.2|2023.08.03|1413
-DetectHiddenWindows, On
-WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI
-Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")
-if Windy_CurWin_id
+﻿;|2.6|2024.05.05|1413
+Windy_CurWin_Fullpath :=  A_Args[1]
+if !Windy_CurWin_Fullpath
 {
-	Windy_CurWin_Fullpath := WinGetProcessPath(Windy_CurWin_id)
-}
-else
-{
-	Windy_CurWin_Fullpath := WinGetProcessPath(WinExist("A"))
+	DetectHiddenWindows, On
+	WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI
+	Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")
+	if Windy_CurWin_id
+	{
+		Windy_CurWin_Fullpath := WinGetProcessPath(Windy_CurWin_id)
+	}
+	else
+	{
+		Windy_CurWin_Fullpath := WinGetProcessPath(WinExist("A"))
+	}
 }
 File_OpenAndSelect(Windy_CurWin_Fullpath)
 sleep 300

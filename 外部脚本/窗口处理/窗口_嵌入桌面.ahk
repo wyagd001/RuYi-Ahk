@@ -1,6 +1,6 @@
 ﻿;|2.6|2024.04.28|1584
-CandySel := A_Args[1]
-pin2desk(CandySel)
+Windy_CurWin_id := A_Args[1]
+pin2desk(Windy_CurWin_id)
 Return
 
 pin2desk(shwnd)

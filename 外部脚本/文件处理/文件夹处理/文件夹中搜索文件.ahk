@@ -563,6 +563,12 @@ FileToClipboard(FilesPath, DropEffect := "Copy")
 			Offset += StrPut(File.Path, pDrop + Offset, File.Len) * TCS
 		DllCall("GlobalUnlock", "Ptr", hDrop)
 		DllCall("SetClipboardData","UInt", 0x0F, "UPtr", hDrop) ; 0x0F = CF_HDROP
+/*
+DROPEFFECT_NONE  0   放置目标不能接受数据。
+DROPEFFECT_COPY  1   删除会导致副本。 原始数据不受拖动源影响。
+DROPEFFECT_MOVE  2   拖动源应删除数据。
+DROPEFFECT_LINK  4   拖动源应创建指向原始数据的链接。
+*/
 		; Preferred DropEffect format ------------------------------------------------------------------------------------
 		If (DropEffect := DropEffects[DropEffect])
 		{

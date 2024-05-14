@@ -1,7 +1,7 @@
-﻿;|2.0|2023.07.01|1151
+﻿;|2.6|2024.05.05|1151
 ComObjError(0)
-Windy_CurWin_id := A_Args[1]
-if !Windy_CurWin_id
+Windy_CurWin_Pid := A_Args[1]
+if !Windy_CurWin_Pid
 {
 	DetectHiddenWindows, On
 	WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI
@@ -18,7 +18,7 @@ else
 
 CMDLine := WMI_Query(Windy_CurWin_Pid)
 if CMDLine
-clipboard := CMDLine
+	clipboard := CMDLine
 return
 
 WMI_Query(pid)

@@ -105,6 +105,7 @@ SearchStop := 0
 
 if !folder1 or !fileexist(folder1)
 	return
+ToltalSize := 0
 Loop, Files, %folder1%\*.*, DFR
 {
 	if A_LoopFileAttrib contains H,R,S
@@ -155,6 +156,7 @@ Loop, Files, %folder1%\*.*, DFR
 	else
 		filelistObj[relativePS]["Type"] := A_LoopFileExt
 	filelistObj[relativePS]["BSize"] := A_LoopFileSize
+	ToltalSize += A_LoopFileSize
 	if (A_LoopFileSize = 0)
 		filelistObj[relativePS]["KBSize"] := 0
 	else if (A_LoopFileSize < 1024) && (A_LoopFileSize != 0)
@@ -174,8 +176,10 @@ for k,v in filelistObj
 			sevenVal := v["EnCode"]
 		else if (SelFun = "扩展名*")
 			sevenVal := v["EnExt"]
+		else if filterContext
+			sevenVal := v["filter"]   ; 查找字符串
 		else
-			sevenVal := v["filter"]
+			sevenVal := Format("{:.4f}", v["BSize"] * 100 / ToltalSize) "%"
 		if (SelFun = "扩展名*") && v["EnExt"] && (v["Type"] != v["EnExt"])
 			LV_Add("check", f_index, k, v["MDT"], v["KBSize"], v["Type"], v["CT"], sevenVal)
 		else

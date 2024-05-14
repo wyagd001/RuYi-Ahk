@@ -284,9 +284,11 @@ return
 
 filetoclip:
 ControlGet, selfiles, List, Col2 Selected, SysListView321, 文件库中搜索文件
-FileToClipboard(selfiles)
+if GetKeyState("Shift")
+	FileToClipboard(selfiles, "Move")
+else
+	FileToClipboard(selfiles)
 return
-
 
 FileToClipboard(FilesPath, DropEffect := "Copy")
 {
