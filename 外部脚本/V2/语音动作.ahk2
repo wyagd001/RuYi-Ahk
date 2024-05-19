@@ -1,4 +1,4 @@
-﻿;|2.5|2024.03.20|1559
+﻿;|2.6|2024.05.16|1559
 init()
 init()
 {
@@ -54,7 +54,7 @@ sound_call_back(name, text)
 		return
 	}
 	Tooltip(text)
-	RetValue := ExecSendToRuyi(text,, 985)
+	RetValue := ExecSendToRuyi(text,, 984)     ; 984 这一个动作编号在如意内部绑定到了语音动作
 	if !RetValue
 	{
 		sleep 500

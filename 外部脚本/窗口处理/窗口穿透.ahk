@@ -1,4 +1,4 @@
-﻿;|2.6|2024.04.30|1586
+﻿;|2.6|2024.05.16|1586
 ; 来源网址: https://www.autohotkey.com/boards/viewtopic.php?style=2&t=30622
 ; Note: Exit script with Esc::
 #SingleInstance Ignore
@@ -50,6 +50,7 @@ timer(state,region:="",inverted:=false,rate:=50){
 		if !aot													; Restore not being aot if appropriate.
 			WinSet, AlwaysOnTop, off, % "ahk_id " hWin
 		hWin:="",timerFn:="",aot:="",paused:=0
+		exitapp   ; 关闭后自动退出
 		return
 	} else if (timerFn) {										; Pause/unpause or...
 		if (state=-1) {

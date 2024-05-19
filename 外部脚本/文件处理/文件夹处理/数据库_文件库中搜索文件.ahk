@@ -1,4 +1,4 @@
-﻿;|2.6|2024.05.03|1225
+﻿;|2.6|2024.05.14|1225
 #SingleInstance force
 #InputLevel 10   ; 优先级设置比如意中的高, 按下相同热键后先触发脚本自身的
 Menu, Tray, UseErrorLevel

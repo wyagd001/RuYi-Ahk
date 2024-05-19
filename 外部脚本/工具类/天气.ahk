@@ -1,4 +1,4 @@
-﻿;|2.5|2024.02.22|1554
+﻿;|2.6|2024.05.18|1554
 
 CandySel := A_Args[1]
 ; CandySel := 101300501
@@ -8,11 +8,11 @@ result := WinHttp.URLGet("http://t.weather.sojson.com/api/weather/city/" CandySe
 ;msgbox %result% ;检查是否获取
 city := json(result, "cityInfo.city")
 atmp := json(result, "data.wendu")
-quality := json(result, "data.quality")
-htype0 := json(Result, "data.forecast[0].type") ;读取数组中的值
+quality := json(result, "data.quality")      ; 空气质量
+htype0 := json(Result, "data.forecast[0].type")   ;  读取数组中的值 ; 今天的天气
 high0 := strreplace(json(Result, "data.forecast[0].high"), "高温 ")
 low0 := strreplace(json(Result, "data.forecast[0].low"), "低温 ")
-htype1 := json(Result, "data.forecast[1].type") ;读取数组中的值
+htype1 := json(Result, "data.forecast[1].type")   ; 读取数组中的值   ; 明天的天气
 high1 := json(Result, "data.forecast[1].high")
 low1 := json(Result, "data.forecast[1].low")
 
@@ -20,7 +20,7 @@ if WinExist("AppBarWin ahk_class AutoHotkeyGUI")
 {
 	loop 3
 	{
-		h := ExecSendToRuyi(atmp "`n" htype0 "`n"  strreplace(high0, "℃") "-"  strreplace(low0, "℃") "|red",, 1527)
+		h := ExecSendToRuyi(atmp "`n" htype0 "`n"  strreplace(low0, "℃") "-"  strreplace(high0, "℃") "|red",, 1527)
 		;FileAppend("`n" A_now ": " h)
 		if h
 			break
@@ -28,7 +28,7 @@ if WinExist("AppBarWin ahk_class AutoHotkeyGUI")
 	;msgbox % h "|" htype0 "|" json(Result, "data.forecast[0].high") "`n" Result
 }
 else
-	msgbox, %city%: %tmp%℃ %quality% `n 今日 %htype0%  %high0% %low0% `n 明日 %htype1%  %high1% %low1%
+	msgbox,, 天气预报, %city%: %tmp%℃ %quality% `n今日 %htype0%  %low0% %high0%`n 明日 %htype1% %low1% %high1%
 Return
 
 json(ByRef js, s, v = "") 

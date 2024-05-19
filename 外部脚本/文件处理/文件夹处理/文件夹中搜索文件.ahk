@@ -1,4 +1,4 @@
-﻿;|2.4|2023.10.02|1093
+﻿;|2.6|2024.5.9|1093
   ;
   ; AutoHotkey Version:  1.1 (modified version)
   ; Language:       English
