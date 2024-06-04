@@ -1,4 +1,4 @@
-﻿;|2.6|2024.05.15|1598
+﻿;|2.6|2024.05.19|1598
 Gui, Add, Text, x10 y10 w60, 类型:
 Gui, Add, ComboBox, xp+70 yp w250 vFormulaTypeIndex gshowNameIndex AltSubmit, 常用||身份证|时间|重复|常规运算
 Gui, Add, Text, x10 yp+30 w60, 名称:
@@ -34,7 +34,7 @@ SFZ_Arr := ["=MID(A1,7,4)&""/""&MID(A1,11,2)&""/""&MID(A1,13,2)"
 , "=IF(LEN(A1)=15,REPLACE(A1,7,,19)&MID(""10X98765432"",MOD(SUMPRODUCT(MID(REPLACE(A1,7,,19),ROW($1:$17),1)*2^(18-ROW($1:$17))),11)+1,1),IF(LEN(A1)=16,REPLACE(A1,7,,19),IF(LEN(A1)=17,A1&MID(""10X98765432"",MOD(SUMPRODUCT(MID(A1,ROW($1:$17),1)*2^(18-ROW($1:$17))),11)+1,1),IF(LEN(A1)=18,A1,""错误""))))"
 , "=EDATE(TEXT(MID(A1,7,8),""0!/00!/00""),MOD(MID(A1,15,3),2)*120+600)"]
 
-SJ_ItemsStr := "1. 判断季度|2. 距离合同到期还剩多少天|3. 生肖|4. 将距1900/1/1的天数转为日期|5. 天数转为日期2|6. 日期转为距1900/1/1的天数|7. 计算退休日期|8. 计算退休日期|9. 计算日期是一年中的第几周|10.计算是一年中的第几天|11.计算本月的最后一天的日期|11.计算本月的第一天的日期"
+SJ_ItemsStr := "1. 判断季度|2. 距离合同到期还剩多少天|3. 生肖|4. 将距1900/1/1的天数转为日期|5. 天数转为日期2|6. 日期转为距1900/1/1的天数|7. 计算退休日期|8. 计算退休日期|9. 计算日期是一年中的第几周|10.计算是一年中的第几天|11.计算本月的最后一天的日期|12.计算本月的第一天的日期"
 SJ_Arr := ["=LEN(2^MONTH(A1))&""季度"""
 , "=DATEDIF(TODAY(),A1,""D"")"
 , "=MID(""猴鸡狗猪鼠牛虎兔龙蛇马羊"",MOD(Year(A1),12)+1,1)"
@@ -62,11 +62,11 @@ CF_Arr := ["=IF(COUNTIF(A$1:A$10,A1)>1,""有重复"",""无重复"")"
 , "=COUNTBLANK(A$2:A2)"]
 
 CGYS_ItemsStr := "1. 求和|2. 平均值|3. 取整|4. 绝对值|5. 四舍五入|6. |7. |8. ()|9. ()|10.|11."
-CGYS_Arr := ["=SUM(A$1:A$10)"
+CGYS_Arr := ["=SUM(A1:A10)"
 , "=Average(A1:A10)"
 , "=Int(A1)"
 , "=ABS(A1)"
-, "=Round(A1)"
+, "=Round(A1,2)"
 , "="
 , "="
 , "="
@@ -145,7 +145,8 @@ else if Instr(FormulaStr, "EDATE")
 	SB_SetText("Edate(起始日期,月份数(正为加上指定月数, 负数为减去))")
 else if Instr(FormulaStr, "WEEKNUM")
 	SB_SetText("WEEKNUM(日期,2(星期一为第一天))")
-
+else if Instr(FormulaStr, "Round")
+	SB_SetText("Round(数值,保留的小数位数)")
 
 else
 	SB_SetText("")

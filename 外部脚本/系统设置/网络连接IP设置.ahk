@@ -1,4 +1,4 @@
-﻿;|2.0|2023.07.01|1094
+﻿;|2.6|2024.05.28|1094
 /*
 TODO:
 - find a better way to make context sensitive hotkeys for when listbox is selected
@@ -96,16 +96,16 @@ gosub, dns_toggle
 Gui, +Hwndgui_hwnd
 
 hotkey, ifwinactive, ahk_id %gui_hwnd%
-	hotkey, ^p, ping, on
-	hotkey, ^b, browse, on
-	hotkey, ^s, save, on
-	hotkey, ^t, telnet, on
-	hotkey, ^h, ssh, on
-	hotkey, ^Enter, run_cmd, on
+hotkey, ^p, ping, on
+hotkey, ^b, browse, on
+hotkey, ^s, save, on
+hotkey, ^t, telnet, on
+hotkey, ^h, ssh, on
+hotkey, ^Enter, run_cmd, on
 
-	;hotkey, ^up, context_preset_up
-	;hotkey, ^down, context_preset_down
-	;hotkey, del, context_preset_delete
+;hotkey, ^up, context_preset_up
+;hotkey, ^down, context_preset_down
+;hotkey, del, context_preset_delete
 hotkey, ifwinactive
 Gui, Show,w650 h360
 ComObjError(false)
@@ -138,17 +138,17 @@ ExitApp
 showmore:
 if !showmore
 {
-GuiControl,,ieproxy,% CF_regread("HKCU","Software\Microsoft\Windows\CurrentVersion\Internet Settings","Proxyenable")
-GuiControl,,ieproxyserver,% CF_regread("HKCU","Software\Microsoft\Windows\CurrentVersion\Internet Settings","ProxyServer")
-gui,show,w650 h510
-GuiControl,,showmoretext,收起∧
-showmore:=1
+	GuiControl,,ieproxy,% CF_regread("HKCU","Software\Microsoft\Windows\CurrentVersion\Internet Settings","Proxyenable")
+	GuiControl,,ieproxyserver,% CF_regread("HKCU","Software\Microsoft\Windows\CurrentVersion\Internet Settings","ProxyServer")
+	gui,show,w650 h510
+	GuiControl,,showmoretext,收起∧
+	showmore:=1
 }
 else 
 {
-Gui, Show,w650 h360
-GuiControl,,showmoretext,更多∨
-showmore:=
+	Gui, Show,w650 h360
+	GuiControl,,showmoretext,更多∨
+	showmore:=
 }
 return
 
@@ -157,20 +157,20 @@ gui, submit, nohide
 filedelete, error.tmp
 if interface contains  已启用
 {
-interface:=trim(StrReplace(interface,"已启用"))
-Runwait,%comspec% /c netsh interface set interface name="%interface%" admin=disabled >error.tmp, ,Hide
-check_error("error.tmp","已禁用" interface)
+	interface:=trim(StrReplace(interface,"已启用"))
+	Runwait,%comspec% /c netsh interface set interface name="%interface%" admin=disabled >error.tmp, ,Hide
+	check_error("error.tmp","已禁用" interface)
 }
 if interface contains  已禁用
 {
-interface:=trim(StrReplace(interface,"已禁用"))
-Runwait,  %comspec% /c netsh interface set interface name="%interface%" admin=enabled >error.tmp,,Hide
-check_error("error.tmp","已启用" interface)
+	interface:=trim(StrReplace(interface,"已禁用"))
+	Runwait,  %comspec% /c netsh interface set interface name="%interface%" admin=enabled >error.tmp,,Hide
+	check_error("error.tmp","已启用" interface)
 }
 
 GuiControl, , interface,|
 GuiControl, , interface, % get_interfaces_list(interfaces_tmpfile)
-	gosub, update_cmd
+gosub, update_cmd
 return
 
 get_interfaces_list(tmp_file) {
@@ -186,21 +186,21 @@ get_interfaces_list(tmp_file) {
 
 check_error(tmp_file,msg)
 {
-fileread,error_msg,%tmp_file%
-error_msg:=StrReplace(error_msg,"`r`n")
-filedelete, %tmp_file%
-if !error_msg
-{
-tooltip,%msg%。
-sleep,1000
-tooltip
-return
-}
-else
-{
-msgbox,,提示信息,% error_msg
-return
-}
+	fileread,error_msg,%tmp_file%
+	error_msg:=StrReplace(error_msg,"`r`n")
+	filedelete, %tmp_file%
+	if !error_msg
+	{
+		tooltip,%msg%。
+		sleep,1000
+		tooltip
+		return
+	}
+	else
+	{
+		msgbox,,提示信息,% error_msg
+		return
+	}
 }
 
 ieproxy:
@@ -219,17 +219,17 @@ ip_haschanged:
 ControlGetFocus, WhichControl, A
 if WhichControl=Edit8
 {
-IPoctet1:=IPCtrlGetAddress(hIPControl,1)
-IPoctet2:=IPCtrlGetAddress(hIPControl,2)
-IPoctet3:=IPCtrlGetAddress(hIPControl,3)
-GWoctet4:=IPCtrlGetAddress(hgatewayControl,4)
-if IPoctet1 between 1 and 127
-IPCtrlSetAddress(hnetmaskControl, "255.0.0.0")
-if IPoctet1 between 128 and 191
-IPCtrlSetAddress(hnetmaskControl, "255.255.0.0")
-if (IPoctet1>191)
-IPCtrlSetAddress(hnetmaskControl, "255.255.255.0")
-IPCtrlSetAddress(hgatewayControl, IPoctet1 "." IPoctet2 "." IPoctet3 "." GWoctet4)
+	IPoctet1:=IPCtrlGetAddress(hIPControl,1)
+	IPoctet2:=IPCtrlGetAddress(hIPControl,2)
+	IPoctet3:=IPCtrlGetAddress(hIPControl,3)
+	GWoctet4:=IPCtrlGetAddress(hgatewayControl,4)
+	if IPoctet1 between 1 and 127
+		IPCtrlSetAddress(hnetmaskControl, "255.0.0.0")
+	if IPoctet1 between 128 and 191
+		IPCtrlSetAddress(hnetmaskControl, "255.255.0.0")
+	if (IPoctet1>191)
+		IPCtrlSetAddress(hnetmaskControl, "255.255.255.0")
+	IPCtrlSetAddress(hgatewayControl, IPoctet1 "." IPoctet2 "." IPoctet3 "." GWoctet4)
 }
 return
 
@@ -264,136 +264,136 @@ IPCtrlSetAddress(hControl, ipaddress)
 
 IPCtrlGetAddress(hControl,n="")
 {
-    static WM_USER := 0x400
-    static IPM_GETADDRESS := WM_USER + 102
+	static WM_USER := 0x400
+	static IPM_GETADDRESS := WM_USER + 102
 
-    n :=n?n:0
-    VarSetCapacity(addrword, 4)
-    SendMessage IPM_GETADDRESS, 0, &addrword,, ahk_id %hControl%
-  if n=1
-    return NumGet(addrword, 3, "UChar") 
-  else if n=2
-return  NumGet(addrword, 2, "UChar") 
-  else if n=3
-return NumGet(addrword, 1, "UChar")
+	n :=n?n:0
+	VarSetCapacity(addrword, 4)
+	SendMessage IPM_GETADDRESS, 0, &addrword,, ahk_id %hControl%
+	if n=1
+		return NumGet(addrword, 3, "UChar") 
+	else if n=2
+		return  NumGet(addrword, 2, "UChar") 
+	else if n=3
+		return NumGet(addrword, 1, "UChar")
   else if n=4
-return NumGet(addrword, 0, "UChar")
+		return NumGet(addrword, 0, "UChar")
   else if n=0
-return NumGet(addrword, 3, "UChar") "." NumGet(addrword, 2, "UChar")  "." NumGet(addrword, 1, "UChar") "." NumGet(addrword, 0, "UChar")
+		return NumGet(addrword, 3, "UChar") "." NumGet(addrword, 2, "UChar")  "." NumGet(addrword, 1, "UChar") "." NumGet(addrword, 0, "UChar")
 }
 
 ; ip + dns 
 ip_toggle:
-	gui, submit, nohide
-	if ip_ignore
-		guicontrol, disable, ip_auto
-	else
-		guicontrol, enable, ip_auto
-		
-	if (ip_ignore or ip_auto)
-		action := "disable"
-	else
-		action := "enable"
+gui, submit, nohide
+if ip_ignore
+	guicontrol, disable, ip_auto
+else
+	guicontrol, enable, ip_auto
+	
+if (ip_ignore or ip_auto)
+	action := "disable"
+else
+	action := "enable"
 
-	guicontrol, %action%, comp_ip
-	guicontrol, %action%, netmask
-	guicontrol, %action%, gateway
-	gosub, update_cmd
+guicontrol, %action%, comp_ip
+guicontrol, %action%, netmask
+guicontrol, %action%, gateway
+gosub, update_cmd
 return
 
 dns_toggle:
-	gui, submit, nohide
-	if dns_ignore
-		guicontrol, disable, dns_auto
-	else
-		guicontrol, enable, dns_auto
-		
-	if (dns_ignore or dns_auto)
-		action := "disable"
-	else
-		action := "enable"
+gui, submit, nohide
+if dns_ignore
+	guicontrol, disable, dns_auto
+else
+	guicontrol, enable, dns_auto
+	
+if (dns_ignore or dns_auto)
+	action := "disable"
+else
+	action := "enable"
 
-	guicontrol, %action%, dns_1
-	guicontrol, %action%, dns_2
-	gosub, update_cmd
+guicontrol, %action%, dns_1
+guicontrol, %action%, dns_2
+gosub, update_cmd
 return
 
 gateway2comp_ip:
-	gui, submit, nohide
-	regexmatch(gateway, "^(.+)\.(\d+)$", segments)
-	segments2 = %segments2%  ; strip spaces, still string?
-	; segments2 += 1  ; casting magic
-	comp_ip := segments1 "." segments2+1
-	guicontrol,, comp_ip, % comp_ip
-	gosub, update_cmd
+gui, submit, nohide
+regexmatch(gateway, "^(.+)\.(\d+)$", segments)
+segments2 = %segments2%  ; strip spaces, still string?
+; segments2 += 1  ; casting magic
+comp_ip := segments1 "." segments2+1
+guicontrol,, comp_ip, % comp_ip
+gosub, update_cmd
 return
 
 set_google_dns:
-	dns_1 := "8.8.8.8"
-	dns_2 := "8.8.4.4"
-	guicontrol,, dns_1, % dns_1
-	guicontrol,, dns_2, % dns_2
-	gosub, update_cmd
+dns_1 := "8.8.8.8"
+dns_2 := "8.8.4.4"
+guicontrol,, dns_1, % dns_1
+guicontrol,, dns_2, % dns_2
+gosub, update_cmd
 return
 
 set_now_dns:
-	dns_1 := GetDnsAddress()[1]
-	dns_2 := GetDnsAddress()[2]
-	guicontrol,, dns_1, % dns_1
-	guicontrol,, dns_2, % dns_2
-	gosub, update_cmd
+dns_1 := GetDnsAddress()[1]
+dns_2 := GetDnsAddress()[2]
+guicontrol,, dns_1, % dns_1
+guicontrol,, dns_2, % dns_2
+gosub, update_cmd
 return
 
 ; gui-initiated stuff
 update_cmd:
-	gui, submit, nohide
-	cmd := ""
-	if not ip_ignore
-	{
-		if ip_auto
-			cmd .= "netsh interface ip set address """ interface """ source = dhcp & "
-		else
-			cmd .= "netsh interface ipv4 set address name=""" interface """ source=static address=" comp_ip " mask=" netmask " gateway=" gateway " & "
-	}
+gui, submit, nohide
+cmd := ""
+if not ip_ignore
+{
+	if ip_auto
+		cmd .= "netsh interface ip set address """ interface """ source = dhcp & "
+	else
+		cmd .= "netsh interface ipv4 set address name=""" interface """ source=static address=" comp_ip " mask=" netmask " gateway=" gateway " & "
+}
 
-	if not dns_ignore
+if not dns_ignore
+{
+	if dns_auto
+		cmd .= "netsh interface ip set dns """ interface """ dhcp & "
+	else
 	{
-		if dns_auto
-			cmd .= "netsh interface ip set dns """ interface """ dhcp & "
-		else
-		{
-			if dns_1 != 0.0.0.0
-				cmd .= "netsh interface ip set dns name=""" interface """ static " dns_1 " & "
-			if dns_2 != 0.0.0.0
-				cmd .= "netsh interface ip add dns name=""" interface """ addr=" dns_2 " index=2 & "
-		}	
-	}
-	cmd:=StrReplace(cmd,"已禁用 ")
-	cmd:=StrReplace(cmd,"已启用 ")
-	cmd := regexreplace(cmd, "& $", "")
-	guicontrol,, cmd, % cmd
+		if dns_1 != 0.0.0.0
+			cmd .= "netsh interface ip set dns name=""" interface """ static " dns_1 " validate=no & "
+		if dns_2 != 0.0.0.0
+			cmd .= "netsh interface ip add dns name=""" interface """ addr=" dns_2 " index=2 validate=no & "
+	}	
+}
+cmd:=StrReplace(cmd,"已禁用 ")
+cmd:=StrReplace(cmd,"已启用 ")
+cmd := regexreplace(cmd, "& $", "")
+guicontrol,, cmd, % cmd
 return
 
 update_gui:
-	controls = 
-	(
-		ip_ignore
-		ip_auto
-		comp_ip
-		netmask
-		gateway
-		dns_ignore
-		dns_auto
-		dns_1
-		dns_2
-	)
+controls = 
+(
+	ip_ignore
+	ip_auto
+	comp_ip
+	netmask
+	gateway
+	dns_ignore
+	dns_auto
+	dns_1
+	dns_2
+)
 
-	loop, parse, controls, `n, `r%A_Tab%%A_Space%
-		guicontrol,, %A_LoopField%, % %A_LoopField%
-	
-	gosub, ip_toggle
-	gosub, dns_toggle
-	gosub, update_cmd
+loop, parse, controls, `n, `r%A_Tab%%A_Space%
+	guicontrol,, %A_LoopField%, % %A_LoopField%
+
+gosub, ip_toggle
+gosub, dns_toggle
+gosub, update_cmd
 return
 
 ScanSubnet:
@@ -406,89 +406,91 @@ PrintArr(OutPut)
 return
 
 preset_select:
-	gui, submit, nohide
-	
-	iniread, ip_ignore, % presets_ini_file, % preset, ip_ignore, 0
-	if not ip_ignore
+gui, submit, nohide
+
+iniread, ip_ignore, % presets_ini_file, % preset, ip_ignore, 0
+if not ip_ignore
+{
+	iniread, ip_auto, % presets_ini_file, % preset, ip_auto, 0
+	if not ip_auto
 	{
-		iniread, ip_auto, % presets_ini_file, % preset, ip_auto, 0
-		if not ip_auto
-		{
-			iniread, comp_ip, % presets_ini_file, % preset, comp_ip, 
-			iniread, netmask, % presets_ini_file, % preset, netmask, 
-			iniread, gateway, % presets_ini_file, % preset, gateway, 
-		}
+		iniread, comp_ip, % presets_ini_file, % preset, comp_ip, 
+		iniread, netmask, % presets_ini_file, % preset, netmask, 
+		iniread, gateway, % presets_ini_file, % preset, gateway, 
 	}
-	
-	iniread, dns_ignore, % presets_ini_file, % preset, dns_ignore, 0
-	if not dns_ignore
+}
+
+iniread, dns_ignore, % presets_ini_file, % preset, dns_ignore, 0
+if not dns_ignore
+{
+	iniread, dns_auto, % presets_ini_file, % preset, dns_auto, 0
+	if not dns_auto
 	{
-		iniread, dns_auto, % presets_ini_file, % preset, dns_auto, 0
-		if not dns_auto
-		{
-			iniread, dns_1, % presets_ini_file, % preset, dns_2, 
-			iniread, dns_2, % presets_ini_file, % preset, dns_1, 
-		}
+		iniread, dns_1, % presets_ini_file, % preset, dns_2, 
+		iniread, dns_2, % presets_ini_file, % preset, dns_1, 
 	}
-	
-	gosub, update_gui
-	
-	if (A_GuiEvent == "DoubleClick")
-		gosub, run_cmd
+}
+
+gosub, update_gui
+
+if (A_GuiEvent == "DoubleClick")
+	gosub, run_cmd
 return
 
 run_cmd:
-	gui, submit, nohide
-	filedelete, error.tmp
-	cmd:=StrReplace(cmd,"&",">>error.tmp &") ">>error.tmp"
-	RunWait, %comspec% /c %cmd%,,hide
+gui, submit, nohide
+filedelete, error.tmp
+cmd:=StrReplace(cmd,"&",">>error.tmp &") ">>error.tmp"
+RunWait, %comspec% /c %cmd%,,hide
 check_error("error.tmp","IP 设置应用完成")
 return
 
 save:
-	gui, submit, nohide
-	inputbox, name, 保存设置到方案 , 请输入方案名称,,,,,,,, % comp_ip
-	if ErrorLevel
+gui, submit, nohide
+inputbox, name, 保存设置到方案 , 请输入方案名称,,,,,,,, % comp_ip
+if ErrorLevel
+{
+	return
+}
+; check if already exists
+AddItem := 1
+current_sections := ini_get_sections(presets_ini_file)
+loop, parse, current_sections, |
+{
+	if (name == A_LoopField)
 	{
-		return
+		AddItem := 0
+		break
 	}
+}
+iniwrite, % ip_ignore, % presets_ini_file, % name, ip_ignore
+if not ip_ignore
+{
+	iniwrite, % ip_auto, % presets_ini_file, % name, ip_auto
+	if not ip_auto
+	{
+		iniwrite, % comp_ip, % presets_ini_file, % name, comp_ip
+		iniwrite, % netmask, % presets_ini_file, % name, netmask
+		iniwrite, % gateway, % presets_ini_file, % name, gateway
+	}
+}
 
-	; check if already exists
-	current_sections := ini_get_sections(presets_ini_file)
-	loop, parse, current_sections, |
+iniwrite, % dns_ignore, % presets_ini_file, % name, dns_ignore
+if not dns_ignore
+{
+	iniwrite, % dns_auto, % presets_ini_file, % name, dns_auto
+	if not dns_auto
 	{
-		if (name == A_LoopField)
-		{
-			msgbox 方案名 %name% 已经存在.`n请输入新的名称.
-			return
-		}
+		iniwrite, % dns_1, % presets_ini_file, % name, dns_1
+		iniwrite, % dns_2, % presets_ini_file, % name, dns_2
 	}
-	
-	iniwrite, % ip_ignore, % presets_ini_file, % name, ip_ignore
-	if not ip_ignore
-	{
-		iniwrite, % ip_auto, % presets_ini_file, % name, ip_auto
-		if not ip_auto
-		{
-			iniwrite, % comp_ip, % presets_ini_file, % name, comp_ip
-			iniwrite, % netmask, % presets_ini_file, % name, netmask
-			iniwrite, % gateway, % presets_ini_file, % name, gateway
-		}
-	}
-	
-	iniwrite, % dns_ignore, % presets_ini_file, % name, dns_ignore
-	if not dns_ignore
-	{
-		iniwrite, % dns_auto, % presets_ini_file, % name, dns_auto
-		if not dns_auto
-		{
-			iniwrite, % dns_1, % presets_ini_file, % name, dns_1
-			iniwrite, % dns_2, % presets_ini_file, % name, dns_2
-		}
-	}
-	
+}
+
+if AddItem
+{
 	guicontrol,, preset, % name  ; TODO: select new entry?
 	GuiControl, ChooseString, preset, % name
+}
 return
 
 ping:

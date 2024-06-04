@@ -1,4 +1,4 @@
-﻿;|2.6|2024.05.18|1605
+﻿;|2.6|2024.05.19|1605
 CandySel := A_Args[1]
 
 if CandySel
@@ -10,7 +10,7 @@ result := WinHttp.URLGet(URL, "Charset:utf-8") ; 101270101为天气预报城市i
 city := json(result, "city")
 quality := json(result, "air.aqi_name")     ; 空气质量
 htype0 := json(Result, "data.type") ; 读取天气类型
-if htype0
+if !htype0
 	htype0 := json(Result, "data.night.type")
 high0 := strreplace(json(Result, "data.high"), "高温 ")
 low0 := strreplace(json(Result, "data.low"), "低温 ")

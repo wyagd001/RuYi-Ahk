@@ -1,4 +1,4 @@
-﻿;|2.4|2023.10.23|1527
+﻿;|2.4|2023.10.23|1524
 ; 来源网址: https://www.autohotkey.com/boards/viewtopic.php?t=61649
 ; 2 = ABS_ALWAYSONTOP  |  1 = ABS_AUTOHIDE
 SetTaskbarState( GetTaskbarState() & 1 ? 2 : 1|2 )
