@@ -1,4 +1,4 @@
-﻿;|2.2|2023.08.04|1317
+﻿;|2.7|2024.06.15|1317
 #Persistent
 #SingleInstance Force
 IniMenuInifile := A_ScriptDir "\..\配置文件\外部脚本\ini菜单.ini"
@@ -6,6 +6,7 @@ ATA_settingFile := A_ScriptDir "\..\配置文件\如一.ini"
 IniMenuobj := ini2obj(IniMenuInifile)
 SetWorkingDir %A_ScriptDir%
 Menu, Tray, Icon, Shell32.dll, 174
+Menu, GuiTabMenu, Add, 删除, Remove
 
 Window := {Width: 550, Height: 425, Title: "Ini_Fav"}  ; Version: "0.2"
 Navigation := {Label: ["文件", "文件夹", "程序", "命令", "命令2", "网址", "注册表", "对话框", "如意动作", "桌面", "桌面2"]}
@@ -35,10 +36,9 @@ Loop % Navigation.Label.Length() {
 Gui Font
 
 ; Bottom button and background
-Global HtmlButton1, HtmlButton2
+Global HtmlButton1
 
-NewButton1 := New HtmlButton("HtmlButton1", "OK", "Button1_", (Window.Width-176)-20, (Window.Height-24)-30)
-NewButton2 := New HtmlButton("HtmlButton2", "Cancel", "Button1_", (Window.Width-80)-20, (Window.Height-24)-30)
+NewButton1 := New HtmlButton("HtmlButton1", "退出", "Button1_", (Window.Width-80)-20, (Window.Height-24)-30)
 
 Gui Add, Picture, x96 y360 w1001 h1 +0x4E +HWNDhDividerLine4  ; Dividing line From left to right [Bottom]
 Gui Add, Progress, x0 y360 w1502 h149 +0x4000000 +E0x4 Disabled BackgroundFBFBFB
@@ -630,7 +630,25 @@ ILButton(hBtn, images, cx=16, cy=16, align=4, margin="1,1,1,1")
 
 
 
+GuiContextMenu:
+MouseGetPos,,, WinH, Contr
+If Instr(Contr, "button")
+{
+	GuiControl, Focus, %Contr%
+	Menu, GuiTabMenu, Show
+}
+return
 
+Remove:
+GuiControlGet, OutputVar, FocusV
+TabClass := Substr(OutputVar, 1, Instr(OutputVar, "_") - 1)
+ButNum := Substr(OutputVar, Instr(OutputVar, "_")+1, Instr(OutputVar, "_", 0, , 2)-Instr(OutputVar, "_")-1)
+;msgbox % TabClass "-" ButNum
+
+IniMenuobj[TabClass].RemoveAt(ButNum)
+obj2ini(IniMenuobj, IniMenuInifile)
+IniDelete, %IniMenuInifile%, %TabClass%, % IniMenuobj[TabClass].Count()+1  ; 删除最后多出的哪一项
+return
 
 ini2obj(file){
 	iniobj := {}

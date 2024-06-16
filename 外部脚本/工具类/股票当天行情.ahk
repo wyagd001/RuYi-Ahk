@@ -1,4 +1,6 @@
-﻿;|2.6|2024.04.17|1220
+﻿;|2.7|2024.06.16|1220
+Menu, Tray, UseErrorLevel
+Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e9d2.ico"
 SetFormat, float, 10.4
 
 ; <title>上证指数 3167.24 +1.08%(33.99)股票价格-行情-走势图-行情-金融界</title>
@@ -226,7 +228,12 @@ Gui, 1:+Disabled
 Gui, 98:Default
 Gui, Submit, NoHide
 if !R_index && !R_Code
+{
+	NewCode := 1
 	R_index := settingobj["股票"].Count()+1
+}
+else
+	NewCode := 0
 Gui, Add, Text, x20 y20 w50 h20, 编号：
 Gui, Add, Text, x20 y50 w60 h20, 股票代码：
 Gui, Add, Text, x20 y80 w80 h20, 股票名称：
@@ -241,7 +248,7 @@ Gui, Add, Edit, x110 y140 w100 h20 vR_Price, %R_Price%
 
 Gui, Add, Button, x200 y170 w70 h30 g98ButtonOK, 确定
 Gui, Add, Button, x280 y170 w70 h30 g98GuiClose Default, 取消
-Gui, Show,, 股票基金项目编辑
+Gui, Show,, % "股票基金项目" (NewCode ? "新增" : "编辑")
 Return
 
 98ButtonOK:
@@ -249,12 +256,14 @@ Gui, 98:Submit
 Gui, 98:Destroy
 Gui, 1:Default
 Gui, 1:-Disabled
-Gui, Submit, NoHide
 settingobj["股票"][R_index] := R_Code "|" R_Name "|" R_Share "|" R_Price
 Tmp_Obj := Gupiao(R_Code)
-LV_Modify(R_index, "", R_index, R_Code, R_Name, Tmp_Obj["价格"], Tmp_Obj["涨跌"], Tmp_Obj["涨幅"], R_Share * Tmp_Obj["涨跌"], R_Share, R_Price, R_Share * Tmp_Obj["价格"] - R_Share * R_Price)
+if !NewCode
+	LV_Modify(R_index, "", R_index, R_Code, R_Name, Tmp_Obj["价格"], Tmp_Obj["涨跌"], Tmp_Obj["涨幅"], R_Share * Tmp_Obj["涨跌"], R_Share, R_Price, R_Share * Tmp_Obj["价格"] - R_Share * R_Price)
+else
+	LV_Add("", R_index, R_Code, R_Name, Tmp_Obj["价格"], Tmp_Obj["涨跌"], Tmp_Obj["涨幅"], R_Share * Tmp_Obj["涨跌"], R_Share, R_Price, R_Share * Tmp_Obj["价格"] - R_Share * R_Price)
 obj2ini(settingobj, settingInifile)
-;RefreshData("股票")
+WinActivate, 股票当天行情 ahk_class AutoHotkeyGUI
 R_index := R_Code := R_Name := R_Share := R_Price := ""
 return
 
@@ -348,9 +357,10 @@ Loop % TmpArr.Length()
 	;msgbox % Tmp_Index
 	settingobj["股票"].RemoveAt(Tmp_Index)
 	IniDelete, % settingInifile, 股票, % settingobj["股票"].Count()+1
+	LV_Delete(Tmp_Index)
 }
-obj2ini(settingobj, settingInifile)
-;RefreshData(Comb)
+LV_RowIndexOrder()
+LV_ListToObj("股票")
 return
 
 

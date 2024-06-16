@@ -39,7 +39,7 @@ gui, add, ComboBox, xp+140 yp w240 vmyedit2,
 gui, add, Text, x170 yp+40 w140 vmyparam3, 参数3:
 gui, add, Edit, xp+140 yp w240 vmyedit3,
 
-Gui, Add, ListView, x170 y165 w900 h445 -Readonly Grid Checked hwndHLV, 序号`n文件名`n相对路径`n新文件名
+Gui, Add, ListView, x170 y165 w900 h445 -Readonly Grid Checked hwndHLV vMyListView, 序号`n文件名`n相对路径`n新文件名
 gui, add, Button, xp+170 yp+455 w80 gcheckallfile default, 全选
 gui, add, Button, xp+90 yp w80 guncheckallfile, 全不选
 gui, add, Button, xp+90 yp w80 gmodify, 手动编辑
@@ -71,6 +71,7 @@ exitapp
 reloadfolder:
 Gui Submit, nohide
 LV_Delete()
+GuiControl, -Redraw, MyListView
 R_index := 0
 Loop, Files, %myfolderpath%\*.*, FR
 {
@@ -82,6 +83,7 @@ Loop, Files, %myfolderpath%\*.*, FR
 	R_index++
 	LV_Add("", R_index, A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, myfolderpath), A_LoopFileName))
 }
+GuiControl, +Redraw, MyListView 
 LV_ModifyCol()
 LV_ModifyCol(2, "Logical")
 LV_ModifyCol(3, 60)

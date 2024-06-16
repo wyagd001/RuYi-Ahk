@@ -1,4 +1,4 @@
-﻿;|2.5|2024.03.24|1548
+﻿;|2.7|2024.06.16|1548
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\f17f.ico"
 
@@ -18,9 +18,10 @@ gui, add, Text, xp+160 yp+3 w60, 输出编码:
 gui, add, ComboBox, xp+80 yp-3 w100  vOut_Code, ANSI(中文简体)|UTF-8 Raw|UTF-8 BOM||Unicode(UTF-16)
 Gui, Add, CheckBox, xp+110 yp h30 vaddfilepath, 合并时添加文件名到首行
 
-Gui, Add, ListView, x10 yp+40 w700 h500 vfilelist hwndHLV Checked AltSubmit, 序号|文件名|相对路径|扩展名|文件编码|大小(KB)|修改日期|完整路径   ;
+Gui, Add, ListView, x10 yp+40 w700 h500 vfilelist hwndHLV Checked AltSubmit grid, 序号|文件名|相对路径|扩展名|文件编码|大小(KB)|修改日期|完整路径   ;
 Gui, Add, Button, xp+710 yp w60 gMoveRow_Up, 向上
 Gui, Add, Button, xp yp+28 w60 gMoveRow_Down, 向下
+;Gui, Add, Button, xp yp+28 w60 gDelListItem, 删除
 
 Gui, Add, Button, x10 y630 w60 h30 gcheckall, 全选
 Gui, Add, Button, xp+70 yp w60 h30 guncheckall, 全不选
@@ -98,66 +99,29 @@ Return
 GuiClose:
 ExitApp
 
-ini2obj(file)
+GuiDropFiles:
+;MsgBox % A_GuiEvent "|" A_EventInfo
+;AddDroppedFileOrLnk(FileList, filesCount)
+if (A_EventInfo > 1)
 {
-	iniobj := {}
-	FileRead, filecontent, %file% ;加载文件到变量
-	StringReplace, filecontent, filecontent, `r, , All
-	StringSplit, line, filecontent, `n, , ;用函数分割变量为伪数组
-	Loop ;循环
+	Loop, parse, A_GuiEvent, `n
 	{
-		if A_Index > %line0%
-			Break
-		content = % line%A_Index% ; 赋值当前行
-		if (instr(content, ";") = 1)  ; 每行第一个字符为 ; 为注释跳过
-			continue
-		FSection := RegExMatch(content, "\[.*\]") ;正则表达式匹配section
-		if FSection = 1 ;如果找到
-		{
-			TSection := RegExReplace(content, "\[(.*)\]", "$1") ; 正则替换并赋值临时section $为向后引用
-			iniobj[TSection] := {}
-		}
-		Else
-		{
-			FKey := RegExMatch(content, "^.*=.*")    ;正则表达式匹配key
-			if FKey
-			{
-				TKey := RegExReplace(content, "^(.*?)=.*", "$1")   ; 正则替换并赋值临时key
-				;StringReplace, TKey, TKey, ., _, All               ; 会将键中的 "." 自动替换为 "_". 快捷键中有 ., 所以注释掉了
-				TValue := RegExReplace(content, "^.*?=(.*)", "$1") ; 正则替换并赋值临时value
-				if TKey
-					iniobj[TSection][TKey] := TValue
-			}
-		}
+		B_Index ++
+		SplitPath, A_LoopField, OutFileName, OutDir, OutExtension
+		FileGetSize, OutputSize, %A_LoopField%
+		FileGetTime, OutputMT, %A_LoopField%, M
+		LV_Add("", B_Index, OutFileName, , OutExtension, File_GetEncoding(A_LoopField), Ceil(OutputSize / 1024), OutputMT, A_LoopField)
 	}
-	Return iniobj
 }
-
-obj2ini(obj, file){
-	if (!isobject(obj) or !file)
-		Return 0
-	for k,v in obj
-	{
-		for key,value in v                                  ; 删除的键值不会保存
-		{
-			IniWrite, %value%, %file%, %k%, %key%
-			;fileappend %key%-%value%`n, %A_desktop%\123.txt
-		}
-	}
-Return 1
-}
-
-GetStringIndex(String, Index := "")
+else
 {
-	arrCandy_Cmd_Str := StrSplit(String, "|", " `t")
-	if Index
-	{
-		NewStr := arrCandy_Cmd_Str[Index]
-		return NewStr
-	}
-	else
-		return arrCandy_Cmd_Str
+	B_Index ++
+	SplitPath, A_GuiEvent, OutFileName, OutDir, OutExtension
+	FileGetSize, OutputSize, %A_GuiEvent%
+	FileGetTime, OutputMT, %A_GuiEvent%, M
+	LV_Add("", B_Index, OutFileName, , OutExtension, File_GetEncoding(A_GuiEvent), Ceil(OutputSize / 1024), OutputMT, A_GuiEvent)
 }
+Return
 
 MoveRow_Up:
 Gui, Submit, NoHide
@@ -287,12 +251,7 @@ Loop
 Loop % TmpArr.Length()
 {
 	Tmp_Index := TmpArr.Pop()
-	;msgbox % Tmp_Index
-	settingobj["股票"].RemoveAt(Tmp_Index)
-	IniDelete, % settingInifile, 股票, % settingobj["股票"].Count()+1
 }
-obj2ini(settingobj, settingInifile)
-;RefreshData(Comb)
 return
 
 checkall:
@@ -331,36 +290,6 @@ SplitPath, Tmp_file,, OutDir
 Run, %OutDir%
 ;Run, explorer.exe /select`, %Tmp_file%
 return
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -576,10 +505,10 @@ File_GetEncoding(aFile, aNumBytes = 0, aMinimum = 4)
 		}
 	}
 
-	changyongzi2 :=["的", "一", "是", "了", "不", "在", "有", "個", "人", "這", "上", "中", "大", "為", "來", "我", "到", "出", "要", "以", "時", "和", "地", "們", "得", "可", "下", "對", "生", "也", "子", "就", "過", "能", "他", "會", "多", "發", "說", "而", "于", "自", "之", "用", "年", "行", "家", "方", "后", "作", "成", "開", "面", "事", "好", "小", "心", "前", "所", "道", "法", "如", "進", "著", "同", "經", "分", "定", "都", "然", "與", "本", "還", "其", "當", "起", "動", "已", "兩", "點", "從", "問", "里", "主", "實", "天", "高", "去", "現", "長", "此", "三", "將", "無", "國", "全", "文", "理", "明", "日"]
+	changyongzi2 := ["個", "這", "為", "來", "時", "們", "得", "對", "過", "會", "發", "說", "開", "進", "經", "與", "本", "還", "當", "動", "兩", "點", "從", "問", "實", "現", "長", "將", "無", "國", "愛", "罷", "筆", "邊", "慘", "憐", "稱", "辦", "礙", "幫", "斃", "標", "彆", "錶", "參", "陽", "産", "蟲", "醜", "塵", "個", "掃", "監", "見", "舉", "鳥", "贜", "樹", "雜", "聽", "嘆", "薦", "夥", "漢", "黨", "齣", "遲", "車", "竄", "燈", "膚", "團", "態", "條", "殺", "農", "樂", "競", "驚", "幾", "處", "齒", "廠", "徹", "雙", "懲", "東", "當", "電", "奪", "麽", "舊", "關", "畫", "來", "賣", "買", "門", "麵", "氣"]
 	readstr := StrGet(&_rawBytes, _nBytes, "CP950")
 	changyongzi_jishu := 0
-	for k,v in changyongzi
+	for k,v in changyongzi2
 	{
 		if InStr(readstr, v)
 			changyongzi_jishu := changyongzi_jishu + 1

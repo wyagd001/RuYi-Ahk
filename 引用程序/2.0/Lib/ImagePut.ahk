@@ -1,4 +1,4 @@
-﻿; Script:    ImagePut.ahk
+; Script:    ImagePut.ahk
 ; License:   MIT License
 ; Author:    Edison Hua (iseahound)
 ; Github:    https://github.com/iseahound/ImagePut
@@ -296,7 +296,7 @@ class ImagePut {
 
       if weight
          goto clean_stream
-      
+
       ; Attempt conversion using StreamToCoimage.
       try coimage := this.StreamToCoimage(cotype, stream, p*)
       catch Error as e
@@ -2553,16 +2553,8 @@ class ImagePut {
          NumPut(  "uint",            0, bm, 46) ; biClrUsed
          NumPut(  "uint",            0, bm, 50) ; biClrImportant
 
-         loop
-            try
-               if file := FileOpen(filepath, "w")
-                  break
-               else throw
-            catch
-               if A_Index < 6
-                  Sleep (2**(A_Index-1) * 30)
-               else throw
 
+         file := FileOpen(filepath, "w")
          file.RawWrite(bm)                    ; Writes 54 bytes of bitmap file header.
          file.RawWrite(this)                  ; Writes raw 32-bit ARGB pixel data.
          file.Close()
@@ -2918,14 +2910,14 @@ class ImagePut {
 
          ; ------------------------ Machine code generated with MCode4GCC using gcc 13.2.0 ------------------------
 
-         ; C source code - https://godbolt.org/z/GYMPYv4qT
+         ; C source code - https://godbolt.org/z/3rd4drccd
          pixelsearchall1 := this.Base64Code((A_PtrSize == 4)
             ? "VTHSieVXZg9uVRiLRRBWU4tdFGYPcMoAjXP0OfBzDw8QAGYPdsFmD9fIhcl0BY1IEOsVjUgQicjr4TnIdPiLfRg5OHQJg8AEOdhy"
             . "7usOO1UMcwaLfQiJBJdC6+lbidBeX13D"
             : "VlMxwESLVCQ4ZkEPbtJmD3DKAEmNWfRJOdhNjVgQcyNBDxAAZg92wWYP1/CF9nUTTYnY6+JNOdh09kU5EHQLSYPABE05yHLt6w45"
             . "0HMGicZMiQTx/8Dr51teww==")
 
-         ; C source code - https://godbolt.org/z/G5vYe5c8c
+         ; C source code - https://godbolt.org/z/8859rajsx
          pixelsearchall2 := this.Base64Code((A_PtrSize == 4)
             ? "VWYPduSJ5VdWU4Pk8IPsEItdGItNIItVKIpFHIhcJA8PttuLfRTB4xCIRCQOikUkiEwkDQ+2yY139IhUJAsPttLB4QgJ2ohEJAyK"
             . "RSwJyg+2TSQPttiBygAAAP+IRCQKweEIZg9u6jHSCcsPtk0cZg9wzQDB4RAJy2YPbvNmD3DWADl1EHMri0UQDxAADxAYDxA4Zg/e"
@@ -2936,7 +2928,7 @@ class ImagePut {
             . "UBBzQEEPECAPKNEPKNxmD97UZg/e2GYPdNFmD3TcD1TTZg921WYP18qFyXUXSYnQ68lJOdB09kGKSAJAOM9zC0mDwARNOchy6esu"
             . "QDjpcvBBikgBQTjMcudEOOly4kGKCEE4znLaRDj5ctU58HMGicFMiQTL/8Drx1teX11BXEFdQV5BX8M=")
 
-         ; C source code - https://godbolt.org/z/Px5TE4MWW
+         ; C source code - https://godbolt.org/z/Ync4eq1rj
          pixelsearchall3 := this.Base64Code((A_PtrSize == 4)
             ? "VTHSMcmJ5VdWU4Pk8IPsEItFFIPoDIlEJASLRRwp0IlEJAwPhDwBAACD+AF0PoP4AnQhg/gDuAMAAAAPTEQkCIlEJAiLRRhmD25k"
             . "kAhmD3DcAOsIx0QkCAIAAACLRRhmD25skARmD3DVAOsIx0QkCAEAAACLRRiNBJCJBCSLRRhmD240kItFEGYPcM4Ag3wkDAF1C4t1"
@@ -2949,7 +2941,7 @@ class ImagePut {
             . "DyjhZg924GYPdsJmRA/X7GYP19hECet13kiDwBBIOehy24PCAuke////DxAAZg92wWYP19iF23W+SIPAEEg56HLo/8Lp//7//0WL"
             . "PJxEOTh0Hkj/w0E52n/vSIPABEw5yHMcTDnoD4Q9////Mdvr5Tn5cwdBic9KiQT+/8Hr04nIW15fXUFcQV1BXkFfww==")
 
-         ; C source code - https://godbolt.org/z/T8KjEPb1z
+         ; C source code - https://godbolt.org/z/aajP7z1jb
          pixelsearchall4 := this.Base64Code((A_PtrSize == 4)
             ? "VWYPdtKJ5VdWMfZTMduD5PCD7ECJXCQ0i0UgKfCJRCQ8D4R3AgAAg/gBdGOD+AJ0OIP4A7gDAAAAD0xEJDiJRCQ4i0UYZg9uZLAI"
             . "i0UcZg9w7AAPKWwkIGYPbmywCGYPcN0ADykcJOsIx0QkOAIAAACLRRhmD25ksASLRRxmD25MsARmD3DcAGYPcOkA6wjHRCQ4AQAA"
@@ -3568,14 +3560,29 @@ class ImagePut {
          pDelays := DllCall("GlobalAlloc", "uint", 0, "uptr", nDelays, "ptr")
          DllCall("gdiplus\GdipGetPropertyItem", "ptr", pBitmap, "uint", 0x5100, "uint", nDelays, "ptr", pDelays)
 
-         ; Check PropertyTagTypeLong if WEBP or GIF.
+         ; Check if WEBP or GIF from PropertyTagTypeLong.
          type := NumGet(pDelays + 8, "ushort") == 4 ? "gif" : "webp"
 
-         ; Save frame delays because they are slow enough to impact timing.
-         p := NumGet(pDelays + 8 + A_PtrSize, "ptr")
-         delays := Map(0, NumGet(p, "uint"))
-         loop number ; Remember the pointer to the array of delays should be dereferenced.
-            delays[A_Index] := NumGet(p + 4*A_Index, "uint")
+         ; Save frame delays because retrieving them is slow enough to impact timing.
+         p := NumGet(pDelays + 8 + A_PtrSize, "ptr") ; Offset to array of delays
+         delays := Map()                             ; Start index from 0
+         loop number {
+            A_Offset := A_Index - 1
+            delay := NumGet(p + 4*A_Offset, "uint")
+
+            ; See: https://www.biphelps.com/blog/The-Fastest-GIF-Does-Not-Exist
+            if (type = "gif") {
+               delay *= 10                      ; Convert centiseconds to milliseconds
+               delay := max(delay, 10)          ; Minimum delay is 10ms
+               (delay == 10) && delay := 100    ; 10 ms is actually 100 ms
+            }
+
+            if (type = "webp") {
+               (delay == 0) && delay := 100     ; 10 ms is actually 100 ms
+            }
+
+            delays[A_Offset] := delay
+         }
 
          ; Calculate the greatest common factor of all frame delays.
          for each, delay in delays
@@ -3587,10 +3594,6 @@ class ImagePut {
                   interval := delay
                   delay := temp
                }
-
-         ; Convert centiseconds to milliseconds.
-         if (type = "gif")
-            interval *= 10
 
          ; Because timeSetEvent calls in a seperate thread, redirect to main thread.
          ; LPTIMECALLBACK: (uTimerID, uMsg, dwUser, dw1, dw2)
@@ -3962,7 +3965,6 @@ class ImagePut {
                return
 
             ; Get variables. ObjRelease is automatically called at the end of the scope.
-            type := obj.type
             w := obj.w
             h := obj.h
             frame := obj.frame
@@ -3982,13 +3984,6 @@ class ImagePut {
          if (uMsg = 0x8000 && wParam == 0) {
             index := mod(frame + 1, number)     ; Increment and loop back to zero
             delay := delays[index]              ; Zero-based array
-
-            ; See: https://www.biphelps.com/blog/The-Fastest-GIF-Does-Not-Exist
-            if (type = "gif") {
-               delay *= 10                      ; Convert centiseconds to milliseconds
-               delay := max(delay, 10)          ; Minimum delay is 10ms
-               (delay == 10) && delay := 100    ; 10 ms is actually 100 ms
-            }
 
             ; The current wait time is advanced by one interval.
             accumulate += interval              ; Add resolution of timer
@@ -4992,11 +4987,15 @@ class ImagePut {
       ;https://gist.github.com/smourier/5b770d32043121d477a8079ef6be0995
       ;https://stackoverflow.com/questions/75917247/convert-svg-files-to-bitmap-using-direct2d-in-mfc#75935717
       ; ID2D1DeviceContext5::CreateSvgDocument is the carrying api
+      /*
+
+
       hModule:=DllCall("GetModuleHandleA", "AStr", "WindowsCodecs.dll", "ptr")||DllCall("LoadLibraryA", "AStr", "WindowsCodecs.dll", "ptr")
-      CLSID_WICImagingFactory:=Buffer(0x10)
-      NumPut("uint64", 0x433D5F24317D06E8, CLSID_WICImagingFactory, 0x0)
-      NumPut("uint64", 0xC2ABD868CE79F7BD, CLSID_WICImagingFactory, 0x8)
-      IID_IClassFactory:=Buffer(0x10)
+      CLSID_WICImagingFactory := Buffer(16)
+      DllCall("ole32\CLSIDFromString", "wstr", "{317d06e8-5f24-433d-bdf7-79ce68d8abc2}", "ptr", CLSID_WICImagingFactory, "hresult")
+      ;NumPut("uint64", 0x433D5F24317D06E8, CLSID_WICImagingFactory, 0x0)
+      ;NumPut("uint64", 0xC2ABD868CE79F7BD, CLSID_WICImagingFactory, 0x8)
+      IID_IClassFactory := Buffer(16)
       NumPut("uint64", 0x0000000000000001, IID_IClassFactory, 0x0)
       NumPut("uint64", 0x46000000000000C0, IID_IClassFactory, 0x8)
       DllGetClassObject:=DllCall("GetProcAddress", "ptr", hModule, "AStr", "DllGetClassObject", "ptr")
@@ -5006,22 +5005,20 @@ class ImagePut {
       NumPut("uint64", 0x4314C395EC5EC8A9, IID_IWICImagingFactory, 0x0)
       NumPut("uint64", 0x70FF35A9D754779C, IID_IWICImagingFactory, 0x8)
       ComCall(CreateInstance := 3, IClassFactory, "ptr", 0, "ptr", IID_IWICImagingFactory, "ptr*", &IWICImagingFactory:=0) ;IClassFactory::
+*/
+      IWICImagingFactory := ComObject("{CACAF262-9370-4615-A13B-9F5539DA4C0A}", "{EC5EC8A9-C395-4314-9C77-54D7A935FF70}")
 
-      GUID_WICPixelFormat32bppPBGRA := Buffer(0x10)
-      NumPut("uint64", 0x4BFE4E036FDDC324, GUID_WICPixelFormat32bppPBGRA, 0x0)
-      NumPut("uint64", 0x10C98D76773D85B1, GUID_WICPixelFormat32bppPBGRA, 0x8)
-      ComCall(CreateBitmap := 17, IWICImagingFactory, "uint", width, "uint", height, "ptr", GUID_WICPixelFormat32bppPBGRA, "Int", 0x2, "ptr*", &IWICBitmap:=0) ;IWICImagingFactory::,  0x2=WICBitmapCacheOnLoad
+      GUID_WICPixelFormat32bppPBGRA := Buffer(16)
+      DllCall("ole32\CLSIDFromString", "wstr", "{6fddc324-4e03-4bfe-b185-3d77768dc910}", "ptr", GUID_WICPixelFormat32bppPBGRA, "hresult")
+      ComCall(CreateBitmap := 17, IWICImagingFactory, "uint", width, "uint", height, "ptr", GUID_WICPixelFormat32bppPBGRA, "int", 2, "ptr*", &IWICBitmap:=0) ;IWICImagingFactory::,  0x2=WICBitmapCacheOnLoad
 
-
-      IID_ID2D1Factory:=Buffer(0x10)
-      NumPut("uint64", 0x465A6F5006152247, IID_ID2D1Factory, 0x0)
-      NumPut("uint64", 0x07603BFD8B114592, IID_ID2D1Factory, 0x8)
-
+      IID_ID2D1Factory:=Buffer(16)
+      DllCall("ole32\IIDFromString", "wstr", "{06152247-6f50-465a-9245-118bfd3b6007}", "ptr", IID_ID2D1Factory, "hresult")
       DllCall("GetModuleHandleA",  "AStr",  "d2d1") || DllCall("LoadLibraryA",  "AStr",  "d2d1") ;this is needed to avoid "Critical Error: Invalid memory read/write"
-      DllCall("d2d1\D2D1CreateFactory", "Int", 0, "ptr", IID_ID2D1Factory, "Int*", 3, "ptr*", &ID2D1Factory:=0) ;0=D2D1_FACTORY_TYPE_SINGLE_THREADED,  3=D2D1_DEBUG_LEVEL_INFORMATION
+      DllCall("d2d1\D2D1CreateFactory", "Int", 0, "ptr", IID_ID2D1Factory, "ptr", 0, "ptr*", &ID2D1Factory:=0) ;0=D2D1_FACTORY_TYPE_SINGLE_THREADED,  3=D2D1_DEBUG_LEVEL_INFORMATION
 
       D2D1_RENDER_TARGET_PROPERTIES:=Buffer(0x1c, 0)
-      ComCall(13, ID2D1Factory, "ptr", IWICBitmap, "ptr", D2D1_RENDER_TARGET_PROPERTIES, "ptr*", &ID2D1RenderTarget:=0) ;ID2D1Factory::CreateWicBitmapRenderTarget
+      ComCall(CreateWicBitmapRenderTarget := 13, ID2D1Factory, "ptr", IWICBitmap, "ptr", D2D1_RENDER_TARGET_PROPERTIES, "ptr*", &ID2D1RenderTarget:=0) ;ID2D1Factory::
 
       ; IID_ID2D1DeviceContext5:=Buffer(0x10)
       ; NumPut("uint64", 0x4DF668CC7836D248, IID_ID2D1DeviceContext5, 0x0)
@@ -5035,8 +5032,8 @@ class ImagePut {
       NumPut("float", height, D2D1_SIZE_F, 0x4)
       ComCall(115, ID2D1RenderTarget, "ptr", IStream, "uint64", NumGet(D2D1_SIZE_F, "uint64"), "ptr*", &ID2D1SvgDocument:=0) ;ID2D1DeviceContext5::CreateSvgDocument
 
-      ComCall(BeginDraw := 48, ID2D1RenderTarget) ;ID2D1RenderTarget::
-      ComCall(DrawSvgDocument := 116, ID2D1RenderTarget, "ptr", ID2D1SvgDocument) ;ID2D1DeviceContext5::
+      ComCall(BeginDraw := 48, ID2D1RenderTarget, "char") ;ID2D1RenderTarget::
+      ComCall(DrawSvgDocument := 116, ID2D1RenderTarget, "ptr", ID2D1SvgDocument, "char") ;ID2D1DeviceContext5::
       ComCall(EndDraw := 49, ID2D1RenderTarget, "ptr", 0, "ptr", 0) ;ID2D1RenderTarget::
       static pData
       cbStride:=4*width ;stride=bpp*width

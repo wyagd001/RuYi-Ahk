@@ -13,7 +13,7 @@ if !CandySel
 	ControlGetText, CandySel, Edit1, 获取当前窗口信息_ 
 }
 DetectHiddenWindows, Off
-;tooltip % CandySel "11111"
+;msgbox % CandySel "11111"
 Tmp_Val := Trim(CandySel, " `t`r`n")
 ;tooltip % Tmp_Val "11111"
 ;sleep 5000
@@ -41,7 +41,7 @@ for key, value in translist
 		return
 	}
 }
-sleep 5000
+sleep 3000
 return
 
 ini2obj(file)

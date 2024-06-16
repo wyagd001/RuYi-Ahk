@@ -1,4 +1,4 @@
-﻿;|2.7|2023.06.03|1611
+﻿;|2.7|2023.06.05|1611
 ; A_Variables - AutoHotkey Built-in Variables v1.1.2
 #SingleInstance Force
 #NoEnv
@@ -16,7 +16,6 @@ OSObj := {}
 YingJianObj := {}
 YingJianObj["主板"] := {}
 YingJianObj["CPU"] := {}
-YingJianObj["内存"] := {}
 YingJianObj["BIOS"] := {}
 
 
@@ -39,6 +38,7 @@ NetworkAdapterConfigProperties := objWMIService.ExecQuery("Select * From Win32_N
 
 While colSettings[strOSItem] 
 {
+	OSobj["版本"] := strOSItem.Version
 	OSobj["内存"] := Floor(strOSItem.TotalVisibleMemorySize / 1024 / 1000) "Gb"
 	OSobj["安装时间"] := substr(strOSItem.InstallDate, 1, 14)
 	OSobj["Windows序列号"] := strOSItem.SerialNumber
@@ -63,9 +63,14 @@ While BaseBoardProperties[objProperty]
 	YingJianObj["主板"]["型号"] := objProperty["Product"]
 	YingJianObj["主板"]["版本"] := objProperty["Version"]
 }
+B_Index := 0
 While PhysicalMemoryProperties[objProperty]
 {
-	OSobj["内存"] .= " " objProperty["Speed"] "Mhz"
+	B_index ++
+	YingJianObj["内存" B_Index] := {}
+	YingJianObj["内存" B_Index]["大小"] := Floor(objProperty["Capacity"] / 1024 / 1000) "Gb"
+	YingJianObj["内存" B_Index]["制造商"] := objProperty["Manufacturer"]
+	YingJianObj["内存" B_Index]["速度"] :=  objProperty["Speed"] "Mhz"
 }
 
 While CPUProperties[objProperty]
@@ -171,16 +176,15 @@ A.Push(["A_IsUnicode", A_IsUnicode, 10])
 
 ; Operating System and User Information
 G.Push([20, "操作系统"])
-A.Push(["A_OSType", A_OSType, 20])
-A.Push(["A_OSVersion(OS 版本)", A_OSVersion, 20])
-A.Push(["A_Is64bitOS", A_Is64bitOS, 20])
-A.Push(["A_PtrSize", A_PtrSize, 20])
-A.Push(["A_Language", A_Language, 20])
-A.Push(["A_ComputerName(主机名)", A_ComputerName, 20])
+A.Push(["A_OSType", A_OSType, 20, "systeminfo"])
+A.Push(["A_OSVersion(OS 版本)", A_OSVersion, 20, "systeminfo"])
+A.Push(["A_Is64bitOS", A_Is64bitOS, 20, "systeminfo"])
+A.Push(["A_PtrSize", A_PtrSize, 20, "systeminfo"])
+A.Push(["A_Language", A_Language, 20, "systeminfo"])
+A.Push(["A_ComputerName(主机名)", A_ComputerName, 20, "systeminfo"])
 for k, v in OSobj
 {
-	if (k != "内存")
-		A.Push([k, v, 20])
+	A.Push([k, v, 20, "msinfo32"])
 }
 
 G.Push([30, "用户信息"])
@@ -246,10 +250,10 @@ A.Push(["A_IPAddress1", A_IPAddress1, 150, "设置IP"])
 A.Push(["A_IPAddress2", A_IPAddress2, 150, "设置IP"])
 A.Push(["A_IPAddress3", A_IPAddress3, 150, "设置IP"])
 A.Push(["A_IPAddress4", A_IPAddress4, 150, "设置IP"])
-A.Push(["网络适配器", YingJianObj["网络适配器配置"]["描述"], 150, "设置IP"])
-A.Push(["默认网关", YingJianObj["网络适配器配置"]["默认网关"], 150, "设置IP"])
-A.Push(["MAC", YingJianObj["网络适配器配置"]["MAC"], 150, "设置IP"])
-A.Push(["DNS", YingJianObj["网络适配器配置"]["DNS"], 150, "设置IP"])
+A.Push(["网络适配器", YingJianObj["网络适配器配置"]["描述"], 150, "ipconfig"])
+A.Push(["默认网关", YingJianObj["网络适配器配置"]["默认网关"], 150, "ipconfig"])
+A.Push(["MAC", YingJianObj["网络适配器配置"]["MAC"], 150, "ipconfig"])
+A.Push(["DNS", YingJianObj["网络适配器配置"]["DNS"], 150, "ipconfig"])
 
 ; Cursor
 G.Push([160, "光标"])
@@ -264,7 +268,12 @@ A.Push(["ClipboardAll", ClipboardAll, 170])
 
 G.Push([180, "硬件"])
 A.Push(["主板", YingJianObj["主板"]["制造商"] " " YingJianObj["主板"]["型号"], 180])
-A.Push(["内存", OSobj["内存"], 180])
+B_Index := 1
+while IsObject(YingJianObj["内存" B_Index])
+{
+	A.Push(["内存" B_Index, YingJianObj["内存" B_Index]["制造商"] " " YingJianObj["内存" B_Index]["大小"] " " YingJianObj["内存" B_Index]["速度"], 180])
+	B_Index ++
+}
 A.Push(["CPU", YingJianObj["CPU"]["型号"] " (" YingJianObj["CPU"]["核"] " 核)", 180])
 B_Index := 1
 while IsObject(YingJianObj["显示器" B_Index])
@@ -436,14 +445,20 @@ if (Text = "打开路径")
 	LV_GetText(LPath, Row, 2)
 	Run % LPath
 }
-if (Text = "设置IP")
+else if (Text = "设置IP")
 {
 	Run "%A_AhkPath%" "%A_ScriptDir%\网络连接IP设置.ahk"
 }
-if (Text = "网络连接")
+else if (Text = "网络连接")
 {
 	Run ::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}
 }
+else if (Text = "systeminfo")
+	run cmd /k systeminfo && pause
+else if (Text = "msinfo32")
+	run msinfo32.exe
+else if (Text = "ipconfig")
+	run cmd /k ipconfig /all
 return
 
 LV_InsertGroup(hLV, GroupID, Header, Index := -1) {
@@ -666,4 +681,3 @@ class Computer
         return sOutput
     }
 }
-

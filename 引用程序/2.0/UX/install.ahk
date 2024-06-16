@@ -45,11 +45,8 @@ Install_Main() {
         inst.%method%(params*)
     }
     catch as e {
-        DllCall(CallbackCreate(errBox.Bind(e)))
+        inst.ErrorBox(e, "&Exit")
         ExitApp 1
-    }
-    errBox(e) {
-        throw e
     }
 }
 
@@ -186,7 +183,10 @@ class Installation {
         
         ; Execute post-install actions
         for item in this.PostAction
-            item(this)
+            try
+                item(this)
+            catch as e
+                this.ErrorBox(e, "&Continue")
         
         ; Write file list to disk
         if this.Hashes.Count
@@ -370,9 +370,11 @@ class Installation {
         ; Close scripts and help files
         this.PreUninstallChecks files
         
-        ; Remove from registry only if being fully uninstalled
-        if versions = ''
+        ; Remove registry key and certificate only if being fully uninstalled
+        if versions = '' {
             this.UninstallRegistry
+            try EnableUIAccess_DeleteCertAndKey("AutoHotkey")
+        }
         
         ; Remove files
         SetWorkingDir this.InstallDir
@@ -784,6 +786,25 @@ class Installation {
         ExitApp 1
     }
     
+    ErrorBox(err, abortText?) { ; Show a standard error dialog with stack trace etc.
+        OnMessage(0xBAAD, newthread, -2),
+        PostMessage(0xBAAD, 0, 0, A_ScriptHwnd),
+        SendMessage(0xBAAD, ObjPtr(err), 0, A_ScriptHwnd),
+        OnMessage(0xBAAD, newthread, 0)
+        newthread(ep, *) {
+            if ep
+                throw ObjFromPtrAddRef(ep)
+            if ep ; This line prevents an "unreachable" warning in v2.0.
+                return 0 ; This line prevents continuation of the function in v2.1-alpha.3+ (if user selects Continue).
+            DetectHiddenWindows true
+            WinExist "ahk_class #32770 ahk_pid " ProcessExist()
+            Loop 5
+                ControlHide "Button" A_Index+1
+            ControlSetText abortText, "Button1"
+            return 0
+        }
+    }
+    
     GetTargetUX() {
         try {
             ; For registered installations, InstallCommand allows for future changes.
@@ -901,21 +922,25 @@ class Installation {
             }
             catch as e {
                 try FileDelete newPath
-                if e.What != "EndUpdateResource"
-                    throw
+                if e.What != "EndUpdateResource" {
+                    abort := true
+                    this.WarnBox "An error occurred while generating files to support the `"Run with UI access`" option. An error dialog will be shown with additional information, then setup will continue."
+                    throw e
+                }
                 if this.Silent {
                     if A_Index > 4
                         break
                     Sleep 500
                 }
                 switch MsgBox("Unable to create " baseName "_UIA.exe. Try adding an exclusion in your antivirus software. If that doesn't work, please report the issue.`n`nError: " e.Message
-                    ,, "a/r/i") {
+                    , this.DialogTitle, "Icon! a/r/i") {
                 case "Abort": abort := true
                 case "Ignore": break
                 }
             }
         }
-        this.AddFileHash newPath, '' ; For uninstall
+        if FileExist(newPath)
+            this.AddFileHash newPath, '' ; For uninstall
     }
     
     IsTrustedLocation(path) { ; http://msdn.com/library/bb756929

@@ -1,4 +1,4 @@
-﻿;|2.5|2024.02.16|1316
+﻿;|2.7|2024.06.15|1316
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\f17f.ico"
 
@@ -8,14 +8,24 @@ valuetocp := {"ANSI(中文简体)": "CP936", "UTF-8 BOM": "UTF-8", "UTF-8 Raw": 
 Gui, Add, Text, x10 y15 h25, 查找文件夹:
 Gui, Add, Edit, xp+80 yp-5 w550 h25 vsfolder, % CandySel
 Gui, Add, Button, xp+560 yp-2 w60 h30 gstartsearch, 开始查找
-Gui, Add, Text, x10 yp+40 h25, 指定扩展名:
-Gui, Add, Edit, xp+80 yp-5 w550 h25 vsExt, % "txt,ahk,md"
-Gui, Add, Button, xp+560 yp w60 h30 grunzhuanma, 执行转码
+Gui, Add, Text, x10 yp+40 h25, 筛选扩展名:
+Gui, Add, Edit, xp+80 yp-5 w225 h25 vsExt, % "txt,ahk,md,lrc,ahk2,htm,html"
+Gui, Add, Text, xp+240 yp+5 h25, 筛选编码:
+Gui, Add, DropDownList, xp+80 yp-5 w230 h70 vfcode hwndhcbx, 所有||CP936|UTF-8
+PostMessage, 0x0153, -1, 20,, ahk_id %hcbx%  
+
+Gui, Add, Button, xp+240 yp w60 h30 grunzhuanma, 执行转码
 gui, add, Text, x10 yp+40 w60 vmyparam1, 输出编码:
-gui, add, ComboBox, xp+80 yp w550 vOut_Code, ANSI(中文简体)|UTF-8 Raw|UTF-8 BOM||Unicode(UTF-16)
+gui, add, DropDownList, xp+80 yp w550 vOut_Code hwndhcby, ANSI(中文简体)|UTF-8 Raw|UTF-8 BOM||Unicode(UTF-16)
+PostMessage, 0x0153, -1, 20,, ahk_id %hcby% 
+Gui, Add, Button, xp+560 yp w60 h30 gstopload, 停止查找
+
 Gui, Add, ListView, x10 yp+40 w700 h500 vfilelist Checked hwndHLV AltSubmit, 文件名|相对路径|扩展名|文件编码|大小(KB)|修改日期|完整路径
-Gui, Add, Button, xp yp+510 w60 h30 guncheckall, 全不选
-Gui, Add, Button, xp+70 yp w60 h30 gEditfilefromlist, 编辑文件
+Gui, Add, Button, xp yp+510 w60 h30 gcheckall, 全选
+Gui, Add, Button, xp+70 yp w60 h30 guncheckall, 全不选
+Gui, Add, Button, xp+70 yp w60 h30 gcheckunall, 反选
+Gui, Add, Button, xp+70 yp w80 h30 gcheckcp936, 勾选 CP936
+Gui, Add, Button, xp+90 yp w60 h30 gEditfilefromlist, 编辑文件
 Gui, Add, Button, xp+70 yp w60 h30 gopenfilefromlist, 打开文件
 Gui, Add, Button, xp+70 yp w60 h30 gopenfilepfromlist, 打开路径
 
@@ -26,9 +36,11 @@ if FileExist(CandySel)
 Return
 
 startsearch:
+stopload := 0
 gui, Submit, NoHide
 ToolTip, % "正在遍历文本文件编码类型, 请稍候..."
 LV_Delete()
+GuiControl, -Redraw, filelist
 Loop, Files, %sfolder%\*.*, FR
 {
 	if A_LoopFileSize = 0
@@ -38,22 +50,58 @@ Loop, Files, %sfolder%\*.*, FR
 		if A_LoopFileExt not in %sExt%
 			continue
 	}
-	LV_Add("", A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, sfolder), A_LoopFileName), A_LoopFileExt, File_GetEncoding(A_LoopFileFullPath), Ceil(A_LoopFileSize / 1024), A_LoopFileTimeModified, A_LoopFilePath)
+	Tmp_Code := File_GetEncoding(A_LoopFileFullPath)
+	if (fcode = "所有") or (Tmp_Code = fcode)
+		LV_Add("", A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, sfolder), A_LoopFileName), A_LoopFileExt, Tmp_Code, Ceil(A_LoopFileSize / 1024), A_LoopFileTimeModified, A_LoopFilePath)
+	if stopload
+	{
+		stopload := 0
+		ToolTip
+		break
+	}
 }
 ;msgbox % "文件遍历完成. 用时: " A_TickCount - st
 ToolTip
-
+GuiControl, +Redraw, filelist
 LV_ModifyCol()
 LV_ModifyCol(1, 200)
 LV_ModifyCol(2, 250)
 LV_ModifyCol(3, 60)
 LV_ModifyCol(5, "75 Logical")
-
 ;FileAppend, % Array_ToString(folderobj) , %A_desktop%\123.txt
+return
+
+stopload:
+stopload := 1
+return
+
+checkall:
+LV_Modify(0, "check")
 return
 
 uncheckall:
 LV_Modify(0, "-check")
+return
+
+checkunall:
+Loop % LV_GetCount()
+{
+	SendMessage, 0x102C, A_index - 1, 0xF000, SysListView321
+	IsChecked := (ErrorLevel >> 12) - 1
+	if IsChecked
+		LV_Modify(A_index, "-check")
+	else
+		LV_Modify(A_index, "check")
+}
+return
+
+checkcp936:
+Loop % LV_GetCount()
+{
+	LV_GetText(OutputVar, A_Index, 4)
+	if (OutputVar = "CP936")
+		LV_Modify(A_index, "check")
+}
 return
 
 Editfilefromlist:
@@ -86,6 +134,7 @@ Run, %OutDir%
 return
 
 runzhuanma:
+ToolTip, % "正在进行文件转码, 请稍候..."
 gui, Submit, NoHide
 out_code := valuetocp[out_code]
 ;msgbox % out_code
@@ -101,6 +150,7 @@ Loop
 	if (Tmp_CPcode != out_code)
 		File_CpTransform(Tmp_Path, Tmp_CPcode, out_code, 0)
 }
+ToolTip
 Return
 
 GuiClose:
@@ -329,7 +379,7 @@ File_GetEncoding(aFile, aNumBytes = 0, aMinimum = 4)
 	for k,v in changyongzi
 	{
 		if InStr(readstr, v)
-			changyongzi_jishu := changyongzi_jishu + 1
+			changyongzi_jishu++
 		if (changyongzi_jishu > 5)
 		{
 			return "UTF-8-Raw"
@@ -342,7 +392,7 @@ File_GetEncoding(aFile, aNumBytes = 0, aMinimum = 4)
 	{
 		if InStr(readstr, v)
 		{
-			changyongzi_jishu := changyongzi_jishu + 1
+			changyongzi_jishu++
 		}
 		if (changyongzi_jishu > 5)
 		{
@@ -350,10 +400,10 @@ File_GetEncoding(aFile, aNumBytes = 0, aMinimum = 4)
 		}
 	}
 
-	changyongzi2 :=["的", "一", "是", "了", "不", "在", "有", "個", "人", "這", "上", "中", "大", "為", "來", "我", "到", "出", "要", "以", "時", "和", "地", "們", "得", "可", "下", "對", "生", "也", "子", "就", "過", "能", "他", "會", "多", "發", "說", "而", "于", "自", "之", "用", "年", "行", "家", "方", "后", "作", "成", "開", "面", "事", "好", "小", "心", "前", "所", "道", "法", "如", "進", "著", "同", "經", "分", "定", "都", "然", "與", "本", "還", "其", "當", "起", "動", "已", "兩", "點", "從", "問", "里", "主", "實", "天", "高", "去", "現", "長", "此", "三", "將", "無", "國", "全", "文", "理", "明", "日"]
+	changyongzi2 := ["個", "這", "為", "來", "時", "們", "得", "對", "過", "會", "發", "說", "開", "進", "經", "與", "本", "還", "當", "動", "兩", "點", "從", "問", "實", "現", "長", "將", "無", "國", "愛", "罷", "筆", "邊", "慘", "憐", "稱", "辦", "礙", "幫", "斃", "標", "彆", "錶", "參", "陽", "産", "蟲", "醜", "塵", "個", "掃", "監", "見", "舉", "鳥", "贜", "樹", "雜", "聽", "嘆", "薦", "夥", "漢", "黨", "齣", "遲", "車", "竄", "燈", "膚", "團", "態", "條", "殺", "農", "樂", "競", "驚", "幾", "處", "齒", "廠", "徹", "雙", "懲", "東", "當", "電", "奪", "麽", "舊", "關", "畫", "來", "賣", "買", "門", "麵", "氣"]
 	readstr := StrGet(&_rawBytes, _nBytes, "CP950")
 	changyongzi_jishu := 0
-	for k,v in changyongzi
+	for k,v in changyongzi2
 	{
 		if InStr(readstr, v)
 			changyongzi_jishu := changyongzi_jishu + 1
@@ -364,7 +414,7 @@ File_GetEncoding(aFile, aNumBytes = 0, aMinimum = 4)
 	}
 
 	; 未符合上面条件的返回系统默认 ansi 内码
-	; 简体中文系统默认返回的是 CP936, 非中文系统的内码显示中文会乱码,如果要显示中文可直接改为"CP936"
+	; 简体中文系统默认返回的是 CP936, 非中文系统的内码显示中文会乱码, 如果要显示中文可直接改为 "CP936"
 	return "CP" DllCall("GetACP")  
 }
 
