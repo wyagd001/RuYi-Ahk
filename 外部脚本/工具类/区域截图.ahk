@@ -1,4 +1,4 @@
-﻿;|2.6|2024.04.22|1530
+﻿;|2.7|2024.06.26|1530
 区域选择方式 = 1
 pToken := Gdip_Startup()
 
@@ -185,7 +185,9 @@ gosub guiclose
 return
 
 savas:
-FileSelectFile, savefile, S2, , 截图另存为, 图片文件 (*.jpg; *.png)
+FileSelectFile, savefile, S2, , 截图另存为, 图片文件 (*.jpg; *.png; *.bmp)
+if !RegExMatch(savefile, "(\.jpg)|(\.png)|(\.bmp)$")
+  savefile := savefile ".png"
 Gdip_SaveBitmapToFile(pBitmap, savefile)
 Gdip_DisposeImage(pBitmap)
 DeleteObject(hBitmap)
@@ -345,7 +347,7 @@ Swap(ByRef Left, ByRef Right)
 }
 
 Tip_info:
-  TrayTip,截图进行中...,%cstip%,,17
+TrayTip, 截图进行中..., %cstip%,, 17
 Return
 
 HBitmapToRandomAccessStream(hBitmap) {

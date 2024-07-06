@@ -20,9 +20,9 @@ while !i
 }
 
 PlayMusic(i)
-ExecSendToRuyi("1529",, 1526)
+ExecSendToRuyi("1529",, 1526)    ; 按钮颜色还原
 Sleep 600
-ExecSendToRuyi("1529||FF0000",, 1525)
+ExecSendToRuyi("1529||FF0000",, 1525)   ; 设置颜色
 onmessage(0x3B9, "ContinuePlay")
 OnExit, _exit
 return

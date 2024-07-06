@@ -69,13 +69,13 @@ Loop, parse, sfolder, |;
 		if (mode = "samename") && fnameobj[A_LoopFileName]
 		{
 			prefilepath := fnameobj[A_LoopFileName]
-				currfileMD5 := MD5_File(A_LoopFilePath)
-				folderobj[A_LoopFilePath] := {}
-				folderobj[A_LoopFilePath]["fname"] := A_LoopFileName
-				folderobj[A_LoopFilePath]["relPath"] := StrReplace(StrReplace(A_LoopFilePath, A_LoopField), A_LoopFileName)
-				folderobj[A_LoopFilePath]["fTMod"] := A_LoopFileTimeModified
-				folderobj[A_LoopFilePath]["fsize"] := A_LoopFileSize
-				folderobj[A_LoopFilePath]["fmd5"] := currfileMD5
+			currfileMD5 := MD5_File(A_LoopFilePath)
+			folderobj[A_LoopFilePath] := {}
+			folderobj[A_LoopFilePath]["fname"] := A_LoopFileName
+			folderobj[A_LoopFilePath]["relPath"] := StrReplace(StrReplace(A_LoopFilePath, A_LoopField), A_LoopFileName)
+			folderobj[A_LoopFilePath]["fTMod"] := A_LoopFileTimeModified
+			folderobj[A_LoopFilePath]["fsize"] := A_LoopFileSize
+			folderobj[A_LoopFilePath]["fmd5"] := currfileMD5
 			if !folderobj[prefilepath]
 			{
 					FileGetTime, fTMod, % prefilepath, M
@@ -83,13 +83,12 @@ Loop, parse, sfolder, |;
 					prefileMD5 := MD5_File(prefilepath)
 					folderobj[prefilepath] := {}
 					folderobj[prefilepath]["fname"] := fname
-					folderobj[prefilepath]["relPath"] := StrReplace(StrReplace(prefilepath, A_LoopField), fname)
+					folderobj[prefilepath]["relPath"] := StrReplace(prefilepath, fname)
 					folderobj[prefilepath]["fTMod"] := fTMod
 					folderobj[prefilepath]["fsize"] := A_LoopFileSize
 					folderobj[prefilepath]["fmd5"] := prefileMD5
 			}
-
-}
+    }
 		if (mode = "Md5") && fsizeobj[A_LoopFileSize]    ; 大小有重复的情况
 		{
 			currfileMD5 := MD5_File(A_LoopFilePath)
@@ -118,7 +117,7 @@ Loop, parse, sfolder, |;
 					SplitPath, mprefilepath, fname
 					folderobj[mprefilepath] := {}
 					folderobj[mprefilepath]["fname"] := fname
-					folderobj[mprefilepath]["relPath"] := StrReplace(StrReplace(mprefilepath, A_LoopField), fname)
+					folderobj[mprefilepath]["relPath"] := StrReplace(mprefilepath, fname)
 					folderobj[mprefilepath]["fTMod"] := fTMod
 					folderobj[mprefilepath]["fsize"] := A_LoopFileSize
 					folderobj[mprefilepath]["fmd5"] := currfileMD5

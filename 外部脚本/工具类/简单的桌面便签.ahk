@@ -101,6 +101,10 @@ Note(cmd="", id:="", args*)
       GuiControl,, Edit1
       Gui, Hide
     }
+    else if (k="退出所有")
+    {
+      exitapp
+    }
     return
   Case "All":
     i:=0
@@ -133,7 +137,7 @@ Note(cmd="", id:="", args*)
   Gui, New, +AlwaysOnTop +LastFound +Hwndid +Resize +Owner -DPIScale
   Gui, Margin, 0, 0
   Gui, Font, s12
-  For k,v in StrSplit("新建|清空|撤销|删除", "|")
+  For k,v in StrSplit("新建|清空|撤销|删除|退出所有", "|")
   {
     j:=(k=1) ? "":"x+0"
     Gui, Add, Button, %j% h30 Hwndctrl_id, %v%

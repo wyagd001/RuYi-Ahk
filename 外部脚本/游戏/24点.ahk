@@ -1,4 +1,4 @@
-﻿;|2.1|2023.07.21|1367
+﻿;|2.7|2024.07.3|1367
 #SingleInstance
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e75f.ico"
@@ -53,8 +53,8 @@ main(a, b, c, d)
 	str .= get(c, a, d, b)
 	str .= get(c, b, a, d)
 	str .= get(c, b, d, a)
-	str .= get(c, d, a, c)
-	str .= get(c, d, c, a)
+	str .= get(c, d, a, b)
+	str .= get(c, d, b, a)
 	str .= get(d, a, b, c)
 	str .= get(d, a, c, b)
 	str .= get(d, b, a, c)
@@ -90,28 +90,32 @@ get(a, b, c, d)
         if(calculate_B(a,b,c,d,mark1,mark2,mark3)=24)
         {
           str .= "(" a mark[mark1] "(" b mark[mark2] c "))" mark[mark3] d "`n"
-          flag = 1
+          ;msgbox % a "|" b "|" c "|" d
+          flag = 2
         }
         if(calculate_C(a,b,c,d,mark1,mark2,mark3)=24)
         {
           str .= a mark[mark1] "(" b mark[mark2] "(" c mark[mark3] d "))`n"
-          flag=1
+          flag=3
         }
         if(calculate_D(a,b,c,d,mark1,mark2,mark3)=24)
         {
           str .= a mark[mark1] "((" b mark[mark2] c ")" mark[mark3] d ")`n"
-          flag=1
+          flag=4
         }
         if(calculate_E(a,b,c,d,mark1,mark2,mark3)=24)
         {
           str .= "(" a mark[mark1] b ")" mark[mark2] "(" c mark[mark3] d ")`n"
-          flag=1
+          flag=5
         }
       }
     }
   }
 	if flag
+{
+  ;msgbox % str " | " flag
   return str
+}
 	else
 	return ""
 }

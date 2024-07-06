@@ -1,6 +1,6 @@
-﻿;|2.7|2024.06.16|1548
+﻿;|2.7|2024.06.20|1548
 Menu, Tray, UseErrorLevel
-Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\f17f.ico"
+Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\f156.ico"
 
 CandySel :=  A_Args[1]
 ;CandySel := "C:\Documents and Settings\Administrator\Desktop\Gui"
@@ -12,18 +12,22 @@ Gui, Add, Text, x10 yp+40 h25, 指定扩展名:
 Gui, Add, Edit, xp+80 yp-5 w550 h25 vsExt, % "txt,ahk,md"
 Gui, Add, Button, xp+560 yp w60 h30 gexemerge, 执行
 
-Gui, Add, Text, x10 yp+40  w60, 文件名:
-Gui, Add, Edit, xp+80 yp-3 w150 h25 vofilename,
-gui, add, Text, xp+160 yp+3 w60, 输出编码:
+Gui, Add, Text, x10 yp+40 w60, 文件名(可选):
+Gui, Add, Edit, xp+80 yp-3 w360 h25 vofilename,
+gui, add, Text, xp+370 yp+3 w60, 输出编码:
 gui, add, ComboBox, xp+80 yp-3 w100  vOut_Code, ANSI(中文简体)|UTF-8 Raw|UTF-8 BOM||Unicode(UTF-16)
-Gui, Add, CheckBox, xp+110 yp h30 vaddfilepath, 合并时添加文件名到首行
+Gui, Add, Text, x10 yp+40 w60, 选项:
+Gui, Add, Radio, xp+80 yp-10 h30 vaddblankline, 文件间添加空行
+Gui, Add, Radio, xp+120 yp h30 vaddfilepath, 文件间添加文件路径
+Gui, Add, Radio, xp+145 yp h30 vaddchaifen, 文件间添加拆分信息
+Gui, Add, Radio, xp+140 yp h30 checked, 无 
 
 Gui, Add, ListView, x10 yp+40 w700 h500 vfilelist hwndHLV Checked AltSubmit grid, 序号|文件名|相对路径|扩展名|文件编码|大小(KB)|修改日期|完整路径   ;
 Gui, Add, Button, xp+710 yp w60 gMoveRow_Up, 向上
 Gui, Add, Button, xp yp+28 w60 gMoveRow_Down, 向下
 ;Gui, Add, Button, xp yp+28 w60 gDelListItem, 删除
 
-Gui, Add, Button, x10 y630 w60 h30 gcheckall, 全选
+Gui, Add, Button, x10 y655 w60 h30 gcheckall, 全选
 Gui, Add, Button, xp+70 yp w60 h30 guncheckall, 全不选
 Gui, Add, Button, xp+70 yp w60 h30 gEditfilefromlist, 编辑文件
 Gui, Add, Button, xp+70 yp w60 h30 gopenfilefromlist, 打开文件
@@ -69,6 +73,7 @@ Loop, Files, %sfolder%\*.*, FR
 ToolTip
 
 LV_ModifyCol()
+LV_ModifyCol(1, "Integer")
 LV_ModifyCol(2, 200)
 LV_ModifyCol(3, 250)
 LV_ModifyCol(4, 60)
@@ -80,17 +85,32 @@ gui, Submit, NoHide
 RowNumber := 0
 ofilecode := valuetocp[out_code]
 Tmp_Str := ""
+SplitPath, SFolder, OutFileName, OutDir
 Loop
 {
-	RowNumber := LV_GetNext(RowNumber, "C")  ; 在前一次找到的位置后继续搜索.
-	if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
-		break
-	LV_GetText(fullpath, RowNumber, 8)
-	FileRead, OutputVar, %fullpath%
-	if addfilepath
-		Tmp_Str .= fullpath "`r`n" OutputVar "`r`n`r`n"
-	else
-		Tmp_Str .= OutputVar "`r`n`r`n"
+  RowNumber := LV_GetNext(RowNumber, "C")  ; 在前一次找到的位置后继续搜索.
+  if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
+    break
+  LV_GetText(fullpath, RowNumber, 8)
+
+  if addchaifen
+  {
+    LV_GetText(filecode, RowNumber, 5)
+    Relpath := strreplace(fullpath, OutDir "\")
+    fileMD5 := MD5_File(fullpath)
+    FileGetTime, CreateTime, %fullpath%, C
+    FileGetTime, ModifyTime, %fullpath%, M
+    FileEncoding, % filecode
+    FileRead, OutputVar, %fullpath%
+  }
+  if addfilepath
+    Tmp_Str .= fullpath "`r`n" OutputVar "`r`n"
+  else if addchaifen
+    Tmp_Str .= ";自拆分文件 | " Relpath " | " A_Index " | " filecode " | " fileMD5 " | " CreateTime  " | " ModifyTime "`r`n" OutputVar "`r`n"
+  else if addblankline
+    Tmp_Str .= OutputVar "`r`n`r`n"
+  else
+    Tmp_Str .= OutputVar "`r`n"
 }
 ofilename := ofilename ? ofilename : "合并_" A_Now ".txt"
 FileAppend, %Tmp_Str%, %sfolder%\%ofilename%, % ofilecode
@@ -621,4 +641,29 @@ Local OutFile
   DllCall("Kernel32\GetFullPathNameW", "WStr",Filename, "UInt",260, "Str",OutFile, "Ptr",0)
   DllCall("Shell32\PathYetAnotherMakeUniqueName", "Str",OutFile, "Str",Outfile, "Ptr",0, "Ptr",0)
 Return A_IsUnicode ? OutFile : StrGet(&OutFile, "UTF-16")
+}
+
+MD5_File( sFile="", cSz=4 ) { ; www.autohotkey.com/forum/viewtopic.php?p=275910#275910
+	global Nomd5func
+ cSz  := (cSz<0||cSz>8) ? 2**22 : 2**(18+cSz), VarSetCapacity( Buffer,cSz,0 )
+ hFil := DllCall( "CreateFile", Str,sFile,UInt,0x80000000, Int,1,Int,0,Int,3,Int,0,Int,0)
+ IfLess,hFil,1, Return,hFil
+ DllCall( "GetFileSizeEx", UInt,hFil, Str,Buffer ),   fSz := NumGet( Buffer,0,"Int64" )
+ VarSetCapacity( MD5_CTX,104,0 ),    DllCall( "advapi32\MD5Init", Str,MD5_CTX )
+	LoopNum := fSz//cSz
+ Loop % ( LoopNum +!!Mod(fSz,cSz) )
+	{
+		if (LoopNum > 125)
+				tooltip % (A_index * cSz *100) / fSz "%"
+   DllCall( "ReadFile", UInt,hFil, Str,Buffer, UInt,cSz, UIntP,bytesRead, UInt,0 )
+ , DllCall( "advapi32\MD5Update", Str,MD5_CTX, Str,Buffer, UInt,bytesRead )
+	if Nomd5func
+	break
+	}
+	if (LoopNum > 125)
+		tooltip
+ DllCall( "advapi32\MD5Final", Str,MD5_CTX ), DllCall( "CloseHandle", UInt,hFil )
+ Loop % StrLen( Hex:="123456789ABCDEF0" )
+  N := NumGet( MD5_CTX,87+A_Index,"Char"), MD5 .= SubStr(Hex,N>>4,1) . SubStr(Hex,N&15,1)
+Return MD5
 }

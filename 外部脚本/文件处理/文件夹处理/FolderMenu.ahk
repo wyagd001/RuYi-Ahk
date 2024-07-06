@@ -1,9 +1,10 @@
-﻿;|2.0|2023.07.01|1177,1178
+﻿;|2.7|2024.06.17|1177,1178
 CandySel :=  A_Args[1]
 CandySel2 :=  A_Args[2]
+CandySel3 :=  A_Args[3]
 if !CandySel2
 	CandySel2 := "*"
-menu, % FolderMenu(CandySel, CandySel2, "收藏夹", 0, 1, 0, 1), show
+menu, % FolderMenu(CandySel, CandySel2, "收藏夹", CandySel3, 1, 0, 1), show
 return
 
 ;menu, % FolderMenu(A_desktop, "lnk","收藏夹",1,2,1,1), show

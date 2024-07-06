@@ -1,4 +1,4 @@
-﻿;|2.7|2023.06.05|1611
+﻿;|2.7|2023.06.17|1611
 ; A_Variables - AutoHotkey Built-in Variables v1.1.2
 #SingleInstance Force
 #NoEnv
@@ -18,7 +18,6 @@ YingJianObj["主板"] := {}
 YingJianObj["CPU"] := {}
 YingJianObj["BIOS"] := {}
 
-
 B_index := 0
 objWMIService := ComObjGet("winmgmts:{impersonationLevel=impersonate}!\\" . A_ComputerName . "\root\cimv2") 
 colSettings := objWMIService.ExecQuery("select * from Win32_OperatingSystem")._NewEnum 
@@ -35,6 +34,7 @@ VideoControlProperties := objWMIService.ExecQuery("Select * From win32_VideoCont
 SoundDeviceProperties := objWMIService.ExecQuery("Select * From Win32_SoundDevice")._NewEnum
 NetworkAdapterProperties := objWMIService.ExecQuery("Select * From Win32_NetworkAdapter")._NewEnum
 NetworkAdapterConfigProperties := objWMIService.ExecQuery("Select * From Win32_NetworkAdapterConfiguration WHERE IPEnabled = True")._NewEnum
+PrinterProperties := objWMIService.ExecQuery("Select * From Win32_Printer")._NewEnum
 
 While colSettings[strOSItem] 
 {
@@ -167,6 +167,15 @@ While VideoControlProperties[objProperty]
 	YingJianObj["GPU"]["名称"] := objProperty["Caption"]
 	YingJianObj["GPU"]["描述"] := objProperty["Description"]
 }
+B_Index := 0
+While PrinterProperties[objProperty]
+{
+	B_index ++
+	YingJianObj["打印机" B_Index] := {}
+	YingJianObj["打印机" B_Index]["名称"] := objProperty["DriverName"]
+	YingJianObj["打印机" B_Index]["默认打印机"] := objProperty["Default"]
+	YingJianObj["打印机" B_Index]["端口"] := objProperty["PortName"]
+}
 
 ; AutoHotkey Information
 G.Push([10, "AutoHotkey信息"])
@@ -287,8 +296,6 @@ while IsObject(YingJianObj["硬盘" B_Index])
 	A.Push(["硬盘" B_Index, YingJianObj["硬盘" B_Index]["型号"] " (" Ceil(YingJianObj["硬盘" B_Index]["大小"]) " GB) " YingJianObj["硬盘" B_Index]["类型"] " " YingJianObj["硬盘" B_Index]["分区"], 180])
 	B_Index ++
 }
-
-
 B_Index := 1
 while IsObject(YingJianObj["声卡" B_Index])
 {
@@ -304,7 +311,12 @@ while IsObject(YingJianObj["显卡" B_Index])
 }
 ;A.Push(["GPU", YingJianObj["GPU"]["名称"] " " YingJianObj["GPU"]["描述"], 180])
 A.Push(["网络适配器1", YingJianObj["网络适配器1"]["名称"]  " (" Ceil(YingJianObj["网络适配器1"]["speed"]) " MB)", 180, "网络连接"])
-
+B_Index := 1
+while IsObject(YingJianObj["打印机" B_Index])
+{
+	A.Push(["打印机" B_Index, YingJianObj["打印机" B_Index]["名称"] " - " YingJianObj["打印机" B_Index]["端口"] (YingJianObj["打印机" B_Index]["默认打印机"]?" - 默认打印机":""), 180])
+	B_Index ++
+}
 
 Gui +Resize
 Gui Color, 0xFEFEFE
