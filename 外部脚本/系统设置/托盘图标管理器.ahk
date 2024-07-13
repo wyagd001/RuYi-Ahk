@@ -1,15 +1,16 @@
-﻿;|2.3|2023.08.19|1430
+﻿;|2.7|2024.07.13|1430
 #NoEnv
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\f597.ico"
 
 SendMode Input
 lv := "kong" 
-Gui Add, ListView, Grid r30 w1200 Sort gMyListView Checked AltSubmit, idx|Process|Tooltip|Visible|hwnd|主进程句柄|idcmd|pid|uid|msgid|hicon|Class|tray
+Gui Add, ListView, Grid r30 w1200 Sort gMyListView Checked AltSubmit, idx|Process|Tooltip|Visible|hwnd|主进程句柄|idcmd|pid|uid|msgid|hicon|Class|tray|xuhao
 
 ImageListID1 := IL_Create(10)
 LV_SetImageList(ImageListID1)
 
+samehwndobj := {}
 oIcons := TrayIcon_GetInfo()
 
 Loop, % oIcons.MaxIndex()
@@ -26,11 +27,15 @@ Loop, % oIcons.MaxIndex()
     tClass := oIcons[A_Index].Class
     tray := oIcons[A_Index].Tray
     thWnd := oIcons[A_Index].hWnd
+    if !samehwndobj[thWnd]
+      samehwndobj[thWnd] := 1
+    else
+      samehwndobj[thWnd] += 1
     hWnd := Format("0x{1:x}", thWnd)
 
 	vis := (tray == "Shell_TrayWnd") ? "Yes" : "No"
 	
-    LV_Add("Icon" . IconIndex " check",idx,tproc, ttip, vis,thwnd, hWnd,tidcmd,tpid,tuid,tmsgid,thicon,tClass, tray)
+    LV_Add("Icon" . IconIndex " check", idx, tproc, ttip, vis, thwnd, hWnd, tidcmd, tpid, tuid, tmsgid, thicon, tClass, tray, samehwndobj[thWnd])
 }
 
 LV_ModifyCol()
@@ -41,33 +46,40 @@ Return
 
 MyListView:
 Critical
-	if (A_GuiEvent = "DoubleClick")
+if (A_GuiEvent = "DoubleClick")
+{
+  LV_GetText(hWnd, A_EventInfo, 5)
+  LV_GetText(xuhao, A_EventInfo, 14) 
+  TrayIcon_Button(hWnd, "L",, xuhao)
+}
+else if (A_GuiEvent = "I")
+{
+	if (lv = "kong")
+		return
+	LV_GetText(idcmd, A_EventInfo, 7)  
+	LV_GetText(tray, A_EventInfo, 13)
+	if InStr(ErrorLevel, "C", true)
 	{
-	    LV_GetText(hWnd, A_EventInfo, 5)  
-	    TrayIcon_Button(hWnd,"L")
+		TrayIcon_Hide(idcmd, tray, 0)
+		;tooltip % idcmd " - " tray " - " A_EventInfo
 	}
-	if (A_GuiEvent = "I")
+	else if InStr(ErrorLevel, "c", true)
 	{
-		if (lv = "kong")
-			return
-		LV_GetText(idcmd, A_EventInfo, 7)  
-		LV_GetText(tray, A_EventInfo, 13)
-		if InStr(ErrorLevel, "C", true)
-		{
-			TrayIcon_Hide(idcmd, tray, 0)
-			;tooltip % idcmd " - " tray " - " A_EventInfo
-		}
-		else if InStr(ErrorLevel, "c", true)
-		{
-			TrayIcon_Hide(idcmd, tray, 1)
-			;tooltip % "显示图标"
-		}
+		TrayIcon_Hide(idcmd, tray, 1)
+		;tooltip % "显示图标"
 	}
+}
+else if (A_GuiEvent = "RightClick")
+{
+  LV_GetText(hWnd, A_EventInfo, 5)
+  LV_GetText(xuhao, A_EventInfo, 14) 
+  TrayIcon_Button(hWnd, "R",, xuhao)
+}
 return
 
 GuiEscape:
 GuiClose:
-    ExitApp
+  ExitApp
 return
 
 ; 来源网址：https://autohotkey.com/boards/viewtopic.php?p=9186#p9186
@@ -366,6 +378,7 @@ TrayIcon_Button(sExeName, sButton := "L", bDouble := false, index := 1)
 	sButton := "WM_" sButton "BUTTON"
 	oIcons := {}
 	oIcons := TrayIcon_GetInfo(sExeName)
+  ;msgbox % oIcons.MaxIndex()
 	msgID  := oIcons[index].msgID
 	uID    := oIcons[index].uID
 	hWnd   := oIcons[index].hWnd

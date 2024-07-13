@@ -1,0 +1,58 @@
+﻿;|2.7|2024.07.09|1640
+#Include <WebView2>
+
+Persistent
+CandySel := ""
+Try CandySel := A_Args[1]
+if !CandySel
+{
+	DetectHiddenWindows 1
+	Try CandySel := ControlGetText("Edit1", "获取当前窗口信息_") 
+	DetectHiddenWindows 0
+}
+OpenDocxWithWebView2(CandySel)
+return
+
+OpenDocxWithWebView2(pdffilepath)
+{
+	Global
+  SplitPath pdffilepath, &oname, &odir
+  ;msgbox odir
+	main := Gui("+Resize")
+	main.OnEvent("Close", _ExitApp)
+	main.Title := oname " - Pdf 文档阅读"
+	main.Show(Format("w{} h{}", A_ScreenWidth * 0.8, A_ScreenHeight * 0.92))
+
+	wvc := WebView2.create(main.Hwnd,,,,,{AdditionalBrowserArguments: "--disable-web-security='true'"})
+	;msgbox main.Hwnd
+	wv := wvc.CoreWebView2
+	nwr := wv.NewWindowRequested(NewWindowRequestedHandler)
+
+wv.Navigate(A_ScriptDir "\..\..\引用程序\其它资源\WebView2\pdf.js\web\viewer.html")
+sleep 1000
+wv.ExecuteScript('document.querySelector("#secondaryOpenFile").click();', 0)
+SetTimer autoopenpdf, -1250
+
+	NewWindowRequestedHandler(handler, wv2, arg) {
+		argp := WebView2.NewWindowRequestedEventArgs(arg)
+		deferral := argp.GetDeferral()
+		argp.NewWindow := wv2
+		deferral.Complete()
+	}
+
+	_ExitApp(*) {
+    Global
+    ;FileDelete odir "\docx-preview.min.js"
+    ;FileDelete odir "\jszip.min.js"
+    ;FileDelete odir "\preview.html"
+    ExitApp(0)
+	}
+}
+
+autoopenpdf()
+{
+  WinWaitActive "ahk_class #32770",, 1000
+  ControlSetText CandySel, "edit1", "ahk_class #32770"
+  sleep 100
+  send "{enter}"
+}

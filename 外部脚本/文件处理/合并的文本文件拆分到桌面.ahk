@@ -7,6 +7,7 @@ Loop, Read, % CandySel
 	{
     if pre_Tmp_File
     {
+      File.Close()
       FileSetTime, % CreateTime, % Tmp_File, C
       FileSetTime, % ModifyTime, % Tmp_File, M
     }
@@ -17,15 +18,18 @@ Loop, Read, % CandySel
     ModifyTime := Tmp_Arr[7]
 		CreateFolder(Tmp_File)
 		FileAppend,, % Tmp_File
+    File := FileOpen(Tmp_File, "rw", Tmp_Arr[4])
 		continue
 	}
-	if (Tmp_File != pre_Tmp_File)
+	if (Tmp_File != pre_Tmp_File)    ; 新文件开始
 	{
-		FileAppend, % A_LoopReadLine , % Tmp_File
+		;FileAppend, % A_LoopReadLine , % Tmp_File
+    File.Write(A_LoopReadLine)
 		pre_Tmp_File := Tmp_File
 	}
 	else
-		FileAppend, % "`r`n" A_LoopReadLine , % Tmp_File
+    File.Write("`r`n" A_LoopReadLine)
+		;FileAppend, % "`r`n" A_LoopReadLine , % Tmp_File
 }
 return
 

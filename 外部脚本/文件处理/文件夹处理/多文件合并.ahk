@@ -9,7 +9,7 @@ Gui, Add, Text, x10 y15 h25, 文件夹:
 Gui, Add, Edit, xp+80 yp-5 w550 h25 vsfolder, % CandySel
 Gui, Add, Button, xp+560 yp-2 w60 h30 gstartsearch, 载入
 Gui, Add, Text, x10 yp+40 h25, 指定扩展名:
-Gui, Add, Edit, xp+80 yp-5 w550 h25 vsExt, % "txt,ahk,md"
+Gui, Add, Edit, xp+80 yp-5 w550 h25 vsExt, % "txt,ahk,ahk2,md"
 Gui, Add, Button, xp+560 yp w60 h30 gexemerge, 执行
 
 Gui, Add, Text, x10 yp+40 w60, 文件名(可选):

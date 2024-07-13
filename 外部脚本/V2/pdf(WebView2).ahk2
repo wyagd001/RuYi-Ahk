@@ -1,0 +1,42 @@
+﻿;|2.7|2024.07.08|1638
+#Include <WebView2>
+
+Persistent
+CandySel := ""
+Try CandySel := A_Args[1]
+if !CandySel
+{
+	DetectHiddenWindows 1
+	Try CandySel := ControlGetText("Edit1", "获取当前窗口信息_") 
+	DetectHiddenWindows 0
+}
+;generatehtml()
+openpdfwithwebview2(CandySel)
+return
+
+openpdfwithwebview2(pdffilepath)
+{
+	Global
+  SplitPath pdffilepath, &name, &dir
+	main := Gui("+Resize")
+	main.OnEvent("Close", _ExitApp)
+	main.Title := name " - Pdf 文件阅读"
+	main.Show(Format("w{} h{}", A_ScreenWidth * 0.8, A_ScreenHeight * 0.92))
+
+	wvc := WebView2.create(main.Hwnd)
+	;msgbox main.Hwnd
+	wv := wvc.CoreWebView2
+	nwr := wv.NewWindowRequested(NewWindowRequestedHandler)
+	wv.Navigate(pdffilepath)
+
+	NewWindowRequestedHandler(handler, wv2, arg) {
+		argp := WebView2.NewWindowRequestedEventArgs(arg)
+		deferral := argp.GetDeferral()
+		argp.NewWindow := wv2
+		deferral.Complete()
+	}
+
+	_ExitApp(*) {
+		ExitApp(0)
+	}
+}

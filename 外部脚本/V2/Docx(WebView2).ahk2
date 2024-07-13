@@ -1,0 +1,113 @@
+﻿;|2.7|2024.07.08|1639
+#Include <WebView2>
+
+Persistent
+CandySel := ""
+Try CandySel := A_Args[1]
+if !CandySel
+{
+	DetectHiddenWindows 1
+	Try CandySel := ControlGetText("Edit1", "获取当前窗口信息_") 
+	DetectHiddenWindows 0
+}
+generatehtml(CandySel)
+OpenDocxWithWebView2(CandySel)
+return
+
+/*
+q::
+{
+SplitPath CandySel, &oname, &odir
+wv.ExecuteScript('load("' oname '");', 0)
+}
+*/
+
+OpenDocxWithWebView2(docxfilepath)
+{
+	Global
+  SplitPath docxfilepath, &oname, &odir
+  ;msgbox odir
+	main := Gui("+Resize")
+	main.OnEvent("Close", _ExitApp)
+	main.Title := oname " - Docx 文档阅读"
+	main.Show(Format("w{} h{}", A_ScreenWidth * 0.8, A_ScreenHeight * 0.92))
+
+	wvc := WebView2.create(main.Hwnd,,,,,{AdditionalBrowserArguments: "--disable-web-security='true'"})
+	;msgbox main.Hwnd
+	wv := wvc.CoreWebView2
+	nwr := wv.NewWindowRequested(NewWindowRequestedHandler)
+;vhn := wv.SetVirtualHostNameToFolderMapping("demo", A_ScriptDir "\..\..\引用程序\其它资源\WebView2\docx", 0x2)
+vhn := wv.SetVirtualHostNameToFolderMapping("demo", odir, 0x2)
+;wv.Navigate("https://demo/preview.html")
+wv.Navigate(A_ScriptDir "\..\..\引用程序\其它资源\WebView2\docx\preview.html")
+
+	NewWindowRequestedHandler(handler, wv2, arg) {
+		argp := WebView2.NewWindowRequestedEventArgs(arg)
+		deferral := argp.GetDeferral()
+		argp.NewWindow := wv2
+		deferral.Complete()
+	}
+
+	_ExitApp(*) {
+    Global
+    ;FileDelete odir "\docx-preview.min.js"
+    ;FileDelete odir "\jszip.min.js"
+    ;FileDelete odir "\preview.html"
+    ExitApp(0)
+	}
+}
+
+generatehtml(docxfilepath)
+{
+  SplitPath docxfilepath, &oname, &odir
+  html_code := 
+(
+'<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+
+    <script src="jszip.min.js"></script>
+    <script src="docx-preview.min.js"></script>
+    <script>
+
+        function load(name) {
+           fetch("https://demo/" + name)
+                .then(resp => resp.blob())
+                .then(
+                    blobData => {
+                        docx.renderAsync(blobData, document.getElementById("container")).then(x => console.log("docx: finished"));
+                    })}
+        
+    </script>
+<script>
+window.onload = () => {
+load("' oname '");
+}
+</script>
+    <style>
+        body,
+        html {
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+</body>
+
+</html>
+)'
+
+try FileDelete A_ScriptDir "\..\..\引用程序\其它资源\WebView2\docx\preview.html"
+sleep 300
+FileAppend html_code, A_ScriptDir "\..\..\引用程序\其它资源\WebView2\docx\preview.html", "`UTF-8"
+sleep 300
+;Try FileCopy A_ScriptDir "\..\..\引用程序\其它资源\WebView2\docx\docx-preview.min.js", odir, 0
+;Try FileCopy A_ScriptDir "\..\..\引用程序\其它资源\WebView2\docx\jszip.min.js", odir, 0
+;Try FileCopy A_ScriptDir "\..\..\引用程序\其它资源\WebView2\docx\preview.html", odir, 0
+}

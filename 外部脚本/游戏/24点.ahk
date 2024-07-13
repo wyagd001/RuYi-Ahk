@@ -1,4 +1,4 @@
-﻿;|2.7|2024.07.3|1367
+﻿;|2.7|2024.07.03|1367
 #SingleInstance
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e75f.ico"

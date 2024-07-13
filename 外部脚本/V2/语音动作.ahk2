@@ -1,8 +1,8 @@
-﻿;|2.6|2024.05.16|1559
+﻿;|2.7|2024.07.11|1559
 init()
 init()
 {
-	global g_sound := SoundINput(A_Scriptdir '\..\..\引用程序\其它资源\语音.html')
+	global g_sound := SoundINput(A_Scriptdir '\..\..\引用程序\其它资源\WebView2\语音.html')
 	;g_sound.show(, , 400, 400)
 	g_sound.set_out_change_call_back(sound_call_back)
 	g_sound.start()
@@ -1472,10 +1472,12 @@ class WebView2 extends WebView2.Base {
 	static DEFAULT_DOWNLOAD_DIALOG_CORNER_ALIGNMENT := { TOP_LEFT: 0, TOP_RIGHT: 1, BOTTOM_LEFT: 2, BOTTOM_RIGHT: 3 }
 	;#endregion
 }
+
 CoTaskMem_String(ptr) {
 	s := StrGet(ptr), DllCall('ole32\CoTaskMemFree', 'ptr', ptr)
 	return s
 }
+
 class SyncHandler extends WebView2.Handler {
 	__New(cb := 0) {
 		this.obj := SyncHandler.CompletedEventHandler()

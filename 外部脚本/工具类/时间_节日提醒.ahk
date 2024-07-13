@@ -1,4 +1,4 @@
-﻿;|2.0|2023.07.01|1330
+﻿;|2.7|2024.07.07|1330
 ;date=20170101
 ;MsgBox,% Date_GetDate(date)
 ;MsgBox,% Date_GetDate(date,1) ;闰5月
@@ -41,7 +41,7 @@ JCTF:
 		msgbox % tx
 
 	aTX =
-	CFArray := {"公历新年": "0101", "情人节": "0214", "劳动节": "0501", "儿童节": "0601", "教师节": "0910", "国庆节": "1001", "圣诞节": "1225"}
+	CFArray := {"公历新年": "0101", "情人节": "0214", "劳动节": "0501", "儿童节": "0601", "建党节": "0701", "建军节": "0801", "教师节": "0910", "国庆节": "1001", "圣诞节": "1225"}
 
 	for k,v in CFArray
 	{
@@ -68,7 +68,18 @@ JCTF:
 	if (Easterdata = today)
 		aTX .= "今天是复活节`n"
 	if atx
-		msgbox % atx
+  {
+    if WinExist("AppBarWin ahk_class AutoHotkeyGUI")
+    {
+      loop 3
+      {
+        h := ExecSendToRuyi(strreplace(atx, "今天是") "|red",, 1527)
+        if h
+          break
+      }
+    }
+    msgbox % atx
+  }
 return
 
 qingming(Nyear)   ; 年份支持 1700-3100
@@ -438,4 +449,25 @@ dec2hex(d)
 	h := d+0
 	SetFormat, IntegerFast, %BackUp_FmtInt%
 return h
+}
+
+ExecSendToRuyi(ByRef StringToSend := "", Title := "如一 ahk_class AutoHotkey", wParam := 0, Msg := 0x4a) {
+	VarSetCapacity(CopyDataStruct, 3*A_PtrSize, 0)
+	SizeInBytes := (StrLen(StringToSend) + 1) * (A_IsUnicode ? 2 : 1)
+	NumPut(SizeInBytes, CopyDataStruct, A_PtrSize)
+	NumPut(&StringToSend, CopyDataStruct, 2*A_PtrSize)
+
+	DetectHiddenWindows, On
+	if Title is integer
+	{
+		SendMessage, Msg, wParam, &CopyDataStruct,, ahk_id %Title%
+		;msgbox % ErrorLevel  "qq"
+	}
+	else if Title is not integer
+	{
+		SetTitleMatchMode 2
+		sendMessage, Msg, wParam, &CopyDataStruct,, %Title%
+	}
+	DetectHiddenWindows, Off
+	return ErrorLevel
 }

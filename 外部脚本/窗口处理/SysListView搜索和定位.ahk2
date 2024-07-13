@@ -1,0 +1,302 @@
+﻿;|2.7|2024.07.10|1641
+#SingleInstance force
+persistent
+Windy_CurWin_Id := A_Args[1]
+
+DetectHiddenWindows 1
+if !Windy_CurWin_Id
+{
+	try h_Title := WinGetTitle("获取当前窗口信息_")
+	Windy_CurWin_id := StrReplace(h_Title, "获取当前窗口信息_")
+}
+DetectHiddenWindows 0
+
+_ListView("SysListView321", Windy_CurWin_Id?Windy_CurWin_Id:"A").selectByInput()
+ 
+class _ListView {
+ 
+    __new(ctl, winTitle:="") {
+        this.ctl := ctl
+        if (winTitle = "A")
+        {
+          this.hwnd := WinExist(winTitle)
+          this.pid := WinGetPID()
+          try this.hCtl := ControlGetHwnd(ctl, "A")
+          catch as e 
+          {
+            msgbox("当前窗口:" . this.hwnd . "`n当前窗口中没有 SysListView 控件, 程序退出.`n")
+            exitapp(0)
+          }
+        }
+        else
+        {
+          this.hwnd := winTitle
+          this.pid := WinGetPID("Ahk_id " winTitle)
+          try this.hCtl := ControlGetHwnd(ctl, "Ahk_id " winTitle)
+          catch as e 
+          {
+            msgbox("当前窗口:" . this.hwnd . "`n当前窗口中没有 SysListView 控件, 程序退出.`n")
+            exitapp(0)
+          }
+        }
+    }
+ 
+    getIndexByText(str, idx:=1) {
+        loop parse, ListViewGetContent(, this.hCtl), "`n", "`r" {
+            ;msgbox(str . "`n" . json.stringify(StrSplit(A_LoopField,A_Tab), 4))
+            if (StrSplit(A_LoopField,A_Tab)[idx] == str) {
+                return A_Index
+            }
+        }
+        return 0
+    }
+ 
+    selectByInput() {
+        arr := []
+        loop parse, ListViewGetContent(, this.hCtl), "`n", "`r"
+            arr.push(RegExReplace(A_LoopField, "`t.*"))
+        arrRes := searchArr(arr)
+        if (arrRes.length)
+            this.selectByText(arrRes[1])
+    }
+    selectByText(str) {
+        idx := this.getIndexByText(str)
+        if (!idx)
+            throw ValueError(format('not found "{1}" in ListView', str))
+        this.selectByIndex(idx)
+    }
+    selectByIndex(idx:=1) {
+        bufLvItem := buffer(52+(2*A_PtrSize))
+        numput("UPtr", state:=3, bufLvItem, 12)
+        numput("UPtr", stateMask:=2, bufLvItem, 16)
+        oRB := RemoteBuffer(this.pid, bufLvItem.size)
+        oRB.write(bufLvItem)
+        SendMessage(LVM_ENSUREVISIBLE:=0x1013, idx-1,,, "ahk_id" . this.hCtl)
+        SendMessage(LVM_SETITEMSTATE:=0x102B, idx-1, oRB.arrBuffer[1],, "ahk_id" . this.hCtl)
+        ;PostMessage(0x1043,, 2,, "ahk_id" . ControlGetHwnd(ctl, winTitle))
+    }
+ 
+}
+ 
+class RemoteBuffer {
+    ;size 一般多大
+    ; https://docs.microsoft.com/en-us/windows/win32/procthread/process-security-and-access-rights
+    ;PROCESS_VM_OPERATION:=0x8 PROCESS_VM_READ:=0x10 PROCESS_VM_WRITE:=0x20 PROCESS_QUERY_INFORMATION:=0x400
+    __new(pid, size:=0, DesiredAccess:=56) { ; 0x8|0x10|0x20==56
+        if !(this.hProcess := dllcall("OpenProcess", "UInt",DesiredAccess, "Int",0, "UInt",pid, "Ptr"))
+            return ""
+        this.arrBuffer := [] ;NOTE 可申请多个内存，所以用数组
+        this.arrSize := []
+        if (size)
+            this.addBuffer(size)
+    }
+ 
+    __delete(idx:=0) {
+        if idx {
+            pBuffer := this.arrBuffer.RemoveAt(idx)
+            this.arrSize.RemoveAt(idx)
+            dllcall("VirtualFreeEx", "Ptr",this.hProcess, "Ptr",pBuffer, "UInt",0, "UInt",MEM_RELEASE:=0x8000)
+            dllcall("CloseHandle", "Ptr",this.hProcess)
+        } else { ;删除全部
+            for k, pBuffer in this.arrBuffer
+                dllcall("VirtualFreeEx", "Ptr",this.hProcess, "Ptr",pBuffer, "UInt",0, "UInt",MEM_RELEASE:=0x8000)
+            dllcall("CloseHandle", "Ptr",this.hProcess)
+        }
+    }
+ 
+    ;比如给 SysTabControl321 的某一项申请空间(文字内容不定长，所以不能直接用 SendMessage 获取)
+    ;文字内容往往在 pBuffer + size 的后面
+    addBuffer(size) {
+        if !(pBuffer := dllcall("VirtualAllocEx", "UInt",this.hProcess, "UInt",0, "UInt",size, "UInt",MEM_COMMIT:=0x1000, "UInt",PAGE_READWRITE:=4, "Ptr"))
+            return ""
+        this.arrBuffer.push(pBuffer)
+        this.arrSize.push(size)
+        return pBuffer
+    }
+ 
+    ;NOTE size 可能和 arrSize 不同
+    write(pLocalBuff, size:=0, idx:=1, offset:=0) {
+        size := size ? size : this.arrSize[idx] ;TODO size是否恒等于 this.arrSize[idx]，是则可省略参数
+        return dllcall("WriteProcessMemory", "Ptr",this.hProcess, "Ptr",this.arrBuffer[idx]+offset, "Ptr",pLocalBuff, "UInt",size, "UInt",0)
+    }
+ 
+    ;如果是单值，可直接设置 bVal=1
+    read(idx:=1, bVal:=0, offset:=0, size:=0) {
+        static bufLocal ;NOTE 不能少
+        if !size
+            size := this.arrSize[idx] - offset
+        else
+            size := min(size, this.arrSize[idx] - offset)
+        bufLocal := buffer(size, 0)
+        ;从 arrBuffer[idx]+offset 地址读取 size 长度内容，存到 &bufLocal 地址
+        dllcall("ReadProcessMemory", "Ptr",this.hProcess, "Ptr",this.arrBuffer[idx]+offset, "Ptr",bufLocal, "UInt",size, "UInt",0)
+        ;bufLocal := buffer(-1)
+        return bVal ? bufLocal : bufLocal.ptr
+    }
+ 
+}
+ 
+searchArr(arr, bAddPy:=false, bDistinct:=false) {
+    ;NOTE 转成二维 顺带 push 序号(以第1项为主，用来生成拼音什么的，所以用 push)
+    if !arr.length
+        return []
+    if !isobject(arr[1]) { ;一维转成[hot, item]
+        for k, v in arr
+            arr[k] := [v, k]
+    }
+    arrNew := []
+    ;去重(根据 subArr[1])
+    if (bDistinct) { ;去重，并过滤空值
+        obj := map()
+        for subArr in arr {
+            v := subArr[1]
+            if (strlen(v) && !obj.has(v)) {
+                arrNew.push(subArr)
+            }
+            obj[v] := ""
+        }
+    } else {
+        arrNew := arr
+    }
+    ;添加标题
+    arrField := ["序号"]
+    for v in arrNew[1]
+        arrField.push("v" . A_Index)
+    ;添加拼音
+    if (bAddPy) {
+        arrField.push("拼音")
+        for k, v in arrNew
+            arrNew[k].push(v[1].shouzimus())
+    }
+    ;msgbox(json.stringify(arrField, 4))
+    ;msgbox(json.stringify(arrNew, 4))
+    ;添加到 Gui
+    oGui := gui("+resize")
+    oGui.OnEvent("escape",doEscape)
+    oGui.OnEvent("close",doEscape)
+    oGui.SetFont("s13")
+    oGui.add("Text",,"按 F1-F12 或【双击】可直接确定对应条目")
+    oEdit := oGui.add("Edit", "Lowercase section")
+    oEdit.OnEvent("change", loadLV)
+    oCB1 := oGui.Add("Checkbox", "yp checked", arrField[2])
+    oCB2 := oGui.Add("Checkbox", "yp", arrField[3])
+    ;添加按键显示结果(点击复制)
+    oButton1 := oGui.add("button", "w200 xs cRed")
+    oButton1.OnEvent("click", (ctl, p*)=>A_Clipboard := ctl.text)
+    if (arrNew[1].length > 2) {
+        oButton2 := oGui.add("button", "w500 yp xp+300 cRed")
+        oButton2.OnEvent("click", (ctl, p*)=>A_Clipboard := ctl.text)
+    }
+    ;ListView 标题名
+    ;field := 65
+    oLv := oGui.AddListView("vlv1 xs r20 cRed w900", arrField) ;NOTE selectN 要用 lv1 获取控件，不要用 oLv(影响释放)
+    oLv.OnEvent("DoubleClick", do)
+    oLv.OnEvent("ItemFocus", tips)
+    tooltip("加载数据...")
+    timeSave := A_TickCount
+    obj := ""
+    nLoad := A_TickCount - timeSave
+    tooltip("添加到Gui...")
+    loadLV(oEdit)
+    nGui := A_TickCount - timeSave - nLoad
+    tooltip
+    oGui.title := format("读取耗时 {1} 加载到Gui耗时 {2}", nLoad,nGui)
+    oGui.show()
+    resGui := []
+    OnMessage(WM_KEYDOWN:=0x100, selectN)
+    WinWaitClose("ahk_id " . oGui.hwnd)
+    return resGui
+    doEscape(oGui, p*) {
+        oGui.destroy()
+        OnMessage(WM_KEYDOWN, selectN, 0)
+        settimer exitfun, -2000
+    }
+    loadLV(ctl, p*) { ;中文则搜索第1个内容，否则搜索第2个内容
+        oLv.delete()
+        oLv.opt("-Redraw")
+        ;获取匹配项
+        arrKeysMatch := []
+        if oCB1.value
+            arrKeysMatch.push(1)
+        if oCB2.value
+            arrKeysMatch.push(2)
+        if !arrKeysMatch.length
+            return
+        sInput := ctl.text
+        arrKeysMatch[1] := (bAddPy && sInput ~= "[[:ascii:]]") ? arrNew[1].length : 1
+        i := 1
+        for subArr in arrNew {
+            for idx in arrKeysMatch {
+                if (sInput=="" || instr(subArr[idx], sInput)) {
+                    oLv.add(, i++, subArr*)
+                    break
+                }
+            }
+        }
+        ;搜网址有用没结果且只搜索标题，则搜索网址
+        ;if (oLv.GetCount() == 0) {
+        ;    for subArr in arrNew {
+        ;        if instr(subArr[2], sInput)
+        ;            oLv.add(, i++, subArr[1], subArr[2], subArr[3])
+        ;    }
+        ;}
+        oLv.ModifyCol(2, "+AutoHdr +center")
+        oLv.ModifyCol(1, "48")
+        oLv.opt("+Redraw")
+        if (oLv.GetCount() == 1) { ;单结果
+            do(oLv, 1)
+        } else if (oLv.GetCount() > 1) {
+            oLv.modify(1, "+select")
+            tips(oLv, 1)
+        }
+    }
+    selectN(wParam, lParam, msg, hwnd) { ;NOTE 由于这个函数不传入oGui或oControl，要用 hwnd获取oGui，用oGui[ctlNmae]获取控件
+        try
+            oLv := GuiFromHwnd(hwnd, 1)["lv1"] ;NOTE
+        catch
+            return
+        if (wParam == 13) { ;enter
+            do(oLv, oLv.GetNext())
+        } else if (wParam == 40) { ;down
+            n := oLv.GetNext()
+            if (!n)
+                oLv.modify(1, "+select")
+            else {
+                oLv.modify(n, "-select")
+                oLv.modify(n+1, "+select")
+            }
+        } else if (wParam == 38) { ;up
+            n := oLv.GetNext()
+            if (n>1) {
+                oLv.modify(n, "-select")
+                oLv.modify(n-1, "+select")
+            }
+        } else {
+            r := wParam-111
+            if (r >= 1 && r <= 12) ;F1-F12
+                do(oLv, r)
+        }
+    }
+    tips(oLv, r, p*) {
+        ;获取当前行整行内容
+        arrRes := []
+        loop(arrNew.length)
+            arrRes.push(oLv.GetText(r, A_Index))
+        oButton1.text := arrRes[2]
+        try
+            oButton2.text := arrRes[3]
+    }
+    do(oLv, r, p*) { ;NOTE 要做的事
+        ;获取当前行整行内容
+        arrRes := []
+        loop(arrNew[1].length)
+            arrRes.push(oLv.GetText(r, A_Index+1))
+        ;做任何事
+        ;设置返回值
+        resGui := arrRes
+        doEscape(oLv.gui)
+    }
+    exitfun(){
+      ExitApp(0)
+    }
+}
