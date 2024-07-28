@@ -476,6 +476,21 @@ else if (SelFun = "复制到")
 			Tmp_Str .= "源文件夹\" relPath " 复制到 目标文件夹`n"
 	}
 }
+else if (SelFun = "剪贴到")
+{
+	RowNumber := 0  ; 这样使得首次循环从列表的顶部开始搜索.
+	Loop
+	{
+		RowNumber := LV_GetNext(RowNumber, "C")  ; 在前一次找到的位置后继续搜索.
+		if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
+			break
+		LV_GetText(relPath, RowNumber, 2)
+		if (Funpara = "带结构移动")
+			Tmp_Str .= "源文件夹\" relPath " 移动到 目标文件夹\" relPath "`n"
+		else if (Funpara = "移动到同一层")
+			Tmp_Str .= "源文件夹\" relPath " 移动到 目标文件夹`n"
+	}
+}
 else if (SelFun = "删除")
 {
 	RowNumber := 0  ; 这样使得首次循环从列表的顶部开始搜索.

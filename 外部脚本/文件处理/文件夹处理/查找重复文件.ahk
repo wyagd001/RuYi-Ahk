@@ -529,9 +529,9 @@ AutoXYWH(DimSize, cList*){       ; http://ahkscript.org/boards/viewtopic.php?t=1
         GuiControl, % A_Gui ":" cInfo[ctrlID].m , % ctrl, % Options
 } } }
 
-GetStringIndex(String, Index := "")
+GetStringIndex(String, Index := "", MaxParts := -1, SplitStr := "|")
 {
-	arrCandy_Cmd_Str := StrSplit(String, "|", " `t")
+	arrCandy_Cmd_Str := StrSplit(String, SplitStr, " `t", MaxParts)
 	if Index
 	{
 		NewStr := arrCandy_Cmd_Str[Index]

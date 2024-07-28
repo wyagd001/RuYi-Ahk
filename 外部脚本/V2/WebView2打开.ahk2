@@ -1,4 +1,4 @@
-﻿;|2.7|2024.07.08|1638
+﻿;|2.7|2024.07.26|1645
 #Include <WebView2>
 
 Persistent
@@ -11,23 +11,32 @@ if !CandySel
 	DetectHiddenWindows 0
 }
 ;generatehtml()
-openpdfwithwebview2(CandySel)
+openwithwebview2(CandySel)
 return
 
-openpdfwithwebview2(pdffilepath)
+/*
+q::
+{
+wv.ExecuteScript('mouseClicks(200, 200);', 0)
+wv.ExecuteScript('element.dispatchEvent(event);', 0)
+return
+}
+*/
+
+openwithwebview2(filepath)
 {
 	Global
-  SplitPath pdffilepath, &name, &dir
+  SplitPath filepath, &name, &dir
 	main := Gui("+Resize")
 	main.OnEvent("Close", _ExitApp)
-	main.Title := name " - Pdf 文件阅读"
+	main.Title := name " - WebView 浏览器"
 	main.Show(Format("w{} h{}", A_ScreenWidth * 0.8, A_ScreenHeight * 0.92))
 
-	wvc := WebView2.create(main.Hwnd)
+	wvc := WebView2.create(main.Hwnd,,,,,{AdditionalBrowserArguments: "--disable-web-security='true'"})
 	;msgbox main.Hwnd
 	wv := wvc.CoreWebView2
 	nwr := wv.NewWindowRequested(NewWindowRequestedHandler)
-	wv.Navigate(pdffilepath)
+	wv.Navigate(filepath)
 
 	NewWindowRequestedHandler(handler, wv2, arg) {
 		argp := WebView2.NewWindowRequestedEventArgs(arg)

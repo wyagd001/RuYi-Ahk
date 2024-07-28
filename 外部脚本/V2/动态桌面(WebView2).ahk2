@@ -1,0 +1,97 @@
+﻿;|2.7|2024.07.28|1638
+#Include <WebView2>
+
+Persistent
+CandySel := ""
+Try CandySel := A_Args[1]
+if !CandySel
+{
+	DetectHiddenWindows 1
+	Try CandySel := ControlGetText("Edit1", "获取当前窗口信息_") 
+	DetectHiddenWindows 0
+}
+OnExit ExitFunc
+if CandySel && FileExist(CandySel)
+  htmlfilepath := CandySel
+else
+  htmlfilepath := A_scriptdir "\..\..\引用程序\其它资源\WebView2\点击爆炸.html"
+generatehtml()
+openwithwebview2(htmlfilepath)
+return
+
+generatehtml()
+{
+  CssFile := A_ScriptDir "\..\..\临时目录\wallpaperpath.css"
+  try FileDelete CssFile
+  pFile := RegRead("HKEY_CURRENT_USER\Control Panel\Desktop", "WallPaper")
+  pFile := StrReplace(pFile, "\", "/")
+  css_code := 
+  (
+    'body {
+      background-image: url("file:///' pFile '");
+      background-repeat: no-repeat;  // 防止背景图平铺
+      background-size: cover;  // 图片按比例缩放，保持完整显示在背景区域
+    }
+  )'
+  FileAppend css_code, CssFile, "UTF-8-RAW"
+}
+
+openwithwebview2(filepath)
+{
+	Global
+  SplitPath filepath, &name, &dir
+	main := Gui("+Resize")
+	main.OnEvent("Close", _ExitApp)
+	main.Title := name
+	main.Show(Format("w{} h{}", A_ScreenWidth, A_ScreenHeight))
+
+	wvc := WebView2.create(main.Hwnd)
+	;msgbox main.Hwnd
+	wv := wvc.CoreWebView2
+	nwr := wv.NewWindowRequested(NewWindowRequestedHandler)
+	wv.Navigate(filepath)
+  AttachToDesktop(main.Hwnd)
+
+	NewWindowRequestedHandler(handler, wv2, arg) {
+		argp := WebView2.NewWindowRequestedEventArgs(arg)
+		deferral := argp.GetDeferral()
+		argp.NewWindow := wv2
+		deferral.Complete()
+	}
+
+	_ExitApp(*) {
+		ExitApp(0)
+	}
+}
+
+ExitFunc(*)
+{
+  global hWorkerW
+  DllCall("User32\SetParent", "Ptr", main.Hwnd, "Ptr", 0)
+  WinRedraw "ahk_id" hWorkerW
+  winhide "ahk_id" hWorkerW
+  winshow "ahk_id" hWorkerW
+  ExitApp(0)
+}
+
+AttachToDesktop(hWindow)
+{
+  global hWorkerW
+  SendMessage 0x052C, 0, 0, , "ahk_id " WinExist("ahk_class Progman")
+  Matched := WinGetList("ahk_class WorkerW")
+  for k, v in Matched
+  {
+    ; 有 SHELLDLL_DefView 的存图标，没有的存壁纸
+    if (!DllCall("FindWindowEx", "Ptr", v, "Ptr", 0, "Str", "SHELLDLL_DefView", "UPtr", 0, "Ptr"))
+      hWorkerW := v
+  }
+  DllCall("SetParent", "Ptr", hWindow, "Ptr", hWorkerW, "Ptr")
+}
+
+~lbutton::
+{
+  MouseGetPos &OutputVarX, &OutputVarY, &OutputVarWin
+  WorkerWId := WinGetID("ahk_class WorkerW")
+  if (OutputVarWin = WorkerWId)
+    ControlClick "x" OutputVarX " y" OutputVarY, "ahk_id" main.Hwnd
+}

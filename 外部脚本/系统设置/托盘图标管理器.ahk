@@ -5,44 +5,50 @@ Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\f597.ico"
 
 SendMode Input
 lv := "kong" 
-Gui Add, ListView, Grid r30 w1200 Sort gMyListView Checked AltSubmit, idx|Process|Tooltip|Visible|hwnd|主进程句柄|idcmd|pid|uid|msgid|hicon|Class|tray|xuhao
-
-ImageListID1 := IL_Create(10)
-LV_SetImageList(ImageListID1)
-
-samehwndobj := {}
-oIcons := TrayIcon_GetInfo()
-
-Loop, % oIcons.MaxIndex()
-{
-    idx:= oIcons[A_Index].idx
-    tidcmd:= oIcons[A_Index].IDcmd
-    tpid := oIcons[A_Index].pid
-    tuid := oIcons[A_Index].uid
-    tmsgid := oIcons[A_Index].msgid
-    tproc := oIcons[A_Index].Process
-    thicon := Format("0x{1:x}", oIcons[A_Index].hicon)
-    IconIndex := IL_Add(ImageListID1, "HICON:" . thicon)
-    ttip := oIcons[A_Index].tooltip
-    tClass := oIcons[A_Index].Class
-    tray := oIcons[A_Index].Tray
-    thWnd := oIcons[A_Index].hWnd
-    if !samehwndobj[thWnd]
-      samehwndobj[thWnd] := 1
-    else
-      samehwndobj[thWnd] += 1
-    hWnd := Format("0x{1:x}", thWnd)
-
-	vis := (tray == "Shell_TrayWnd") ? "Yes" : "No"
-	
-    LV_Add("Icon" . IconIndex " check", idx, tproc, ttip, vis, thwnd, hWnd, tidcmd, tpid, tuid, tmsgid, thicon, tClass, tray, samehwndobj[thWnd])
-}
-
-LV_ModifyCol()
-LV_ModifyCol(3, "AutoHdr")          
+Gui Add, ListView, Grid r20 w1200 Sort gMyListView Checked AltSubmit, idx|Process|Tooltip|Visible|hwnd|主进程句柄|idcmd|pid|uid|msgid|hicon|Class|tray|xuhao
+Gui, Add, button, gLoadTrayIconList, 重新载入
+LoadTrayIconList()
 Gui Show, Center, 系统托盘图标管理器
 lv := "man"
 Return
+
+LoadTrayIconList()
+{
+  LV_Delete()
+  ImageListID1 := IL_Create(10)
+  LV_SetImageList(ImageListID1)
+
+  samehwndobj := {}
+  oIcons := TrayIcon_GetInfo()
+
+  Loop, % oIcons.MaxIndex()
+  {
+      idx:= oIcons[A_Index].idx
+      tidcmd:= oIcons[A_Index].IDcmd
+      tpid := oIcons[A_Index].pid
+      tuid := oIcons[A_Index].uid
+      tmsgid := oIcons[A_Index].msgid
+      tproc := oIcons[A_Index].Process
+      thicon := Format("0x{1:x}", oIcons[A_Index].hicon)
+      IconIndex := IL_Add(ImageListID1, "HICON:" . thicon)
+      ttip := oIcons[A_Index].tooltip
+      tClass := oIcons[A_Index].Class
+      tray := oIcons[A_Index].Tray
+      thWnd := oIcons[A_Index].hWnd
+      if !samehwndobj[thWnd]
+        samehwndobj[thWnd] := 1
+      else
+        samehwndobj[thWnd] += 1
+      hWnd := Format("0x{1:x}", thWnd)
+
+    vis := (tray == "Shell_TrayWnd") ? "Yes" : "No"
+    
+      LV_Add("Icon" . IconIndex " check", idx, tproc, ttip, vis, thwnd, hWnd, tidcmd, tpid, tuid, tmsgid, thicon, tClass, tray, samehwndobj[thWnd])
+}
+
+LV_ModifyCol()
+LV_ModifyCol(3, "AutoHdr")
+}
 
 MyListView:
 Critical

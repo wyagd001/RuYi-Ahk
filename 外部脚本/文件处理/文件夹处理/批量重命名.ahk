@@ -303,6 +303,7 @@ runrename:
 gui, Submit, NoHide
 
 RowNumber := 0  ; 这样使得首次循环从列表的顶部开始搜索.
+FailNum += 1 := 0
 Loop
 {
 	RowNumber := LV_GetNext(RowNumber, "C")  ; 在前一次找到的位置后继续搜索.
@@ -320,8 +321,11 @@ Loop
 	{
 		newfilep := PathU(newfilep)
 		FileMove, % oldfilep, % newfilep
+    if ErrorLevel
+      FailNum += 1
 	}
 }
+CF_ToolTip("重命名执行完毕!" (FailNum ? (" " FailNum "个文件重命名失败") : ""), 2500)
 Return
 
 PathU(Filename) { ;  PathU v0.91 by SKAN on D35E/D68M @ tiny.cc/pathu
@@ -546,7 +550,7 @@ Loop % LV_GetCount()
 		Else
 			newname := SafeFileName(SubStr(A_LvFileNameNoext, 1, myedit1))
 	}
-	if newname
+	if (newname != "")
 	{
 		LV_Modify(A_index, "Check", A_index, A_LvFileName, A_LvRelPath, newname "." A_LvFileExt)
 	}

@@ -1004,7 +1004,10 @@ class Installation {
         SplitPath destPath,, &destDir
         if destDir != ""
             DirCreate destDir
-        FileMove sourcePath, destPath
+        try
+            FileMove sourcePath, destPath
+        catch as e
+            throw (e.Message := OSError().Message "`nSource: " sourcePath "`nDestination: " destPath, e.Extra := "", e)
         try this.Hashes.Delete(sourcePath)
         this.AddFileHash destPath, version
     }

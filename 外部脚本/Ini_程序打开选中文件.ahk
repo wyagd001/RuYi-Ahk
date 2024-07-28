@@ -72,13 +72,18 @@ show_openwith(obj, menu_name := ""){
 
 Menuopenwith:
 Candy_Cmd := IniMenuobj["程序"][A_ThisMenuItemPos]
-Candy_Cmd := GetStringIndex(Candy_Cmd)
+Candy_Cmd := GetStringIndex(Candy_Cmd, 1)
 run %Candy_Cmd% %CandySel%,, UseErrorLevel
 return
 
-GetStringIndex(String, Index := 1)
+GetStringIndex(String, Index := "", MaxParts := -1, SplitStr := "|")
 {
-	arrCandy_Cmd_Str := StrSplit(String, "|", " `t")
-	NewStr := arrCandy_Cmd_Str[Index]
-	return NewStr
+	arrCandy_Cmd_Str := StrSplit(String, SplitStr, " `t", MaxParts)
+	if Index
+	{
+		NewStr := arrCandy_Cmd_Str[Index]
+		return NewStr
+	}
+	else
+		return arrCandy_Cmd_Str
 }

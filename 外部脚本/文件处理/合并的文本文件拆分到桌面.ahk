@@ -1,4 +1,4 @@
-﻿;|2.7|2024.06.20|1623
+﻿;|2.7|2024.07.20|1623
 CandySel := A_Args[1]
 
 Loop, Read, % CandySel
@@ -31,6 +31,9 @@ Loop, Read, % CandySel
     File.Write("`r`n" A_LoopReadLine)
 		;FileAppend, % "`r`n" A_LoopReadLine , % Tmp_File
 }
+File.Close()
+FileSetTime, % CreateTime, % Tmp_File, C
+FileSetTime, % ModifyTime, % Tmp_File, M
 return
 
 GetStringIndex(String, Index := "", MaxParts := -1, SplitStr := "|")

@@ -1,0 +1,5 @@
+body {
+  background-image: url("file:///c:/documents and settings/administrator/desktop/ahk/如意百宝箱/临时目录/bz_1.jpg");
+  background-repeat: no-repeat;  // 防止背景图平铺
+  background-size: cover;  // 图片按比例缩放，保持完整显示在背景区域
+}

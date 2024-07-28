@@ -1,4 +1,4 @@
-﻿;|2.7|2024.07.09|1640
+﻿;|2.7|2024.07.28|1640
 #Include <WebView2>
 
 Persistent
@@ -10,28 +10,32 @@ if !CandySel
 	Try CandySel := ControlGetText("Edit1", "获取当前窗口信息_") 
 	DetectHiddenWindows 0
 }
-OpenDocxWithWebView2(CandySel)
+
+generatehtml(CandySel)
+OpenPdfWithWebView2(CandySel)
 return
 
-OpenDocxWithWebView2(pdffilepath)
+OpenPdfWithWebView2(pdffilepath)
 {
-	Global
+  Global
   SplitPath pdffilepath, &oname, &odir
   ;msgbox odir
-	main := Gui("+Resize")
-	main.OnEvent("Close", _ExitApp)
-	main.Title := oname " - Pdf 文档阅读"
-	main.Show(Format("w{} h{}", A_ScreenWidth * 0.8, A_ScreenHeight * 0.92))
+  main := Gui("+Resize")
+  main.OnEvent("Close", _ExitApp)
+  main.Title := oname " - Pdf 文档阅读"
+  main.Show(Format("w{} h{}", A_ScreenWidth * 0.8, A_ScreenHeight * 0.92))
+  
+  wvc := WebView2.create(main.Hwnd,,,,,{AdditionalBrowserArguments: "--disable-web-security='true'"})
+  ;msgbox main.Hwnd
+  wv := wvc.CoreWebView2
+  nwr := wv.NewWindowRequested(NewWindowRequestedHandler)
 
-	wvc := WebView2.create(main.Hwnd,,,,,{AdditionalBrowserArguments: "--disable-web-security='true'"})
-	;msgbox main.Hwnd
-	wv := wvc.CoreWebView2
-	nwr := wv.NewWindowRequested(NewWindowRequestedHandler)
+  ;vhn := wv.SetVirtualHostNameToFolderMapping("demo", odir, 0x2)
 
-wv.Navigate(A_ScriptDir "\..\..\引用程序\其它资源\WebView2\pdf.js\web\viewer.html")
-sleep 1000
-wv.ExecuteScript('document.querySelector("#secondaryOpenFile").click();', 0)
-SetTimer autoopenpdf, -1250
+  wv.Navigate(A_ScriptDir "\..\..\引用程序\其它资源\WebView2\pdf.js\web\viewer.html")
+  sleep 1000
+  ;wv.ExecuteScript('document.querySelector("#secondaryOpenFile").click();', 0)
+  ;SetTimer autoopenpdf, -1250
 
 	NewWindowRequestedHandler(handler, wv2, arg) {
 		argp := WebView2.NewWindowRequestedEventArgs(arg)
@@ -42,9 +46,6 @@ SetTimer autoopenpdf, -1250
 
 	_ExitApp(*) {
     Global
-    ;FileDelete odir "\docx-preview.min.js"
-    ;FileDelete odir "\jszip.min.js"
-    ;FileDelete odir "\preview.html"
     ExitApp(0)
 	}
 }
@@ -55,4 +56,22 @@ autoopenpdf()
   ControlSetText CandySel, "edit1", "ahk_class #32770"
   sleep 100
   send "{enter}"
+}
+
+generatehtml(Pdffilepath)
+{
+  OutputFile := A_ScriptDir "\..\..\临时目录\filepath.js"
+  try FileDelete OutputFile
+  FileEncoding "UTF-8-RAW"
+  pdfurl := StrReplace(Pdffilepath, "\", "/")
+
+  html_code := 
+  (
+    'document.addEventListener("webviewerloaded", function() {
+      PDFViewerApplicationOptions.set("defaultUrl", "file:///' pdfurl '");
+        });
+  )'
+
+  FileAppend html_code, OutputFile, "UTF-8"
+  sleep 300
 }

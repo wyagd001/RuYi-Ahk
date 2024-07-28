@@ -1,4 +1,4 @@
-﻿;|2.7|2024.07.08|1639
+﻿;|2.7|2024.07.28|1639
 #Include <WebView2>
 
 Persistent
@@ -39,7 +39,7 @@ OpenDocxWithWebView2(docxfilepath)
 ;vhn := wv.SetVirtualHostNameToFolderMapping("demo", A_ScriptDir "\..\..\引用程序\其它资源\WebView2\docx", 0x2)
 vhn := wv.SetVirtualHostNameToFolderMapping("demo", odir, 0x2)
 ;wv.Navigate("https://demo/preview.html")
-wv.Navigate(A_ScriptDir "\..\..\引用程序\其它资源\WebView2\docx\preview.html")
+wv.Navigate(A_ScriptDir "\..\..\临时目录\preview.html")
 
 	NewWindowRequestedHandler(handler, wv2, arg) {
 		argp := WebView2.NewWindowRequestedEventArgs(arg)
@@ -50,9 +50,6 @@ wv.Navigate(A_ScriptDir "\..\..\引用程序\其它资源\WebView2\docx\preview.
 
 	_ExitApp(*) {
     Global
-    ;FileDelete odir "\docx-preview.min.js"
-    ;FileDelete odir "\jszip.min.js"
-    ;FileDelete odir "\preview.html"
     ExitApp(0)
 	}
 }
@@ -70,8 +67,8 @@ generatehtml(docxfilepath)
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title></title>
 
-    <script src="jszip.min.js"></script>
-    <script src="docx-preview.min.js"></script>
+    <script src="../引用程序/其它资源/WebView2/docx/jszip.min.js"></script>
+    <script src="../引用程序/其它资源/WebView2/docx/docx-preview.min.js"></script>
     <script>
 
         function load(name) {
@@ -103,11 +100,8 @@ load("' oname '");
 </html>
 )'
 
-try FileDelete A_ScriptDir "\..\..\引用程序\其它资源\WebView2\docx\preview.html"
+try FileDelete A_ScriptDir "\..\..\临时目录\preview.html"
 sleep 300
-FileAppend html_code, A_ScriptDir "\..\..\引用程序\其它资源\WebView2\docx\preview.html", "`UTF-8"
+FileAppend html_code, A_ScriptDir "\..\..\临时目录\preview.html", "`UTF-8"
 sleep 300
-;Try FileCopy A_ScriptDir "\..\..\引用程序\其它资源\WebView2\docx\docx-preview.min.js", odir, 0
-;Try FileCopy A_ScriptDir "\..\..\引用程序\其它资源\WebView2\docx\jszip.min.js", odir, 0
-;Try FileCopy A_ScriptDir "\..\..\引用程序\其它资源\WebView2\docx\preview.html", odir, 0
 }

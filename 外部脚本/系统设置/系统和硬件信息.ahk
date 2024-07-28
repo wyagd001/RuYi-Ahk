@@ -1,4 +1,4 @@
-﻿;|2.7|2023.06.17|1611
+﻿;|2.7|2024.07.14|1611
 ; A_Variables - AutoHotkey Built-in Variables v1.1.2
 #SingleInstance Force
 #NoEnv
@@ -84,6 +84,8 @@ While DesktopMonitorProperties[objProperty]
 	B_index ++
 	YingJianObj["显示器" B_Index] := {}
 	YingJianObj["显示器" B_Index]["型号"] := substr(objProperty["PNPDeviceID"], 9, instr(objProperty["PNPDeviceID"], "\", , 10)-9)
+	YingJianObj["显示器" B_Index]["宽"] := objProperty["ScreenWidth"]
+	YingJianObj["显示器" B_Index]["高"] := objProperty["ScreenHeight"]
 }
 B_Index := 0
 DskObj := MSFT_PhysicalDisk()
@@ -161,11 +163,14 @@ While DisplayProperties[objProperty]
 	YingJianObj["显卡" B_Index]["名称"] := objProperty["DeviceName"]
 	YingJianObj["显卡" B_Index]["版本号"] := objProperty["DriverVersion"]
 }
+B_Index := 0
 While VideoControlProperties[objProperty]
 {
-	YingJianObj["GPU"] := {}
-	YingJianObj["GPU"]["名称"] := objProperty["Caption"]
-	YingJianObj["GPU"]["描述"] := objProperty["Description"]
+  B_index ++
+	YingJianObj["GPU" B_Index] := {}
+	YingJianObj["GPU" B_Index]["名称"] := objProperty["Caption"]
+	YingJianObj["GPU" B_Index]["宽"] := objProperty["CurrentHorizontalResolution"]
+	YingJianObj["GPU" B_Index]["高"] := objProperty["CurrentVerticalResolution"]
 }
 B_Index := 0
 While PrinterProperties[objProperty]
@@ -287,7 +292,7 @@ A.Push(["CPU", YingJianObj["CPU"]["型号"] " (" YingJianObj["CPU"]["核"] " 核
 B_Index := 1
 while IsObject(YingJianObj["显示器" B_Index])
 {
-	A.Push(["显示器" B_Index, YingJianObj["显示器" B_Index]["型号"], 180])
+	A.Push(["显示器" B_Index, YingJianObj["显示器" B_Index]["型号"] " " YingJianObj["显示器" B_Index]["宽"] "×" YingJianObj["显示器" B_Index]["高"], 180])
 	B_Index ++
 }
 B_Index := 1
@@ -309,7 +314,12 @@ while IsObject(YingJianObj["显卡" B_Index])
 	A.Push(["显卡" B_Index, YingJianObj["显卡" B_Index]["名称"] " " YingJianObj["显卡"]["版本号"], 180])
 	B_Index ++
 }
-;A.Push(["GPU", YingJianObj["GPU"]["名称"] " " YingJianObj["GPU"]["描述"], 180])
+B_Index := 1
+while IsObject(YingJianObj["GPU" B_Index])
+{
+  A.Push(["GPU" B_Index, YingJianObj["GPU" B_Index]["名称"] " " YingJianObj["GPU" B_Index]["宽"] "×" YingJianObj["GPU" B_Index]["高"], 180])
+	B_Index ++
+}
 A.Push(["网络适配器1", YingJianObj["网络适配器1"]["名称"]  " (" Ceil(YingJianObj["网络适配器1"]["speed"]) " MB)", 180, "网络连接"])
 B_Index := 1
 while IsObject(YingJianObj["打印机" B_Index])

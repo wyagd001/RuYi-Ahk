@@ -63,7 +63,7 @@ return
 
 MenuHandler:
 ;msgbox % IniMenuobj["对话框"][A_ThisMenuItemPos]
-dpath := GetStringIndex(IniMenuobj["对话框"][A_ThisMenuItemPos])
+dpath := GetStringIndex(IniMenuobj["对话框"][A_ThisMenuItemPos], 1)
 ;msgbox % dpath
 gosub Cando_Dialogsetpath
 return
@@ -886,9 +886,14 @@ RemoveToolTip:
 return
 }
 
-GetStringIndex(String, Index := 1)
+GetStringIndex(String, Index := "", MaxParts := -1, SplitStr := "|")
 {
-	arrCandy_Cmd_Str := StrSplit(String, "|", " `t")
-	NewStr := arrCandy_Cmd_Str[Index]
-	return NewStr
+	arrCandy_Cmd_Str := StrSplit(String, SplitStr, " `t", MaxParts)
+	if Index
+	{
+		NewStr := arrCandy_Cmd_Str[Index]
+		return NewStr
+	}
+	else
+		return arrCandy_Cmd_Str
 }

@@ -181,12 +181,14 @@ searchArr(arr, bAddPy:=false, bDistinct:=false) {
     oCB1 := oGui.Add("Checkbox", "yp checked", arrField[2])
     oCB2 := oGui.Add("Checkbox", "yp", arrField[3])
     ;添加按键显示结果(点击复制)
-    oButton1 := oGui.add("button", "w200 xs cRed")
+    oButton1 := oGui.add("button", "w200 xs cRed vbtn1")
     oButton1.OnEvent("click", (ctl, p*)=>A_Clipboard := ctl.text)
     if (arrNew[1].length > 2) {
         oButton2 := oGui.add("button", "w500 yp xp+300 cRed")
         oButton2.OnEvent("click", (ctl, p*)=>A_Clipboard := ctl.text)
     }
+    oButton3 := oGui.add("button", "yp xp+220", "结束所有")
+    oButton3.OnEvent("Click", KillAllProcess)
     ;ListView 标题名
     ;field := 65
     oLv := oGui.AddListView("vlv1 xs r20 cRed w900", arrField) ;NOTE selectN 要用 lv1 获取控件，不要用 oLv(影响释放)
@@ -298,5 +300,17 @@ searchArr(arr, bAddPy:=false, bDistinct:=false) {
     }
     exitfun(){
       ExitApp(0)
+    }
+    KillAllProcess(*)
+    {
+      proname := oButton1.text
+      b_index := 0
+      While ProcessExist(proname)
+      {
+        ProcessClose proname
+        b_index += 1
+        if (b_index > 25)
+          break
+      }
     }
 }

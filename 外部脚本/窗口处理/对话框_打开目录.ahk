@@ -8,7 +8,7 @@ AllOpenFolder := GetAllWindowOpenFolder()
 
 for k,v in IniMenuobj["对话框"]
 {
-	SubMenuName := GetStringIndex(v)
+	SubMenuName := GetStringIndex(v, 1)
 	Menu JumpToFavFolder, add, %SubMenuName%, Windo_JumpToFolder
 }
 Menu DialogMenu, Add, 收藏的文件夹, :JumpToFavFolder
@@ -171,9 +171,14 @@ RunScript(script, WaitResult:="false")
 return
 }
 
-GetStringIndex(String, Index := 1)
+GetStringIndex(String, Index := "", MaxParts := -1, SplitStr := "|")
 {
-	arrCandy_Cmd_Str := StrSplit(String, "|", " `t")
-	NewStr := arrCandy_Cmd_Str[Index]
-	return NewStr
+	arrCandy_Cmd_Str := StrSplit(String, SplitStr, " `t", MaxParts)
+	if Index
+	{
+		NewStr := arrCandy_Cmd_Str[Index]
+		return NewStr
+	}
+	else
+		return arrCandy_Cmd_Str
 }

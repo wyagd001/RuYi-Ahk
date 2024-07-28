@@ -4724,8 +4724,8 @@ const defaultOptions = {
   }
 };
 {
-  defaultOptions.defaultUrl = {
-    value: "blank.pdf",
+   defaultOptions.defaultUrl = {
+value: "file://pdffilepath",
     kind: OptionKind.VIEWER
   };
   defaultOptions.sandboxBundleSrc = {

@@ -189,9 +189,9 @@ obj2ini(obj, file){
 Return 1
 }
 
-GetStringIndex(String, Index := "")
+GetStringIndex(String, Index := "", MaxParts := -1, SplitStr := "|")
 {
-	arrCandy_Cmd_Str := StrSplit(String, "|", " `t")
+	arrCandy_Cmd_Str := StrSplit(String, SplitStr, " `t", MaxParts)
 	if Index
 	{
 		NewStr := arrCandy_Cmd_Str[Index]
