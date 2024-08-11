@@ -1,4 +1,4 @@
-﻿;|2.7|2024.07.07|1330
+﻿;|2.7|2024.08.07|1330
 ;date=20170101
 ;MsgBox,% Date_GetDate(date)
 ;MsgBox,% Date_GetDate(date,1) ;闰5月
@@ -37,8 +37,6 @@ JCTF:
 			TX .= "今天是除夕`n"
 		}
 	}
-	if tx
-		msgbox % tx
 
 	aTX =
 	CFArray := {"公历新年": "0101", "情人节": "0214", "劳动节": "0501", "儿童节": "0601", "建党节": "0701", "建军节": "0801", "教师节": "0910", "国庆节": "1001", "圣诞节": "1225"}
@@ -67,18 +65,21 @@ JCTF:
 	Easterdata := A_YYYY Easter(A_YYYY)
 	if (Easterdata = today)
 		aTX .= "今天是复活节`n"
-	if atx
+	if atx or TX
   {
     if WinExist("AppBarWin ahk_class AutoHotkeyGUI")
     {
       loop 3
       {
-        h := ExecSendToRuyi(strreplace(atx, "今天是") "|red",, 1527)
+        h := ExecSendToRuyi(strreplace(TX, "今天是") "`n" strreplace(atx, "今天是") "|red",, 1527)
         if h
           break
       }
     }
-    msgbox % atx
+    if TX
+      msgbox % TX
+    else if atx
+      msgbox % atx
   }
 return
 

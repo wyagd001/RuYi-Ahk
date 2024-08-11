@@ -320,7 +320,7 @@ while IsObject(YingJianObj["GPU" B_Index])
   A.Push(["GPU" B_Index, YingJianObj["GPU" B_Index]["名称"] " " YingJianObj["GPU" B_Index]["宽"] "×" YingJianObj["GPU" B_Index]["高"], 180])
 	B_Index ++
 }
-A.Push(["网络适配器1", YingJianObj["网络适配器1"]["名称"]  " (" Ceil(YingJianObj["网络适配器1"]["speed"]) " MB)", 180, "网络连接"])
+A.Push(["网络适配器1", YingJianObj["网络适配器1"]["名称"]  " (" Ceil(YingJianObj["网络适配器1"]["speed"]) " MB) " YingJianObj["网络适配器1"]["显示名称"], 180, "网络连接"])
 B_Index := 1
 while IsObject(YingJianObj["打印机" B_Index])
 {

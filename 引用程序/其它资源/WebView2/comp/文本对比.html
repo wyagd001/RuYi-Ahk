@@ -1,0 +1,53 @@
+﻿<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+
+<head>
+    <meta charset="UTF-8">
+    <title>文本比对</title>
+    <link rel="stylesheet" href="codemirror.min.css">
+    <link rel="stylesheet" href="merge.css">
+    <script
+        src="jquery.min.js">
+    </script>
+    <style>
+    .CodeMirror-merge, .CodeMirror-merge .CodeMirror {
+	    height: 98vh;
+	}
+    </style>
+</head>
+
+<body>
+    <div id="code_view"></div>
+
+
+    <script
+        src="diff_match_patch.js">
+    </script>
+    <script
+        src="codemirror.min.js">
+    </script>
+    <script
+        src="merge.js">
+    </script>
+
+    <script>
+        var leftValue = ";|2.7|2024.07.08|1639\n#Include <WebView2>\n\nPersistent\nCandySel := \"\"\nTry CandySel := A_Args[1]\nif !CandySel\n{\n	DetectHiddenWindows 1\n	Try CandySel := ControlGetText(\"Edit1\", \"获取当前窗口信息_\") \n	DetectHiddenWindows 0\n}\ngeneratehtml(CandySel)\nOpenDocxWithWebView2(CandySel)\nreturn\n\n\/*\nq::\n{\nSplitPath CandySel, &oname, &odir\nwv.ExecuteScript(\'load(\"\' oname \'\");\', 0)\n}\n*\/\n\nOpenDocxWithWebView2(docxfilepath)\n{\n	Global\n  SplitPath docxfilepath, &oname, &odir\n  ;msgbox odir\n	main := Gui(\"+Resize\")\n	main.OnEvent(\"Close\", _ExitApp)\n	main.Title := oname \" - Docx 文档阅读\"\n	main.Show(Format(\"w{} h{}\", A_ScreenWidth * 0.8, A_ScreenHeight * 0.92))\n\n	wvc := WebView2.create(main.Hwnd,,,,,{AdditionalBrowserArguments: \"--disable-web-security=\'true\'\"})\n	;msgbox main.Hwnd\n	wv := wvc.CoreWebView2\n	nwr := wv.NewWindowRequested(NewWindowRequestedHandler)\n;vhn := wv.SetVirtualHostNameToFolderMapping(\"demo\", A_ScriptDir \"\\..\\..\\引用程序\\其它资源\\WebView2\\docx\", 0x2)\nvhn := wv.SetVirtualHostNameToFolderMapping(\"demo\", odir, 0x2)\n;wv.Navigate(\"https:\/\/demo\/preview.html\")\nwv.Navigate(A_ScriptDir \"\\..\\..\\引用程序\\其它资源\\WebView2\\docx\\preview.html\")\n\n	NewWindowRequestedHandler(handler, wv2, arg) {\n		argp := WebView2.NewWindowRequestedEventArgs(arg)\n		deferral := argp.GetDeferral()\n		argp.NewWindow := wv2\n		deferral.Complete()\n	}\n\n	_ExitApp(*) {\n    Global\n    ;FileDelete odir \"\\docx-preview.min.js\"\n    ;FileDelete odir \"\\jszip.min.js\"\n    ;FileDelete odir \"\\preview.html\"\n    ExitApp(0)\n	}\n}\n\ngeneratehtml(docxfilepath)\n{\n  SplitPath docxfilepath, &oname, &odir\n  html_code := \n(\n\'<!DOCTYPE html>\n<html>\n\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title><\/title>\n\n    <script src=\"jszip.min.js\"><\/script>\n    <script src=\"docx-preview.min.js\"><\/script>\n    <script>\n\n        function load(name) {\n           fetch(\"https:\/\/demo\/\" + name)\n                .then(resp => resp.blob())\n                .then(\n                    blobData => {\n                        docx.renderAsync(blobData, document.getElementById(\"container\")).then(x => console.log(\"docx: finished\"));\n                    })}\n        \n    <\/script>\n<script>\nwindow.onload = () => {\nload(\"\' oname \'\");\n}\n<\/script>\n    <style>\n        body,\n        html {\n            margin: 0;\n        }\n    <\/style>\n<\/head>\n\n<body>\n    <div id=\"container\"><\/div>\n<\/body>\n\n<\/html>\n)\'\n\ntry FileDelete A_ScriptDir \"\\..\\..\\引用程序\\其它资源\\WebView2\\docx\\preview.html\"\nsleep 300\nFileAppend html_code, A_ScriptDir \"\\..\\..\\引用程序\\其它资源\\WebView2\\docx\\preview.html\", \"`UTF-8\"\nsleep 300\n;Try FileCopy A_ScriptDir \"\\..\\..\\引用程序\\其它资源\\WebView2\\docx\\docx-preview.min.js\", odir, 0\n;Try FileCopy A_ScriptDir \"\\..\\..\\引用程序\\其它资源\\WebView2\\docx\\jszip.min.js\", odir, 0\n;Try FileCopy A_ScriptDir \"\\..\\..\\引用程序\\其它资源\\WebView2\\docx\\preview.html\", odir, 0\n}";
+        var rightValue = ";|2.7|2024.06.07|1638\n#Include <WebView2>\n\nPersistent\nCandySel := \"\"\nTry CandySel := A_Args[1]\nif !CandySel\n{\n	DetectHiddenWindows 1\n	Try CandySel := ControlGetText(\"Edit1\", \"获取当前窗口信息_\") \n	DetectHiddenWindows 0\n}\n;generatehtml()\nopenpdfwithwebview2(CandySel)\nreturn\n\nopenpdfwithwebview2(pdffilepath)\n{\n	Global\n  SplitPath pdffilepath, &name, &dir\n	main := Gui(\"+Resize\")\n	main.OnEvent(\"Close\", _ExitApp)\n	main.Title := name \" - Pdf 文件阅读\"\n	main.Show(Format(\"w{} h{}\", A_ScreenWidth * 0.8, A_ScreenHeight * 0.92))\n\n	wvc := WebView2.create(main.Hwnd)\n	;msgbox main.Hwnd\n	wv := wvc.CoreWebView2\n	nwr := wv.NewWindowRequested(NewWindowRequestedHandler)\n	wv.Navigate(pdffilepath)\n\n	NewWindowRequestedHandler(handler, wv2, arg) {\n		argp := WebView2.NewWindowRequestedEventArgs(arg)\n		deferral := argp.GetDeferral()\n		argp.NewWindow := wv2\n		deferral.Complete()\n	}\n\n	_ExitApp(*) {\n		ExitApp(0)\n	}\n}";
+        var t = document.getElementById("code_view");
+        CodeMirror.MergeView(t, {
+            value: leftValue,
+            lineWrapping: true,
+            origLeft: null,
+            orig: rightValue,
+            lineNumbers: true,
+            mode: "text/plain",
+            highlightDifferences: true,
+            connect: null,
+            collapseIdentical: false,
+            allowEditingOriginals: true
+        })
+    </script>
+</body>
+
+</html>

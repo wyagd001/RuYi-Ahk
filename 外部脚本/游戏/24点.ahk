@@ -6,20 +6,20 @@ Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e75f.ico"
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e94d.ico"
 Gui, Add, Text, x5 y5, 请输入 4 个数字:
-Gui, Add, Edit, xp yp+25  w60 h25 vnum1 gnext, 
-Gui, Add, Edit, xp+70 yp w60 h25 vnum2 gnext,
-Gui, Add, Edit, xp+70 yp w60 h25 vnum3 gnext,
-Gui, Add, Edit, xp+70 yp w60 h25 vnum4 gnext,
-Gui, Add, Button, xp+70 yp w90 ggenresult default, 显示计算结果
+Gui, Add, Edit, xp yp+25 w80 h25 vnum1 gnext, 
+Gui, Add, Edit, xp+83 yp w80 h25 vnum2 gnext,
+Gui, Add, Edit, xp+83 yp w80 h25 vnum3 gnext,
+Gui, Add, Edit, xp+83 yp w80 h25 vnum4 gnext,
+Gui, Add, Button, xp+90 yp w90 ggenresult default, 显示计算结果
 if (showmode = "listview")
-  Gui, Add, ListView, x5 yp+30 r30 w270 vMyresultList, a|b|c|d
+  Gui, Add, ListView, x5 yp+30 r40 w330 vMyresultList, a|b|c|d
 else
-  Gui, Add, Edit, x5 yp+30 w270 r30 vresultedit,
+  Gui, Add, Edit, x5 yp+30 w330 r40 vresultedit,
 LV_ModifyCol(1, 85)
 LV_ModifyCol(2, 85)
 LV_ModifyCol(3, 85)
 LV_ModifyCol(4, 0)
-Gui, Add, Button, xp+280 yp w90 grandomnum, 随机生成
+Gui, Add, Button, xp+340 yp w90 grandomnum, 随机生成
 Gui, Add, Button, xp yp+30 w90 gclear, 一键清空
 gui, Show,, 24 点计算
 return
@@ -43,18 +43,18 @@ if (showmode = "listview")
   Arr := StrSplit(result, "`n")
   for k, v in Arr
   {
-    if A_Index <= 25
+    if A_Index <= 50
       LV_Add(, v)
-    else if ((A_Index > 25) && (A_Index <= 50))
-      LV_Modify(A_Index - 25, "col2", v)
-    else if ((A_Index > 50) && (A_Index <= 75))
+    else if ((A_Index > 50) && (A_Index <= 100))
+      LV_Modify(A_Index - 50, "col2", v)
+    else if ((A_Index > 100) && (A_Index <= 150))
     {
-      LV_Modify(A_Index - 50, "col3", v)
+      LV_Modify(A_Index - 100, "col3", v)
       ;FileAppend((A_Index - 50) v "`n")
     }
-    else if ((A_Index > 75) && (A_Index <= 100))
+    else if ((A_Index > 150) && (A_Index <= 200))
     {
-      LV_Modify(A_Index - 75, "col4", v)
+      LV_Modify(A_Index - 150, "col4", v)
       ;FileAppend((A_Index - 75) v "`n")
     }
     ;FileAppend(A_Index "`n")

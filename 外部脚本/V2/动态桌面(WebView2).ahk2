@@ -1,4 +1,4 @@
-﻿;|2.7|2024.07.28|1638
+﻿;|2.7|2024.07.28|1645
 #Include <WebView2>
 
 Persistent
@@ -40,7 +40,7 @@ openwithwebview2(filepath)
 {
 	Global
   SplitPath filepath, &name, &dir
-	main := Gui("+Resize")
+	main := Gui("+Resize ToolWindow")
 	main.OnEvent("Close", _ExitApp)
 	main.Title := name
 	main.Show(Format("w{} h{}", A_ScreenWidth, A_ScreenHeight))
@@ -50,6 +50,7 @@ openwithwebview2(filepath)
 	wv := wvc.CoreWebView2
 	nwr := wv.NewWindowRequested(NewWindowRequestedHandler)
 	wv.Navigate(filepath)
+  sleep 1500
   AttachToDesktop(main.Hwnd)
 
 	NewWindowRequestedHandler(handler, wv2, arg) {
@@ -68,6 +69,7 @@ ExitFunc(*)
 {
   global hWorkerW
   DllCall("User32\SetParent", "Ptr", main.Hwnd, "Ptr", 0)
+  DetectHiddenWindows 1
   WinRedraw "ahk_id" hWorkerW
   winhide "ahk_id" hWorkerW
   winshow "ahk_id" hWorkerW
@@ -85,7 +87,16 @@ AttachToDesktop(hWindow)
     if (!DllCall("FindWindowEx", "Ptr", v, "Ptr", 0, "Str", "SHELLDLL_DefView", "UPtr", 0, "Ptr"))
       hWorkerW := v
   }
-  DllCall("SetParent", "Ptr", hWindow, "Ptr", hWorkerW, "Ptr")
+  if (A_OSVersion!="6.1.7601")
+  {
+    DllCall("SetParent", "Ptr", hWindow, "Ptr", hWorkerW, "Ptr")
+  }
+  else
+  {
+    Progman := DllCall("User32.dll\FindWindowW", "Str", "Progman", "UPtr", 0, "Ptr")
+    DllCall("SetParent", "Ptr", hWindow, "Ptr", Progman, "Ptr")
+    Winhide "ahk_id" hWorkerW
+  }
 }
 
 ~lbutton::

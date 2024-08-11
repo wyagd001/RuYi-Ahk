@@ -30,7 +30,7 @@ class WebView2 extends WebView2.Base {
 				dllPath := t
 			if (!edgeruntime) {
 				ver := '0.0.0.0'
-				for root in [EnvGet('ProgramFiles(x86)'), A_AppData '\..\Local']
+				for root in [EnvGet('ProgramFiles(x86)'), A_AppData '\..\Local', EnvGet('ProgramFiles')]
 					loop files root '\Microsoft\EdgeWebView\Application\*', 'D'
 						if RegExMatch(A_LoopFilePath, '\\([\d.]+)$', &m) && VerCompare(m[1], ver) > 0
 							edgeruntime := A_LoopFileFullPath, ver := m[1]
@@ -40,6 +40,7 @@ class WebView2 extends WebView2.Base {
 					options.TargetCompatibleBrowserVersion := ver
 				options := WebView2.EnvironmentOptions(options)
 			}
+;msgbox dllpath
 			DllCall(dllPath '\CreateCoreWebView2EnvironmentWithOptions', 'str', edgeruntime,
 				'str', datadir || RegExReplace(A_AppData, 'Roaming$', 'Local\Microsoft\Edge\User Data'), 'ptr', options,
 				'ptr', WebView2.Handler(EnvironmentCompleted_Invoke), 'hresult')

@@ -3,7 +3,7 @@ CandySel := A_Args[1]
 param := A_Args[2]
 if !param
 	param := "文件夹"
-if (param="文件夹")
+if (param = "文件夹")
 	gosub 新建文件夹
 else
 	gosub 新建文本文档
@@ -19,7 +19,15 @@ if WinActive("ahk_class TTOTAL_CMD")
 	TC_SendMsg(540)
 }
 Else If !IsRenaming()   ; win 7 以上系统自带的新建文件夹的快捷键
-	Send ^+n
+{
+  if !Instr(A_clipboard, "\")
+    Send ^+n
+  else if !Instr(A_clipboard, ":")
+  {
+    CurrentFolder := GetCurrentFolder()
+    CreateFolder(CurrentFolder A_clipboard)
+  }
+}
 Return
 
 新建文本文档:
@@ -327,8 +335,7 @@ CreateNewTextFile(CurrentFolder:="")
 	TextTranslated := TranslateMUI("notepad.exe", 470) ; "New Textfile"
 	if (CurrentFolder = "")
 		CurrentFolder := GetCurrentFolder()
-		CurrentFolder := GetCurrentFolder()
-	If (CurrentFolder = 0)
+	If !CurrentFolder
 		Return
 	Testpath := CurrentFolder "\" TextTranslated ".txt"
 	Testpath := PathU(Testpath)
@@ -585,4 +592,19 @@ strTrimLeft(string,trim)
 strEndsWith(string,end)
 {
 	Return strlen(end)<=strlen(string) && Substr(string,-strlen(end)+1)=end
+}
+
+CreateFolder(filepath)
+{
+  if !RegExMatch(filepath, "i)\\.*\..*$")
+  {
+    if !InStr(FileExist(filepath), "D")
+      FileCreateDir % filepath
+  }
+  else
+  {
+    SplitPath, filepath,, OutDir
+    if !InStr(FileExist(OutDir), "D")
+      FileCreateDir % OutDir
+  }
 }

@@ -1,0 +1,39 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+
+    <script src="jszip.min.js"></script>
+    <script src="docx-preview.min.js"></script>
+    <script>
+
+        function load(name) {
+           fetch("https://demo/" + name)
+                .then(resp => resp.blob())
+                .then(
+                    blobData => {
+                        docx.renderAsync(blobData, document.getElementById("container")).then(x => console.log("docx: finished"));
+                    })}
+
+    </script>
+<script>
+window.onload = () => {
+load("2.docx(文件名)");
+}
+</script>
+    <style>
+        body,
+        html {
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+</body>
+
+</html>
