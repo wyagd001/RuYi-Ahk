@@ -1,13 +1,13 @@
-﻿;|2.0|2023.07.01|1003
+﻿;|2.7|2024.08.18|1003
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\E71D.ico"
-global A_icon := Object("收藏夹", "{323CA680-C24D-4099-B94D-446DD2D7249E}", "库", "{031E4825-7B94-4dc3-B131-E946B44C8DD5}", "家庭组", "{B4FB3F98-C1EA-428d-A78A-D1F5659CBA93}", "网络", "{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}", "OneDrive", "{018D5C66-4533-4307-9B53-224DE2ED1FE6}", "快速访问", "{679f85cb-0220-4080-b29b-5540cc05aab6}")
-global A_iconev := Object("收藏夹", "a0900100", "库", "b080010d", "家庭组", "b084010c", "网络", "b0040064", "OneDrive", "f080004d", "快速访问", "a0100000")
-global A_icondv := Object("收藏夹", "a9400100", "库", "b090010d", "家庭组", "b094010c", "网络", "b0940064", "OneDrive", "f090004d", "快速访问", "a0600000")
-global A_iconDy := Object("收藏夹", "vfav", "库", "vlib", "家庭组", "vhomegroup", "网络", "vweb", "OneDrive", "voned", "快速访问", "vquickac")
-global A_iconDy2 := Object("收藏夹", "vfav_32", "库", "vlib_32", "家庭组", "vhomegroup_32", "网络", "vweb_32", "OneDrive", "voned_32", "快速访问", "vquickac_32")
-global A_iconSt := Object("收藏夹", 0, "库", 0, "家庭组", 0, "网络", 0, "OneDrive", 0, "快速访问", 0)
-global A_iconSt2 := Object("收藏夹", 0, "库", 0, "家庭组", 0, "网络", 0, "OneDrive", 0, "快速访问", 0)
+global A_icon := Object("收藏夹", "{323CA680-C24D-4099-B94D-446DD2D7249E}", "库", "{031E4825-7B94-4dc3-B131-E946B44C8DD5}", "家庭组", "{B4FB3F98-C1EA-428d-A78A-D1F5659CBA93}", "网络", "{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}", "OneDrive", "{018D5C66-4533-4307-9B53-224DE2ED1FE6}", "快速访问", "{679f85cb-0220-4080-b29b-5540cc05aab6}", "控制面板", "{26EE0668-A00A-44D7-9371-BEB064C98683}")
+global A_iconev := Object("收藏夹", "a0900100", "库", "b080010d", "家庭组", "b084010c", "网络", "b0040064", "OneDrive", "f080004d", "快速访问", "a0100000", "控制面板", "a0000004")
+global A_icondv := Object("收藏夹", "a9400100", "库", "b090010d", "家庭组", "b094010c", "网络", "b0940064", "OneDrive", "f090004d", "快速访问", "a0600000", "控制面板", "a0100004")
+global A_iconDy := Object("收藏夹", "vfav", "库", "vlib", "家庭组", "vhomegroup", "网络", "vweb", "OneDrive", "voned", "快速访问", "vquickac", "控制面板", "vcontr")
+global A_iconDy2 := Object("收藏夹", "vfav_32", "库", "vlib_32", "家庭组", "vhomegroup_32", "网络", "vweb_32", "OneDrive", "voned_32", "快速访问", "vquickac_32", "控制面板", "vcontr_32")
+global A_iconSt := Object("收藏夹", 0, "库", 0, "家庭组", 0, "网络", 0, "OneDrive", 0, "快速访问", 0, "控制面板", 0)
+global A_iconSt2 := Object("收藏夹", 0, "库", 0, "家庭组", 0, "网络", 0, "OneDrive", 0, "快速访问", 0, "控制面板", 0)
 for key in A_icon
 {
 	A_iconSt[key] := readshoworhide(key)
@@ -74,7 +74,7 @@ Gui, Add, CheckBox, % "xp+150 yp w80 h20 vvquickac_32 Checked" A_iconSt2["快速
 
 Gui, Tab, 其他文件夹
 Gui, Add, GroupBox, x10 y30 w500 h120, 待定
-Gui, Add, CheckBox, % "xp+10 yp+30 w120 h20 vv3d Checked" A_iconSt["3d"], 无项目
+Gui, Add, CheckBox, % "xp+10 yp+30 w120 h20 vvcontr Checked" A_iconSt["控制面板"], 控制面板
 ;Gui, Add, CheckBox, % "xp+150 yp w120 h20 vvpicture Checked" A_iconSt["图片"], 图片
 ;Gui, Add, CheckBox, % "xp-150 yp+30 w120 h20 vvdocument Checked" A_iconSt["文档"], 文档
 ;Gui, Add, CheckBox, % "xp+150 yp w120 h20 vvdownload Checked" A_iconSt["下载"], 下载
@@ -82,7 +82,7 @@ Gui, Add, CheckBox, % "xp+10 yp+30 w120 h20 vv3d Checked" A_iconSt["3d"], 无项
 ;Gui, Add, CheckBox, % "xp+150 yp w120 h20 vvdesktop Checked" A_iconSt["桌面"], 桌面
 
 Gui, Add, GroupBox, x10 y165 w500 h120, 32位程序打开对话框
-Gui, Add, CheckBox, % "xp+10 yp+30 w120 h20 vv3d_32 Checked" A_iconSt2["3d"], 无项目
+Gui, Add, CheckBox, % "xp+10 yp+30 w120 h20 vvcontr_32 Checked" A_iconSt2["3d"], 控制面板
 
 gui, show, , 资源管理器导航栏项目的显示/隐藏
 return

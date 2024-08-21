@@ -30,7 +30,7 @@ generatehtml()
     'body {
       background-image: url("file:///' pFile '");
       background-repeat: no-repeat;  // 防止背景图平铺
-      background-size: cover;  // 图片按比例缩放，保持完整显示在背景区域
+      background-size: contain;  // 图片按比例缩放，保持完整显示在背景区域
     }
   )'
   FileAppend css_code, CssFile, "UTF-8-RAW"
@@ -40,7 +40,7 @@ openwithwebview2(filepath)
 {
 	Global
   SplitPath filepath, &name, &dir
-	main := Gui("+Resize ToolWindow")
+	main := Gui("+Resize ToolWindow -Caption")
 	main.OnEvent("Close", _ExitApp)
 	main.Title := name
 	main.Show(Format("w{} h{}", A_ScreenWidth, A_ScreenHeight))
@@ -70,9 +70,9 @@ ExitFunc(*)
   global hWorkerW
   DllCall("User32\SetParent", "Ptr", main.Hwnd, "Ptr", 0)
   DetectHiddenWindows 1
-  WinRedraw "ahk_id" hWorkerW
-  winhide "ahk_id" hWorkerW
-  winshow "ahk_id" hWorkerW
+  try WinRedraw "ahk_id" hWorkerW
+  try winhide "ahk_id" hWorkerW
+  try winshow "ahk_id" hWorkerW
   ExitApp(0)
 }
 
@@ -95,12 +95,13 @@ AttachToDesktop(hWindow)
   {
     Progman := DllCall("User32.dll\FindWindowW", "Str", "Progman", "UPtr", 0, "Ptr")
     DllCall("SetParent", "Ptr", hWindow, "Ptr", Progman, "Ptr")
-    Winhide "ahk_id" hWorkerW
+    try Winhide "ahk_id" hWorkerW
   }
 }
 
 ~lbutton::
 {
+  CoordMode "Mouse", "Screen"
   MouseGetPos &OutputVarX, &OutputVarY, &OutputVarWin
   WorkerWId := WinGetID("ahk_class WorkerW")
   if (OutputVarWin = WorkerWId)

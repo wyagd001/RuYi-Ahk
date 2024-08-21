@@ -1,3 +1,4 @@
+;|2.7|2024.08.02|1653辅助一
 #Include "H:\备份\资料备份\脚本收集\AutoHotkey\Ahk_L\其他语言\RapidOcr\RapidOcrOnnx\RapidOcrOnnx.ahk"
 CandySel := A_Args[1]
 CandySel2 := A_Args[2]

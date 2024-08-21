@@ -1,0 +1,160 @@
+﻿;|2.7|2024.08.12|1656
+; 来源网址: https://www.autohotkey.com/boards/viewtopic.php?f=83&t=110405&sid=827737fa77efd160f7fe7b331d05fa6c
+#Requires AutoHotkey v2
+Windy_CurWin_Id := A_Args[1]
+
+;list files opened by VLC player
+FilesMap := GetOpenedFiles( WinGetPID("ahk_id" Windy_CurWin_Id) )
+For _, Filepath in FilesMap
+    Files .= Filepath "`n" 
+GuiText(Files, "加载的文件", 500)
+;ExitApp
+
+GuiText(Gtext, Title:="", w:=300, l:=20)
+{
+	global myedit, MyGui, GuiCtrl
+  MyGui := Gui("+Resize", Title)
+  myGui.onevent('size', gui_size)
+	;MyGui.Destroy()
+  GuiCtrl := MyGui.Add("Edit", "Multi readonly vmyedit w" w " r" l, "")
+	GuiCtrl.Value := Gtext
+  MyGui.Show("AutoSize")
+	return
+
+Gui_Size(myGui, MinMax, Width, Height)
+{
+  ;global GuiCtrl
+  If (minmax = -1)
+   Return
+  AutoXYWH("wh", GuiCtrl)
+}
+}
+
+;GetOpenedFiles(PID): return a Map with all filepaths opened in a process (PID)
+;  2020-05-31 v1 teadrinker                               https://www.autohotkey.com/r?p=332647
+;  2022-11-12 v2.beta14 neogna2                           https://www.autohotkey.com/r?p=490815
+GetOpenedFiles(PID) {
+    FilesMap := Map()
+    static PROCESS_DUP_HANDLE := 0x0040
+    hProcess := DllCall("OpenProcess"
+        , "UInt", PROCESS_DUP_HANDLE
+        , "UInt", 0
+        , "UInt", PID
+        , "Ptr")
+
+    ;https://learn.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntquerysysteminformation
+    ;https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-erref/596a1078-e883-4972-9bbc-49e60bebca55
+    ;https://www.geoffchappell.com/studies/windows/km/ntoskrnl/api/ex/sysinfo/handle_ex.htm
+    ;https://www.geoffchappell.com/studies/windows/km/ntoskrnl/api/ex/sysinfo/handle_table_entry_ex.htm
+    static SystemExtendedHandleInformation := 0x40
+    NTSTATUS := BufSize := 1
+    while NTSTATUS != 0 
+    {
+        oBuffer := Buffer(BufSize, 0)
+        NTSTATUS := DllCall("ntdll\NtQuerySystemInformation"
+            , "Int"  , SystemExtendedHandleInformation
+            , "Ptr"  , oBuffer    ;increasingly written until NTSTATUS = 0 (STATUS_SUCCESS)
+            , "UInt" , BufSize    ;in
+            , "UIntP", &BufSize   ;out
+            , "UInt")
+    }
+  
+    ;SYSTEM_HANDLE_INFORMATION_EX struct
+    ;---------------------------        offset dec (x64)
+    ;ULONG_PTR NumberOfHandles;         0
+    ;ULONG_PTR Reserved;                8
+    ;SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX  16  (size 40)
+    ;SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX  56  
+    ;SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX  96  
+    ;...                                
+    ;---------------------------    size 16 + 40*NumberOfHandles
+    
+    ;SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX struct
+    ;---------------------------    offset dec (x64)
+    ;PVOID Object;                  0
+    ;ULONG_PTR UniqueProcessId;     8
+    ;ULONG_PTR HandleValue;         16
+    ;...
+    ;---------------------------    size 40
+
+    NumberOfHandles := NumGet(oBuffer, "UInt")
+    BufFilePath := Buffer(1026)
+    static StructSize := A_PtrSize*3 + 16 ;SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX
+    static DUPLICATE_SAME_ACCESS := 0x2
+    static FILE_TYPE_DISK := 1
+
+    Loop NumberOfHandles
+    {
+        StructOffset := A_PtrSize*2 + StructSize*(A_Index - 1)
+        UniqueProcessId := NumGet(oBuffer, StructOffset + A_PtrSize, "UInt")
+        if (UniqueProcessId = PID)
+        {
+            HandleValue := NumGet(oBuffer, StructOffset + A_PtrSize*2, "Ptr")
+            ;https://learn.microsoft.com/en-us/windows/win32/api/handleapi/nf-handleapi-duplicatehandle
+            DllCall("DuplicateHandle" 
+                , "Ptr" , hProcess
+                , "Ptr" , HandleValue
+                , "Ptr" , DllCall("GetCurrentProcess")
+                , "PtrP", &lpTargetHandle := 0
+                , "UInt", 0
+                , "UInt", 0
+                , "UInt", DUPLICATE_SAME_ACCESS)
+            ;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfiletype
+            ;get filepath if FILE_TYPE_DISK (not type pipe, char, remote)
+            if DllCall("GetFileType", "Ptr", lpTargetHandle) = FILE_TYPE_DISK
+            && DllCall("GetFinalPathNameByHandle"
+                , "Ptr" , lpTargetHandle
+                , "Ptr" , BufFilePath
+                , "UInt", 512
+                , "UInt", 0)
+            {
+                FilePath := StrGet(BufFilePath) ;prefix "\\?\"
+                FilesMap[A_Index] :=  RegExReplace(FilePath, "^\\\\\?\\")
+            }
+            DllCall("CloseHandle", "Ptr", lpTargetHandle)
+        }
+    }
+    DllCall("CloseHandle", "Ptr", hProcess)
+    return FilesMap
+}
+
+; original by tmplinshi, modified by toralf, Alguimist: https://www.autohotkey.com/boards/viewtopic.php?f=6&t=1079
+; converted to v2 by Relayer: https://www.autohotkey.com/boards/viewtopic.php?f=83&t=114445
+
+AutoXYWH(DimSize, cList*)
+{
+	Static cInfo := Map()
+	If DimSize = 'reset'
+		Return cInfo := Map()
+	For Ctrl in cList
+	{
+		Ctrl.Gui.GetPos(,, &gw, &gh)
+		If !cInfo.Has(Ctrl)
+		{
+			Ctrl.GetPos(&x, &y, &w, &h)
+      ;tooltip x "|" y
+			fx := fy := fw := fh := 0
+			For dim in StrSplit(RegExReplace(DimSize, 'i)[^xywh]'))
+				f%dim% := RegExMatch(DimSize, 'i)' dim '\s*\K[\d.-]+', &m) ? m[] : 1
+			If InStr(DimSize, 't')
+			{
+				Hwnd := DllCall('GetParent', 'Ptr', Ctrl.Hwnd, 'Ptr')
+				DllCall('GetWindowRect', 'Ptr', Hwnd, 'Ptr', RECT := Buffer(16, 0))
+				DllCall('MapWindowPoints', 'Ptr', 0, 'Ptr', DllCall('GetParent', 'Ptr', Hwnd, 'Ptr'), 'Ptr', RECT, 'UInt', 2)
+				x -= NumGet(RECT, 'Int') * 96 // A_ScreenDPI
+				y -= NumGet(RECT, 4, 'Int') * 96 // A_ScreenDPI
+			}
+			cInfo[Ctrl] := Map('x', x, 'fx', fx, 'y', y, 'fy', fy, 'w', w, 'fw', fw, 'h', h, 'fh', fh, 'gw', gw, 'gh', gh, 'm', !!InStr(DimSize, '*'))
+		}
+		Else
+		{
+			dgw := gw - cInfo[Ctrl]['gw'], dgh := gh - cInfo[Ctrl]['gh']
+			Ctrl.Move(cInfo[Ctrl]['fx'] ? dgw * cInfo[Ctrl]['fx'] + cInfo[Ctrl]['x'] : unset
+				, cInfo[Ctrl]['fy'] ? dgh * cInfo[Ctrl]['fy'] + cInfo[Ctrl]['y'] : unset
+				, cInfo[Ctrl]['fw'] ? dgw * cInfo[Ctrl]['fw'] + cInfo[Ctrl]['w'] : unset
+				, cInfo[Ctrl]['fh'] ? dgh * cInfo[Ctrl]['fh'] + cInfo[Ctrl]['h'] : unset)
+			If cInfo[Ctrl]['m']
+				Ctrl.Redraw()
+		}
+	}
+}

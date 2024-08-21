@@ -1,4 +1,5 @@
 ﻿;|2.7|2024.08.02|1653
+; 需要 自行安装 RapidOCR(老式CPU适用) 或 PaddleOCR
 区域选择方式 = 1
 OCRMode := "Rapid"
 ;OCRMode := "Paddle"
@@ -104,7 +105,7 @@ pBitmap := Gdip_BitmapFromScreen(aRect)
 JTFilePath := A_temp "\Vis2_123.bmp"
 Gdip_SaveBitmapToFile(pBitmap, JTFilePath)
 Gdip_DisposeImage(pBitmap)
-
+; 需在 github 库中自行下载 RapidOcrOnnx.ahk2 或 PaddleOCR_身份证识别验证.ahk 放在脚步同目录下
 if (OCRMode = "Rapid")
 {
   AutoHotkey64 := A_ScriptDir "\..\..\引用程序\2.0\AutoHotkey64.exe"

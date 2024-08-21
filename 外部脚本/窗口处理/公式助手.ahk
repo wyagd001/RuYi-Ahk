@@ -1,4 +1,4 @@
-﻿;|2.7|2024.06.26|1598
+﻿;|2.7|2024.08.17|1598
 Gui, Add, Text, x10 y10 w60, 类型:
 Gui, Add, ComboBox, xp+70 yp w250 vFormulaTypeIndex gshowNameIndex AltSubmit, 常用||身份证|时间|重复|常规运算
 Gui, Add, Text, x10 yp+30 w60, 名称:
@@ -8,7 +8,10 @@ Gui, Add, Edit, xp+70 yp w250 vReplacedCell,
 Gui, Add, Button, xp+260 yp w60 gReplaceCell, 替换A1
 Gui, Add, Text, x10 yp+30 w60, 区域:
 Gui, Add, Edit, xp+70 yp w250 vSearchRange,
-Gui, Add, Edit, x10 yp+30 w390 r8 vFormulaEdit,
+Gui, Add, Button, xp+260 yp w60 gRefresh, 刷新
+Gui, Add, Edit, x10 yp+30 w390 r5 vFormulaEdit,
+Gui, Add, Edit, x10 yp+90 w390 r5 vFilepath,
+
 Gui, Add, StatusBar,, 
 Gui, Show, AutoSize, 公式助手
 
@@ -62,7 +65,7 @@ CF_Arr := ["=IF(COUNTIF(A$1:A$10,A1)>1,""有重复"",""无重复"")"
 , "=COUNTA(A$2:A2)"
 , "=COUNTBLANK(A$2:A2)"]
 
-CGYS_ItemsStr := "1. 求和|2. 平均值|3. 取整|4. 绝对值|5. 四舍五入|6. |7. |8. ()|9. ()|10.|11."
+CGYS_ItemsStr := "1. 求和|2. 平均值|3. 取整|4. 绝对值|5. 四舍五入|6. |7. |8. |9. |10. |11. "
 CGYS_Arr := ["=SUM(A1:A10)"
 , "=Average(A1:A10)"
 , "=Int(A1)"
@@ -156,3 +159,8 @@ return
 GuiClose:
 GuiEscape:
  ExitApp
+
+Refresh:
+Application := ComObjActive("ket.Application")
+GuiControl,, Filepath, % "[" Application.ActiveWorkbook.Name "]" Application.ActiveWorkbook.ActiveSheet.Name
+Return

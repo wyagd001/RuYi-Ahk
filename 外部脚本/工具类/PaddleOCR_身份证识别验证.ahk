@@ -1,4 +1,5 @@
-﻿CandySel := A_Args[1] 
+﻿;|2.7|2024.08.02|1653辅助二
+CandySel := A_Args[1] 
 CandySel2 := A_Args[2]
 
 if instr(CandySel, "☆")

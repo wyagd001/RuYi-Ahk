@@ -1,4 +1,4 @@
-﻿;|2.7|2024.07.11|1220
+﻿;|2.7|2024.08.20|1220
 #Include <WinHttp>
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e9d2.ico"
@@ -27,6 +27,7 @@ Gui, Add, Button, xp yp+28 w60 gMoveRow_Down, 向下
 
 Gui, Add, Button, xp yp+40 w60 gopenweb, 打开网页
 Gui, Add, Button, xp yp+28 w60 gopensetfile, 打开配置
+Gui, Add, Button, xp yp+28 w60 gsearchcode, 代码查询
 
 GuiControl,, ColorsOn, % ColorsOn
 GuiControl,, speccolor, % speccolor
@@ -275,6 +276,69 @@ Gui, 98:Destroy
 R_index := R_Code := R_Name := R_Share := R_Price := ""
 Return
 
+searchcode:
+Gui, 2:Destroy
+Gui, 2:Default
+Gui, Add, Edit, x12 y5 w300 h80 vgpinfo,
+Gui, Add, Edit, x12 y90 w300 h25 vgpcode hwndHandle gEditjisaun,
+Gui, Add, Button, x12 y120 w60 h30 g600, 600
+Gui, Add, Button, xp+60 yp w60 h30 g7, 7
+Gui, Add, Button, xp+60 yp w60 h30 g8, 8
+Gui, Add, Button, xp+60 yp w60 h30 g9, 9
+
+Gui, Add, Button, x12 yp+35 w60 h30 g601, 601
+Gui, Add, Button, xp+60 yp w60 h30 g4, 4
+Gui, Add, Button, xp+60 yp w60 h30 g5, 5
+Gui, Add, Button, xp+60 yp w60 h30 g6, 6
+
+Gui, Add, Button, x12 yp+35 w60 h30 g002, 002
+Gui, Add, Button, xp+60 yp w60 h30 g1, 1
+Gui, Add, Button, xp+60 yp w60 h30 g2, 2
+Gui, Add, Button, xp+60 yp w60 h30 g3, 3
+Gui, Add, Button, xp+60 yp w60 h30 g删除, 删除
+
+Gui, Add, Button, x12 yp+35 w60 h30 g300, 300
+Gui, Add, Button, xp+60 yp w60 h30 g000, 000
+Gui, Add, Button, xp+60 yp w60 h30 g0, 0
+Gui, Add, Button, xp+60 yp w60 h30 ggpjiage, 查询
+Gui, Add, Button, xp+60 yp w60 h30 g清除, 清空
+
+Gui, Add, StatusBar, gSB vSB, Welcome!
+SB_SetParts(73)
+Menu, 历史, Add, 1, 历史
+Menu, 历史, Add, 2, 历史
+Menu, 历史, Add, 3, 历史
+Menu, 历史, Add, 4, 历史
+Menu, 历史, Add, 5, 历史
+Menu, 历史, Add, 6, 历史
+Menu, 历史, Add, 7, 历史
+Menu, 历史, Add, 8, 历史
+Menu, 历史, Add, 9, 历史
+Menu, 历史, Add, 10, 历史
+Menu, Menu, Add, 历史, :历史
+Gui, Menu, Menu
+Gui, Show, , 输入代码查询
+return
+
+2GuiEscape:
+2GuiClose:
+Gui, 2:Destroy
+Return
+
+gpjiage:
+Gui, 2:Default
+Gui, Submit, NoHide
+Tmp_Obj := Gupiao(gpcode)
+GuiControl, Text, gpInfo, % Tmp_Obj["名称"] " " Tmp_Obj["价格"] " " Tmp_Obj["涨跌"] " " Tmp_Obj["涨幅"]
+if (StrLen(gpcode) >= 6)
+{
+  history++
+  Menu, 历史, Rename, %history%&, %gpcode%=%numsym%
+  if (history = 10)
+    history := 0
+}
+return
+
 MoveRow_Up:
 Gui, Submit, NoHide
 LV_MoveRow()
@@ -363,6 +427,91 @@ Loop % TmpArr.Length()
 LV_RowIndexOrder()
 LV_ListToObj("股票")
 return
+
+FocusBack:
+if (StrLen(gpcode) >= 6)
+{
+  history++
+  Menu, 历史, Rename, %history%&, %gpcode%=%numsym%
+  if (history = 10)
+    history := 0
+}
+
+GuiControl, Text, gpcode, %numsym%
+GuiControl, Focus, gpcode 
+SendMessage, 0xB1, -2, -1,, ahk_id %Handle%
+SendMessage, 0xB7,,,, ahk_id %Handle%
+numsym := 0
+return
+
+Editjisaun:
+Gui, Submit, NoHide
+if InStr(gpcode, "!") > 0
+	numsym := ZTrim(Fac(RTrim(gpcode, "!")))
+if InStr(gpcode, "!") = 0
+	numsym := Mather.Evaluate(gpcode)
+SB_SetText(numsym, 2)
+return
+
+SB:
+Gui, 2:Default
+Gui, Submit, NoHide
+GuiControl, Text, gpcode, %SB%
+SB_SetText(gpcode)
+Goto, Editjisaun
+return
+
+历史:
+GuiControl, Text, gpcode, % StrReplace(SubStr(A_ThisMenuItem, 1, InStr(A_ThisMenuItem, "=")), "=")
+GuiControl, Focus, gpcode 
+SendMessage, 0xB1, -2, -1,, ahk_id %Handle%
+SendMessage, 0xB7,,,, ahk_id %Handle%
+Goto, Editjisaun
+return
+
+清除:
+GuiControl, Text, gpcode
+return
+
+删除:
+ControlSend,, {BS}, ahk_id %Handle% 
+return
+
+0:
+1:
+2:
+3:
+4:
+5:
+6:
+7:
+8:
+9:
+600:
+601:
+002:
+000:
+300:
+Gui, 2:Default
+Gui, Submit, NoHide
+numsym := gpcode A_ThisLabel
+Goto, FocusBack
+return
+
+ZTrim(x) {
+	global Round
+	x := Round(x, Round)
+	IfInString, x, .00
+	x := % Floor(x)
+	return x
+}
+
+Fac(x) {
+	var := 1
+	Loop, %x%
+		var *= A_Index
+	return var
+}
 
 ; ======================================================================================================================
 ; Namespace:      LV_Colors

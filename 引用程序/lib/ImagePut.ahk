@@ -56,9 +56,11 @@ ImagePutEncodedBuffer(image, extension := "", quality := "") {
    return ImagePut("EncodedBuffer", image, extension, quality)
 }
 
-; Puts the image into the most recently active explorer window.
-ImagePutExplorer(image, default := "") {
-   return ImagePut("Explorer", image, default)
+; Puts the image into the currently active explorer window.
+;   default_dir -  Default Directory       |  string   ->   C:\Users\Me\Pictures
+;   background  -  Find Inactive Windows?  |  bool     ->   False
+ImagePutExplorer(image, default_dir := "", background_window := False) {
+   return ImagePut("Explorer", default_dir, background_window)
 }
 
 ; Puts the image into a file and returns its filepath.
@@ -213,6 +215,8 @@ class ImagePut {
       scale     := keywords.HasKey("scale")      ? keywords.scale     : ""
       upscale   := keywords.HasKey("upscale")    ? keywords.upscale   : ""
       downscale := keywords.HasKey("downscale")  ? keywords.downscale : ""
+      minsize   := keywords.HasKey("minsize")    ? keywords.minsize   : ""
+      maxsize   := keywords.HasKey("maxsize")    ? keywords.maxsize   : ""
       sprite    := keywords.HasKey("sprite")     ? keywords.sprite    : ""
       decode    := keywords.HasKey("decode")     ? keywords.decode    : this.decode
       render    := keywords.HasKey("render")     ? keywords.render    : this.render
@@ -223,6 +227,11 @@ class ImagePut {
       ; Keywords are for (input -> intermediate).
       try index := keywords.index
 
+      weight := crop || scale || upscale || downscale || minsize || maxsize || sprite || decode
+      cleanup := ""
+      if (weight)
+         goto make_bitmap
+
       ; #0 - Special cases.
       if (type = "SharedBuffer" && cotype = "SharedBuffer")
          return this.SharedBufferToSharedBuffer(image)
@@ -232,8 +241,6 @@ class ImagePut {
 
       if (type = "Screenshot" && cotype = "Buffer")
          return this.ScreenshotToBuffer(image)
-
-      cleanup := ""
 
       ; #1 - Stream as the intermediate representation.
       try stream := this.ImageToStream(type, image, keywords)
@@ -246,41 +253,8 @@ class ImagePut {
 
       ; Check the file signature for magic numbers.
       stream:
-
-      ; 2048 characters should be good enough to identify the file correctly.
-      DllCall("shlwapi\IStream_Size", "ptr", stream, "uint64*", size:=0, "uint")
-      size := min(size, 2048)
-      VarSetCapacity(bin, size)
-
-      ; Get the first few bytes of the image.
-      DllCall("shlwapi\IStream_Reset", "ptr", stream, "uint")
-      DllCall("shlwapi\IStream_Read", "ptr", stream, "ptr", &bin, "uint", size, "uint")
-      DllCall("shlwapi\IStream_Reset", "ptr", stream, "uint")
-
-      ; Allocate enough space for a hexadecimal string with spaces interleaved and a null terminator.
-      length := 2*size + (size-1) + 1
-      VarSetCapacity(str, length * (A_IsUnicode?2:1))
-
-      ; Lift the binary representation to hex.
-      flags := 0x40000004 ; CRYPT_STRING_NOCRLF | CRYPT_STRING_HEX
-      DllCall("crypt32\CryptBinaryToString", "ptr", &bin, "uint", size, "uint", flags, "str", str, "uint*", length)
-
-      ; Determine the extension using herustics. See: http://fileformats.archiveteam.org
-      extension := 0                                                              ? ""
-      : str ~= "(?i)66 74 79 70 61 76 69 66"                                      ? "avif" ; ftypavif
-      : str ~= "(?i)^42 4d (.. ){36}00 00 .. 00 00 00"                            ? "bmp"  ; BM
-      : str ~= "(?i)^01 00 00 00 (.. ){36}20 45 4D 46"                            ? "emf"  ; emf
-      : str ~= "(?i)^47 49 46 38 (37|39) 61"                                      ? "gif"  ; GIF87a or GIF89a
-      : str ~= "(?i)66 74 79 70 68 65 69 63"                                      ? "heic" ; ftypheic
-      : str ~= "(?i)^00 00 01 00"                                                 ? "ico"
-      : str ~= "(?i)^ff d8 ff"                                                    ? "jpg"
-      : str ~= "(?i)^25 50 44 46 2d"                                              ? "pdf"  ; %PDF-
-      : str ~= "(?i)^89 50 4e 47 0d 0a 1a 0a"                                     ? "png"  ; PNG
-      : str ~= "(?i)^(((?!3c|3e).. )|3c (3f|21) ((?!3c|3e).. )*3e )*+3c 73 76 67" ? "svg"  ; <svg
-      : str ~= "(?i)^(49 49 2a 00|4d 4d 00 2a)"                                   ? "tif"  ; II* or MM*
-      : str ~= "(?i)^52 49 46 46 .. .. .. .. 57 45 42 50"                         ? "webp" ; RIFF....WEBP
-      : str ~= "(?i)^d7 cd c6 9a"                                                 ? "wmf"
-      : "" ; Extension must be blank for file pass-through as-is.
+      ; (ComCall(Seek := 5, stream, "uint64", 0, "uint", 1, "uint64*", &current:=0), current != 0 && MsgBox(current))
+      extension := this.GetExtensionFromStream(stream)
 
       ; Convert vectorized formats to rasterized formats.
       if (render && extension ~= "^(?i:pdf|svg)$") {
@@ -292,7 +266,7 @@ class ImagePut {
       ; To determine whether the stream should be decoded into pixels:
       ; (1) Check for scaling or cropping, etc.
       ; (2) Check if the source encoding is different from the destination.
-      weight := decode || crop || scale || upscale || downscale || sprite ||
+      weight |=
 
          ; The 1st parameter holds the destination encoding.
          !( cotype ~= "^(?i:safearray|encodedbuffer|hex|base64|uri|stream|randomaccessstream|)$"
@@ -349,6 +323,8 @@ class ImagePut {
       (scale) && this.BitmapScale(pBitmap, scale)
       (upscale) && this.BitmapScale(pBitmap, upscale, 1)
       (downscale) && this.BitmapScale(pBitmap, downscale, -1)
+      (minsize) && this.BitmapScale(pBitmap, minsize, 1, "join", True)
+      (maxsize) && this.BitmapScale(pBitmap, maxsize, -1, "meet", True)
       (sprite) && this.BitmapSprite(pBitmap)
 
       ; Save frame delays and loop count for webp.
@@ -712,8 +688,8 @@ class ImagePut {
       if (cotype = "URL") ; (pBitmap)
          return this.BitmapToURL(pBitmap)
 
-      if (cotype = "Explorer") ; (pBitmap, default)
-         return this.BitmapToExplorer(pBitmap, p1)
+      if (cotype = "Explorer") ; (pBitmap, default_dir, background_window)
+         return this.BitmapToExplorer(pBitmap, p1, p2)
 
       if (cotype = "File") ; (pBitmap, filepath, quality)
          return this.BitmapToFile(pBitmap, p1, p2)
@@ -805,8 +781,8 @@ class ImagePut {
       if (cotype = "URL") ; (stream)
          return this.StreamToURL(stream)
 
-      if (cotype = "Explorer") ; (stream, default)
-         return this.StreamToExplorer(stream, p1)
+      if (cotype = "Explorer") ; (stream, default_dir, background_window)
+         return this.StreamToExplorer(stream, p1, p2)
 
       if (cotype = "File") ; (stream, filepath)
          return this.StreamToFile(stream, p1)
@@ -894,22 +870,51 @@ class ImagePut {
       return pBitmap := pBitmapCrop
    }
 
-   BitmapScale(ByRef pBitmap, scale, direction := 0) {
-      if not (IsObject(scale) && ((scale[1] ~= "^(?!0+$)\d+$") || (scale[2] ~= "^(?!0+$)\d+$")) || (scale ~= "^(?!0+$)\d+(\.\d+)?$"))
-         throw Exception("Invalid scale.")
+   BitmapScale(ByRef pBitmap, scale, direction := 0, bound := "", preserveAspectRatio := False) {
+      ; min() specifies the greatest lower bound or the maximum size, fitting the image to the bounding box. 
+      ; max() specifies the least upper bound or the minimum size, filling the image to the bounding box. 
+      bound := !IsFunc(bound) && (bound ~= "^(?i:fit|meet|and|infimum)$") ? Func("min")
+            :  !IsFunc(bound) && (bound ~= "^(?i:fill|join|or|supremum)$") ? Func("max")
+            :  !IsFunc(bound) && (bound == "") ? ((direction < 0) ? Func("max") : Func("min"))
+            :  bound ; Please specify your own bound function
 
       ; Get Bitmap width, height, and format.
       DllCall("gdiplus\GdipGetImageWidth", "ptr", pBitmap, "uint*", width:=0)
       DllCall("gdiplus\GdipGetImageHeight", "ptr", pBitmap, "uint*", height:=0)
       DllCall("gdiplus\GdipGetImagePixelFormat", "ptr", pBitmap, "int*", format:=0)
 
-      if IsObject(scale) {
-         safe_w := (scale[1] ~= "^(?!0+$)\d+$") ? scale[1] : Round(width / height * scale[2])
-         safe_h := (scale[2] ~= "^(?!0+$)\d+$") ? scale[2] : Round(height / width * scale[1])
-      } else {
-         safe_w := Ceil(width * scale)
-         safe_h := Ceil(height * scale)
+      ; Scale using a real number greater than 0.
+      if !IsObject(scale) && scale ~= "^(?!0+$)\d+(\.\d+)?$" {
+         safe_w := Round(width * scale)
+         safe_h := Round(height * scale)
       }
+
+      ; Specify min or max as the bounding function to fit or fill to the specified edge length.
+      if IsObject(scale) && scale.length() = 1 && scale.HasKey(1) && scale[1] ~= "^(?!0+$)\d+$" {
+         safe_w := Round(width * %bound%(scale[1] / width, scale[1] / height))
+         safe_h := Round(height * %bound%(scale[1] / width, scale[1] / height))
+      }
+
+      ; (1) If either the width or the height is set to "auto", the other dimension is calculated from the aspect ratio.
+      ; (2) Preserve the aspect ratio using either the width or the height as the reference.
+      ; (3) Scale to the given width x height.
+      if IsObject(scale) && scale.length() = 2 && (scale.HasKey(1) && scale[1] ~= "^(?!0+$)\d+$" || scale.HasKey(2) && scale[2] ~= "^(?!0+$)\d+$") {
+         safe_w := !(scale[1] ~= "^(?!0+$)\d+$") ? Round(width / height * scale[2])
+               : (preserveAspectRatio) ? Round(width * %bound%(scale[1] / width, scale[2] / height))
+               : scale[1]
+         safe_h := !(scale[2] ~= "^(?!0+$)\d+$") ? Round(height / width * scale[1])
+               : (preserveAspectRatio) ? Round(height * %bound%(scale[1] / width, scale[2] / height))
+               : scale[2]
+      }
+
+      if IsObject(scale) && scale.length() = 1 && scale.HasKey(1) && scale[1] ~= "^(?!0+$)\d+$" && direction = 0
+         throw Exception("Single scale value requires a direction such as upscale or downscale.")
+      if !IsSet(safe_w) || !IsSet(safe_h)
+         throw Exception("Invalid scale.")
+
+      ; Minimum size is 1 x 1.
+      safe_w := max(1, safe_w)
+      safe_h := max(1, safe_h)
 
       ; Avoid drawing if no changes detected.
       if (safe_w = width && safe_h = height)
@@ -992,6 +997,45 @@ class ImagePut {
       DllCall("gdiplus\GdipBitmapUnlockBits", "ptr", pBitmap, "ptr", &BitmapData)
 
       return pBitmap
+   }
+
+   GetExtensionFromStream(stream) {
+      ; 2048 characters should be good enough to identify the file correctly.
+      DllCall("shlwapi\IStream_Size", "ptr", stream, "uint64*", size:=0, "uint")
+      size := min(size, 2048)
+      VarSetCapacity(bin, size)
+
+      ; Get the first few bytes of the image.
+      DllCall("shlwapi\IStream_Reset", "ptr", stream, "uint")
+      DllCall("shlwapi\IStream_Read", "ptr", stream, "ptr", &bin, "uint", size, "uint")
+      DllCall("shlwapi\IStream_Reset", "ptr", stream, "uint")
+
+      ; Allocate enough space for a hexadecimal string with spaces interleaved and a null terminator.
+      length := 2*size + (size-1) + 1
+      VarSetCapacity(str, length * (A_IsUnicode?2:1))
+
+      ; Lift the binary representation to hex.
+      flags := 0x40000004 ; CRYPT_STRING_NOCRLF | CRYPT_STRING_HEX
+      DllCall("crypt32\CryptBinaryToString", "ptr", &bin, "uint", size, "uint", flags, "str", str, "uint*", length)
+
+      ; Determine the extension using herustics. See: http://fileformats.archiveteam.org
+      extension := 0                                                              ? ""
+      : str ~= "(?i)66 74 79 70 61 76 69 66"                                      ? "avif" ; ftypavif
+      : str ~= "(?i)^42 4d (.. ){36}00 00 .. 00 00 00"                            ? "bmp"  ; BM
+      : str ~= "(?i)^01 00 00 00 (.. ){36}20 45 4D 46"                            ? "emf"  ; emf
+      : str ~= "(?i)^47 49 46 38 (37|39) 61"                                      ? "gif"  ; GIF87a or GIF89a
+      : str ~= "(?i)66 74 79 70 68 65 69 63"                                      ? "heic" ; ftypheic
+      : str ~= "(?i)^00 00 01 00"                                                 ? "ico"
+      : str ~= "(?i)^ff d8 ff"                                                    ? "jpg"
+      : str ~= "(?i)^25 50 44 46 2d"                                              ? "pdf"  ; %PDF-
+      : str ~= "(?i)^89 50 4e 47 0d 0a 1a 0a"                                     ? "png"  ; PNG
+      : str ~= "(?i)^(((?!3c|3e).. )|3c (3f|21) ((?!3c|3e).. )*3e )*+3c 73 76 67" ? "svg"  ; <svg
+      : str ~= "(?i)^(49 49 2a 00|4d 4d 00 2a)"                                   ? "tif"  ; II* or MM*
+      : str ~= "(?i)^52 49 46 46 .. .. .. .. 57 45 42 50"                         ? "webp" ; RIFF....WEBP
+      : str ~= "(?i)^d7 cd c6 9a"                                                 ? "wmf"
+      : "" ; Extension must be blank for file pass-through as-is.      
+
+      return extension
    }
 
 
@@ -2319,8 +2363,9 @@ class ImagePut {
 
       ; #3 - Copy other formats to a file and pass a (15) DROPFILES struct.
       if (extension) {
-         filepath := A_ScriptDir "\clipboard." extension
+         filepath := A_Temp "\ImagePut\clipboard." extension
          filepath := RTrim(filepath, ".") ; Remove trailing periods.
+         FileCreateDir % A_Temp "\ImagePut"
 
          ; For compatibility with SHCreateMemStream do not use GetHGlobalFromStream.
          DllCall("shlwapi\SHCreateStreamOnFileEx"
@@ -2347,13 +2392,6 @@ class ImagePut {
 
          ; Set the file to the clipboard as a shared object.
          DllCall("SetClipboardData", "uint", 15, "ptr", hDropFiles)
-
-         ; Clean up the files on script exit.
-         static extensions := []
-         if not extensions.HasKey(extension) {
-            extensions.push(extension)
-            OnExit(ObjBindMethod(this, "StreamToClipboardExit", filepath))
-         }
       }
 
       ; Close the clipboard.
@@ -2361,11 +2399,6 @@ class ImagePut {
 
       ; Honestly why would the user use this return value? Use a sentinel instead.
       return ""
-   }
-
-   StreamToClipboardExit(filepath, p*) {
-      try FileDelete % filepath
-      return 0 ; Required by OnExit to exit the script.
    }
 
    BitmapToSafeArray(pBitmap, extension := "", quality := "") {
@@ -2535,17 +2568,29 @@ class ImagePut {
          ImagePut.gdiplusShutdown()
       }
 
+      stride {
+         get {
+            return this.size // this.height
+         }
+      }
+
+      pitch {
+         get {
+            return this.size // this.height
+         }
+      }
+
       pBitmap {
          get {
             ; Test if the cached bitmap (this.pBitmap2) already exists.
             renew := False
-            renew |= this.HasProp("ptr2") && this.ptr != this.ptr2
+            renew |= this.HasKey("ptr2") && this.ptr != this.ptr2
 
             ; Delete the old bitmap.
             (renew) && DllCall("gdiplus\GdipDisposeImage", "ptr", this.pBitmap2)
 
             ; Test if the cached bitmap needs to be created.
-            renew |= !this.HasProp("pBitmap2")
+            renew |= !this.HasKey("pBitmap2")
             try renew |= DllCall("gdiplus\GdipGetImageType", "ptr", this.pBitmap2, "ptr*", _type:=0) or (_type != 1)
             catch
                renew := True
@@ -2574,6 +2619,7 @@ class ImagePut {
             if IsObject(this.free) && this.free.length() > 0
                for callback in this.free
                   callback.call()
+            return this
          }
 
          if (name = "Update") && this.HasKey("draw") {
@@ -2582,9 +2628,8 @@ class ImagePut {
             if IsObject(this.draw) && this.draw.length() > 0
                for callback in this.draw
                   callback.call()
+            return this
          }
-
-         return this
       }
 
       __Get(x, y) {
@@ -4315,79 +4360,54 @@ class ImagePut {
       return url
    }
 
-   BitmapToExplorer(pBitmap, default := "") {
-
-      ; Get path of active window.
-      if (hwnd := WinExist("ahk_class ExploreWClass")) || (hwnd := WinExist("ahk_class CabinetWClass")) {
-         ; script from Lexikos: https://www.autohotkey.com/boards/viewtopic.php?f=83&t=109907
-         ; modified for this by: @TheCrether
-         ; useful for windows 11 explorer tabs support (works with windows 10 explorers too)
-         tab := this.GetCurrentExplorerTab(hwnd)
-         if tab {
-            switch ComObjType(tab.Document, "Class") {
-               case "ShellFolderView":
-                  directory := tab.Document.Folder.Self.Path
-               default: ; case "HTMLDocument"
-                  directory := tab.LocationURL
-            }
-         }
-      }
-      else if (default != "")
-         directory := default
-      else
-         return
-
-      return this.BitmapToFile(pBitmap, directory)
+   BitmapToExplorer(pBitmap, default_dir := "", background_window := False) {
+      if directory := this.GetExplorerDirectory(default_dir, background_window)
+         return this.BitmapToFile(pBitmap, directory)
    }
 
-   StreamToExplorer(stream, default := "") {
+   StreamToExplorer(stream, default_dir := "", background_window := False) {
+      if directory := this.GetExplorerDirectory(default_dir, background_window)
+         return this.StreamToFile(stream, directory)
+   }
 
-      ; Get path of active window.
-      if (hwnd := WinExist("ahk_class ExploreWClass")) || (hwnd := WinExist("ahk_class CabinetWClass")) {
-         ; script from Lexikos: https://www.autohotkey.com/boards/viewtopic.php?f=83&t=109907
-         ; modified for this by: @TheCrether
-         ; useful for windows 11 explorer tabs support (works with windows 10 explorers too)
-         tab := this.GetCurrentExplorerTab(hwnd)
-         if tab {
+   GetExplorerDirectory(default_dir := "", background_window := False) {
+      ; Thanks @TheCrether
+      GetExplorer := (background_window) ? Func("WinExist") : Func("WinActive")
+      if (hwnd := %GetExplorer%("ahk_class ExploreWClass"))
+      or (hwnd := %GetExplorer%("ahk_class CabinetWClass"))
+        if tab := this.GetCurrentExplorerTab(hwnd)
             switch ComObjType(tab.Document, "Class") {
                case "ShellFolderView":
                   directory := tab.Document.Folder.Self.Path
                default: ; case "HTMLDocument"
                   directory := tab.LocationURL
             }
-         }
-      }
-      else if (default != "")
-         directory := default
-      else
-         return
 
-      return this.StreamToFile(stream, directory)
+      if WinActive("ahk_class WorkerW") or WinActive("ahk_class Progman")
+         directory := A_Desktop
+
+      ; Returns the empty string if the directory is not found.
+      return directory ? directory : default_dir
    }
 
    GetCurrentExplorerTab(hwnd) {
-      ; script from Lexikos: https://www.autohotkey.com/boards/viewtopic.php?f=83&t=109907
-      ; modified for this by: @TheCrether
-      static IID_IShellBrowser := "{000214E2-0000-0000-C000-000000000046}"
-
-      activeTab := 0, hwnd := hwnd ? hwnd : WinExist("A")
-      try
-         ControlGet, activeTab, Hwnd,, ShellTabWindowClass1, ahk_id %hwnd% ; File Explorer (Windows 11)
+      ; Thanks Lexikos - https://www.autohotkey.com/boards/viewtopic.php?f=83&t=109907
+      try ControlGet activeTab, Hwnd,, ShellTabWindowClass1, ahk_id %hwnd% ; File Explorer (Windows 11)
       catch
-      try
-         ControlGet, activeTab, Hwnd,, TabWindowClass1, ahk_id %hwnd% ; IE
+      try ControlGet activeTab, Hwnd,, TabWindowClass1, ahk_id %hwnd% ; IE
       for w in ComObjCreate("Shell.Application").Windows {
          if (w.hwnd != hwnd)
+            continue
+         if IsSet(activeTab) { ; The window has tabs, so make sure this is the right one.
+            static IID_IShellBrowser := "{000214E2-0000-0000-C000-000000000046}"
+            IShellBrowser := ComObjQuery(w, IID_IShellBrowser, IID_IShellBrowser)
+            DllCall(NumGet(NumGet(IShellBrowser+0)+A_PtrSize* 3), "ptr", IShellBrowser, "uint*", thisTab:=0), ObjRelease(IShellBrowser)
+            if (thisTab != activeTab)
                continue
-         if (activeTab) { ; The window has tabs, so make sure this is the right one.
-            shellBrowser := ComObjQuery(w, IID_IShellBrowser, IID_IShellBrowser)
-               DllCall(NumGet(NumGet(shellBrowser+0), 3*A_PtrSize), "UPtr",shellBrowser, "UIntP",thisTab:=0)
-               if (thisTab != activeTab)
-                  continue
          }
-         return w
+         return w ; Returns a ComObject with a .hwnd property
       }
-      return 0
+      throw Exception("Could not locate active tab in Explorer window.")
    }
 
    BitmapToFile(pBitmap, filepath := "", quality := "") {
