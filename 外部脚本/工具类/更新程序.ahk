@@ -1,4 +1,4 @@
-﻿;|2.7|2024.06.17|0000
+﻿;|2.8|2024.08.22|0000
 ruyiexefile := A_Args[1]
 ;ruyiexefile := "如一.exe"
 if instr(ruyiexefile, "_x32")
@@ -13,10 +13,27 @@ if FileExist(A_ScriptDir "\..\..\临时目录\" ruyiexefile)
 	ExitProcess("如一_x32.exe ahk_class AutoHotkey")
 	ExitProcess("AnyToAhk_x32.exe ahk_class AutoHotkey")
 	ExitProcess("AnyToAhk.exe ahk_class AutoHotkey")
-	sleep 800
+	sleep 2000
+  FileRecycle, % A_ScriptDir "\..\..\" ruyiexefile
 	FileMove, % A_ScriptDir "\..\..\临时目录\" ruyiexefile, % A_ScriptDir "\..\..\" ruyiexefile, 1
-	;MsgBox % ErrorLevel 
+	if ErrorLevel
+  {
+    ExitProcess("如一.exe ahk_class AutoHotkey")
+    ExitProcess("如一_x32.exe ahk_class AutoHotkey")
+    sleep 500
+    FileRecycle, % A_ScriptDir "\..\..\" ruyiexefile
+    FileMove, % A_ScriptDir "\..\..\临时目录\" ruyiexefile, % A_ScriptDir "\..\..\" ruyiexefile, 1
+  }
+  FileRecycle, % A_ScriptDir "\..\..\" AnyToAhkexefile
 	FileMove, % A_ScriptDir "\..\..\临时目录\" AnyToAhkexefile, % A_ScriptDir "\..\..\" AnyToAhkexefile, 1
+	if ErrorLevel
+  {
+    ExitProcess("AnyToAhk_x32.exe ahk_class AutoHotkey")
+    ExitProcess("AnyToAhk.exe ahk_class AutoHotkey")
+    sleep 500
+    FileRecycle, % A_ScriptDir "\..\..\" AnyToAhkexefile
+    FileMove, % A_ScriptDir "\..\..\临时目录\" AnyToAhkexefile, % A_ScriptDir "\..\..\" AnyToAhkexefile, 1
+  }
 	sleep 500
 	run % A_ScriptDir "\..\..\" ruyiexefile
 }

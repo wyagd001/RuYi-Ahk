@@ -7,24 +7,26 @@ ipause := 0
 Heap := new BinaryHeap
 B_index := 0
 fileobj := {}
+
 if !CandySel
 {
-  GuiText("未指定扫描文件夹", "查找大文件", 800)
+  GuiText("未指定扫描文件夹", "查找大文件夹", 800)
   return
 }
 else
-  GuiText("按 Esc 停止搜索", "查找大文件", 800)
+  GuiText("按 Esc 停止搜索", "查找大文件夹", 800)
 if (StrLen(CandySel) > 3)
   skipminsize := 0
 else
   skipminsize := 1
-Loop, Files, %CandySel%\*.*, FR
+Loop, Files, %CandySel%\*.*, DR
 {
   if ipause
     break
   if (Mod(A_index, 10000) = 0)
     tooltip % A_index
-  if skipminsize && (A_LoopFileSize < 52428800)
+  FolderSize := CountFolderSize(A_LoopFilePath)
+  if skipminsize && (FolderSize < 524288000)
     continue
   else
   {
@@ -33,18 +35,18 @@ Loop, Files, %CandySel%\*.*, FR
     if (B_index <= 50)
     {
       ;msgbox % B_index " 1|1 " A_LoopFileFullPath
-      Heap.Add(A_LoopFileSize)
-      fileobj["a" A_LoopFileSize] := A_LoopFileFullPath
+      Heap.Add(FolderSize)
+      fileobj["a" FolderSize] := A_LoopFileFullPath
     }
     else
     {
       ;msgbox % B_index " 2|2 " A_LoopFileFullPath
       miniV := Heap.Peek()
-      if (A_LoopFileSize > miniV)
+      if (FolderSize > miniV)
       {
-        Heap.Add(A_LoopFileSize)
+        Heap.Add(FolderSize)
         Heap.Pop()
-        fileobj["a" A_LoopFileSize] := A_LoopFileFullPath
+        fileobj["a" FolderSize] := A_LoopFileFullPath
         fileobj.Delete("a" miniV)
       }
     }
@@ -77,14 +79,14 @@ return
 
 GuiText(Gtext, Title:="", w:=300, l:=20)
 {
-	global myedit, TextGuiHwnd, openfile, openpath
+	global myedit, TextGuiHwnd, openpath
 	Gui,GuiText: Destroy
 	Gui,GuiText: Default
 	Gui, +HwndTextGuiHwnd +Resize
 	Gui, Add, Edit, Multi readonly w%w% r%l% vmyedit
 	GuiControl,, myedit, %Gtext%
-  gui, add, Button, XM+3 vopenfile gopenfile, 打开文件
-  gui, add, Button, xp+80 yp vopenpath gopenpath, 打开路径
+  gui, add, Button, XM+3 vopenpath gopenpath, 打开路径
+  ;gui, add, Button, xp+80 yp vopenpath gopenpath, 打开路径
 	gui, Show, AutoSize, % Title
 	return
 
@@ -98,24 +100,24 @@ GuiText(Gtext, Title:="", w:=300, l:=20)
 	If (A_EventInfo = 1) ; The window has been minimized.
 		Return
 	AutoXYWH("wh", "myedit")
-  AutoXYWH("y", "openfile", "openpath")
+  AutoXYWH("y", "openpath")
 	return
   
-  openfile:
   openpath:
   ControlGet, OutputVar, CurrentLine,, edit1, ahk_id %TextGuiHwnd%
   ControlGet, OutputVar, Line, %OutputVar%, edit1, ahk_id %TextGuiHwnd%
   file := SubStr(OutputVar, 1, Instr(OutputVar, "|")-2)
-  ;msgbox % file
-  if (A_GuiControl = "openfile")
-    run %file%
-  else
-  {
-    SplitPath, file,, Folder
-    run %Folder%
-  }
+  run %file%
   return
 }
+
+CountFolderSize(Folder) {
+    static fso := ComObjCreate("Scripting.FileSystemObject")
+    Folder := fso.GetFolder(Folder)
+    try Size := fso.GetFolder(Folder).Size
+    return Size
+}
+
 
 ; =================================================================================
 ; Function: AutoXYWH

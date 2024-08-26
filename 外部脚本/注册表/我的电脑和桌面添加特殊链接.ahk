@@ -1,5 +1,6 @@
-﻿;|2.7|2024.08.18|1005
+﻿;|2.7|2024.08.25|1005
 ; 来源网址: http://thinkai.net/page/16   已修改
+#SingleInstance force
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\E703.ico"
 ;创建界面
@@ -30,15 +31,16 @@ Gui, Add, CheckBox, xp+130 yp vsep w120 h20, 菜单后添加分隔符
 Gui, Add, text, x0 yp+20 w40 h20 , 命令行
 Gui, add, Edit, x50 yp w360 h20 vmenu_cmd,
 Gui, Add, Button, xp+360 yp w40 h20 gadd, 添加
-Gui, add, ListView, xo yp+20 w450 h160 vmylist1, id|是否默认|菜单名|命令|子键名|带分隔符
+Gui, add, ListView, x0 yp+20 w450 h160 vmylist1, id|是否默认|菜单名|命令|子键名|带分隔符
 
 Gui, Add, Text, x0 yp+180 w50 h20, 已有项目
-Gui, add, ListView, xo yp+20 w450 h160 Checked vmylist2 gEditItem, id|名称|命令|clsid|注册表来源
+Gui, add, ListView, x0 yp+20 w450 h160 Checked vmylist2 AltSubmit gEditItem, id|名称|命令|clsid|注册表来源
 Gui, Add, Button, x460 yp w60 h20 gLoadSystemItem, 刷新
-Gui, Add, Button, x460 yp+20 w60 h20 ggreg1, NameSpace
+Gui, Add, Button, x460 yp+40 w60 h20 gdelicon, 删除
+Gui Add, Text, x460 yp+40 w80 h2 +0x10
+Gui, Add, Button, x460 yp+20 w60 h20 ggreg1, 我的电脑
 Gui, Add, Button, x460 yp+20 w60 h20 ggreg3, 桌面
 Gui, Add, Button, x460 yp+20 w60 h20 ggreg2, CLSID
-Gui, Add, Button, x460 yp+20 w60 h20 gdelicon, 删除
 
 Gui, Add, Picture, x460 y10 w64 h64 vsico,
 
@@ -132,19 +134,19 @@ if (iname and iicon)
 	}
 	;RegWrite, REG_BINARY, HKCU, %item%, Attributes, 00000000 ;属性
   if comp
-    RegWrite, REG_SZ, HKCU, Software\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\%clsid%, , %iname% ;添加到我的电脑
+    RegWrite, REG_SZ, HKCU, Software\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\%clsid%,, %iname% ;添加到我的电脑
   if desk
-    RegWrite, REG_SZ, HKCU, SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\%clsid%, , %iname% ;添加到桌面
+    RegWrite, REG_SZ, HKCU, SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\%clsid%,, %iname% ;添加到桌面
 }
 ;清空所有填写
 GuiControl, , menu_name,
 GuiControl, , menu_cmd,
-GuiControl, , iicon,
 GuiControl, , iname,
-GuiControl, , sico,
+;GuiControl, , sico,
 GuiControl, , iTileInfo,
 GuiControl, , iInfoTip,
 GuiControl, , itargetfile,
+GuiControl, , iicon,
 
 Gui, ListView, MyList1
 LV_Delete()
@@ -153,6 +155,7 @@ option["index"] := 0
 GuiControl, , menustatetxt, 右键菜单(可选, 现为空)
 
 gosub LoadSystemItem
+RefreshExplorer()
 Return
 
 selectico:
@@ -161,7 +164,7 @@ fileselectfile, icon, 1, %lastdir%, 打开---图标文件, 图标文件(*.ico; *
 if icon =
 	Return
 GuiControl, , iicon, %icon%
-guicontrol, , sico, %icon%
+;guicontrol, , sico, %icon%
 Return
 
 showicon:
@@ -211,8 +214,8 @@ if main = 1
     menu,% menu_name, show
 }
 
-MenuHandler:
-return
+;MenuHandler:
+;return
 
 GuiClose:
 ExitApp
@@ -247,7 +250,6 @@ KeyName := "HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer
 f_OpenReg(KeyName)
 return
 
-
 greg2:
 Gui, ListView, MyList2
 RF := LV_GetNext("F")
@@ -262,11 +264,14 @@ return
 delicon:
 Gui, ListView, MyList2
 RF := LV_GetNext("F")
+IsChecked := 0
 if RF
 {
 	LV_GetText(lclsid, RF, 4)
+  SendMessage, 0x102C, RF - 1, 0xF000, SysListView322  ; 0x102C 为 LVM_GETITEMSTATE. 0xF000 为 LVIS_STATEIMAGEMASK.
+  IsChecked := (ErrorLevel >> 12) - 1  ; 如果 RowNumber 为选中的则设置 IsChecked 为真, 否则为假.
 }
-if lclsid
+if lclsid && IsChecked
 {
   RegDelete HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\%lclsid%
   RegDelete HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\%lclsid%
@@ -349,12 +354,18 @@ f_Split2(String, Seperator, ByRef LeftStr, ByRef RightStr)
 }
 
 LoadSystemItem:
+;Critical On
+LoadLV_dis_Label := 1
+sleep 100
 Gui, ListView, MyList2
 LV_Delete()
+
 B_index := 0
 Loop, Reg, HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace, K
 {
   RegRead, OutputVar, HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\%A_LoopRegName%
+  if !OutputVar
+    RegRead, OutputVar, HKCU\Software\Classes\CLSID\%A_LoopRegName%
   if OutputVar
   {
     B_index ++
@@ -362,9 +373,23 @@ Loop, Reg, HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\
     LV_Add("Check", B_index, OutputVar, OutputVar2, A_LoopRegName, "我的电脑")
   }
 }
+Loop, Reg, HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpaceDisabled, K
+{
+  RegRead, OutputVar, HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpaceDisabled\%A_LoopRegName%
+  if !OutputVar
+    RegRead, OutputVar, HKCU\Software\Classes\CLSID\%A_LoopRegName%
+  if OutputVar
+  {
+    B_index ++
+    RegRead, OutputVar2, HKCU\Software\Classes\CLSID\%A_LoopRegName%\Shell\Open\Command
+    LV_Add("", B_index, OutputVar, OutputVar2, A_LoopRegName, "我的电脑")
+  }
+}
 Loop, Reg, HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace, K
 {
   RegRead, OutputVar, HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\%A_LoopRegName%
+  if !OutputVar
+    RegRead, OutputVar, HKCU\Software\Classes\CLSID\%A_LoopRegName%
   if OutputVar
   {
     B_index ++
@@ -372,7 +397,24 @@ Loop, Reg, HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\
     LV_Add("Check", B_index, OutputVar, OutputVar2, A_LoopRegName, "桌面")
   }
 }
+Loop, Reg, HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpaceDisabled, K
+{
+  RegRead, OutputVar, HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpaceDisabled\%A_LoopRegName%
+  if !OutputVar
+    RegRead, OutputVar, HKCU\Software\Classes\CLSID\%A_LoopRegName%
+  if OutputVar
+  {
+    B_index ++
+    RegRead, OutputVar2, HKCU\Software\Classes\CLSID\%A_LoopRegName%\Shell\Open\Command
+    LV_Add("", B_index, OutputVar, OutputVar2, A_LoopRegName, "桌面")
+  }
+}
 LV_ModifyCol()
+settimer setlvdisvalue, -1500
+;LoadLV_dis_Label := 0
+;Critical off
+;GuiControl, Focus, Button3
+;tooltip % ErrorLevel
 return
 
 EditItem:
@@ -388,6 +430,50 @@ if (A_GuiEvent = "DoubleClick")
 		SetGuiValue(lclsid)
 	}
 }
+if (A_GuiEvent = "I") && (ErrorLevel = "C") && !LoadLV_dis_Label
+{
+	LV_GetText(lclsid, A_EventInfo, 4)
+	LV_GetText(regaddr, A_EventInfo, 5)
+  ;msgbox % regaddr "|" LoadLV_dis_Label "|" A_GuiControl "|" ErrorLevel
+	if (ErrorLevel == "c") && lclsid
+	{
+    if (regaddr = "我的电脑")
+    {
+      RegRead, OutputVar, HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\%lclsid%
+      RegWrite, REG_SZ, HKCU, Software\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpaceDisabled\%lclsid%, , %OutputVar%
+      RegDelete HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\%lclsid%
+    }
+    else if (regaddr = "桌面")
+    {
+      RegRead, OutputVar, HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\%lclsid%
+      RegWrite, REG_SZ, HKCU, Software\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpaceDisabled\%lclsid%, , %OutputVar%
+      RegDelete HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\%lclsid%
+    }
+	}
+	if (ErrorLevel == "C") && lclsid
+	{
+		if (regaddr = "我的电脑")
+    {
+      RegRead, OutputVar, HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpaceDisabled\%lclsid%
+      RegWrite, REG_SZ, HKCU, Software\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\%lclsid%, , %OutputVar%
+      RegDelete HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpaceDisabled\%lclsid%
+    }
+    else if (regaddr = "桌面")
+    {
+      RegRead, OutputVar, HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpaceDisabled\%lclsid%
+      RegWrite, REG_SZ, HKCU, Software\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\%lclsid%, , %OutputVar%
+      RegDelete HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpaceDisabled\%lclsid%
+    }
+	}
+  RefreshExplorer()
+}
+return
+
+setlvdisvalue:
+LoadLV_dis_Label := 0
+tooltip 可勾选已有项目已进行激活或禁用!
+sleep 2000
+tooltip
 return
 
 SetGuiValue(hclsid)
@@ -472,4 +558,13 @@ IndexOfIconResource_EnumIconResources(hModule, lpszType, lpszName, lParam)
         return false    ; break
     }
     return true
+}
+
+RefreshExplorer()
+{ ; by teadrinker on D437 @ tiny.cc/refreshexplorer
+	local Windows := ComObjCreate("Shell.Application").Windows
+	Windows.Item(ComObject(0x13, 8)).Refresh()
+	for Window in Windows
+		if (Window.Name != "Internet Explorer")
+			Window.Refresh()
 }

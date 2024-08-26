@@ -402,9 +402,7 @@ else if (myedit1 = "黑阈")
 	GuiControl,, myedit3, shell sh /data/data/me.piebridge.brevent/brevent.sh
 }
 
-
 return
-
 
 commmode(p1:="参数1:", p2:="参数2:", st1:="Disable", st2:="Disable")
 {

@@ -1,46 +1,172 @@
-﻿;|2.0|2023.07.01|1269
+﻿;|2.8|2024.08.24|1660
+#SingleInstance force
 CandySel := A_Args[1]
-if !CandySel
-{
-	DetectHiddenWindows, On
-	ControlGetText, CandySel, Edit1, 获取当前窗口信息_ 
-	DetectHiddenWindows, Off
-	if !CandySel
-		exitapp
-}
 
-;CandySel := "C:\Documents and Settings\Administrator\Desktop\123.zip"
+Aapt := GetFullPathName(A_ScriptDir "\..\..\引用程序\x32\aapt.exe")
+;msgbox % Aapt " dump badging """ CandySel """"
+ApkInfo := RunCmd(Aapt " dump badging """ CandySel """", , "UTF-8")
+RegExMatch(ApkInfo, "icon='(.*?)'", iconfile)   ; 图标文件
+RegExMatch(ApkInfo, "application-label-zh_CN:'(.*?)'", zhcnname)
+if !zhcnname1
+  RegExMatch(ApkInfo, "application-label:'(.*?)'", zhcnname)
+RegExMatch(ApkInfo, "name='(.*?)'", name)
+RegExMatch(ApkInfo, "versionName='(.*?)'", versionName)
+RegExMatch(ApkInfo, "versionCode='(.*?)'", versionCode)
+Tmp_str := "名称: " zhcnname1 "`n"
+Tmp_str .= "包名: " Name1 "`n"
+Tmp_str .= "版本号: " versionName1 "`n"
+Tmp_str .= "版本代码: " versionCode1 "`n"
+Tmp_str .= "-----------------------------`n"
+ApkInfo := Tmp_str ApkInfo
+
 If !( o7z := 7Zip_Init() )
   Quit("Failed loading 7-zip32.dll library")
 global sDllPath
-
-;o7z.opt.Output := "C:\Documents and Settings\Administrator\Desktop"
 o7z.opt.Hide := 1
-o7z.opt.ExcludeFile := ".git"   ; 排除的文件
+o7z.opt.ExtractPaths := 0
+o7z.opt.Output := GetFullPathName(A_ScriptDir "\..\..\临时目录")
+o7z.opt.IncludeFile := iconfile1
+if iconfile1
+  7Zip_Extract(CandySel)
+RegExMatch(iconfile1, ".*/([^/]+)$", filename)
+;msgbox % filename "|" filename1 "|" o7z.opt.Output
+iconfile := o7z.opt.Output "\icon.png"
+filedelete, % iconfile
+if filename1
+  FileMove, % o7z.opt.Output "\" filename1, % iconfile
+GuiText(ApkInfo, "Apk 信息", 600)
+return
 
-if !instr(CandySel, "`n")
+F2::
+ControlGet, Tmp_V, Selected,, Edit1, A
+if Tmp_V
 {
-	SplitPath, CandySel,, OutDir,, OutFileNameNoExt
-	7Zip_Add(OutDir "\" OutFileNameNoExt ".zip", CandySel)
+  SplitPath, CandySel,, Prew_File_ParentPath, Prew_File_Ext
+  TargetFile := PathU(Prew_File_ParentPath "\" Tmp_V "." Prew_File_Ext)
+  ;msgbox % Tmp_V "|" TargetFile 
+  FileMove, % CandySel, % TargetFile
 }
-Else
-{
-	loop, parse, CandySel, `n, `r
-	{
-		SplitPath, CandySel,, OutDir,, OutFileNameNoExt
-		break
-	}
-	loop, parse, CandySel, `n, `r
-	{
-		7Zip_Add(OutDir "\" OutFileNameNoExt ".zip", A_LoopField)
-	}
+return
+
+PathU(Filename) { ;  PathU v0.91 by SKAN on D35E/D68M @ tiny.cc/pathu
+Local OutFile
+  VarSetCapacity(OutFile, 520)
+  DllCall("Kernel32\GetFullPathNameW", "WStr",Filename, "UInt",260, "Str",OutFile, "Ptr",0)
+  DllCall("Shell32\PathYetAnotherMakeUniqueName", "Str",OutFile, "Str",Outfile, "Ptr",0, "Ptr",0)
+Return A_IsUnicode ? OutFile : StrGet(&OutFile, "UTF-16")
 }
-ExitApp
 
 Quit(Msg) {
   MsgBox % Msg
   ExitApp
 }
+
+GetFullPathName(path) {
+    cc := DllCall("GetFullPathName", "str", path, "uint", 0, "ptr", 0, "ptr", 0, "uint")
+    VarSetCapacity(buf, cc*(A_IsUnicode?2:1))
+    DllCall("GetFullPathName", "str", path, "uint", cc, "str", buf, "ptr", 0, "uint")
+    return buf
+}
+
+RunCmd(CmdLine, WorkingDir:="", Cp:="CP0") { ; Thanks Sean!  SKAN on D34E @ tiny.cc/runcmd 
+  Local P8 := (A_PtrSize=8),  pWorkingDir := (WorkingDir ? &WorkingDir : 0)                                                
+  Local SI, PI,  hPipeR:=0, hPipeW:=0, Buff, sOutput:="",  ExitCode:=0,  hProcess, hThread
+                   
+  DllCall("CreatePipe", "PtrP",hPipeR, "PtrP",hPipeW, "Ptr",0, "UInt",0)
+, DllCall("SetHandleInformation", "Ptr",hPipeW, "UInt",1, "UInt",1)
+    
+  VarSetCapacity(SI, P8? 104:68,0),      NumPut(P8? 104:68, SI)
+, NumPut(0x100, SI,  P8? 60:44,"UInt"),  NumPut(hPipeW, SI, P8? 88:60)
+, NumPut(hPipeW, SI, P8? 96:64)   
+
+, VarSetCapacity(PI, P8? 24:16)               
+
+  If not DllCall("CreateProcess", "Ptr",0, "Str",CmdLine, "Ptr",0, "UInt",0, "UInt",True
+              , "UInt",0x08000000 | DllCall("GetPriorityClass", "Ptr",-1,"UInt"), "UInt",0
+              , "Ptr",pWorkingDir, "Ptr",&SI, "Ptr",&PI )  
+     Return Format( "{1:}", "" 
+          , DllCall("CloseHandle", "Ptr",hPipeW)
+          , DllCall("CloseHandle", "Ptr",hPipeR)
+          , ErrorLevel := -1 )
+  DllCall( "CloseHandle", "Ptr",hPipeW)
+
+, VarSetCapacity(Buff, 4096, 0), nSz:=0   
+  While DllCall("ReadFile",  "Ptr",hPipeR, "Ptr",&Buff, "UInt",4094, "PtrP",nSz, "UInt",0)
+    sOutput .= StrGet(&Buff, nSz, Cp)
+
+  hProcess := NumGet(PI, 0),  hThread := NumGet(PI,4)
+, DllCall("GetExitCodeProcess", "Ptr",hProcess, "PtrP",ExitCode)
+, DllCall("CloseHandle", "Ptr",hProcess),    DllCall("CloseHandle", "Ptr",hThread)
+, DllCall("CloseHandle", "Ptr",hPipeR),      ErrorLevel := ExitCode  
+Return sOutput  
+}
+
+GuiText(Gtext, Title:="", w:=300, l:=20)
+{
+	global myedit, TextGuiHwnd, iconfile
+	Gui,GuiText: Destroy
+	Gui,GuiText: Default
+	Gui, +HwndTextGuiHwnd +Resize
+  Gui, add, Picture, , %iconfile%
+	Gui, Add, Edit, Multi readonly xM+2 w%w% r%l% vmyedit
+	GuiControl,, myedit, %Gtext%
+	gui, Show, AutoSize, % Title
+	return
+
+	GuiTextGuiClose:
+	;GuiTextGuiescape:
+	Gui, GuiText: Destroy
+	exitapp
+	Return
+
+	GuiTextGuiSize:
+	If (A_EventInfo = 1) ; The window has been minimized.
+		Return
+	AutoXYWH("wh", "myedit")
+	return
+}
+
+; =================================================================================
+; Function: AutoXYWH
+;   Move and resize control automatically when GUI resizes.
+; Parameters:
+;   DimSize - Can be one or more of x/y/w/h  optional followed by a fraction
+;             add a '*' to DimSize to 'MoveDraw' the controls rather then just 'Move', this is recommended for Groupboxes
+;   cList   - variadic list of ControlIDs
+;             ControlID can be a control HWND, associated variable name, ClassNN or displayed text.
+;             The later (displayed text) is possible but not recommend since not very reliable 
+; Examples:
+;   AutoXYWH("xy", "Btn1", "Btn2")
+;   AutoXYWH("w0.5 h 0.75", hEdit, "displayed text", "vLabel", "Button1")
+;   AutoXYWH("*w0.5 h 0.75", hGroupbox1, "GrbChoices")
+; ---------------------------------------------------------------------------------
+; Version: 2015-5-29 / Added 'reset' option (by tmplinshi)
+;          2014-7-03 / toralf
+;          2014-1-2  / tmplinshi
+; requires AHK version : 1.1.13.01+
+; =================================================================================
+AutoXYWH(DimSize, cList*){       ; http://ahkscript.org/boards/viewtopic.php?t=1079
+  static cInfo := {}
+ 
+  If (DimSize = "reset")
+    Return cInfo := {}
+ 
+  For i, ctrl in cList {
+    ctrlID := A_Gui ":" ctrl
+    If ( cInfo[ctrlID].x = "" ){
+        GuiControlGet, i, %A_Gui%:Pos, %ctrl%
+        MMD := InStr(DimSize, "*") ? "MoveDraw" : "Move"
+        fx := fy := fw := fh := 0
+        For i, dim in (a := StrSplit(RegExReplace(DimSize, "i)[^xywh]")))
+            If !RegExMatch(DimSize, "i)" dim "\s*\K[\d.-]+", f%dim%)
+              f%dim% := 1
+        cInfo[ctrlID] := { x:ix, fx:fx, y:iy, fy:fy, w:iw, fw:fw, h:ih, fh:fh, gw:A_GuiWidth, gh:A_GuiHeight, a:a , m:MMD}
+    }Else If ( cInfo[ctrlID].a.1) {
+        dgx := dgw := A_GuiWidth  - cInfo[ctrlID].gw  , dgy := dgh := A_GuiHeight - cInfo[ctrlID].gh
+        For i, dim in cInfo[ctrlID]["a"]
+            Options .= dim (dg%dim% * cInfo[ctrlID]["f" dim] + cInfo[ctrlID][dim]) A_Space
+        GuiControl, % A_Gui ":" cInfo[ctrlID].m , % ctrl, % Options
+} } }
 
 ; https://www.autohotkey.com/board/topic/64362-7zip-7-zip32dll-library-without-commandline-ahk-l/page-1
 
@@ -721,67 +847,3 @@ Yes            ;assume Yes on all queries;e,x
     . ":" . ((StrLen(tvar := NumGet(SystemTime,12,"short")) = 1) ? "0" . tvar : tvar) ;seconds
   ;      . "." . NumGet(SystemTime,14,"short") ;milliseconds
 }
-
-/* STRUCTURES ------------------------------------------------------------------------------------------------------------------
-typedef struct {
-	DWORD	dwOriginalSize;  4 8
-	DWORD	dwCompressedSize;  4 8
-	DWORD	dwCRC; 4 8
-	UINT	uFlag; 4 8
-	UINT	uOSType; 4 8
-	WORD	wRatio; 2 2
-	WORD	wDate; 2 2
-	WORD	wTime; 2 2
-	char	szFileName[FNAME_MAX32 + 1]; 513 513
-	char	dummy1[3]; 3 3
-	char	szAttribute[8]; 8 8
-	char	szMode[8]; 8 8
-} INDIVIDUALINFO, *LPINDIVIDUALINFO;
-
-tINDIVIDUALINFO 
-VarSetCapacity(tINDIVIDUALINFO , 558, 0)
-
-; typedef struct {
-    dwOriginalSize := NumGet(tINDIVIDUALINFO , 0, "UInt")
-    dwCompressedSize := NumGet(tINDIVIDUALINFO , 4, "UInt")
-    dwCRC := NumGet(tINDIVIDUALINFO , 8, "UInt")
-    uFlag := NumGet(tINDIVIDUALINFO , 12, "UInt")
-    uOSType := NumGet(tINDIVIDUALINFO , 16, "UInt")
-    wRatio := NumGet(tINDIVIDUALINFO , 20, "UShort")
-    wDate := NumGet(tINDIVIDUALINFO , 22, "UShort")
-    wTime := NumGet(tINDIVIDUALINFO , 24, "UShort")
-    szFileName[%index%] := NumGet(tINDIVIDUALINFO , 26 + index, "Char"), szFileName_length := 513
-    dummy1[%index%] := NumGet(tINDIVIDUALINFO , 539 + index, "Char"), dummy1_length := 3
-    szAttribute[%index%] := NumGet(tINDIVIDUALINFO , 542 + index, "Char"), szAttribute_length := 8
-    szMode[%index%] := NumGet(tINDIVIDUALINFO , 550 + index, "Char"), szMode_length := 8
-; }
-
-tEXTRACTINGINFO
-VarSetCapacity(tEXTRACTINGINFO, 1040, 0)
-
-; typedef struct {
-    tEXTRACTINGINFO_dwFileSize := NumGet(tEXTRACTINGINFO, 0, "UInt")
-    tEXTRACTINGINFO_dwWriteSize := NumGet(tEXTRACTINGINFO, 4, "UInt")
-    tEXTRACTINGINFO_szSourceFileName[%index%] := NumGet(tEXTRACTINGINFO, 8 + index, "Char"), tEXTRACTINGINFO_szSourceFileName_length := 513
-    tEXTRACTINGINFO_dummy1[%index%] := NumGet(tEXTRACTINGINFO, 521 + index, "Char"), tEXTRACTINGINFO_dummy1_length := 3
-    tEXTRACTINGINFO_szDestFileName[%index%] := NumGet(tEXTRACTINGINFO, 524 + index, "Char"), tEXTRACTINGINFO_szDestFileName_length := 513
-    tEXTRACTINGINFO_dummy[%index%] := NumGet(tEXTRACTINGINFO, 1037 + index, "Char"), tEXTRACTINGINFO_dummy_length := 3
-; }
-
-
-tEXTRACTINGINFOEX
-VarSetCapacity(tEXTRACTINGINFOEX, 1074, 0)
-
-; typedef struct {
-    tEXTRACTINGINFOEX_exinfo := NumGet(tEXTRACTINGINFOEX, 0, "UInt")
-    tEXTRACTINGINFOEX_dwCompressedSize := NumGet(tEXTRACTINGINFOEX, 1040, "UInt")
-    tEXTRACTINGINFOEX_dwCRC := NumGet(tEXTRACTINGINFOEX, 1044, "UInt")
-    tEXTRACTINGINFOEX_uOSType := NumGet(tEXTRACTINGINFOEX, 1048, "UInt")
-    tEXTRACTINGINFOEX_wRatio := NumGet(tEXTRACTINGINFOEX, 1052, "UShort")
-    tEXTRACTINGINFOEX_wDate := NumGet(tEXTRACTINGINFOEX, 1054, "UShort")
-    tEXTRACTINGINFOEX_wTime := NumGet(tEXTRACTINGINFOEX, 1056, "UShort")
-    tEXTRACTINGINFOEX_szAttribute[%index%] := NumGet(tEXTRACTINGINFOEX, 1058 + index, "Char"), tEXTRACTINGINFOEX_szAttribute_length := 8
-    tEXTRACTINGINFOEX_szMode[%index%] := NumGet(tEXTRACTINGINFOEX, 1066 + index, "Char"), tEXTRACTINGINFOEX_szMode_length := 8
-; }
-------------------------------------------------------------------------------------------------------------------------------- 
-*/

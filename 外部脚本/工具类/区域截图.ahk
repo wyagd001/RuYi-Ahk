@@ -152,12 +152,15 @@ else
    gosub guiclose
 Return
 
-; win_7 本地 OCR, 将下载 VIS2 压缩包解压到 引用程序\其它资源 文件夹
+; 本地 OCR, %Ahk% %OCR% %Picfile%
 OCR2:
 JTFilePath := A_temp "\Vis2_123.bmp"
 Gdip_SaveBitmapToFile(pBitmap, JTFilePath)
 B_Autohotkey := A_ScriptDir "\..\..\引用程序\" (A_PtrSize = 8 ? "AutoHotkeyU64.exe" : "AutoHotkeyU32.exe")
 run %B_Autohotkey% "%A_ScriptDir%\..\文件处理\本地OCR(Vis2).ahk" "%JTFilePath%"
+;run %B_Autohotkey% "%A_ScriptDir%\PaddleOCR_身份证识别验证.ahk" "%JTFilePath%"
+;AutoHotkey64 := A_ScriptDir "\..\..\引用程序\2.0\AutoHotkey64.exe"
+;run %AutoHotkey64% "%A_ScriptDir%\RapidOcrOnnx.ahk2" "%JTFilePath%"
 return
 
 QRcodeReader:
