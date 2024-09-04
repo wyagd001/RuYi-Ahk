@@ -171,11 +171,19 @@ CF_RegWrite(ValueType, KeyName, ValueName="", Value="")
 
 CF_RegDelete(KeyName, ValueName := "")
 {
+  if !ValueName or (ValueName="\")   ; 防止删除整个主键
+  {
+    KeyName := KeyName ValueName
+    if KeyName in HKEY_LOCAL_MACHINE,HKEY_LOCAL_MACHINE\,HKEY_LOCAL_MACHINE\\,HKLM,HKLM\,HKLM\\,HKEY_CLASSES_ROOT,HKEY_CLASSES_ROOT\,HKEY_CLASSES_ROOT\\,HKCR,HKCR\,HKCR\\,HKEY_CURRENT_USER,HKEY_CURRENT_USER\,HKEY_CURRENT_USER\\,HKCU,HKCU\,HKCU\\
+    {
+      return 1
+    }
+  }
 	RegDelete, % KeyName, % ValueName
 	if ErrorLevel
-	Return %A_LastError%
+    Return %A_LastError%
 	else
-	Return 0
+    Return 0
 }
 
 RestartExplorer()

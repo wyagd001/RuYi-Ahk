@@ -1,10 +1,16 @@
-﻿;|2.6|2024.05.04|1592
+﻿;|2.8|2024.08.31|1592
+; 进测试一些设备一次不能同时设置亮度和对比度
+#Warn VarUnset, Off
 CandySel := A_Args[1]
 CandySel2 := A_Args[2]
-Monitor.SetBrightness(CandySel)
+if CandySel
+  obb := Monitor.SetBrightness(CandySel)
 if CandySel2
-	Monitor.SetContrast(CandySel2)
-
+	obc := Monitor.SetContrast(CandySel2)
+if CandySel
+  try msgbox("当前亮度: " obb["Current"] , "屏幕亮度调节", "T5")
+if CandySel2
+  try msgbox("当前对比度: " obc["Current"], "屏幕对比度调节", "T5")
 ; 来源网址: https://www.autohotkey.com/boards/viewtopic.php?t=103415
 /*
 ; Retrieve Contrast values:

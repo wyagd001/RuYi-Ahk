@@ -1,4 +1,4 @@
-﻿;|2.7|2024.08.25|1005
+﻿;|2.7|2024.08.26|1005
 ; 来源网址: http://thinkai.net/page/16   已修改
 #SingleInstance force
 Menu, Tray, UseErrorLevel
@@ -37,8 +37,9 @@ Gui, Add, Text, x0 yp+180 w50 h20, 已有项目
 Gui, add, ListView, x0 yp+20 w450 h160 Checked vmylist2 AltSubmit gEditItem, id|名称|命令|clsid|注册表来源
 Gui, Add, Button, x460 yp w60 h20 gLoadSystemItem, 刷新
 Gui, Add, Button, x460 yp+40 w60 h20 gdelicon, 删除
-Gui Add, Text, x460 yp+40 w80 h2 +0x10
-Gui, Add, Button, x460 yp+20 w60 h20 ggreg1, 我的电脑
+Gui Add, Text, x460 yp+30 w80 h2 +0x10
+Gui, Add, Button, x460 yp+10 w60 h20 ggreg1, 我的电脑
+Gui, Add, Button, x460 yp+20 w60 h20 ggreg4, HKLM
 Gui, Add, Button, x460 yp+20 w60 h20 ggreg3, 桌面
 Gui, Add, Button, x460 yp+20 w60 h20 ggreg2, CLSID
 
@@ -239,6 +240,17 @@ KeyName := "HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer
 f_OpenReg(KeyName)
 return
 
+greg4:
+Gui, ListView, MyList2
+RF := LV_GetNext("F")
+if RF
+{
+	LV_GetText(lclsid, RF, 4)
+}
+KeyName := "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\" lclsid
+f_OpenReg(KeyName)
+return
+
 greg3:
 Gui, ListView, MyList2
 RF := LV_GetNext("F")
@@ -409,6 +421,31 @@ Loop, Reg, HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\
     LV_Add("", B_index, OutputVar, OutputVar2, A_LoopRegName, "桌面")
   }
 }
+Loop, Reg, HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace, K
+{
+  RegRead, OutputVar, HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\%A_LoopRegName%
+  if !OutputVar
+    RegRead, OutputVar, HKCU\Software\Classes\CLSID\%A_LoopRegName%
+  if OutputVar
+  {
+    B_index ++
+    RegRead, OutputVar2, HKCU\Software\Classes\CLSID\%A_LoopRegName%\Shell\Open\Command
+    LV_Add("Check", B_index, OutputVar, OutputVar2, A_LoopRegName, "HKLM")
+  }
+}
+Loop, Reg, HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpaceDisabled, K
+{
+  RegRead, OutputVar, HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpaceDisabled\%A_LoopRegName%
+  if !OutputVar
+    RegRead, OutputVar, HKCU\Software\Classes\CLSID\%A_LoopRegName%
+  if OutputVar
+  {
+    B_index ++
+    RegRead, OutputVar2, HKCU\Software\Classes\CLSID\%A_LoopRegName%\Shell\Open\Command
+    LV_Add("", B_index, OutputVar, OutputVar2, A_LoopRegName, "HKLM")
+  }
+}
+
 LV_ModifyCol()
 settimer setlvdisvalue, -1500
 ;LoadLV_dis_Label := 0
@@ -449,6 +486,12 @@ if (A_GuiEvent = "I") && (ErrorLevel = "C") && !LoadLV_dis_Label
       RegWrite, REG_SZ, HKCU, Software\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpaceDisabled\%lclsid%, , %OutputVar%
       RegDelete HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\%lclsid%
     }
+    else if (regaddr = "HKLM")
+    {
+      RegRead, OutputVar, HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\%lclsid%
+      RegWrite, REG_SZ, HKLM, Software\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpaceDisabled\%lclsid%, , %OutputVar%
+      RegDelete HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\%lclsid%
+    }
 	}
 	if (ErrorLevel == "C") && lclsid
 	{
@@ -463,6 +506,12 @@ if (A_GuiEvent = "I") && (ErrorLevel = "C") && !LoadLV_dis_Label
       RegRead, OutputVar, HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpaceDisabled\%lclsid%
       RegWrite, REG_SZ, HKCU, Software\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace\%lclsid%, , %OutputVar%
       RegDelete HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpaceDisabled\%lclsid%
+    }
+    else if (regaddr = "HKLM")
+    {
+      RegRead, OutputVar, HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpaceDisabled\%lclsid%
+      RegWrite, REG_SZ, HKLM, Software\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\%lclsid%, , %OutputVar%
+      RegDelete HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpaceDisabled\%lclsid%
     }
 	}
   RefreshExplorer()

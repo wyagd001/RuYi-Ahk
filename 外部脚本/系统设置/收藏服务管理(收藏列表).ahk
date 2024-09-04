@@ -4,9 +4,10 @@
 ;SetWorkingDir %A_ScriptDir%
 SetBatchLines -1
 
-Gui, Add, ListView, x10 y10 w800 h350 vMyList gdoubclick Checked, 序号|服务名称|显示名称|描述|是否运行|启动类型|可执行文件路径|服务类型|1|2|3|
+Gui, Add, ListView, x10 y10 w800 h350 vMyList gdoubclick Checked, 序号|服务名称|显示名称|描述|是否运行|Pid|启动类型|可执行文件路径|服务类型|1|2|3|
+Gui, Add, Button, x10 yp+360 gRefresh, 刷新
 
-arr:=["ATService", "Flash Helper Service", "FlashCenterSvc", "GLyhPassInputService", "HuaweiHiSuiteService64.exe", "PSBCInputService", "spacedeskService", "Spooler", "ToDesk_Service", "VMwareHostd", "VMnetDHCP", "VMware NAT Service", "wpscloudsvr", "XLServicePlatform"]
+arr:=["ATService", "Flash Helper Service", "FlashCenterSvc", "GLyhPassInputService", "HuaweiHiSuiteService64.exe", "PSBCInputService", "spacedeskService", "Spooler", "ToDesk_Service", "VMwareHostd", "VMnetDHCP", "VMware NAT Service", "wpscloudsvr", "XLServicePlatform", "AppInfo"]
 runstateObj := {1:"停止", 2:"正在启动", 3:"正在停止", 4:"运行", 5:"可恢复", 6:"可暂停", 7:"暂停"}
 startTypeObj := {0:"启动", 1:"系统", 2:"自动", 3:"手动", 4:"禁用"}
 startTypeValueObj := {"启动":0, "系统":1, "自动":2, "手动":3, "禁用":4}
@@ -14,9 +15,9 @@ ServiceTypeObj := { 1:"驱动程序服务", 2:"文件系统驱动", 16:"进程�
 
 for k, v in arr
 {
-  是否运行 := Service_State(v)
+  是否运行 := Service_State(v, hpid)
   ServObj := Service_Info(v)
-  Lv_Add("", k, v, ServObj.svcDispName, ServObj.svcDesc, runstateObj[是否运行], startTypeObj[ServObj.svcStartMode], ServObj.svcPathName, ServiceTypeObj[ServObj.svcType], ServObj.svcDep, ServObj.svcTrigger, ServObj.svcDelayed)
+  Lv_Add("", k, v, ServObj.svcDispName, ServObj.svcDesc, runstateObj[是否运行], hpid, startTypeObj[ServObj.svcStartMode], ServObj.svcPathName, ServiceTypeObj[ServObj.svcType], ServObj.svcDep, ServObj.svcTrigger, ServObj.svcDelayed)
   ;Lv_Add("", k, v, ServObj.svcDispName, ServObj.svcDesc, runstateObj[是否运行], startTypeObj[ServObj.svcStartMode], ServObj.svcPathName, ServObj.svcType, ServObj.svcDep, ServObj.svcTrigger, ServObj.svcDelayed)
 }
 LV_ModifyCol()
@@ -28,6 +29,27 @@ LV_ModifyCol(6, 60)
 LV_ModifyCol(7, 200)
 Gui Show, AutoSize, 服务管理
 Return
+
+Refresh:
+Gui, 1: Default
+Gui, ListView, MyList
+LV_Delete()
+for k, v in arr
+{
+
+  是否运行 := Service_State(v, hpid)
+  ServObj := Service_Info(v)
+  Lv_Add("", k, v, ServObj.svcDispName, ServObj.svcDesc, runstateObj[是否运行], hpid, startTypeObj[ServObj.svcStartMode], ServObj.svcPathName, ServiceTypeObj[ServObj.svcType], ServObj.svcDep, ServObj.svcTrigger, ServObj.svcDelayed)
+  ;Lv_Add("", k, v, ServObj.svcDispName, ServObj.svcDesc, runstateObj[是否运行], startTypeObj[ServObj.svcStartMode], ServObj.svcPathName, ServObj.svcType, ServObj.svcDep, ServObj.svcTrigger, ServObj.svcDelayed)
+}
+LV_ModifyCol()
+LV_ModifyCol(2, 120)
+LV_ModifyCol(3, 140)
+LV_ModifyCol(4, 250)
+LV_ModifyCol(5, 60)
+LV_ModifyCol(6, 60)
+LV_ModifyCol(7, 200)
+return
 
 doubclick:
 if (A_GuiEvent = "DoubleClick")
@@ -60,7 +82,7 @@ Gui Add, DropDownList, x104 y324 w323 veServstartType, 自动|手动|禁用|自�
 GuiControl, ChooseString, ComboBox1, % startTypeObj[ServObj.svcStartMode]
 
 Gui Add, Text, x34 y417 w70 h23 +0x200, 服务状态:
-Gui Add, Edit, x106 y415 w321 h28 ReadOnly, % runstateObj[是否运行]
+Gui Add, Edit, x106 y415 w321 h28 ReadOnly verunstate, % runstateObj[是否运行]
 
 Gui Add, Button, x34 y475 w80 h30 gstartserv, 启动
 Gui Add, Button, x136 y474 w80 h30 gstopserv, 停止
@@ -78,7 +100,7 @@ else if (runstateObj[是否运行] = "运行")
 }
 Gui Add, Button, x180 y560 w80 h30 gsave, 确定
 Gui Add, Button, x265 y560 w80 h30 g99GuiClose, 取消
-;Gui Add, Button, x350 y560 w80 h30, 应用
+Gui Add, Button, x350 y560 w80 h30 gapply, 应用
 Gui Add, Text, x37 y539 w383 h2 +0x10
 
 Gui Show, w441 h609, 服务编辑
@@ -87,6 +109,7 @@ Return
 99GuiEscape:
 99GuiClose:
   Gui,99: Destroy
+  gosub Refresh
 return
 
 GuiEscape:
@@ -98,12 +121,24 @@ return
 startserv:
 Gui, 99:default
 gui, submit, nohide
+
+if (startTypeObj[(Service_Info(eServName).svcStartMode)] = "禁用")
+{
+  CF_ToolTip("当前服务启动类型处于禁用状态无法启动，请更改启动类型应用后重试!", 5000)
+  if (eServstartType != "禁用" )
+  {
+    GuiControl, ChooseString, ComboBox1, 禁用
+  }
+  return
+}
 Service_Start(eServName)
+sleep 2000
 svs := Service_State(eServName)
-if (svs = 4)
+if (svs = 4)     ; 启动成功
 {
   GuiControl, Disable, Button1
   GuiControl, Enable, Button2
+  GuiControl,, erunstate, % runstateObj[4]
 }
 return
 
@@ -111,22 +146,51 @@ stopserv:
 Gui, 99:default
 gui, submit, nohide
 Service_Stop(eServName)
+sleep 2000
 svs := Service_State(eServName)
-if (svs = 1)
+if (svs = 1)   ; 停止成功
 {
   GuiControl, Enable, Button1
   GuiControl, Disable, Button2
+  GuiControl,, erunstate, % runstateObj[1]
 }
 return
 
 save:
 Gui, 99:default
+gui, submit, Destroy
+;msgbox % startTypeValueObj[eServstartType]
+Service_Change_StartType(eServName, startTypeValueObj[eServstartType])
+if (eServstartType = "禁用") && (erunstate = "运行")
+{
+  Service_Stop(eServName)
+  sleep 500
+}
+gosub Refresh
+return
+
+Apply:
+Gui, 99:default
 gui, submit, nohide
-msgbox % startTypeValueObj[eServstartType]
-;Service_Change_StartType(eServName, startTypeValueObj[eServstartType])
+;msgbox % startTypeValueObj[eServstartType]
+Service_Change_StartType(eServName, startTypeValueObj[eServstartType])
+if (eServstartType = "禁用") && (erunstate = "运行")
+{
+  Service_Stop(eServName)
+  sleep 2000
+  svs := Service_State(eServName)
+  if (svs = 1)        ; 停止成功
+  {
+    GuiControl, Enable, Button1
+    GuiControl, Disable, Button2
+    GuiControl,, erunstate, % runstateObj[1]
+  }
+}
 return
 
 ;MsgBox % Service_List("Active") ;Get List of Running Win32 Service
+;Static SERVICE_QUERY_STATUS=0x4, SERVICE_START=0x10, SERVICE_STOP=0x20, SC_STATUS_PROCESS_INFO=0, SERVICE_CONTROL_STOP=0x1
+;Static SERVICE_STOPPED=0x1, SERVICE_START_PENDING=0x2, SERVICE_STOP_PENDING=0x3, SERVICE_RUNNING=0x4
 
 Service_List(State="", Type="", delimiter="`n"){
 	if !State
@@ -315,7 +379,7 @@ MsgBox % Service_State("Print Spooler")
 	; SERVICE_PAUSE_PENDING (6) : The service pause is pending.
 	; SERVICE_PAUSED (7) : The service is paused.
 */
-Service_State(ServiceName)
+Service_State(ServiceName, ByRef ServicePid := "")
 { 
 	ServiceName := _GetName_(ServiceName)
 	;msgbox % ServiceName
@@ -333,6 +397,15 @@ Service_State(ServiceName)
 		;msgbox % h " - " ErrorLevel " - " A_LastError
 		;debugbin(&SC_STATUS, 28, "456.txt")
 		result := !h ? False : NumGet(SC_STATUS, 4, "UInt") ;-1 or dwCurrentState
+    ;msgbox % result
+    if (result = 4)
+    {
+      h := QueryServiceStatusEx(SC_HANDLE, HSSP)
+      ;msgbox % h
+      ServicePid := NumGet(HSSP, 28, "Uint")
+    }
+    else
+      ServicePid := ""
 	}
 
     CloseServiceHandle(SC_HANDLE)
@@ -451,6 +524,11 @@ QueryServiceStatus(hService, SC_STATUS) {
 	Return DllCall("advapi32\QueryServiceStatus", "Ptr", hService, "Ptr", SC_STATUS)
 }
 
+QueryServiceStatusEx(hService, ByRef @SSP, SC_STATUS_PROCESS_INFO:=0) {
+  VarSetCapacity(@SSP, 36), VarSetCapacity(BytesNeeded, 4)
+	Return DllCall("advapi32\QueryServiceStatusEx", "Ptr", hService, "Ptr", SC_STATUS_PROCESS_INFO, "Uint", &@SSP, "Uint", 36, "Uint", &BytesNeeded)
+}
+
 StartService(hService) {
 	f := (!StrLen(Chr(0xFFFF))) ? "StartServiceA" : "StartServiceW"
 	Return DllCall("advapi32\" f, "UPtr", hService, "UInt", 0, "Ptr", 0)
@@ -511,3 +589,15 @@ _GetName_(DisplayName)
 
     return !Output ? DisplayName : Output
 }
+
+CF_ToolTip(tipText, delay := 1000)
+{
+  ToolTip
+  ToolTip, % tipText
+  if (delay > 0)
+    SetTimer, RemoveToolTip, % "-" delay
+}
+
+RemoveToolTip:
+ToolTip
+return

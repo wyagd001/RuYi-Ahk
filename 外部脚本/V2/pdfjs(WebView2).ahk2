@@ -1,4 +1,4 @@
-﻿;|2.7|2024.07.28|1640
+﻿;|2.8|2024.08.26|1640
 #Include <WebView2>
 
 Persistent
@@ -14,6 +14,11 @@ if !CandySel
 generatehtml(CandySel)
 OpenPdfWithWebView2(CandySel)
 return
+
+Space::
+{
+	ExitApp(0)
+}
 
 OpenPdfWithWebView2(pdffilepath)
 {

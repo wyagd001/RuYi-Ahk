@@ -13,13 +13,25 @@ if !CandySel
 	FileDelete, % A_ScriptDir "\..\..\临时目录\mdip\" SubStr(Var, 1, 8) ".mdip"
 	Return
 }
-else if (CandySel="restore")
+else if (CandySel = "restore")
 {
+  FileList := ""
 	Loop, Files, % A_ScriptDir "\..\..\临时目录\mdip\*.mdip"
 	{
-		menu, RS_mydesktopicon, Add, % A_LoopFileName, Restore
+		FileList .= A_LoopFileTimeModified "`t" A_LoopFileName "`n"
 	}
-	menu, RS_mydesktopicon, Show
+  Sort, FileList, R ; 根据日期排序.
+
+  Loop, Parse, FileList, `n
+  {
+    if (A_LoopField = "")
+      continue
+    StringSplit, FileItem, A_LoopField, %A_Tab%
+    menu, RS_mydesktopicon, Add, % FileItem2, Restore
+    if (A_index > 20)
+      break
+  }
+  menu, RS_mydesktopicon, Show
 }
 Return
 
