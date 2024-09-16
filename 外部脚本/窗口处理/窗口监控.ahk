@@ -1,4 +1,4 @@
-﻿;|2.8|2024.09.16|1674
+﻿;|2.8|2024.09.16|1675
 ; 来源网址: https://www.autohotkey.com/boards/viewtopic.php?t=59149
 Gui, +AlwaysOnTop
 Gui, Add, Text,, WinHook.Shell
