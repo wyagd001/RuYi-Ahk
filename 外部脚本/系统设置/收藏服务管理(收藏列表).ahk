@@ -1,4 +1,4 @@
-﻿;|2.8|2024.08.26|1661
+﻿;|2.8|2024.09.07|1661
 #SingleInstance Force
 #NoEnv
 ;SetWorkingDir %A_ScriptDir%
@@ -7,7 +7,7 @@ SetBatchLines -1
 Gui, Add, ListView, x10 y10 w800 h350 vMyList gdoubclick Checked, 序号|服务名称|显示名称|描述|是否运行|Pid|启动类型|可执行文件路径|服务类型|1|2|3|
 Gui, Add, Button, x10 yp+360 gRefresh, 刷新
 
-arr:=["ATService", "Flash Helper Service", "FlashCenterSvc", "GLyhPassInputService", "HuaweiHiSuiteService64.exe", "PSBCInputService", "spacedeskService", "Spooler", "ToDesk_Service", "VMwareHostd", "VMnetDHCP", "VMware NAT Service", "wpscloudsvr", "XLServicePlatform", "AppInfo"]
+arr:=["AppInfo", "ATService", "Flash Helper Service", "FlashCenterSvc", "GLyhPassInputService", "HuaweiHiSuiteService64.exe", "PSBCInputService", "spacedeskService", "Spooler", "ToDesk_Service", "VMwareHostd", "VMnetDHCP", "VMware NAT Service", "wpscloudsvr", "XLServicePlatform"]
 runstateObj := {1:"停止", 2:"正在启动", 3:"正在停止", 4:"运行", 5:"可恢复", 6:"可暂停", 7:"暂停"}
 startTypeObj := {0:"启动", 1:"系统", 2:"自动", 3:"手动", 4:"禁用"}
 startTypeValueObj := {"启动":0, "系统":1, "自动":2, "手动":3, "禁用":4}
@@ -387,7 +387,10 @@ Service_State(ServiceName, ByRef ServicePid := "")
 	; SC_MANAGER_CONNECT (0x0001)
 
 	if !SC_HANDLE := OpenService(SCM_HANDLE, ServiceName, 0x4)  ; SERVICE_QUERY_STATUS (0x0004)
+  {
+    ServicePid := ""
 		result := -4 ; Service Not Found
+  }
 
 	if !result
 	{

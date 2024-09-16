@@ -1,16 +1,21 @@
-﻿;|2.8|2024.09.03|1669
-; 来源网址: https://www.autohotkey.com/boards/viewtopic.php?t=92366
+﻿;|2.8|2024.09.08|1670
 #SingleInstance, Ignore
-StickyNotesFolder := A_ScriptDir "\..\..\配置文件\外部脚本\ahk_note"
-if !FileExist(StickyNotesFolder)
-  FileCreateDir, % StickyNotesFolder
-StickyNotesIni := StickyNotesFolder . "\Sticky Notes.ini"
 
-if !FileExist(StickyNotesIni)
+Filename := GetFullPathName(A_scriptdir "\..\..\引用程序\其它资源\8000.txt")
+Random, Rand, 1, 7744
+FileReadLine, Rand_word, % Filename, % Rand
+FileEncoding UTF-8   ; 默认文本文件的编码
+
+WordIni := A_ScriptDir "\..\..\配置文件\外部脚本\word.ini"
+
+if !FileExist(WordIni)
 {
 	Settings := "
 (
-[StickyNotes]
+[Tabs]
+TabNames=8000|
+t_8000=" Filename "
+t_800_Line=1
 
 [Settings]
 EditColor=0xFFFFFF
@@ -37,54 +42,68 @@ Color14=0
 Color15=0
 Color16=0
 )"
-	FileAppend, %Settings%, %StickyNotesIni%
+	FileAppend, %Settings%, %WordIni%
 }
 
-IniRead, EditC, %StickyNotesIni%, Settings, EditColor
-IniRead, TextC, %StickyNotesIni%, Settings, TextColor
-IniRead, ATC, %StickyNotesIni%, Settings, AutomaticTextColor
-IniRead, AutoS, %StickyNotesIni%, Settings, AutoSave
-IniRead, DarkMode, %StickyNotesIni%, Settings, DarkMode
-IniRead, StartupCheckPassCode, %StickyNotesIni%, Settings, StartupCheckPassCode
-IniRead, Passcode, %StickyNotesIni%, Settings, Passcode
-IniRead, TabCheckRead, %StickyNotesIni%, StickyNotes, TabNames
+IniRead, EditC, %WordIni%, Settings, EditColor
+IniRead, TextC, %WordIni%, Settings, TextColor
+IniRead, ATC, %WordIni%, Settings, AutomaticTextColor
+IniRead, AutoS, %WordIni%, Settings, AutoSave
+IniRead, DarkMode, %WordIni%, Settings, DarkMode
+IniRead, StartupCheckPassCode, %WordIni%, Settings, StartupCheckPassCode
+IniRead, Passcode, %WordIni%, Settings, Passcode
+IniRead, TabCheckRead, %WordIni%, Tabs, TabNames
 
 if (TabCheckRead = "ERROR")    ;  没有配置文件
 {
+  Gui, +Hwnddhydq
 	TNames := "Untitled"
-	Gui, Add, Tab3, hwndtab vcurrentTab, %TNames% 
+	Gui, Add, Tab3, hwndtab vcurrentTab, %TNames%
+  Gui, font, s16
 	Gui, Add, Edit, w300 h200 gAutoSave c%TextC% vEditText1
+  Gui, font
 }
 else
 {
-	IniRead, TNames, %StickyNotesIni%, StickyNotes, TabNames
+	IniRead, TNames, %WordIni%, Tabs, TabNames
+  while instr(TNames, "|")=1
+    TNames := substr(TNames, 2)
+  Gui, +Hwnddhydq
 	Gui, Add, Tab3, hwndtab vcurrentTab, %TNames%
-	tcount := DllCall("SendMessage", "UInt", tab, "UInt", 0x1304, Int, 0, Int, 0)
+	tcount := TAB_GetItemCount(Tab)
 	Loop, Parse, TNames, |
 	{
 		Gui, Tab, %A_Index%
+    EditVar := ""
     if (A_LoopField != "")
     {
-      FileRead, EditVar, % StickyNotesFolder "\" A_LoopField
+      IniRead, Fpath, %WordIni%, Tabs, % "t_" A_LoopField
+      IniRead, FLine, %WordIni%, Tabs, % "t_" A_LoopField "_Line"
+      FileReadLine, EditVar, % Fpath, % FLine
+      ;msgbox % EditVar "`n" Fpath  ; 发生错误 EditVar 不会清空
+      Gui, font, s16
       Gui, Add, Edit, w300 h200 gAutoSave c%TextC% vEditText%A_Index%, %EditVar%
+      Gui, font
       EditPut := ""
     }
 	}
 }
-Gui +Resize 
 Gui, Color, , %EditC%
 Gui, Tab
-Gui, Add, Button, vc1 gSave, 保存
-Gui, Add, Button, vc2 gNew x+5, 新建
-Gui, Add, Button, vc3 gDelete x+5, 删除
-Gui, Add, Button, vc4 gChangeName x+5, 重命名
-Gui, Add, Button, vc5 gAddFiles x+5, ▲
-Gui, Add, Button, vc6 gSettings x+5, ¤
-Gui, Add, CheckBox, vc7 gAOT x+5 yp h25, 置顶
+Gui, Add, Button, gAddFiles, ▲
+Gui, Add, Button, gprev x+5, ◀
+Gui, Add, Button, gnext x+5, ▶
+;Gui, Add, Button, gNew x+5, 新建
+Gui, Add, Button, gDelete x+5, 删除
+Gui, Add, Button, gChangeName x+5, 重命名
+
+Gui, Add, Button, gSettings x+5, ¤
+Gui, Add, CheckBox, gAOT x+5 yp h25, 置顶
+Gui, Add, CheckBox, x+5 yp h25 vwordp, 朗读
 if (StartupCheckPassCode = 1) && (Passcode != "")
 	GoSub, PasscodeCheckEnter
 else
-	Gui, Show,, Sticky Notes
+	Gui, Show,, 阅读器
 
 Gui, +HwndSN
 Gui, New, , Settings
@@ -109,31 +128,10 @@ Col:=0xFF0000
 CColors:=Object()
 Loop 16
 {
-	IniRead, Color%A_Index%, %StickyNotesIni%, Settings, Color%A_Index%
+	IniRead, Color%A_Index%, %WordIni%, Settings, Color%A_Index%
 	CColors.Insert(Color%A_Index%)
   ;msgbox % (Color%A_Index%)
 }
-return
-
-GuiSize:
-If (A_EventInfo = 1) ; The window has been minimized.
-	Return
-tcount := TAB_GetItemCount(Tab)
-;ControlGet, CurrentTabNum, Tab, , SysTabControl321, A
-AutoXYWH("wh", "currentTab")
-loop % tcount
-{
-;AutoXYWH("wh", "EditText1")
-AutoXYWH("wh", "EditText" A_Index)
-}
-AutoXYWH("y", "c1")
-AutoXYWH("y", "c2")
-AutoXYWH("y", "c3")
-AutoXYWH("y", "c4")
-AutoXYWH("y", "c5")
-AutoXYWH("y", "c6")
-AutoXYWH("y", "c7")
-;tooltip % CurrentTabNum
 return
 
 Apply:
@@ -146,10 +144,10 @@ Loop, %tcount%
 	Gui, Color, , %EditColor%
 	GuiControl, +c%TextColor%, Edit%A_Index%
 }
-IniWrite, %EditColor%, %StickyNotesIni%, Settings, EditColor
-IniWrite, %TextColor%, %StickyNotesIni%, Settings, TextColor
-IniWrite, %ATColor%, %StickyNotesIni%, Settings, AutomaticTextColor
-IniWrite, %DM%, %StickyNotesIni%, Settings, DarkMode
+IniWrite, %EditColor%, %WordIni%, Settings, EditColor
+IniWrite, %TextColor%, %WordIni%, Settings, TextColor
+IniWrite, %ATColor%, %WordIni%, Settings, AutomaticTextColor
+IniWrite, %DM%, %WordIni%, Settings, DarkMode
 
 if (pc != "") or (StartupCheckPassCode != scp)
 {
@@ -164,9 +162,9 @@ if (pc != "") or (StartupCheckPassCode != scp)
     if (Passcode = MD5_fromString(oldpc)) or (strlen(Passcode) != 32)
     {
       Passcode := MD5_fromString(PC)
-      IniWrite, % Passcode, %StickyNotesIni%, Settings, Passcode
+      IniWrite, % Passcode, %WordIni%, Settings, Passcode
       StartupCheckPassCode := scp
-      IniWrite, %Scp%, %StickyNotesIni%, Settings, StartupCheckPassCode
+      IniWrite, %Scp%, %WordIni%, Settings, StartupCheckPassCode
     }
     else
     {
@@ -225,7 +223,7 @@ if (ChooseColor(Col, CColors)=1)
     tmpcol := FHex(CColors[A_Index], 6)
     if (tmpcol = 0x0)
       tmpcol := "0x000000"
-		IniWrite, % tmpcol, %StickyNotesIni%, Settings, Color%A_Index%
+		IniWrite, % tmpcol, %WordIni%, Settings, Color%A_Index%
   }
   ;msgbox % BGRtoRGB(Col)
 	Color := FHex(BGRtoRGB(Col), 6)
@@ -281,54 +279,44 @@ else
 	Gui, Settings:-AlwaysOnTop
 return
 
+prev:
+!right::
+next:
+ControlGet, CurrentTabNum, Tab, , SysTabControl321, ahk_id %dhydq%
+currentTab := TAB_GetText(Tab, CurrentTabNum)
+IniRead, Fpath, %WordIni%, Tabs, % "t_" currentTab
+IniRead, FLine, %WordIni%, Tabs, % "t_" currentTab "_Line"
+if FLine is not integer
+  FLine := 0
+FLine++
+FileReadLine, EditVar, % Fpath, % FLine
+while !EditVar
+{
+  FLine++
+  FileReadLine, EditVar, % Fpath, % FLine
+}
+;msgbox % FLine "|" EditVar "|" CurrentTabNum "|" currentTab
+GuiControl,, EditText%CurrentTabNum%, %EditVar%
+IniWrite, % FLine, %WordIni%, Tabs, % "t_" currentTab "_Line"
+sleep 50
+ControlGet, wordp, Checked,, Button8, ahk_id %dhydq%
+if wordp
+{
+  Wordpaly(EditVar)
+  gosub next
+}
+return
+
+AutoSave:
+Return
+
 AOT:
 Winset, AlwaysOnTop, Toggle
 return
 
-AutoSave:
-;ControlGet, CurrentTabNum, Tab, , SysTabControl321, A
-;Gui, Show, , *Sticky Notes
-if (AutoS = 1)
-	SetTimer, Save, -60000
-return
-
-$^s::
-if (WinActive("ahk_id" SN))
-	Goto, Save
-else
-	Send, ^s
-return
-
 guiclose:
+Gui, Destroy
 exitapp
-
-Save:    ; 保存所有
-ControlGet, CurrentTabNum, Tab, , SysTabControl321, A   ; 当前序号
-tcount := TAB_GetItemCount(Tab)
-/*
-Loop, %tcount%
-{
-	GuiControl, Choose, SysTabControl321, %A_Index%
-	Gui, Submit, NoHide
-	GuiControlGet, Edit, , Edit%A_Index%
-
-	TabNames .= currentTab "|"
-	file:=FileOpen(StickyNotesFolder "\" currentTab,"w"), file.Write(Edit), file.Close()
-}
-*/
-Gui, Submit, NoHide
-TabNames := ""
-Loop, %tcount%
-{
-  currentTab := TAB_GetText(Tab, A_Index)
-  TabNames .= currentTab "|"
-  file := FileOpen(StickyNotesFolder "\" currentTab, "w"), file.Write(EditText%A_Index%), file.Close()
-}
-IniWrite, %TabNames%, %StickyNotesIni%, StickyNotes, TabNames
-TabNames := ""
-GuiControl, Choose, SysTabControl321, %CurrentTabNum%
-Gui, Show, NoActivate, Sticky Notes
-return
 
 TAB_GetItemCount(hTab)
 {
@@ -363,26 +351,6 @@ TAB_GetText(hTab,iTab)
   Return l_Text
 }
 
-New:
-newf := newnote()
-GuiControl,, SysTabControl321, % newf   ; 新增1标签
-tcount := TAB_GetItemCount(Tab)
-;msgbox % tcount
-Gui, Tab, %tcount%
-Gui, Add, Edit, w300 h200 gAutoSave c%TextC% vEditText%tcount%
-return
-
-newnote()
-{
-  global StickyNotesFolder
-  Loop
-    f:=Format("{:03d}.txt", A_Index)
-  Until !FileExist(StickyNotesFolder "\" f)
-  ;FileAppend,, % StickyNotesFolder "\" f
-  return f
-}
-return
-
 Delete:
 Gui, +OwnDialogs
 tcount := TAB_GetItemCount(Tab)  ; 总标签页数目
@@ -391,38 +359,25 @@ if (tcount = 1)
 else 
 {
   ControlGet, CurrentTabNum, Tab, , SysTabControl321, A
-  delfileName := TAB_GetText(Tab, CurrentTabNum)
-	MsgBox, 308, 确认, 您确认要删除选中的便签 %delfileName%, 然后重启吗?
+  currentDelTab := TAB_GetText(Tab, CurrentTabNum)
+	MsgBox, 308, 确认, 您确认要删除选中的便签 %currentDelTab%, 然后重启吗?
 	IfMsgBox, No
 		return
 	IfMsgBox, Yes
 	{
-    names := ""
-			
-		Loop, % tcount
-		{
-			GuiControl, Choose, SysTabControl321, %A_Index%
-			Gui, Submit, NoHide
+    TabNames := ""
+    Loop, %tcount%
+    {
+      currentTab := TAB_GetText(Tab, A_Index)
       if (A_Index != CurrentTabNum)
-        names .= "|" currentTab
-		}
-;TAB_DeleteItem(Tab, CurrentTabNum)
-  while instr(names, "|")=1
-  names := substr(names, 2)
-  IniWrite, %names%, %StickyNotesIni%, StickyNotes, TabNames
-  if delfileName
-    FileRecycle % StickyNotesFolder "\" delfileName
-  reload
-			;GuiControl, Choose, SysTabControl321, %tcount%
-			;Gui, Submit, NoHide
-			;IniDelete, %StickyNotesIni%, StickyNotes, %currentTab%
-;msgbox % currentTab
-			;GuiControl, Text, Edit%tcount%
-			;GuiControl, , SysTabControl321, %names%    ; ; 删除标签 移除当前选项卡
-			;GoSub, Save
-			;GuiControl, Choose, SysTabControl321, %CurrentTabNum%
-			;names := ""
-		;}
+        TabNames .= "|" currentTab 
+    }
+    while instr(TabNames, "|")=1
+      TabNames := substr(TabNames, 2)
+    IniWrite, %TabNames%, %WordIni%, Tabs, TabNames
+    IniDelete, %WordIni%, Tabs, % "t_" currentDelTab        ; 删除选中名称
+    IniDelete, %WordIni%, Tabs, % "t_" currentDelTab "_Line"
+    reload
 	}
 }
 return
@@ -430,12 +385,21 @@ return
 ChangeName:
 Gui, +OwnDialogs
 ControlGet, CurrentTabNum, Tab, , SysTabControl321, A
-CurrentfileName := TAB_GetText(Tab, CurrentTabNum)
-InputBox, NewName, Sticky Notes, 请输入新的便签名, , 250, 125
-if (NewName = "TabNames")
+currentChangingNameTab := TAB_GetText(Tab, CurrentTabNum)
+if (currentTab = "无标题")
+{
+  ToolTipTimer("无标题标签不能重命名", 4000)
+  return
+}
+InputBox, NewName, 单词本, 请输入新的标签名, , 250, 125
+if (NewName = "无标题")
 	MsgBox, 8208, Error, Sorry but you can't use that name, it would interfere with the saving system!
 else if (ErrorLevel = 0)
 {
+  IniRead, Fpath, %WordIni%, Tabs, % "t_" currentChangingNameTab
+  IniRead, FLine, %WordIni%, Tabs, % "t_" currentChangingNameTab "_Line"
+  IniDelete, %WordIni%, Tabs, % "t_" currentChangingNameTab  ; 删除旧名称
+  IniDelete, %WordIni%, Tabs, % "t_" currentChangingNameTab "_Line"
   tcount := TAB_GetItemCount(Tab)
   TabNames := ""
   Loop, %tcount%
@@ -443,30 +407,42 @@ else if (ErrorLevel = 0)
     currentTab := TAB_GetText(Tab, A_Index)
     TabNames .= "|" currentTab 
   }
-  TabNames  := strreplace(TabNames, CurrentfileName, NewName)
-  GuiControl, , SysTabControl321, % TabNames    ; 应用新标签名
+  TabNames  := strreplace(TabNames, currentChangingNameTab, NewName)
+  GuiControl, , SysTabControl321, % TabNames   ; 应用新标签名
+  while instr(TabNames, "|")=1
+    TabNames := substr(TabNames, 2)
+  IniWrite, % TabNames, %WordIni%, Tabs, TabNames
+  IniWrite, % Fpath, %WordIni%, Tabs, % "t_" NewName 
+  IniWrite, % FLine, %WordIni%, Tabs, % "t_" NewName "_Line"
   TabNames := ""
-  FileMove, % StickyNotesFolder "\" CurrentfileName, % StickyNotesFolder "\" NewName
-  gosub save
 }
+return
+
+New:
+newf := "无标题"
+GuiControl,, SysTabControl321, % newf   ; 新增1标签
+tcount := TAB_GetItemCount(Tab)
+;msgbox % tcount
+Gui, Tab, %tcount%
+Gui, Add, Edit, w300 h200 gAutoSave c%TextC% vEditText%tcount%
 return
 
 AddFiles:
 Gui, +OwnDialogs
-FileSelectFile, File, 3, C:\Users\%A_UserName%\Downloads, 打开文本文件, 文本文件(*.txt; *.ahk; *.md)
+FileSelectFile, Fpath, 3, C:\Users\%A_UserName%\Downloads, 打开文本文件, 文本文件(*.txt; *.ahk; *.md)
 GuiDropFiles:
 if (A_ThisLabel = "GuiDropFiles")
-	File := A_GuiEvent
-if (File = "")
+	Fpath := A_GuiEvent
+if (Fpath = "")
 	return
 else
 {
 	GoSub, New
-	tcount := TAB_GetItemCount(Tab)
 	GuiControl, Choose, SysTabControl321, %tcount%
-	FileRead, FileInput, %File%
+	FileReadLine, EditVar, % Fpath, 1
+  SplitPath, Fpath, , , , OutNameNoExt
 	Gui, Tab, %tcount%
-	GuiControl, Text, EditText%tcount%, %FileInput%
+	GuiControl, Text, EditText%tcount%, %EditVar%
 
   TabNames := ""
   Loop, %tcount%
@@ -474,10 +450,13 @@ else
     currentTab := TAB_GetText(Tab, A_Index)
     TabNames .= "|" currentTab 
   }
-  TabNames := strreplace(TabNames, newf, LTrim(SubStr(File, InStr(File, "\", , , StrAmt(File, "\"))), "\")) 
+  TabNames := strreplace(TabNames, newf, OutNameNoExt)
 
-  GuiControl, , SysTabControl321, %TabNames%    ; 更新应用新标签
+  GuiControl, , SysTabControl321, %TabNames%
   GuiControl, Choose, SysTabControl321, %tcount%
+  IniWrite, % TabNames, %WordIni%, Tabs, TabNames
+  IniWrite, % Fpath, %WordIni%, Tabs, % "t_" OutNameNoExt 
+  IniWrite, 1, %WordIni%, Tabs, % "t_" OutNameNoExt "_Line"
 }
 return
 
@@ -489,7 +468,7 @@ if (ErrorLevel = 1)
 else
 {
 	if (MD5_fromString(PasswordCheck) = Passcode)
-		Gui, Show, , Sticky Notes
+		Gui, Show, , 阅读器
 	else
   {
     ;msgbox % MD5_fromString(PasswordCheck) "`n" Passcode
@@ -504,7 +483,27 @@ StrAmt(haystack, needle, casesense := false) {
 	return Count
 }
 
-ChooseColor(ByRef Color, ByRef CustColors, hWnd=0x0, Flags=0x103) { ;DISCLAIMER: This function is not mine, all the credit for this goes to Elgin on the forums, thank you for "borrowing" it to me :) Link: https://www.autohotkey.com/board/topic/8617-how-to-call-the-standard-choose-color-dialog/
+/*
+Save:    ; 保存所有
+ControlGet, CurrentTabName, Tab, , SysTabControl321, A   ; 当前序号
+tcount := TAB_GetItemCount(Tab)
+Gui, Submit, NoHide
+TabNames := ""
+Loop, %tcount%
+{
+  currentTab := TAB_GetText(Tab, A_Index)
+  TabNames .= currentTab "|"
+  file := FileOpen(StickyNotesFolder "\" currentTab, "w"), file.Write(EditText%A_Index%), file.Close()
+}
+IniWrite, %TabNames%, %WordIni%, StickyNotes, TabNames
+TabNames := ""
+GuiControl, Choose, SysTabControl321, %CurrentTabName%
+Gui, Show, NoActivate, 阅读器
+return
+*/
+
+ChooseColor(ByRef Color, ByRef CustColors, hWnd=0x0, Flags=0x103)
+{ ;DISCLAIMER: This function is not mine, all the credit for this goes to Elgin on the forums, thank you for "borrowing" it to me :) Link: https://www.autohotkey.com/board/topic/8617-how-to-call-the-standard-choose-color-dialog/
 	VarSetCapacity(CC, 9*A_PtrSize+16*4, 0)
 	NumPut(9*A_PtrSize, CC)
 	NumPut(hWnd, CC, A_PtrSize)
@@ -524,7 +523,8 @@ ChooseColor(ByRef Color, ByRef CustColors, hWnd=0x0, Flags=0x103) { ;DISCLAIMER:
 	return RVal
 }
 
-BGRtoRGB(oldValue) { ;DISCLAIMER: This function is not mine, all the credit for this goes to Micha on the forums, thanks for letting me "borrow" it, Link: https://autohotkey.com/board/topic/8617-how-to-call-the-standard-choose-color-dialog/
+BGRtoRGB(oldValue)
+{ ;DISCLAIMER: This function is not mine, all the credit for this goes to Micha on the forums, thanks for letting me "borrow" it, Link: https://autohotkey.com/board/topic/8617-how-to-call-the-standard-choose-color-dialog/
 	Value := (oldValue & 0x00ff00)
 	Value += ((oldValue & 0xff0000) >> 16)
 	Value += ((oldValue & 0x0000ff) << 16)  
@@ -546,10 +546,11 @@ dec2hex(d)
 	SetFormat, integer, H
 	h := d+0
 	SetFormat, IntegerFast, %BackUp_FmtInt%
-return h
+  return h
 }
 
-ToolTipTimer(Text, Timeout, x:="x", y:="y", WhichToolTip:=1) {
+ToolTipTimer(Text, Timeout, x:="x", y:="y", WhichToolTip:=1)
+{
 	If (x = "x")
 		MouseGetPos, X
 	If (y = "y")
@@ -563,63 +564,22 @@ ToolTipTimer(Text, Timeout, x:="x", y:="y", WhichToolTip:=1) {
 	return
 }
 
-; =================================================================================
-; Function: AutoXYWH
-;   Move and resize control automatically when GUI resizes.
-; Parameters:
-;   DimSize - Can be one or more of x/y/w/h  optional followed by a fraction
-;             add a '*' to DimSize to 'MoveDraw' the controls rather then just 'Move', this is recommended for Groupboxes
-;             add a 't' to DimSize to tell AutoXYWH that the controls in cList are on/in a tab3 control
-;   cList   - variadic list of ControlIDs
-;             ControlID can be a control HWND, associated variable name, ClassNN or displayed text.
-;             The later (displayed text) is possible but not recommend since not very reliable 
-; Examples:
-;   AutoXYWH("xy", "Btn1", "Btn2")
-;   AutoXYWH("w0.5 h 0.75", hEdit, "displayed text", "vLabel", "Button1")
-;   AutoXYWH("*w0.5 h 0.75", hGroupbox1, "GrbChoices")
-;   AutoXYWH("t x h0.5", "Btn1")
-; ---------------------------------------------------------------------------------
-; Version: 2020-5-20 / small code improvements (toralf)
-;          2018-1-31 / added a line to prevent warnings (pramach)
-;          2018-1-13 / added t option for controls on Tab3 (Alguimist)
-;          2015-5-29 / added 'reset' option (tmplinshi)
-;          2014-7-03 / mod by toralf
-;          2014-1-02 / initial version tmplinshi
-; requires AHK version : 1.1.13.01+    due to SprSplit()
-; =================================================================================
+Wordpaly(Word)
+{
+	static spovice
+	if !IsObject(spovice)
+		try spovice := ComObjCreate("sapi.spvoice")
+  if (pos := Instr(Word, " ["))
+    Rand_word := 	SubStr(Word, 1, pos)
+  Else
+    Rand_word := Word
+	try spovice.Speak(Rand_word)
+}
 
-AutoXYWH(DimSize, cList*){   ; https://www.autohotkey.com/boards/viewtopic.php?t=1079
-  Static cInfo := {}
-
-  If (DimSize = "reset")
-    Return cInfo := {}
-
-  For i, ctrl in cList {
-    ctrlID := A_Gui ":" ctrl
-    If !cInfo.hasKey(ctrlID) {
-      ix := iy := iw := ih := 0	
-      GuiControlGet i, %A_Gui%: Pos, %ctrl%
-      MMD := InStr(DimSize, "*") ? "MoveDraw" : "Move"
-      fx := fy := fw := fh := 0
-      For i, dim in (a := StrSplit(RegExReplace(DimSize, "i)[^xywh]"))) 
-        If !RegExMatch(DimSize, "i)" . dim . "\s*\K[\d.-]+", f%dim%)
-          f%dim% := 1
-
-      If (InStr(DimSize, "t")) {
-        GuiControlGet hWnd, %A_Gui%: hWnd, %ctrl%
-        hParentWnd := DllCall("GetParent", "Ptr", hWnd, "Ptr")
-        VarSetCapacity(RECT, 16, 0)
-        DllCall("GetWindowRect", "Ptr", hParentWnd, "Ptr", &RECT)
-        DllCall("MapWindowPoints", "Ptr", 0, "Ptr", DllCall("GetParent", "Ptr", hParentWnd, "Ptr"), "Ptr", &RECT, "UInt", 1)
-        ix := ix - NumGet(RECT, 0, "Int")
-        iy := iy - NumGet(RECT, 4, "Int")
-      }
-
-      cInfo[ctrlID] := {x:ix, fx:fx, y:iy, fy:fy, w:iw, fw:fw, h:ih, fh:fh, gw:A_GuiWidth, gh:A_GuiHeight, a:a, m:MMD}
-    } Else {
-      dgx := dgw := A_GuiWidth - cInfo[ctrlID].gw, dgy := dgh := A_GuiHeight - cInfo[ctrlID].gh
-      Options := ""
-      For i, dim in cInfo[ctrlID]["a"]
-        Options .= dim (dg%dim% * cInfo[ctrlID]["f" . dim] + cInfo[ctrlID][dim]) A_Space
-      GuiControl, % A_Gui ":" cInfo[ctrlID].m, % ctrl, % Options
-} } }
+GetFullPathName(path)
+{
+  cc := DllCall("GetFullPathName", "str", path, "uint", 0, "ptr", 0, "ptr", 0, "uint")
+  VarSetCapacity(buf, cc*(A_IsUnicode?2:1))
+  DllCall("GetFullPathName", "str", path, "uint", cc, "str", buf, "ptr", 0, "uint")
+  return buf
+}

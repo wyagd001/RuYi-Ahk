@@ -24,16 +24,15 @@ comparetext()
 	main.Title := "文本比较"
 	main.Show(Format("w{} h{}", A_ScreenWidth * 0.8, A_ScreenHeight * 0.6))
 
-	wvc := WebView2.create(main.Hwnd)
+	wvc := WebView2.CreateControllerAsync(main.Hwnd).await2()
 	;msgbox main.Hwnd
 	wv := wvc.CoreWebView2
 	nwr := wv.NewWindowRequested(NewWindowRequestedHandler)
 	wv.Navigate(A_ScriptDir "\..\..\临时目录\文本对比.html")
 
-	NewWindowRequestedHandler(handler, wv2, arg) {
-		argp := WebView2.NewWindowRequestedEventArgs(arg)
-		deferral := argp.GetDeferral()
-		argp.NewWindow := wv2
+	NewWindowRequestedHandler(wv2, arg) {
+    deferral := arg.GetDeferral()
+    arg.NewWindow := wv2
 		deferral.Complete()
 	}
 

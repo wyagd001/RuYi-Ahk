@@ -1,4 +1,4 @@
-﻿;|2.8|2024.08.24|1658
+﻿;|2.8|2024.08.24|1659
 #SingleInstance force
 CandySel :=  A_Args[1]
 SetBatchLines, -1

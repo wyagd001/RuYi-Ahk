@@ -1,7 +1,7 @@
-;|2.1|2023.07.21|1370
-;À´Ô´ÍøÖ·: https://www.autoahk.com/archives/39931
+ï»¿;|2.1|2023.07.21|1370
+;æ¥æºç½‘å€: https://www.autoahk.com/archives/39931
 Menu, Tray, UseErrorLevel
-Menu, Tray, Icon, % A_ScriptDir "\..\..\½Å±¾Í¼±ê\ÈçÒâ\f147.ico"
+Menu, Tray, Icon, % A_ScriptDir "\..\..\è„šæœ¬å›¾æ ‡\å¦‚æ„\f147.ico"
 Grid := [], s := 16, w := h := S * 4.5
 Gui, font, s%s%
 Gui, add, text, y1

@@ -5,7 +5,7 @@ CreateOpenWithMenu(CandySel,1,1)
 ;Menu, MyOpenWithMenu, Show
 Return
 
-;https://autohotkey.com/boards/viewtopic.php?t=18081
+;https://www.autohotkey.com/boards/viewtopic.php?t=18081
 ; ==================================================================================================================================
 ; Creates an 'open with' menu for the passed file.
 ; Parameters:

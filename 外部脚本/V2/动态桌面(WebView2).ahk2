@@ -45,7 +45,7 @@ openwithwebview2(filepath)
 	main.Title := name
 	main.Show(Format("w{} h{}", A_ScreenWidth, A_ScreenHeight))
 
-	wvc := WebView2.create(main.Hwnd)
+	wvc := WebView2.CreateControllerAsync(main.Hwnd).await2()
 	;msgbox main.Hwnd
 	wv := wvc.CoreWebView2
 	nwr := wv.NewWindowRequested(NewWindowRequestedHandler)
@@ -53,10 +53,9 @@ openwithwebview2(filepath)
   sleep 1500
   AttachToDesktop(main.Hwnd)
 
-	NewWindowRequestedHandler(handler, wv2, arg) {
-		argp := WebView2.NewWindowRequestedEventArgs(arg)
-		deferral := argp.GetDeferral()
-		argp.NewWindow := wv2
+	NewWindowRequestedHandler(wv2, arg) {
+    deferral := arg.GetDeferral()
+    arg.NewWindow := wv2
 		deferral.Complete()
 	}
 

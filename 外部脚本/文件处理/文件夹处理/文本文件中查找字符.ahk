@@ -1,4 +1,4 @@
-﻿;|2.6|2024.04.03|1096
+﻿;|2.8|2024.09.13|1096
 ; Script Information ===========================================================
 ; Name:         File String Search
 ; Description:  Search files for a specific string (Inspired by TLM)
@@ -16,7 +16,7 @@
 ; ==============================================================================
 
 ; Auto-Execute =================================================================
-#SingleInstance, Force ; Allow only one running instance of script
+#SingleInstance, Ignore ; Allow only one running instance of script
 #Persistent ; Keep the script permanently running until terminated
 #NoEnv ; Avoid checking empty variables for environment variables
 #Warn ; Enable warnings to assist with detecting common errors
@@ -50,10 +50,16 @@ ControlHandler:
         GuiControl, Disable, ButtonSearch
         GuiControl, Enable, ButtonStop
         
-        Loop, Files, % EditDir "\" (EditType ? EditType : "*.*"), FR
+        if Recurse
+          option := "FR"
+        else
+          option := "F"
+        Loop, Files, % EditDir "\" (EditType ? EditType : "*.*"), % option
         {
-            if A_LoopFileExt in txt,ahk,au3,htm,json,md
+            if A_LoopFileExt in txt,ahk,ahk2,au3,htm,html,json,md,bat,js
             	FileEncoding % File_GetEncoding(A_LoopFileFullPath)
+            else if A_LoopFileExt in exe,rar,zip,doc,pdf,mp4,xls,mp3,dll
+              continue    ; 跳过指定类型的文件
             ;FileEncoding % File_GetEncoding(A_LoopFileFullPath)
             Try FileRead, MatchRead, % A_LoopFileFullPath   ;  utf8  编码的问题
 
@@ -125,7 +131,7 @@ Gui,1:default
 Gui,1:submit, nohide
 rcon := a_guicontrol
 Gui,1:ListView, %rcon%
-Extensions := "ahk,txt,bat,bas,ini,htm,html,csv,xml,md,reg,au3"    ;- some extensions with text
+Extensions := "ahk,ahk2,txt,bat,bas,ini,htm,html,csv,xml,md,reg,au3"    ;- some extensions with text
 RN := LV_GetNext("C")
 RF := LV_GetNext("F")
 GC := LV_GetCount()
@@ -213,6 +219,7 @@ GuiCreate() {
     GuiControl, choose, EditDir, % EditDir
     GuiControl, choose, EditType, % EditType
     Gui, Add, CheckBox, xs y+10 h20 vfullword,全字符匹配(单词边界)
+    Gui, Add, CheckBox, x+10 yp h20 Checked vRecurse,递归子文件夹
 
     Gui, Tab, 2
     Gui, Add, ListView, w460 r10 vListView Grid +altsubmit vLV1 gLV1x, 找到次数|文件路径

@@ -26,11 +26,11 @@ OpenPdfWithWebView2(pdffilepath)
   SplitPath pdffilepath, &oname, &odir
   ;msgbox odir
   main := Gui("+Resize")
-  main.OnEvent("Close", _ExitApp)
+  main.OnEvent('Close', (*) => ExitApp())
   main.Title := oname " - Pdf 文档阅读"
   main.Show(Format("w{} h{}", A_ScreenWidth * 0.8, A_ScreenHeight * 0.92))
   
-  wvc := WebView2.create(main.Hwnd,,,,,{AdditionalBrowserArguments: "--disable-web-security='true'"})
+  wvc := WebView2.CreateControllerAsync(main.Hwnd, {AdditionalBrowserArguments: "--disable-web-security='true'"}).await2()
   ;msgbox main.Hwnd
   wv := wvc.CoreWebView2
   nwr := wv.NewWindowRequested(NewWindowRequestedHandler)
@@ -42,16 +42,10 @@ OpenPdfWithWebView2(pdffilepath)
   ;wv.ExecuteScript('document.querySelector("#secondaryOpenFile").click();', 0)
   ;SetTimer autoopenpdf, -1250
 
-	NewWindowRequestedHandler(handler, wv2, arg) {
-		argp := WebView2.NewWindowRequestedEventArgs(arg)
-		deferral := argp.GetDeferral()
-		argp.NewWindow := wv2
+	NewWindowRequestedHandler(wv2, arg) {
+    deferral := arg.GetDeferral()
+    arg.NewWindow := wv2
 		deferral.Complete()
-	}
-
-	_ExitApp(*) {
-    Global
-    ExitApp(0)
 	}
 }
 

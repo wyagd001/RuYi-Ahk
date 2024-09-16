@@ -32,7 +32,7 @@ OpenDocxWithWebView2(docxfilepath)
 	main.Title := oname " - Docx 文档阅读"
 	main.Show(Format("w{} h{}", A_ScreenWidth * 0.8, A_ScreenHeight * 0.92))
 
-	wvc := WebView2.create(main.Hwnd,,,,,{AdditionalBrowserArguments: "--disable-web-security='true'"})
+	wvc := WebView2.CreateControllerAsync(main.Hwnd,{AdditionalBrowserArguments: "--disable-web-security='true'"}).await2()
 	;msgbox main.Hwnd
 	wv := wvc.CoreWebView2
 	nwr := wv.NewWindowRequested(NewWindowRequestedHandler)
@@ -41,10 +41,9 @@ vhn := wv.SetVirtualHostNameToFolderMapping("demo", odir, 0x2)
 ;wv.Navigate("https://demo/preview.html")
 wv.Navigate(A_ScriptDir "\..\..\临时目录\preview.html")
 
-	NewWindowRequestedHandler(handler, wv2, arg) {
-		argp := WebView2.NewWindowRequestedEventArgs(arg)
-		deferral := argp.GetDeferral()
-		argp.NewWindow := wv2
+	NewWindowRequestedHandler(wv2, arg) {
+    deferral := arg.GetDeferral()
+    arg.NewWindow := wv2
 		deferral.Complete()
 	}
 
