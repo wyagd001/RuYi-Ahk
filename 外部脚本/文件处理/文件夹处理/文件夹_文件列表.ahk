@@ -1,9 +1,12 @@
-﻿;|2.0|2023.07.01|1298
+﻿;|2.8|2023.09.27|1298
 CandySel := A_Args[1]
 tmp_Str := ""
-Loop, Files, %CandySel%\*.*, FR
+if CandySel
 {
-	tmp_Str .= A_LoopFileLongPath "`n"
+  Loop, Files, %CandySel%\*.*, FR
+  {
+    tmp_Str .= A_LoopFileLongPath "`n"
+  }
 }
 GuiText(tmp_Str, "文件列表", 500)
 return

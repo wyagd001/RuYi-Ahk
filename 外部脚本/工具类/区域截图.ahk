@@ -1,4 +1,4 @@
-﻿;|2.7|2024.06.26|1530
+﻿;|2.8|2024.09.26|1530
 区域选择方式 = 1
 pToken := Gdip_Startup()
 
@@ -99,7 +99,7 @@ else if(区域选择方式 = 2)
 pBitmap := Gdip_BitmapFromScreen(aRect)
 hBitmap := Gdip_CreateHBITMAPFromBitmap(pBitmap)
 hw := GetStringIndex(aRect, 3), hh := GetStringIndex(aRect, 4), bhh := hh+5
-;Gui, +hwndquyujt
+Gui, +hwndquyujt
 Gui, Add, Picture, w%hw% h%hh% vprev_pic, HBITMAP:%hBitmap%
 Gui, Add, Button, x5 yp+%bhh% gocr w40 vocr, OCR
 Gui, Add, Button, xp+45 yp gOCR2 w60 vocr2, 本地OCR
@@ -158,9 +158,9 @@ JTFilePath := A_temp "\Vis2_123.bmp"
 Gdip_SaveBitmapToFile(pBitmap, JTFilePath)
 B_Autohotkey := A_ScriptDir "\..\..\引用程序\" (A_PtrSize = 8 ? "AutoHotkeyU64.exe" : "AutoHotkeyU32.exe")
 run %B_Autohotkey% "%A_ScriptDir%\..\文件处理\本地OCR(Vis2).ahk" "%JTFilePath%"
-;run %B_Autohotkey% "%A_ScriptDir%\PaddleOCR_身份证识别验证.ahk" "%JTFilePath%"
+;run %B_Autohotkey% "%A_ScriptDir%\PaddleOCR_身份证识别验证.ahk" "%JTFilePath%" "quyujt"
 ;AutoHotkey64 := A_ScriptDir "\..\..\引用程序\2.0\AutoHotkey64.exe"
-;run %AutoHotkey64% "%A_ScriptDir%\RapidOcrOnnx.ahk2" "%JTFilePath%"
+;run %AutoHotkey64% "%A_ScriptDir%\RapidOcrOnnx.ahk2" "%JTFilePath%" "quyujt"
 return
 
 QRcodeReader:

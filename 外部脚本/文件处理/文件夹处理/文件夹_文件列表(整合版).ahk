@@ -1,4 +1,4 @@
-﻿;|2.5|2024.01.20|1297
+﻿;|2.8|2024.09.20|1297
 CandySel := A_Args[1]
 
 Gui,66: Destroy
@@ -13,6 +13,7 @@ Gui, Add, DropDownList, xp+90 yp w80 h60 vlistorderR, 升序||降序
 Gui, Add, CheckBox, xp+90 yp h30 vdelfolderpath gdelfolderpath, 只显示相对路径(删除文件夹的路径)
 Gui, Add, Edit, x10 yp+40 Multi readonly w690 r20 vmyedit
 Gui, Show, AutoSize, 文件夹文件列表
+sleep 300
 if CandySel
 	Gosub folderfilelist
 return

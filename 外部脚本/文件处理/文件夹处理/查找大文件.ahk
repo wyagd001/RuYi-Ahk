@@ -1,4 +1,4 @@
-﻿;|2.8|2024.08.24|1658
+﻿;|2.8|2024.09.17|1658
 #SingleInstance force
 CandySel :=  A_Args[1]
 SetBatchLines, -1
@@ -7,6 +7,7 @@ ipause := 0
 Heap := new BinaryHeap
 B_index := 0
 fileobj := {}
+
 if !CandySel
 {
   GuiText("未指定扫描文件夹", "查找大文件", 800)
@@ -34,7 +35,15 @@ Loop, Files, %CandySel%\*.*, FR
     {
       ;msgbox % B_index " 1|1 " A_LoopFileFullPath
       Heap.Add(A_LoopFileSize)
-      fileobj["a" A_LoopFileSize] := A_LoopFileFullPath
+      ; 同样的大小的文件, 只会记录一个路径
+      if !fileobj["a" A_LoopFileSize]
+        fileobj["a" A_LoopFileSize] := A_LoopFileFullPath
+      else if fileobj["a" A_LoopFileSize] && !fileobj["b" A_LoopFileSize]
+        fileobj["b" A_LoopFileSize] := A_LoopFileFullPath
+      else if fileobj["b" A_LoopFileSize] && !fileobj["c" A_LoopFileSize]
+        fileobj["c" A_LoopFileSize] := A_LoopFileFullPath
+      else if fileobj["c" A_LoopFileSize] && !fileobj["d" A_LoopFileSize]
+        fileobj["d" A_LoopFileSize] := A_LoopFileFullPath
     }
     else
     {
@@ -44,8 +53,16 @@ Loop, Files, %CandySel%\*.*, FR
       {
         Heap.Add(A_LoopFileSize)
         Heap.Pop()
-        fileobj["a" A_LoopFileSize] := A_LoopFileFullPath
-        fileobj.Delete("a" miniV)
+        ; 同样的大小的文件, 只会记录一个路径
+        if !fileobj["a" A_LoopFileSize]
+          fileobj["a" A_LoopFileSize] := A_LoopFileFullPath
+        else if fileobj["a" A_LoopFileSize] && !fileobj["b" A_LoopFileSize]
+          fileobj["b" A_LoopFileSize] := A_LoopFileFullPath
+        else if fileobj["b" A_LoopFileSize] && !fileobj["c" A_LoopFileSize]
+          fileobj["c" A_LoopFileSize] := A_LoopFileFullPath
+        else if fileobj["c" A_LoopFileSize] && !fileobj["d" A_LoopFileSize]
+          fileobj["d" A_LoopFileSize] := A_LoopFileFullPath
+        fileobj.Delete("a" miniV), fileobj.Delete("b" miniV), fileobj.Delete("c" miniV), fileobj.Delete("d" miniV)
       }
     }
   }
@@ -55,10 +72,34 @@ loop 50
   if !Heap.Data.MaxIndex()
     break
   v := Heap.Pop()
-  Tmp_str .= fileobj["a" v] " | " Round(v/1024/1024, 2) "`n"
+  if (lastv = v)
+  {
+    Tmp_LineStr := fileobj["a" v] " | " Round(v/1024/1024, 2) " mb`n"
+    if InStr(Tmp_str, Tmp_LineStr)
+    {
+      Tmp_LineStr := fileobj["b" v] " | " Round(v/1024/1024, 2) " mb`n"
+      if InStr(Tmp_str, Tmp_LineStr)
+      {
+        Tmp_LineStr := fileobj["c" v] " | " Round(v/1024/1024, 2) " mb`n"
+        if InStr(Tmp_str, Tmp_LineStr)
+          Tmp_LineStr := fileobj["d" v] " | " Round(v/1024/1024, 2) " mb`n"
+      }
+    }
+  }
+  else
+    Tmp_LineStr := fileobj["a" v] " | " Round(v/1024/1024, 2) " mb`n"
+
+  Tmp_str .= Tmp_LineStr
+  lastv := v
 }
+Loop, Parse, Tmp_str, `n, `r
+{
+	newStr := A_LoopField "`n" newStr
+  ;msgbox % A_LoopField
+}
+GuiControl,, myedit, % Trim(newStr, "`n")
+newStr := Tmp_str := ""
 tooltip
-GuiControl,, myedit, % Tmp_str
 return
 
 Esc::
@@ -70,9 +111,34 @@ loop 50
   if !Heap.Data.MaxIndex()
     break
   v := Heap.Pop()
-  Tmp_str .= fileobj["a" v] " | " Round(v/1024/1024, 2) "`n"
+  if (lastv = v)
+  {
+    Tmp_LineStr := fileobj["a" v] " | " Round(v/1024/1024, 2) " mb`n"
+    if InStr(Tmp_str, Tmp_LineStr)
+    {
+      Tmp_LineStr := fileobj["b" v] " | " Round(v/1024/1024, 2) " mb`n"
+      if InStr(Tmp_str, Tmp_LineStr)
+      {
+        Tmp_LineStr := fileobj["c" v] " | " Round(v/1024/1024, 2) " mb`n"
+        if InStr(Tmp_str, Tmp_LineStr)
+          Tmp_LineStr := fileobj["d" v] " | " Round(v/1024/1024, 2) " mb`n"
+      }
+    }
+  }
+  else
+    Tmp_LineStr := fileobj["a" v] " | " Round(v/1024/1024, 2) " mb`n"
+
+  Tmp_str .= Tmp_LineStr
+  lastv := v
 }
-GuiControl,, myedit, % Tmp_str
+Loop, Parse, Tmp_str, `n, `r
+{
+	newStr := A_LoopField "`n" newStr
+  ;msgbox % A_LoopField
+}
+;msgbox % newStr
+GuiControl,, myedit, % Trim(newStr, "`n")
+newStr := Tmp_str := ""
 return
 
 GuiText(Gtext, Title:="", w:=300, l:=20)
@@ -178,6 +244,35 @@ AutoXYWH(DimSize, cList*){   ;https://www.autohotkey.com/boards/viewtopic.php?t=
       GuiControl, % A_Gui ":" cInfo[ctrlID].m, % ctrl, % Options
 } } }
 
+/*
+Basic example:
+    Heap := new BinaryHeap
+    For Index, Value In [10,17,20,30,38,30,24,34]
+        Heap.Add(Value)
+    MsgBox % Heap.Peek()
+    Loop, 8
+        MsgBox % Heap.Pop()
+You can use a custom comparison function to modify the behavior of the heap. For example, the class implements a min-heap by default, but it can become a max-heap by extending the class and overriding Compare():
+    Heap := new MaxHeap
+    
+    class MaxHeap extends Heap
+    {
+        Compare(Value1,Value2)
+        {
+            Return, Value1 > Value2
+        }
+    }
+Or work with objects:
+    Heap := ObjectHeap
+    
+    class ObjectHeap extends Heap
+    {
+        Compare(Value1,Value2)
+        {
+            Return, Value1.SomeKey < Value2.SomeKey
+        }
+    }
+*/
 class BinaryHeap
 {
     __New()
@@ -255,8 +350,26 @@ class BinaryHeap
         Return, Value ? Value : 0
     }
 
-    Compare(Value1,Value2)
+    Compare(Value1, Value2)
     {
         Return, Value1 < Value2
     }
 }
+
+/*
+    Heap := new MaxHeap
+    For Index, Value In [10,17,20,30,38,30,24,34]
+        Heap.Add(Value)
+    MsgBox % Heap.Peek()
+    Loop, 8
+        MsgBox % Heap.Pop()
+return
+
+class MaxHeap extends BinaryHeap
+{
+  Compare(Value1,Value2)
+  {
+    Return, Value1 > Value2
+  }
+}
+*/

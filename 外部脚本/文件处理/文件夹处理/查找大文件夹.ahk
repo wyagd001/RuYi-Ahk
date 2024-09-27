@@ -1,4 +1,4 @@
-﻿;|2.8|2024.08.24|1659
+﻿;|2.8|2024.09.17|1659
 #SingleInstance force
 CandySel :=  A_Args[1]
 SetBatchLines, -1
@@ -52,15 +52,30 @@ Loop, Files, %CandySel%\*.*, DR
     }
   }
 }
+/*
+loop % Heap.Data.MaxIndex()    ; Heap 乱序数组
+{
+  v := Heap.Data[A_index]
+  msgbox % v
+  Tmp_str .= fileobj["a" v] " | " Round(v/1024/1024, 2) "`n"
+}
+*/
 loop 50
 {
   if !Heap.Data.MaxIndex()
     break
   v := Heap.Pop()
-  Tmp_str .= fileobj["a" v] " | " Round(v/1024/1024, 2) "`n"
+  ;msgbox % v
+  Tmp_str .= fileobj["a" v] " | " Round(v/1024/1024, 2) " mb`n"
 }
+Loop, Parse, Tmp_str, `n, `r
+{
+	newStr := A_LoopField "`n" newStr
+  ;msgbox % A_LoopField
+}
+GuiControl,, myedit, % Trim(newStr, "`n")
+newStr := Tmp_str := ""
 tooltip
-GuiControl,, myedit, % Tmp_str
 return
 
 Esc::
@@ -72,9 +87,15 @@ loop 50
   if !Heap.Data.MaxIndex()
     break
   v := Heap.Pop()
-  Tmp_str .= fileobj["a" v] " | " Round(v/1024/1024, 2) "`n"
+  Tmp_str .= fileobj["a" v] " | " Round(v/1024/1024, 2) " mb`n"
 }
-GuiControl,, myedit, % Tmp_str
+Loop, Parse, Tmp_str, `n, `r
+{
+	newStr := A_LoopField "`n" newStr
+  ;msgbox % A_LoopField
+}
+GuiControl,, myedit, % Trim(newStr, "`n")
+newStr := Tmp_str := ""
 return
 
 GuiText(Gtext, Title:="", w:=300, l:=20)
@@ -117,7 +138,6 @@ CountFolderSize(Folder) {
     try Size := fso.GetFolder(Folder).Size
     return Size
 }
-
 
 ; =================================================================================
 ; Function: AutoXYWH
@@ -180,6 +200,37 @@ AutoXYWH(DimSize, cList*){   ;https://www.autohotkey.com/boards/viewtopic.php?t=
       GuiControl, % A_Gui ":" cInfo[ctrlID].m, % ctrl, % Options
 } } }
 
+/*
+Basic example:
+    Heap := new BinaryHeap
+    For Index, Value In [10,17,20,30,38,30,24,34]
+        Heap.Add(Value)
+    MsgBox % Heap.Peek()
+    Loop, 8
+        MsgBox % Heap.Pop()
+You can use a custom comparison function to modify the behavior of the heap. For example, the class implements a min-heap by default, but it can become a max-heap by extending the class and overriding Compare():
+您可以使用自定义比较函数来修改堆的行为。例如，类默认实现最小堆，但通过扩展类并重写Compare()，它可以变成最大堆:
+
+    Heap := new MaxHeap
+    
+    class MaxHeap extends Heap
+    {
+        Compare(Value1,Value2)
+        {
+            Return, Value1 > Value2
+        }
+    }
+Or work with objects:
+    Heap := ObjectHeap
+    
+    class ObjectHeap extends Heap
+    {
+        Compare(Value1,Value2)
+        {
+            Return, Value1.SomeKey < Value2.SomeKey
+        }
+    }
+*/
 class BinaryHeap
 {
     __New()
@@ -262,3 +313,21 @@ class BinaryHeap
         Return, Value1 < Value2
     }
 }
+
+/*
+    Heap := new MaxHeap
+    For Index, Value In [10,17,20,30,38,30,24,34]
+        Heap.Add(Value)
+    MsgBox % Heap.Peek()
+    Loop, 8
+        MsgBox % Heap.Pop()
+return
+
+class MaxHeap extends BinaryHeap
+{
+  Compare(Value1,Value2)
+  {
+    Return, Value1 > Value2
+  }
+}
+*/

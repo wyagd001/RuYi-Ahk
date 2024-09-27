@@ -1,4 +1,4 @@
-﻿;|2.5|2024.02.09|1242
+﻿;|2.8|2024.09.26|1242
 #SingleInstance force
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e982.ico"
@@ -275,8 +275,8 @@ else if (comm = "提取行中内容")
 else if (comm = "按条件提取删除行")
 {
 	commmode("条件模式:", "行号:",, "enable", "enable")
-	GuiControl,, myedit1, `n按行号提取`n`n删除空白行`n删除重复行`n提取重复行
-	GuiControl,, myedit2, `n奇数`n`n偶数`n1,2,3,7,8,9
+	GuiControl,, myedit1, `n按行号提取`n`n删除空白行`n删除重复行`n提取重复行`n每隔n行提取`n每隔n行删除
+	GuiControl,, myedit2, `n奇数`n`n偶数`n1,2,3,7,8,9`n4❤❤❤每隔n行(指定行数)
 }
 else if (comm = "英文标点改中文")
 {
@@ -884,7 +884,7 @@ if (myedit1 = "按行号提取")
 			else
 				NewStr .= "`n"
 		}
-		else
+		else   ; 在序列中  1,2,3,7,8 
 		{
 			if A_Index in %myedit2%
 				NewStr .= A_LoopField "`n"
@@ -936,6 +936,28 @@ Else if (myedit1 = "提取重复行")
 				newStr .= A_LoopField "`n"
 			}
 		}
+	}
+}
+Else if (myedit1 = "每隔n行提取")
+{
+  myedit2 := SubStr(myedit2, 1, (pos := InStr(myedit2, "❤❤❤")) ? pos - 1 : 50)
+	Loop, Parse, oldtxt, `r, `n
+	{
+		if (Mod(A_index, myedit2) = 0)
+      newStr .= A_LoopField "`n"
+    else
+      newStr .= "`n"
+	}
+}
+Else if (myedit1 = "每隔n行删除")
+{
+  myedit2 := SubStr(myedit2, 1, (pos := InStr(myedit2, "❤❤❤")) ? pos - 1 : 50)
+	Loop, Parse, oldtxt, `r, `n
+	{
+		if (Mod(A_index, myedit2) = 0)
+      newStr .= "`n"
+    else
+      newStr .= A_LoopField "`n"
 	}
 }
 t2.SetText(newStr)

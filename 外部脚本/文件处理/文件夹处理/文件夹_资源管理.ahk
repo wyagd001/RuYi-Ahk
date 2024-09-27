@@ -1,4 +1,4 @@
-﻿;|2.6|2024.04.01|1xxx
+﻿;|2.8|2024.09.22|1xxx
 ;CandySel := A_Args[1]
 
 CandySel := "C:\Documents and Settings\Administrator\Desktop\Ahk\如意百宝箱\外部脚本\文件处理"
@@ -19,8 +19,8 @@ Gui,66: Default
 
 Gui, Add, text, x10 y10, 源文件夹:
 Gui, Add, edit, xp+80 yp w580 h40 r2 vfolder1, % folder1
-Gui, Add, Button, xp+590 yp h25 gopenfolder1, 打开
-Gui, Add, Button, xp+40 yp h25 gloderfolder, 加载列表
+Gui, Add, Button, xp+590 yp h25 gloderfolder, 加载列表
+Gui, Add, Button, xp+70 yp h25 gopenfolder1, 打开
 
 Gui, Add, Text, x10 yp+50 h25, 文件名:
 Gui, Add, Edit, xp+80 yp-5 w140 h25 vfilterName,
@@ -28,15 +28,15 @@ Gui, Add, Text, xp+150 yp+5 w50 h25 , 扩展名:
 Gui, Add, Edit, xp+60 yp-5 w140 h25 vfilterExt,
 Gui, Add, Text, xp+150 yp+5 w70 h25 , 文件内容:
 Gui, Add, Edit, xp+80 yp-5 w140 h25 vfilterContext,
-Gui, Add, Button, xp+150 yp h25 gofilter, 筛选
+Gui, Add, Button, xp+150 yp w60 h25 gofilter, 筛选
 
 Gui, Add, text, x10 yp+40, 目标文件夹:
 Gui, Add, edit, xp+80 yp w580 h25 vfolder2, % folder2
-Gui, Add, Button, xp+590 yp h25 gopenfolder2, 打开
-Gui, Add, Button, xp+40 yp h25 gselfolder2, ...
+Gui, Add, Button, xp+590 yp h25 w60 gselfolder2, ...
+Gui, Add, Button, xp+70 yp h25 gopenfolder2, 打开
 
 Gui, Add, ListView, x10 yp+40 w750 h500 vfilelist1 hwndHLV1 Checked AltSubmit glvsort, 序号|文件名|修改日期|大小|文件类型|创建日期|找到次数
-Gui, Add, ComboBox, xp+760 yp w80 vSelFun gSelFun, 复制列表||复制到|剪贴到|删除|转换编码*|文本合并*|扩展名*
+Gui, Add, ComboBox, xp+760 yp w80 vSelFun gSelFun, 复制列表||复制到|剪切到|删除|按个数分割|合并分割文件|按字节分割(2个)|转换编码*|文本合并*|纠正扩展名*
 Gui, Add, ComboBox, xp yp+28 w80 vFunpara, 带源文件夹||不带源文件夹
 Gui, Add, Button, xp yp+28 w80 grpview, 预览结果
 Gui, Add, Button, xp yp+28 w80 gRunfun, 执行
@@ -137,7 +137,7 @@ Loop, Files, %folder1%\*.*, DFR
 			filelistObj[relativePS]["EnCode"] := fileEnCode
 		}
 	}
-	else if (SelFun = "扩展名*")
+	else if (SelFun = "纠正扩展名*")
 	{
 		if InStr(A_LoopFileAttrib, "D")
 			filelistObj[relativePS]["EnExt"] := ""
@@ -157,9 +157,9 @@ Loop, Files, %folder1%\*.*, DFR
 		filelistObj[relativePS]["Type"] := A_LoopFileExt
 	filelistObj[relativePS]["BSize"] := A_LoopFileSize
 	ToltalSize += A_LoopFileSize
-	if (A_LoopFileSize = 0)
+	if (A_LoopFileSize = 0)   ; 大小为 0 的文件
 		filelistObj[relativePS]["KBSize"] := 0
-	else if (A_LoopFileSize < 1024) && (A_LoopFileSize != 0)
+	else if (A_LoopFileSize < 1024) && (A_LoopFileSize != 0)   ; 1 kb 大小的文件
 		filelistObj[relativePS]["KBSize"] := 1
 	else
 		filelistObj[relativePS]["KBSize"] := Ceil(A_LoopFileSize / 1024)
@@ -174,13 +174,13 @@ for k,v in filelistObj
 		f_index ++
 		if (SelFun = "转换编码*") or (SelFun = "文本合并*")
 			sevenVal := v["EnCode"]
-		else if (SelFun = "扩展名*")
+		else if (SelFun = "纠正扩展名*")
 			sevenVal := v["EnExt"]
 		else if filterContext
 			sevenVal := v["filter"]   ; 查找字符串
 		else
 			sevenVal := Format("{:.4f}", v["BSize"] * 100 / ToltalSize) "%"
-		if (SelFun = "扩展名*") && v["EnExt"] && (v["Type"] != v["EnExt"])
+		if (SelFun = "纠正扩展名*") && v["EnExt"] && (v["Type"] != v["EnExt"])
 			LV_Add("check", f_index, k, v["MDT"], v["KBSize"], v["Type"], v["CT"], sevenVal)
 		else
 			LV_Add("", f_index, k, v["MDT"], v["KBSize"], v["Type"], v["CT"], sevenVal)
@@ -214,13 +214,17 @@ else if (SelFun = "复制到")
 {
 	GuiControl,, Funpara, 带结构复制||复制到同一层
 }
-else if (SelFun = "剪贴到")
+else if (SelFun = "剪切到")
 {
 	GuiControl,, Funpara, 带结构移动||移动到同一层
 }
 else if (SelFun = "删除")
 {
 	GuiControl,, Funpara, 回收站||永久删除
+}
+else if (SelFun = "按个数分割")
+{
+	GuiControl,, Funpara, 2||3
 }
 else if (SelFun = "转换编码*")
 {
@@ -292,7 +296,7 @@ else if (SelFun = "复制到")
 		}
 	}
 }
-else if (SelFun = "剪贴到")
+else if (SelFun = "剪切到")
 {
 	if !folder2 or !fileexist(folder2)
 	{
@@ -377,7 +381,7 @@ else if (SelFun = "删除")
 	DelArr := []
 	LV_RowIndexOrder()
 }
-else if (SelFun = "扩展名*")
+else if (SelFun = "按个数分割")
 {
 	RowNumber := 0  ; 这样使得首次循环从列表的顶部开始搜索.
 	Loop
@@ -386,13 +390,112 @@ else if (SelFun = "扩展名*")
 		if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
 			break
 		LV_GetText(relPath, RowNumber, 2)
-		LV_GetText(fileext, RowNumber, 5)
-		LV_GetText(filenewext, RowNumber, 7)
 		sour_filepath := folder1 "\" relPath
-		targ_filepath := RegExReplace(sour_filepath, fileext "$", filenewext)
-		;msgbox % sour_filepath " - " targ_filepath
-		if (filenewext != fileext)
-			FileMove, %sour_filepath%, %targ_filepath%
+    sour_fileSize := filelistObj[relPath]["BSize"]
+    SplitPath, sour_filepath, CandySel_FileName, CandySel_ParentPath
+    FegeSize := Ceil(sour_fileSize / Funpara)
+    ;msgbox % sour_fileSize "|" FegeSize
+    FegeLastSize := sour_fileSize - FegeSize * (Funpara - 1)
+    File := FileOpen(sour_filepath, "r")
+    loop % Funpara
+    {
+      zwj_filepath := CandySel_ParentPath "\" CandySel_FileName ".00" A_index
+      file_zwj := FileOpen(zwj_filepath, "rw")
+      if (A_Index < Funpara)
+      {
+        if (A_index = 1)
+          File.Pos := 0
+        File.RawRead(Var, FegeSize)
+        File_zwj.RawWrite(Var, FegeSize)
+      }
+      else if (A_Index = Funpara)
+      {
+        File.RawRead(Var, FegeLastSize)
+        File_zwj.RawWrite(Var, FegeLastSize)
+      }
+      File_zwj.Close()
+    }
+    File.Close()
+    ;
+    Break
+	}
+}
+else if (SelFun = "合并分割文件")
+{
+	RowNumber := 0  ; 这样使得首次循环从列表的顶部开始搜索.
+	Loop
+	{
+		RowNumber := LV_GetNext(RowNumber, "C")  ; 在前一次找到的位置后继续搜索.
+		if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
+			break
+		LV_GetText(relPath, RowNumber, 2)
+		sour_filepath := folder1 "\" relPath
+    sour_filepath := SubStr(sour_filepath, 1, -4)
+    SplitPath, sour_filepath, CandySel_FileName, CandySel_ParentPath, CandySel_Ext, CandySel_FileNameNoExt
+    targetFile := CandySel_ParentPath "\" CandySel_FileNameNoExt "_合并." CandySel_Ext
+    File := FileOpen(targetFile, "rw")
+    break
+  }
+  RowNumber := 0
+	Loop
+	{
+		RowNumber := LV_GetNext(RowNumber, "C")  ; 在前一次找到的位置后继续搜索.
+		if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
+			break
+		LV_GetText(relPath, RowNumber, 2)
+		sour_filepath := folder1 "\" relPath
+    ;msgbox % sour_filepath
+    sourFile := FileOpen(sour_filepath, "r")
+    sourFile.Pos := 0
+    sourFile.RawRead(Var, sourFile.Length)
+    File.RawWrite(Var, sourFile.Length)
+    sourFile.Close()
+    Var := ""
+  }
+  File.Close()
+}
+else if (SelFun = "按字节分割(2个)")
+{
+	RowNumber := 0  ; 这样使得首次循环从列表的顶部开始搜索.
+	Loop
+	{
+		RowNumber := LV_GetNext(RowNumber, "C")  ; 在前一次找到的位置后继续搜索.
+		if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
+			break
+		LV_GetText(relPath, RowNumber, 2)
+		sour_filepath := folder1 "\" relPath
+    sour_fileSize := filelistObj[relPath]["BSize"]
+    SplitPath, sour_filepath, CandySel_FileName, CandySel_ParentPath
+    if (Funpara > 0)
+    {
+      FegeFirstSize := Funpara
+      FegeLastSize := sour_fileSize - Funpara
+    }
+    else
+    {
+      FegeFirstSize := sour_fileSize + Funpara
+      FegeLastSize := -Funpara
+    }
+    File := FileOpen(sour_filepath, "r")
+    loop 2
+    {
+      zwj_filepath := CandySel_ParentPath "\" CandySel_FileName ".00" A_index
+      file_zwj := FileOpen(zwj_filepath, "rw")
+      if (A_index = 1)
+      {
+        File.Pos := 0
+        File.RawRead(Var, FegeFirstSize)
+        File_zwj.RawWrite(Var, FegeFirstSize)
+      }
+      else
+      {
+        File.RawRead(Var, FegeLastSize)
+        File_zwj.RawWrite(Var, FegeLastSize)
+      }
+      File_zwj.Close()
+    }
+    File.Close()
+    Break
 	}
 }
 else if (SelFun = "转换编码*")
@@ -440,6 +543,24 @@ else if (SelFun = "文本合并*")
 	}
 	FileAppend, %Tmp_Str%, %folder1%\合并_%A_Now%.txt, UTF-8
 }
+else if (SelFun = "纠正扩展名*")
+{
+	RowNumber := 0  ; 这样使得首次循环从列表的顶部开始搜索.
+	Loop
+	{
+		RowNumber := LV_GetNext(RowNumber, "C")  ; 在前一次找到的位置后继续搜索.
+		if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
+			break
+		LV_GetText(relPath, RowNumber, 2)
+		LV_GetText(fileext, RowNumber, 5)
+		LV_GetText(filenewext, RowNumber, 7)
+		sour_filepath := folder1 "\" relPath
+		targ_filepath := RegExReplace(sour_filepath, fileext "$", filenewext)
+		;msgbox % sour_filepath " - " targ_filepath
+		if (filenewext != fileext)
+			FileMove, %sour_filepath%, %targ_filepath%
+	}
+}
 return
 
 rpview:
@@ -476,7 +597,7 @@ else if (SelFun = "复制到")
 			Tmp_Str .= "源文件夹\" relPath " 复制到 目标文件夹`n"
 	}
 }
-else if (SelFun = "剪贴到")
+else if (SelFun = "剪切到")
 {
 	RowNumber := 0  ; 这样使得首次循环从列表的顶部开始搜索.
 	Loop

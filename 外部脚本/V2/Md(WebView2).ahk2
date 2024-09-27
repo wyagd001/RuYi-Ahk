@@ -1,0 +1,66 @@
+﻿;|2.8|2024.09.18|1640
+#Include <WebView2>
+
+Persistent
+CandySel := ""
+Try CandySel := A_Args[1]
+if !CandySel
+{
+	DetectHiddenWindows 1
+	Try CandySel := ControlGetText("Edit1", "获取当前窗口信息_") 
+	DetectHiddenWindows 0
+}
+
+generatehtml(CandySel)
+OpenMdWithWebView2(CandySel)
+return
+
+Space::
+{
+	ExitApp(0)
+}
+
+OpenMdWithWebView2(mdfilepath)
+{
+  Global
+  SplitPath mdfilepath, &oname, &odir
+  ;msgbox odir
+  main := Gui("+Resize")
+  main.OnEvent('Close', (*) => ExitApp())
+  main.Title := oname " - Md 文件预览"
+  main.Show(Format("w{} h{}", A_ScreenWidth * 0.8, A_ScreenHeight * 0.92))
+  
+  wvc := WebView2.CreateControllerAsync(main.Hwnd, {AdditionalBrowserArguments: "--disable-web-security='true'"}).await2()
+  ;msgbox main.Hwnd
+  wv := wvc.CoreWebView2
+  nwr := wv.NewWindowRequested(NewWindowRequestedHandler)
+
+  ;vhn := wv.SetVirtualHostNameToFolderMapping("demo", odir, 0x2)
+
+  wv.Navigate(A_ScriptDir "\..\..\引用程序\其它资源\WebView2\editor.md\examples\html-preview-markdown-to-html.html")
+  sleep 1000
+  ;wv.ExecuteScript('document.querySelector("#secondaryOpenFile").click();', 0)
+  ;SetTimer autoopenpdf, -1250
+
+	NewWindowRequestedHandler(wv2, arg) {
+    deferral := arg.GetDeferral()
+    arg.NewWindow := wv2
+		deferral.Complete()
+	}
+}
+
+generatehtml(mdfilepath)
+{
+  OutputFile := A_ScriptDir "\..\..\临时目录\filepath.js"
+  try FileDelete OutputFile
+  FileEncoding "UTF-8-RAW"
+  mdurl := StrReplace(mdfilepath, "\", "/")
+
+  html_code := 
+  (
+    'var filepath = "file:///' mdurl '";
+  )'
+
+  FileAppend html_code, OutputFile, "UTF-8"
+  sleep 300
+}

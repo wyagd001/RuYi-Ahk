@@ -1,4 +1,4 @@
-﻿;|2.8|2024.09.13|1671
+﻿;|2.8|2024.09.17|1671
 ; 来源网址: http://thinkai.net/page/16   已修改
 #SingleInstance force
 Menu, Tray, UseErrorLevel
@@ -80,12 +80,55 @@ run "%A_StartupCommon%"
 return
 
 gtaskmgrS:
+if InStr(A_OSVersion, "10.0.")
+  return
 run Taskmgr.exe
-;ControlGet, OutputVar, Tab,, SysTabControl321, 任务管理器
-SendMessage, 0x1330, 3,, SysTabControl321, 任务管理器  ; 0x1330 为 TCM_SETCURFOCUS.
-Sleep 0  ; 此行和下一行只对于某些选项卡控件才需要.
-SendMessage, 0x130C, 3,, SysTabControl321, 任务管理器  ; 0x130C 为 TCM_SETCURSEL.
-return
+sleep 500
+; A_OsVersion
+; win 10  10.0.19045
+; win 11  10.0.22631
+; win 10
+; 计算机\HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\TaskManager
+; StartUpTab  以 0 开始的选项卡序号
+; win 11
+; %LocalAppData%\Microsoft\Windows\TaskManager\settings.json
+; DefaultStartPage  以 0 开始的选项卡序号
+; 计算机\HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run
+;       HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run
+; 计算机\HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\StartupFolder
+; 启用 RuYi - Ahk
+; 启用 : 02 00 00 00 00 00 00 00 00 00 00 00 (hex)
+; 禁用 : 03 00 00 00 xx xx xx xx xx xx xx 01(hex)   xx 为随机字符
+OSbuildNum := StrReplace(A_OsVersion, "10.0.")
+if (OSbuildNum < 20348) ; Win10
+{
+  ControlGet, OutputVar, Tab,, SysTabControl321, 任务管理器
+  while (OutputVar != 4)
+  {
+    if (A_index > 5)
+      break
+    SendMessage, 0x1330, 3,, SysTabControl321, 任务管理器  ; 0x1330 为 TCM_SETCURFOCUS.
+    Sleep 0  ; 此行和下一行只对于某些选项卡控件才需要.
+    SendMessage, 0x130C, 3,, SysTabControl321, 任务管理器  ; 0x130C 为 TCM_SETCURSEL.
+    ControlGet, OutputVar, Tab,, SysTabControl321, 任务管理器
+    sleep 100
+  }
+}
+else   ; Win11
+{
+  ControlFocus, Windows.UI.Input.InputSite.WindowClass2, 任务管理器
+  send ^{home}
+  sleep 100
+  send {down}
+  sleep 100
+  send {down}
+  sleep 100
+  send {down}
+  sleep 100
+  send {down}
+  send {enter}
+}
+Return
 
 gsettingsS:
 run ms-settings:startupapps

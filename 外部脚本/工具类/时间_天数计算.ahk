@@ -39,7 +39,7 @@ if Time2
 		EnvSub, DaysLeft, %Time2%, days
 		;msgbox % Time2 "|" DaysLeft "|" Time1
 		if (Time1 > 0)
-			tian := Time1 -DaysLeft
+			tian := Time1 - DaysLeft
 		else
 			tian := DaysLeft - Time1
 		nian := abs(nian)

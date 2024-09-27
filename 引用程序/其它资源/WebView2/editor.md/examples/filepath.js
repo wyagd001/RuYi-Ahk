@@ -1,0 +1,1 @@
+var filepath = "file://C:/Documents and Settings/Administrator/Desktop/Ahk/如意百宝箱 - 发布版本/如意说明/index.md";

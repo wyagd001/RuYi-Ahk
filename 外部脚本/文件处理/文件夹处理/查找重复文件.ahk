@@ -1,8 +1,9 @@
-﻿;|2.6|2024.04.24|1229
+﻿;|2.8|2024.09.27|1229
 CandySel :=  A_Args[1]
 ;CandySel := "C:\Documents and Settings\Administrator\Desktop\文本碎片小脚本"
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\e773.ico"
+Gui +Resize
 Gui, Add, Text, x10 y15 h25, 查找文件夹:
 Gui, Add, Edit, xp+80 yp-5 w550 h25 vsfolder, % CandySel
 Gui, Add, Button, xp+560 yp-2 w60 h30 gstartsearch, 开始查找
@@ -13,16 +14,16 @@ Gui, Add, Text, x10 yp+40 h25, 目标文件夹:
 Gui, Add, Edit, xp+80 yp-5 w550 h25 vtfolder,
 Gui, Add, Button, xp+560 yp h25 gseltfolder, ...
 Gui, Add, ListView, x10 yp+40 w700 h500 vfilelist Checked hwndHLV AltSubmit, 分组|序号|文件名|相对路径|大小|修改日期|完整路径|md5
-Gui, Add, Button, xp yp+510 w50 h30 guncheckall, 全不选
-Gui, Add, Button, xp+55 yp w50 h30 gswitchcheck, 反选
-Gui, Add, Button, xp+55 yp w60 h30 gEditfilefromlist, 编辑文件
-Gui, Add, Button, xp+65 yp w60 h30 gopenfilefromlist, 打开文件
-Gui, Add, Button, xp+65 yp w60 h30 gopenfilepfromlist, 打开路径
+Gui, Add, Button, xp yp+510 w50 h30 guncheckall vuncheckallB, 全不选
+Gui, Add, Button, xp+55 yp w50 h30 gswitchcheck vswitchcheckB, 反选
+Gui, Add, Button, xp+55 yp w60 h30 gEditfilefromlist vEditfilefromlistB, 编辑文件
+Gui, Add, Button, xp+65 yp w60 h30 gopenfilefromlist vopenfilefromlistB, 打开文件
+Gui, Add, Button, xp+65 yp w60 h30 gopenfilepfromlist vopenfilepfromlistB, 打开路径
 
 Gui, Add, Radio, xp+100 yp w70 h30 Checked1 vactionmode, 删除勾选
-Gui, Add, Radio, xp+75 yp w160 h30 , 移动勾选到目标文件夹
-Gui, Add, Button, xp+170 yp w60 h30 grpview, 预览结果
-Gui, Add, Button, xp+65 yp w50 h30 grundel, 执行
+Gui, Add, Radio, xp+75 yp w160 h30 vactionmode2, 移动勾选到目标文件夹
+Gui, Add, Button, xp+170 yp w60 h30 grpview vrpviewB, 预览结果
+Gui, Add, Button, xp+65 yp w50 h30 grundel vrundelB, 执行
 gui, Show,, 查找文件夹中的重复文件
 
 if FileExist(CandySel)
@@ -55,12 +56,12 @@ Loop, parse, sfolder, |;
 			if A_LoopFileExt not in %sExt%
 				continue
 		}
-		if (mode = "Md5") && !fsizeobj[A_LoopFileSize]
+		if (mode = "Md5") && !fsizeobj[A_LoopFileSize]  ; 文件大小首次遍历
 		{
 			fsizeobj[A_LoopFileSize] := A_LoopFilePath  ; 将文件的大小记入大小库中
 			continue
 		}
-		if (mode = "samename") && !fnameobj[A_LoopFileName]
+		if (mode = "samename") && !fnameobj[A_LoopFileName]   ; 文件名首次遍历
 		{
 			fnameobj[A_LoopFileName] := A_LoopFilePath  ; 将文件名记入文件名库中
 			continue
@@ -76,16 +77,17 @@ Loop, parse, sfolder, |;
 			folderobj[A_LoopFilePath]["fTMod"] := A_LoopFileTimeModified
 			folderobj[A_LoopFilePath]["fsize"] := A_LoopFileSize
 			folderobj[A_LoopFilePath]["fmd5"] := currfileMD5
-			if !folderobj[prefilepath]
+			if !folderobj[prefilepath]   ; 上次的文件
 			{
 					FileGetTime, fTMod, % prefilepath, M
+          FileGetSize, fsize, % prefilepath
 					SplitPath, prefilepath, fname
 					prefileMD5 := MD5_File(prefilepath)
 					folderobj[prefilepath] := {}
 					folderobj[prefilepath]["fname"] := fname
 					folderobj[prefilepath]["relPath"] := StrReplace(prefilepath, fname)
 					folderobj[prefilepath]["fTMod"] := fTMod
-					folderobj[prefilepath]["fsize"] := A_LoopFileSize
+					folderobj[prefilepath]["fsize"] := fsize
 					folderobj[prefilepath]["fmd5"] := prefileMD5
 			}
     }
@@ -263,9 +265,10 @@ gui, Submit, NoHide
 folder1 := GetStringIndex(sfolder, 1)
 folder2 := GetStringIndex(sfolder, 2)
 folder3 := GetStringIndex(sfolder, 3)
+;msgbox % actionmode "|" actionmode2
 if (actionmode = 1)
 	tipStr := " 删除文件: "
-if (actionmode = 2)
+if (actionmode2 = 1)
 {
 	if !tfolder
 	{
@@ -296,7 +299,7 @@ Loop
 	}
 	Tmp_index := Format("{:04}", A_Index)
 	
-	Tmp_Str .= Tmp_index tipStr Tmp_Path (actionmode = 2 ? " 到 " Tmp_Rel Tmp_Name : "") "`n"
+	Tmp_Str .= Tmp_index tipStr Tmp_Path (actionmode2 = 1 ? " 到 " Tmp_Rel Tmp_Name : "") "`n"
 }
 GuiText(Tmp_Str, "文件夹重复文件操作预览", 780, 20)
 return
@@ -316,7 +319,7 @@ if (actionmode = 1)    ; 删除
 		FileRecycle, % Tmp_Path
 	}
 }
-if (actionmode = 2)   ; 移动
+else if (actionmode2 = 1)   ; 移动
 {
 	if !tfolder
 		return
@@ -355,6 +358,14 @@ Gui Destroy
 Gui, GuiText: Destroy
 exitapp
 Return
+
+GuiSize:
+If (A_EventInfo = 1) ; The window has been minimized.
+	Return
+AutoXYWH("wh", "filelist")
+AutoXYWH("y", "uncheckallB", "switchcheckB", "EditfilefromlistB", "openfilefromlistB", "openfilepfromlistB", "actionmode", "actionmode2", "rpviewB", "rundelB")
+return
+
 
 Array_ToString(array, depth=5, indentLevel="")
 {

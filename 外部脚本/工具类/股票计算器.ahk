@@ -69,9 +69,10 @@ Menu, 收藏, Add, 161725=白酒LOF, 收藏
 Menu, 收藏, Add, 513050=中概互联网ETF, 收藏
 Menu, 收藏, Add, 512800=银行ETF, 收藏
 Menu, 收藏, Add, 515790=光伏EFT, 收藏
-Menu, 收藏, Add, 004348=南方中证500, 收藏
-Menu, 收藏, Add, 003096=中欧医疗, 收藏
-Menu, 收藏, Add, 005918=天弘沪深300, 收藏
+
+Menu, 收藏2, Add, 004348=南方中证500, 收藏
+Menu, 收藏2, Add, 003096=中欧医疗, 收藏
+Menu, 收藏2, Add, 005918=天弘沪深300, 收藏
 Menu, 接口, Add, 金融界, SAPI
 Menu, 接口, Add, 天天基金, SAPI
 Menu, 接口, Add, 金融界, SAPI
@@ -79,6 +80,7 @@ Menu, 接口, Check, 金融界
 Menu, Menu, Add, 接口, :接口
 Menu, Menu, Add, 历史, :历史
 Menu, Menu, Add, 收藏, :收藏
+Menu, Menu, Add, 收藏2, :收藏2
 Gui, Menu, Menu
 Gui, Show, , 输入代码查询
 return
