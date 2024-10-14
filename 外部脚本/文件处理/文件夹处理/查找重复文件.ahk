@@ -1,4 +1,4 @@
-﻿;|2.8|2024.09.27|1229
+﻿;|2.8|2024.10.11|1229
 CandySel :=  A_Args[1]
 ;CandySel := "C:\Documents and Settings\Administrator\Desktop\文本碎片小脚本"
 Menu, Tray, UseErrorLevel
@@ -46,7 +46,7 @@ LV_Delete()
 ; 查找文件夹, 最多支持3个文件夹, 文件夹以 "|" 或 ";" 分隔
 Loop, parse, sfolder, |;
 {
-	;msgbox % A_LoopField
+	My_Index := (A_index = 1) ? "①" : (A_index = 2) ? "②" : "③"
 	Loop, Files, %A_LoopField%\*.*, FR
 	{
 		if A_LoopFileSize = 0   ; 忽略零字节的文件
@@ -58,43 +58,46 @@ Loop, parse, sfolder, |;
 		}
 		if (mode = "Md5") && !fsizeobj[A_LoopFileSize]  ; 文件大小首次遍历
 		{
-			fsizeobj[A_LoopFileSize] := A_LoopFilePath  ; 将文件的大小记入大小库中
+			fsizeobj[A_LoopFileSize] := A_LoopFilePath "|" A_LoopField "|" My_Index    ; 将文件的大小记入大小库中
 			continue
 		}
 		if (mode = "samename") && !fnameobj[A_LoopFileName]   ; 文件名首次遍历
 		{
-			fnameobj[A_LoopFileName] := A_LoopFilePath  ; 将文件名记入文件名库中
+			fnameobj[A_LoopFileName] := A_LoopFilePath "|" A_LoopField "|" My_Index   ; 将文件名记入文件名库中
 			continue
 		}
 
-		if (mode = "samename") && fnameobj[A_LoopFileName]
+		if (mode = "samename") && fnameobj[A_LoopFileName]    ; 存在文件名相同的文件
 		{
-			prefilepath := fnameobj[A_LoopFileName]
-			currfileMD5 := MD5_File(A_LoopFilePath)
+			currfileMD5 := MD5_File(A_LoopFilePath)   ; 当前文件
 			folderobj[A_LoopFilePath] := {}
 			folderobj[A_LoopFilePath]["fname"] := A_LoopFileName
-			folderobj[A_LoopFilePath]["relPath"] := StrReplace(StrReplace(A_LoopFilePath, A_LoopField), A_LoopFileName)
+			folderobj[A_LoopFilePath]["relPath"] := StrReplace(StrReplace(A_LoopFilePath, A_LoopField, My_Index), A_LoopFileName)
+;msgbox % A_LoopFilePath "|" A_LoopField "|" A_LoopFileName
 			folderobj[A_LoopFilePath]["fTMod"] := A_LoopFileTimeModified
 			folderobj[A_LoopFilePath]["fsize"] := A_LoopFileSize
 			folderobj[A_LoopFilePath]["fmd5"] := currfileMD5
-			if !folderobj[prefilepath]   ; 上次的文件
+      prefilepath := GetStringIndex(fnameobj[A_LoopFileName], 1)  ; 前一个同名文件
+			if !folderobj[prefilepath]   ; 首次遍历到的文件
 			{
 					FileGetTime, fTMod, % prefilepath, M
           FileGetSize, fsize, % prefilepath
-					SplitPath, prefilepath, fname
+					;SplitPath, prefilepath, fname
 					prefileMD5 := MD5_File(prefilepath)
 					folderobj[prefilepath] := {}
-					folderobj[prefilepath]["fname"] := fname
-					folderobj[prefilepath]["relPath"] := StrReplace(prefilepath, fname)
+					folderobj[prefilepath]["fname"] := A_LoopFileName
+					folderobj[prefilepath]["relPath"] := StrReplace(StrReplace(prefilepath, GetStringIndex(fnameobj[A_LoopFileName], 2), GetStringIndex(fnameobj[A_LoopFileName], 3)), A_LoopFileName)
+;msgbox % prefilepath "|" A_LoopField "|" A_LoopFileName
 					folderobj[prefilepath]["fTMod"] := fTMod
 					folderobj[prefilepath]["fsize"] := fsize
 					folderobj[prefilepath]["fmd5"] := prefileMD5
+          folderobj[prefilepath]["unchecked"] := "1"
 			}
     }
 		if (mode = "Md5") && fsizeobj[A_LoopFileSize]    ; 大小有重复的情况
 		{
 			currfileMD5 := MD5_File(A_LoopFilePath)
-			sprefilepath := fsizeobj[A_LoopFileSize]
+			sprefilepath := GetStringIndex(fsizeobj[A_LoopFileSize], 1)
 			;FileAppend, % A_LoopFilePath " - " prefilepath "`n", %A_desktop%\123.txt
 			if !fMD5obj[sprefilepath]               ; 前一个文件还没有计算过 Md5
 			{
@@ -106,7 +109,7 @@ Loop, parse, sfolder, |;
 			{
 				folderobj[A_LoopFilePath] := {}
 				folderobj[A_LoopFilePath]["fname"] := A_LoopFileName
-				folderobj[A_LoopFilePath]["relPath"] := StrReplace(StrReplace(A_LoopFilePath, A_LoopField), A_LoopFileName)
+				folderobj[A_LoopFilePath]["relPath"] := StrReplace(StrReplace(A_LoopFilePath, A_LoopField, My_Index), A_LoopFileName)
 				folderobj[A_LoopFilePath]["fTMod"] := A_LoopFileTimeModified
 				folderobj[A_LoopFilePath]["fsize"] := A_LoopFileSize
 				folderobj[A_LoopFilePath]["fmd5"] := currfileMD5
@@ -119,7 +122,7 @@ Loop, parse, sfolder, |;
 					SplitPath, mprefilepath, fname
 					folderobj[mprefilepath] := {}
 					folderobj[mprefilepath]["fname"] := fname
-					folderobj[mprefilepath]["relPath"] := StrReplace(mprefilepath, fname)
+					folderobj[mprefilepath]["relPath"] := StrReplace(StrReplace(mprefilepath, GetStringIndex(fsizeobj[A_LoopFileSize], 2), GetStringIndex(fsizeobj[A_LoopFileSize], 3)), fname)
 					folderobj[mprefilepath]["fTMod"] := fTMod
 					folderobj[mprefilepath]["fsize"] := A_LoopFileSize
 					folderobj[mprefilepath]["fmd5"] := currfileMD5
@@ -163,16 +166,21 @@ if (mode = "samename")
 	Loop % LV_GetCount()
 	{
 		LV_Modify(A_Index, "", "", A_Index)
-		LV_GetText(RetrievedText, A_Index, 3)
+		LV_GetText(RetrievedName, A_Index, 3)   ; 文件名
+    LV_GetText(RetrievedPath, A_Index, 7)   ; 文件路径
 		if (A_Index = 1)
-			preText := RetrievedText
-		if (RetrievedText != preText)
+			preText := RetrievedName
+		if (RetrievedName != preText)
 		{
 			colorou := !colorou
-			preText := RetrievedText
+			preText := RetrievedName
 		}
 		if colorou
 			LV_Modify(A_Index, "", "☆_" A_Index)
+    if !folderobj[RetrievedPath].unchecked
+    {
+			LV_Modify(A_Index, "check")
+		}
 	}
 }
 

@@ -1,4 +1,4 @@
-﻿;|2.8|2024.08.30|1665
+﻿;|2.8|2024.10.08|1665
 #Include <WinHttp>
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e9d2.ico"
@@ -75,7 +75,6 @@ Menu, 收藏2, Add, 003096=中欧医疗, 收藏
 Menu, 收藏2, Add, 005918=天弘沪深300, 收藏
 Menu, 接口, Add, 金融界, SAPI
 Menu, 接口, Add, 天天基金, SAPI
-Menu, 接口, Add, 金融界, SAPI
 Menu, 接口, Check, 金融界
 Menu, Menu, Add, 接口, :接口
 Menu, Menu, Add, 历史, :历史
@@ -272,7 +271,19 @@ return
 历史:
 收藏:
 GuiControl, Text, gpcode, % StrReplace(SubStr(A_ThisMenuItem, 1, (epos:=InStr(A_ThisMenuItem, "="))?epos:10), "=")
-;msgbox % A_ThisMenuItem "|" epos "|" InStr(A_ThisMenuItem, "=")
+;msgbox % A_ThisMenuItem "|" epos "|" A_ThisMenu
+if (A_ThisMenu = "收藏2")
+{
+  jiekou := "天天基金"
+  Menu, 接口, Check, 天天基金
+  Menu, 接口, UnCheck, 金融界
+}
+else if (A_ThisMenu = "收藏")
+{
+  jiekou := "金融界"
+  Menu, 接口, UnCheck, 天天基金
+  Menu, 接口, Check, 金融界
+}
 GuiControl, Focus, gpcode 
 SendMessage, 0xB1, -2, -1,, ahk_id %Handle%
 SendMessage, 0xB7,,,, ahk_id %Handle%

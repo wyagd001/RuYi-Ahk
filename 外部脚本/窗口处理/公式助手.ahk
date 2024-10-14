@@ -1,4 +1,4 @@
-﻿;|2.8|2024.09.21|1598
+﻿;|2.8|2024.10.08|1598
 Gui, Add, Text, x10 y10 w60, 类型:
 Gui, Add, ComboBox, xp+70 yp w250 vFormulaTypeIndex gshowNameIndex AltSubmit, 常用||身份证|时间|重复|常规运算
 Gui, Add, Text, x10 yp+30 w60, 名称:
@@ -16,8 +16,9 @@ Gui, Add, StatusBar,,
 Gui, Show, AutoSize, 公式助手
 
 ; 53257 天数转日期 2045/10/22
-CY_ItemsStr := "1. 条件求和(SumIf)||2. 日期条件求和|3. 乘积求和(SumProduct)|4. 单条件乘积求和|5. 多条件乘积求和|6. 多条件判断(多条件都为真结果才为真)|7. 多条件判断(多条件有一个为真结果就为真)|8. 验证银行卡是否有效"
+CY_ItemsStr := "1. 单条件求和(SumIf)||2. 多条件求和(SumIfs)|3. 日期条件求和|4. 乘积求和(SumProduct)|5. 单条件乘积求和|6. 多条件乘积求和|7. 多条件判断(多条件都为真结果才为真)|8. 多条件判断(多条件有一个为真结果就为真)|9. 验证银行卡是否有效"
 CY_Arr := ["=SUMIF(A1:A10,""支付宝"",B1:B10)"
+, "=SUMIFS(C1:C10,A1:A10,""支付宝"",B1:B10,""卖出"")"
 , "=SUMIF(A1:A10,53257,B1:B10)"
 , "=SUMPRODUCT(A1:A10,B1:B10)"
 , "=SUMPRODUCT((A1:A10=""条件1"")*(B1:B10)*(C1:C10))"
@@ -79,9 +80,9 @@ CGYS_Arr := ["=SUM(A1:A10)"
 , "="
 , "="]
 
-
-kind := "常用"  ; 常用|身份证|时间|重复|常规运算
+kind := "常用"     ; 常用|身份证|时间|重复|常规运算
 GuiControl,, FormulaNameIndex, % CY_ItemsStr
+gosub showFormula
 return
 
 ReplaceCell:
@@ -108,7 +109,7 @@ return
 
 showFormula:
 Gui Submit, NoHide
-;tooltip % kind
+;tooltip % FormulaNameIndex
 if (kind = "常用")
 	FormulaStr := CY_Arr[FormulaNameIndex]
 else if (kind = "身份证")

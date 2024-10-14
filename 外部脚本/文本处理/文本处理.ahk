@@ -1,4 +1,4 @@
-﻿;|2.8|2024.09.26|1242
+﻿;|2.8|2024.10.06|1242
 #SingleInstance force
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e982.ico"
@@ -314,7 +314,7 @@ else if (comm = "行首尾删除字符")
 {
 	commmode("模式:", "删除的字符",, "enable", "enable")
 	GuiControl,, myedit1, `n行首尾`n`n行首`n行尾`n
-	GuiControl,, myedit2, `n　 	❤❤❤删除首尾空格(包括中文空格)制表符`n`n ❤❤❤删除空格`n　❤❤❤删除中文空格`n	❤❤❤删除制表符
+	GuiControl,, myedit2, `n　 	❤❤❤删除空格(包括中文空格)和制表符`n`n ❤❤❤删除空格`n　❤❤❤删除中文空格`n	❤❤❤删除制表符
 }
 else if (comm = "中文转拼音")
 {

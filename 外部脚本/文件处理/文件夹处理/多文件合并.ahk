@@ -1,4 +1,4 @@
-﻿;|2.8|2024.09.18|1548
+﻿;|2.8|2024.10.10|1548
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\f156.ico"
 
@@ -6,11 +6,11 @@ CandySel :=  A_Args[1]
 ;CandySel := "C:\Documents and Settings\Administrator\Desktop\Gui"
 valuetocp := {"ANSI(中文简体)": "CP936", "UTF-8 BOM": "UTF-8", "UTF-8 Raw": "UTF-8-Raw", "Unicode(UTF-16)": "UTF-16"}
 Gui, Add, Text, x10 y15 h25, 文件夹:
-Gui, Add, Edit, xp+80 yp-5 w550 h25 vsfolder, % CandySel
-Gui, Add, Button, xp+560 yp-2 w60 h30 gstartsearch, 载入
+Gui, Add, Edit, xp+80 yp-5 w610 h25 vsfolder, % CandySel
+Gui, Add, Button, xp+625 yp-2 w60 h30 gstartsearch, 载入
 Gui, Add, Text, x10 yp+40 h25, 指定扩展名:
-Gui, Add, Edit, xp+80 yp-5 w550 h25 vsExt, % "txt,ahk,ahk2,md"
-Gui, Add, Button, xp+560 yp w60 h30 gexemerge, 执行
+Gui, Add, Edit, xp+80 yp-5 w610 h25 vsExt, % "txt,ahk,ahk2,md"
+Gui, Add, Button, xp+625 yp w60 h30 gexemerge, 执行
 
 Gui, Add, Text, x10 yp+40 w60, 文件名(可选):
 Gui, Add, Edit, xp+80 yp-3 w360 h25 vofilename,
@@ -95,16 +95,16 @@ Loop
   if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
     break
   LV_GetText(fullpath, RowNumber, 8)
+  LV_GetText(filecode, RowNumber, 5)
+  FileEncoding, % filecode
+  FileRead, OutputVar, %fullpath%
 
   if addchaifen
   {
-    LV_GetText(filecode, RowNumber, 5)
     Relpath := strreplace(fullpath, OutDir "\")
     fileMD5 := MD5_File(fullpath)
     FileGetTime, CreateTime, %fullpath%, C
     FileGetTime, ModifyTime, %fullpath%, M
-    FileEncoding, % filecode
-    FileRead, OutputVar, %fullpath%
   }
   if addfilepath
     Tmp_Str .= fullpath "`r`n" OutputVar "`r`n"
@@ -141,6 +141,7 @@ Loop
     FileGetTime, CreateTime, %fullpath%, C
     FileGetTime, ModifyTime, %fullpath%, M
   }
+
   if addfilepath
     Tmp_Str .= fullpath "`r`n(" fullpath "文件内容.)`r`n"
   else if addchaifen

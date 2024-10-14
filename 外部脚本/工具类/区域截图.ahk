@@ -1,5 +1,6 @@
-﻿;|2.8|2024.09.26|1530
+﻿;|2.8|2024.10.07|1530
 区域选择方式 = 1
+iDraw := 0
 pToken := Gdip_Startup()
 
 if(区域选择方式 = 1)
@@ -82,7 +83,7 @@ else if(区域选择方式 = 2)
 					If ( MY > MYend )
 						Swap(MY, MYend)
 
-					aRect :=  MX "|" MY "|" MXend "|" MYend
+					aRect :=  MX "|" MY "|" w "|" h
 					IfExist, %A_ScriptDir%\..\..\脚本图标\shutter.wav
 						SoundPlay, %A_ScriptDir%\..\..\脚本图标\shutter.wav
 					Gui, Destroy
@@ -100,7 +101,7 @@ pBitmap := Gdip_BitmapFromScreen(aRect)
 hBitmap := Gdip_CreateHBITMAPFromBitmap(pBitmap)
 hw := GetStringIndex(aRect, 3), hh := GetStringIndex(aRect, 4), bhh := hh+5
 Gui, +hwndquyujt
-Gui, Add, Picture, w%hw% h%hh% vprev_pic, HBITMAP:%hBitmap%
+Gui, Add, Picture, w%hw% h%hh% vprev_pic hwndHPIC gSubPic, HBITMAP:%hBitmap%
 Gui, Add, Button, x5 yp+%bhh% gocr w40 vocr, OCR
 Gui, Add, Button, xp+45 yp gOCR2 w60 vocr2, 本地OCR
 Gui, Add, Button, xp+65 yp gmspaint w40, 画图
@@ -110,6 +111,7 @@ Gui, Add, Button, xp+55 yp gclip w50, 剪贴板
 Gui, Add, Button, xp+55 yp gRCap w55, 重新截图
 Gui, Add, Button, xp+60 yp gBreload w40, 重启
 Gui, Add, Button, xp+45 yp gguiclose w40, 退出
+Gui, Add, Button, xp+45 yp gclear w40, 清
 Gui, Add, text, x5 yp+30 w60, 文件名:
 Gui, Add, Edit, xp+50 yp vjtfn w300, 
 Gui, Add, Button, xp+310 yp gQRcodeReader w80, 二维码识别
@@ -119,6 +121,54 @@ if A_OSVersion in Win_7,Win_8,Win_8.1
 if !fileexist(A_ScriptDir "\..\..\引用程序\其它资源\leptonica_util") or !fileexist(A_ScriptDir "\..\..\引用程序\其它资源\tesseract")
 	GuiControl, Disable, ocr2
 Return
+
+; Drawing
+SubPic:
+iDraw := 1
+BISE := 0xFFFF8000
+BIKUAN := 4
+Pen1 := Gdip_CreatePen(BISE, BIKUAN)
+Pen2 := Gdip_CreatePen(BISE, BIKUAN / 2)
+Graphics := Gdip_GraphicsFromHWND(HPIC)
+Gdip_SetSmoothingMode(Graphics, 4)
+
+BitMap := Gdip_CreateBitmap(hw, hh)
+BitMapGraphics := Gdip_GraphicsFromImage(BitMap)
+Gdip_SetSmoothingMode(BitmapGraphics, 4)
+;Gdip_GraphicsClear(BitMapGraphics, 0xFFFFFFFF)
+
+   VarSetCapacity(RECT, 16, 0)
+   DllCall("User32.dll\GetWindowRect", "Ptr", HPIC, "Ptr", &RECT)
+   DllCall("USer32.dll\ClipCursor", "Ptr", &RECT)  ; 设置鼠标在某个矩形范围内
+   GetRelativeCursorPos(HPIC, XP, YP)
+   Gdip_DrawEllipse(BitmapGraphics, Pen2, XP - (BIKUAN / 4), YP - (BIKUAN  / 4), BIKUAN / 2, BIKUAN / 2)
+   While GetKeyState("LButton", "P") {
+      GetRelativeCursorPos(HPIC, X, Y)
+      If (X != XP) || (Y != YP) {
+         Gdip_DrawLine(BitMapGraphics, Pen1, XP, YP, X, Y)
+         Gdip_DrawEllipse(BitMapGraphics, Pen2, X - (BIKUAN / 4), Y - (BIKUAN  / 4), BIKUAN / 2, BIKUAN / 2)
+         Gdip_DrawImageRect(Graphics, Bitmap, 0, 0, hw, hh) ; not included in GIDP.ahk, added below
+         XP := X
+         YP := Y
+      }
+   }
+   DllCall("USer32.dll\ClipCursor", "Ptr", 0)
+Return
+
+clear:
+iDraw := 0
+Gdip_DrawImageRect(Graphics, pBitmap, 0, 0, hw, hh)
+return
+
+; Retrieves the cursor position relative to this HWND
+GetRelativeCursorPos(HWND, ByRef X, ByRef Y) {
+   VarSetCapacity(POINT, 8, 0)
+   DllCall("User32.dll\GetCursorPos", "Ptr", &POINT)
+   DllCall("User32.dll\ScreenToClient", "Ptr", HWND, "Ptr", &POINT)
+   X := NumGet(POINT, 0, "Int")
+   Y := NumGet(POINT, 4, "Int")
+   Return True
+}
 
 save:
 gui, submit, NoHide
@@ -134,7 +184,30 @@ if FileExist(JTFilePath)
 	IfMsgBox, Cancel
 		return
 }
-Gdip_SaveBitmapToFile(pBitmap, JTFilePath)
+
+if (iDraw = 0)
+{
+  Gdip_SaveBitmapToFile(pBitmap, JTFilePath)
+}
+else
+{
+  if (A_OSVersion = "Win_7")
+  {
+    WinGetPos, X, Y,,, A
+    sBitMap := Gdip_BitmapFromScreen(X+14 "|" Y+31 "|" hw "|" hh)
+    Gdip_SaveBitmapToFile(sBitmap, JTFilePath)
+    Gdip_DisposeImage(sBitmap)
+  }
+  else
+  {
+    sBitMap := Gdip_BitmapFromHWND(hpic)   ; Win10 下有效, Win7 无法获取位图
+    Gdip_SaveBitmapToFile(sBitMap, JTFilePath)
+    Gdip_DisposeImage(sBitmap)
+  }
+  Gdip_DisposeImage(Bitmap)
+}
+;Gdip_SaveBitmapToFile(BitMap, JTFilePath)
+
 Gdip_DisposeImage(pBitmap)
 DeleteObject(hBitmap)
 gosub guiclose
@@ -171,7 +244,27 @@ GuiText(QRText, "区域截图 - 二维码识别结果")
 return
 
 mspaint:
-Gdip_SetBitmapToClipboard(pBitmap)
+if (iDraw = 0)
+{
+  Gdip_SetBitmapToClipboard(pBitmap)
+}
+else
+{
+  if (A_OSVersion = "Win_7")
+  {
+    WinGetPos, X, Y,,, A
+    sBitMap := Gdip_BitmapFromScreen(X+14 "|" Y+31 "|" hw "|" hh)
+    Gdip_SetBitmapToClipboard(sBitMap)
+  }
+  else
+  {
+    sBitMap := Gdip_BitmapFromHWND(hpic)   ; Win10 下有效, Win7 无法获取位图
+    Gdip_SetBitmapToClipboard(sBitMap)
+  }
+  Gdip_DisposeImage(sBitmap)
+  Gdip_DisposeImage(Bitmap)
+}
+
 Gdip_DisposeImage(pBitmap)
 DeleteObject(hBitmap)
 run mspaint
@@ -181,7 +274,27 @@ gosub guiclose
 return
 
 clip:
-Gdip_SetBitmapToClipboard(pBitmap)
+if (iDraw = 0)
+{
+  Gdip_SetBitmapToClipboard(pBitmap)
+}
+else
+{
+  if (A_OSVersion = "Win_7")
+  {
+    WinGetPos, X, Y,,, A
+    sBitMap := Gdip_BitmapFromScreen(X+14 "|" Y+31 "|" hw "|" hh)
+    Gdip_SetBitmapToClipboard(sBitMap)
+  }
+  else
+  {
+    sBitMap := Gdip_BitmapFromHWND(hpic)   ; Win10 下有效, Win7 无法获取位图
+    Gdip_SetBitmapToClipboard(sBitMap)
+  }
+  Gdip_DisposeImage(sBitmap)
+  Gdip_DisposeImage(Bitmap)
+}
+
 Gdip_DisposeImage(pBitmap)
 DeleteObject(hBitmap)
 gosub guiclose
@@ -191,7 +304,28 @@ savas:
 FileSelectFile, savefile, S2, , 截图另存为, 图片文件 (*.jpg; *.png; *.bmp)
 if !RegExMatch(savefile, "(\.jpg)|(\.png)|(\.bmp)$")
   savefile := savefile ".png"
-Gdip_SaveBitmapToFile(pBitmap, savefile)
+
+if (iDraw = 0)
+{
+  Gdip_SaveBitmapToFile(pBitmap, savefile)
+}
+else
+{
+  if (A_OSVersion = "Win_7")
+  {
+    WinGetPos, X, Y,,, A
+    sBitMap := Gdip_BitmapFromScreen(X+14 "|" Y+31 "|" hw "|" hh)
+    Gdip_SaveBitmapToFile(sBitmap, savefile)
+  }
+  else
+  {
+    sBitMap := Gdip_BitmapFromHWND(hpic)   ; Win10 下有效, Win7 无法获取位图
+    Gdip_SaveBitmapToFile(sBitMap, savefile)
+  }
+  Gdip_DisposeImage(sBitmap)
+  Gdip_DisposeImage(Bitmap)
+}
+
 Gdip_DisposeImage(pBitmap)
 DeleteObject(hBitmap)
 gosub guiclose

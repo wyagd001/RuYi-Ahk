@@ -60,6 +60,6 @@ movetosecondary:
 CoordMode, Mouse, Screen
 vx := (副屏幕_左 + 副屏幕_右) // 2, vy := (副屏幕_下 + 副屏幕_上) // 2
 MouseMove, % vx, % vy
-;tooltip % vx "|" vy "|" 副屏幕_左 "|" 副屏幕_上 "|" 副屏幕_右 "|" 副屏幕_下
+;msgbox % vx "|" vy "|" 副屏幕_左 "|" 副屏幕_上 "|" 副屏幕_右 "|" 副屏幕_下
 sleep 1000
 return

@@ -510,7 +510,7 @@ CaptureCursor(hDC, nL, nT)
 
 ;#####################################################################################
 
-; Function           Gdip_BitmapFromHWND
+; Function           Gdip_BitmapFromHWND    ; win7 传入控件 hwnd 无法获取到位图
 ; Description        Uses PrintWindow to get a handle to the specified window and return a bitmap from it
 ;
 ; hwnd               handle to the window to get a bitmap from
