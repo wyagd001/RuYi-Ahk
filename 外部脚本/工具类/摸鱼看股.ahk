@@ -17,7 +17,7 @@ if WinExist("AppBarWin ahk_class AutoHotkeyGUI")
 	if (Tmp_涨幅+0<0)
 	{
 		;msgbox % Tmp_涨幅+0 "小于0"
-		ExecSendToRuyi("A`n" SubStr(Tmp_价格, 1, 4) "`n" SubStr(Tmp_涨幅, 1, 5) "|GREEN",, 1527)
+		ExecSendToRuyi("A`n" SubStr(Tmp_价格, 1, 4) "`n" SubStr(Tmp_涨幅, 1, 5) "|Lime",, 1527)
 	}
 }
 else

@@ -31,6 +31,8 @@ Gui, Add, Button, xp yp+28 w60 gMoveRow_Bottom, 置底
 
 Gui, Add, Button, x10 y655 w60 h30 gcheckall, 全选
 Gui, Add, Button, xp+70 yp w60 h30 guncheckall, 全不选
+gui, add, Button, xp+70 yp w60 h30 gcheckallSeletedfile, 选中高亮
+gui, add, Button, xp+70 yp w60 h30 guncheckallSeletedfile, 高亮不选
 Gui, Add, Button, xp+70 yp w60 h30 gEditfilefromlist, 编辑文件
 Gui, Add, Button, xp+70 yp w60 h30 gopenfilefromlist, 打开文件
 Gui, Add, Button, xp+70 yp w60 h30 gopenfilepfromlist, 打开路径
@@ -331,6 +333,28 @@ return
 
 uncheckall:
 LV_Modify(0, "-check")
+return
+
+checkallSeletedfile:
+RowNumber := 0  ; 这样使得首次循环从列表的顶部开始搜索.
+Loop
+{
+  RowNumber := LV_GetNext(RowNumber)  ; 在前一次找到的位置后继续搜索.
+  if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
+    break
+  LV_Modify(RowNumber, "+check")
+}
+return
+
+uncheckallSeletedfile:
+RowNumber := 0  ; 这样使得首次循环从列表的顶部开始搜索.
+Loop
+{
+  RowNumber := LV_GetNext(RowNumber)  ; 在前一次找到的位置后继续搜索.
+  if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
+    break
+  LV_Modify(RowNumber, "-check")
+}
 return
 
 Editfilefromlist:

@@ -1,4 +1,4 @@
-﻿;|2.4|2023.10.07|1333
+﻿;|2.8|2024.10.19|1333
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\f17f.ico"
 CandySel :=  A_Args[1]
@@ -18,6 +18,7 @@ gui, add, Edit, xp+80 yp-3 w550 vmyedit1 r3,
 gui, add, Text, x10 yp+60 w80 vmyparam2, 替换字符:
 gui, add, Edit, xp+80 yp w550 vmyedit2 r3,
 Gui, Add, CheckBox, x10 yp+60 vzhuanyi h30, 对参数中的 \r, \n, \t 进行转义
+Gui, Add, CheckBox, xp+240 yp vregex h30, 使用正则替换
 
 Gui, Add, ListView, x10 yp+40 w700 h500 vfilelist Checked hwndHLV AltSubmit, 文件名|相对路径|扩展名|大小(KB)|修改时间|替换次数|完整路径
 Gui, Add, Button, xp yp+510 w60 h30 guncheckall, 全不选
@@ -115,8 +116,15 @@ Loop, Files, %sfolder%\*.*, FR
 	Try FileRead, OMatchRead, % A_LoopFileFullPath
 	if (command = "查找替换")
 	{
-		StringReplace, MatchRead, OMatchRead, %myedit1%, %myedit2%, UseErrorLevel
-		repalcecount := ErrorLevel
+    if !regex
+    {
+      StringReplace, MatchRead, OMatchRead, %myedit1%, %myedit2%, UseErrorLevel
+      repalcecount := ErrorLevel
+    }
+    else
+    {
+      MatchRead := RegExReplace(OMatchRead, myedit1, myedit2, repalcecount)
+    }
 		;if instr(OMatchRead, myedit1)
 			;msgbox
 	}

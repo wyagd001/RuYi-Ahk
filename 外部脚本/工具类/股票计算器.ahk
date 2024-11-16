@@ -1,4 +1,4 @@
-﻿;|2.8|2024.10.08|1665
+﻿;|2.8|2024.10.19|1665
 #Include <WinHttp>
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e9d2.ico"
@@ -287,11 +287,13 @@ else if (A_ThisMenu = "收藏")
 GuiControl, Focus, gpcode 
 SendMessage, 0xB1, -2, -1,, ahk_id %Handle%
 SendMessage, 0xB7,,,, ahk_id %Handle%
-Goto, Editjisaun
+Gosub Editjisaun
+Gosub gpjiage
 return
 
 清除:
 GuiControl, Text, gpcode
+GuiControl, Text, gpinfo
 return
 
 删除:
@@ -331,7 +333,6 @@ Per(x, y) {
 	Per :=(x/100)*y
 	return Per
 }
-
 
 0:
 1:

@@ -1,4 +1,4 @@
-﻿;|2.7|2024.08.20|1220
+﻿;|2.7|2024.10.19|1220
 #Include <WinHttp>
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e9d2.ico"
@@ -12,13 +12,13 @@ settingobj := ini2obj(settingInifile)
 Global settingobj, settingInifile
 ColorsOn := settingobj["选项"]["显示颜色"]
 speccolor := settingobj["选项"]["仅五六列显示颜色"]
-Gui, Add, ListView, w680 h250 hwndHLV vgupiaolistview, 序号|股票代码|股票名称|价格点数|涨跌|涨幅|涨跌(元)|持仓份额|成本价(元)|盈亏(元)|
+Gui, Add, ListView, w750 h250 hwndHLV vgupiaolistview, 序号|股票代码|股票名称|价格点数|涨跌|涨幅|涨跌(元)|持仓份额|单价(元)|投入(元)|盈亏(元)|
 CLV := New LV_Colors(HLV)
 Gui, Add, Button, grefresh, 刷新
 Gui, Add, CheckBox, xp+60 yp vColorsOn ggcolor h25, 是否显示颜色
 Gui, Add, CheckBox, xp+120 yp vspeccolor ggcolor h25, 仅5,6列显示颜色
 
-Gui, Add, Button, x700 y5 w60 geditnewrow, 新增
+Gui, Add, Button, x770 y5 w60 geditnewrow, 新增
 Gui, Add, Button, xp yp+28 w60 geditrow, 编辑
 Gui, Add, Button, xp yp+28 w60 gDelListItem, 删除
 
@@ -45,16 +45,20 @@ for k,v in settingobj["股票"]
 	;msgbox % v
 	code := GetStringIndex(v, 1), name := GetStringIndex(v, 2), fene := GetStringIndex(v, 3), chengben := GetStringIndex(v, 4)
 	Tmp_Obj := Gupiao(code)
-	LV_Add("", A_Index, code, name?name:Tmp_Obj["名称"], Tmp_Obj["价格"], Tmp_Obj["涨跌"], Tmp_Obj["涨幅"], fene * Tmp_Obj["涨跌"], fene, chengben, fene * Tmp_Obj["价格"] - fene * chengben)
+	if fene
+		LV_Add("", A_Index, code, name?name:Tmp_Obj["名称"], Tmp_Obj["现价"], Tmp_Obj["涨跌"], Tmp_Obj["涨幅"], Format("{:.2f}", fene * Tmp_Obj["涨跌"]), fene, chengben, Format("{:.2f}", fene * chengben), Format("{:.2f}", fene * Tmp_Obj["现价"] - fene * chengben) " / " Format("{:.2f}", (fene * Tmp_Obj["现价"] - fene * chengben) *100 / (fene * chengben)))
+	else
+		LV_Add("", A_Index, code, name?name:Tmp_Obj["名称"], Tmp_Obj["现价"], Tmp_Obj["涨跌"], Tmp_Obj["涨幅"], fene * Tmp_Obj["涨跌"] )
 }
 LV_ModifyCol()
 LV_ModifyCol(1, "Logical 40")
 LV_ModifyCol(2, "Logical 60")
 LV_ModifyCol(4, "Logical 60")
 LV_ModifyCol(5, "Logical")
+LV_ModifyCol(7, 60)
 LV_ModifyCol(8, 60)
-LV_ModifyCol(9, 80)
-
+LV_ModifyCol(9, 60)
+LV_ModifyCol(10, 60)
 if ColorsOn
 {
 	CLV.OnMessage()
@@ -133,7 +137,7 @@ Gupiao(Code)
 		RegExMatch(Wtitle1, "([\+\-]?\d+\.\d+%?)\s([\+\-]?\d+\.\d+%?)\((\-\-)", Value)
 	;msgbox % Value2
 	GPOBJ := {}
-	GPOBJ["价格"] := Value1
+	GPOBJ["现价"] := Value1
 	GPOBJ["涨幅"] := Value2
 	GPOBJ["涨跌"] := Value3
 	Array := StrSplit(Wtitle1, " ")
@@ -261,9 +265,9 @@ Gui, 1:-Disabled
 settingobj["股票"][R_index] := R_Code "|" R_Name "|" R_Share "|" R_Price
 Tmp_Obj := Gupiao(R_Code)
 if !NewCode
-	LV_Modify(R_index, "", R_index, R_Code, R_Name, Tmp_Obj["价格"], Tmp_Obj["涨跌"], Tmp_Obj["涨幅"], R_Share * Tmp_Obj["涨跌"], R_Share, R_Price, R_Share * Tmp_Obj["价格"] - R_Share * R_Price)
+	LV_Modify(R_index, "", R_index, R_Code, R_Name, Tmp_Obj["现价"], Tmp_Obj["涨跌"], Tmp_Obj["涨幅"], Format("{:.2f}", R_Share * Tmp_Obj["涨跌"]), R_Share, R_Price, Format("{:.2f}", R_Share * R_Price), Format("{:.2f}", R_Share * Tmp_Obj["现价"] - R_Share * R_Price) " / " Format("{:.2f}", (R_Share * Tmp_Obj["现价"] - R_Share * R_Price) *100 / (R_Share * R_Price)))
 else
-	LV_Add("", R_index, R_Code, R_Name, Tmp_Obj["价格"], Tmp_Obj["涨跌"], Tmp_Obj["涨幅"], R_Share * Tmp_Obj["涨跌"], R_Share, R_Price, R_Share * Tmp_Obj["价格"] - R_Share * R_Price)
+	LV_Add("", R_index, R_Code, R_Name, Tmp_Obj["现价"], Tmp_Obj["涨跌"], Tmp_Obj["涨幅"], Format("{:.2f}", R_Share * Tmp_Obj["涨跌"]), R_Share, R_Price, Format("{:.2f}", R_Share * R_Price), Format("{:.2f}", R_Share * Tmp_Obj["现价"] - R_Share * R_Price) " / " Format("{:.2f}", (R_Share * Tmp_Obj["现价"] - R_Share * R_Price) *100 / (R_Share * R_Price)))
 obj2ini(settingobj, settingInifile)
 WinActivate, 股票当天行情 ahk_class AutoHotkeyGUI
 R_index := R_Code := R_Name := R_Share := R_Price := ""
@@ -329,7 +333,7 @@ gpjiage:
 Gui, 2:Default
 Gui, Submit, NoHide
 Tmp_Obj := Gupiao(gpcode)
-GuiControl, Text, gpInfo, % Tmp_Obj["名称"] " " Tmp_Obj["价格"] " " Tmp_Obj["涨跌"] " " Tmp_Obj["涨幅"]
+GuiControl, Text, gpInfo, % Tmp_Obj["名称"] " " Tmp_Obj["现价"] " " Tmp_Obj["涨跌"] " " Tmp_Obj["涨幅"]
 if (StrLen(gpcode) >= 6)
 {
   history++

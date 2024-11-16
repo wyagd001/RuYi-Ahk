@@ -43,6 +43,8 @@ Gui, Add, Button, xp yp+28 w80 gRunfun, 执行
 
 Gui, Add, Button, x10 yp+425 w60 gcheckallfile, 全选
 Gui, Add, Button, xp+70 yp w60 guncheckallfile, 全不选
+Gui, Add, Button, xp+70 yp w60 gcheckallSeletedfile, 选中高亮
+Gui, Add, Button, xp+70 yp w60 guncheckallSeletedfile, 高亮不选
 Gui, Add, Button, xp+70 yp w60 gEditFile, 编辑文件
 Gui, Add, Button, xp+70 yp w60 gopenfilefromlist, 打开文件
 Gui, Add, Button, xp+70 yp w60 gopenfilepfromlist, 打开路径
@@ -52,6 +54,8 @@ Menu, Tray, UseErrorLevel
 Menu, filelistMenu, deleteall
 Menu, filelistMenu, Add, 全选, checkallfile
 Menu, filelistMenu, Add, 全不选, uncheckallfile
+Menu, filelistMenu, Add, 选中高亮, checkSameFolderall
+Menu, filelistMenu, Add, 取消选中, uncheckSameFolderall
 Menu, filelistMenu, Add, 全选同级, checkSameFolderall
 Menu, filelistMenu, Add, 全不选同级, uncheckSameFolderall
 Menu, filelistMenu, Add, 下一个选中, jumpcheckedfile
@@ -740,6 +744,28 @@ return
 uncheckallfile:
 Gui,66: Default
 LV_Modify(0, "-check")
+return
+
+checkallSeletedfile:
+RowNumber := 0  ; 这样使得首次循环从列表的顶部开始搜索.
+Loop
+{
+  RowNumber := LV_GetNext(RowNumber)  ; 在前一次找到的位置后继续搜索.
+  if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
+    break
+  LV_Modify(RowNumber, "+check")
+}
+return
+
+uncheckallSeletedfile:
+RowNumber := 0  ; 这样使得首次循环从列表的顶部开始搜索.
+Loop
+{
+  RowNumber := LV_GetNext(RowNumber)  ; 在前一次找到的位置后继续搜索.
+  if not RowNumber  ; 上面返回零, 所以选择的行已经都找到了.
+    break
+  LV_Modify(RowNumber, "-check")
+}
 return
 
 checkSameFolderall:

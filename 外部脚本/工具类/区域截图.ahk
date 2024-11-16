@@ -1,4 +1,4 @@
-﻿;|2.8|2024.10.07|1530
+﻿;|2.8|2024.10.29|1530
 区域选择方式 = 1
 iDraw := 0
 pToken := Gdip_Startup()
@@ -231,9 +231,9 @@ JTFilePath := A_temp "\Vis2_123.bmp"
 Gdip_SaveBitmapToFile(pBitmap, JTFilePath)
 B_Autohotkey := A_ScriptDir "\..\..\引用程序\" (A_PtrSize = 8 ? "AutoHotkeyU64.exe" : "AutoHotkeyU32.exe")
 run %B_Autohotkey% "%A_ScriptDir%\..\文件处理\本地OCR(Vis2).ahk" "%JTFilePath%"
-;run %B_Autohotkey% "%A_ScriptDir%\PaddleOCR_身份证识别验证.ahk" "%JTFilePath%" "quyujt"
+;run %B_Autohotkey% "%A_ScriptDir%\PaddleOCR_身份证识别验证.ahk" "%JTFilePath%" "%quyujt%"
 ;AutoHotkey64 := A_ScriptDir "\..\..\引用程序\2.0\AutoHotkey64.exe"
-;run %AutoHotkey64% "%A_ScriptDir%\RapidOcrOnnx.ahk2" "%JTFilePath%" "quyujt"
+;run %AutoHotkey64% "%A_ScriptDir%\RapidOcrOnnx.ahk2" "%JTFilePath%" "%quyujt%"
 return
 
 QRcodeReader:

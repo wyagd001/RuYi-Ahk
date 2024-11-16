@@ -64,16 +64,21 @@ ControlHandler:
             Try FileRead, MatchRead, % A_LoopFileFullPath   ;  utf8  编码的问题
 
             IfEqual, SearchStop, 1, Break
-            if !fullword
+            if (fullword = 1)
+            {
+              MatchRead := RegExReplace(MatchRead, "i)\b" EditString "\b", EditString, VarCount) 
+              IfEqual, VarCount, 0, Continue
+            }
+            else if (Rerex = 1)
+            {
+              MatchRead := RegExReplace(MatchRead, EditString, , VarCount)
+              IfEqual, VarCount, 0, Continue
+            }
+            else   ; 普通查找
             {
               StringReplace, MatchRead, MatchRead, % EditString, % EditString, UseErrorLevel
               IfEqual, ErrorLevel, 0, Continue
             }
-            else
-            {
-              MatchRead := RegExReplace(MatchRead, "i)\b" EditString "\b", EditString, VarCount) 
-              IfEqual, VarCount, 0, Continue
-            } 
             LV_Add("", (VarCount != "") ? VarCount : ErrorLevel, A_LoopFileFullPath)
             LV_ModifyCol(1, "AutoHdr")
             LV_ModifyCol(2, "AutoHdr")
@@ -108,16 +113,33 @@ If Fileexist(FileFullPath)
 	if instr(notepad2, "notepad2.exe")
 	{
 		FileEncoding % File_GetEncoding(FileFullPath)
+    tmp_linenum := 0
 		Loop, Read, % FileFullPath
 		{
-			if instr(A_LoopReadLine, EditString)
-			{
-				tmp_linenum := A_index
-				;tooltip % EditString "-" tmp_linenum
-				break
-			}
+      if !Rerex
+      {
+        if instr(A_LoopReadLine, EditString)
+        {
+          tmp_linenum := A_index
+          ;tooltip % EditString "-" tmp_linenum
+          break
+        }
+      }
+      else
+      {
+        FoundPos := RegExMatch(A_LoopReadLine, EditString)
+        if FoundPos
+        {
+          tmp_linenum := A_index
+          break
+        }
+      }
 		}
-		Run, "%notepad2%" /g %tmp_linenum% "%FileFullPath%"
+    ;msgbox % notepad2
+    if tmp_linenum
+      Run, "%notepad2%" /g %tmp_linenum% "%FileFullPath%"
+    else
+      Run, "%notepad2%" "%FileFullPath%"
 	}
 	else
 		Run, "%notepad2%" "%FileFullPath%"
@@ -218,8 +240,9 @@ GuiCreate() {
     Gui, Add, Edit, y+10 w460 vEditString, % EditString
     GuiControl, choose, EditDir, % EditDir
     GuiControl, choose, EditType, % EditType
-    Gui, Add, CheckBox, xs y+10 h20 vfullword,全字符匹配(单词边界)
-    Gui, Add, CheckBox, x+10 yp h20 Checked vRecurse,递归子文件夹
+    Gui, Add, CheckBox, xs y+10 h20 vfullword, 全字符匹配(单词边界)
+    Gui, Add, CheckBox, x+10 yp h20 vRerex, 正则表达式
+    Gui, Add, CheckBox, x+10 yp h20 Checked vRecurse, 递归子文件夹
 
     Gui, Tab, 2
     Gui, Add, ListView, w460 r10 vListView Grid +altsubmit vLV1 gLV1x, 找到次数|文件路径
