@@ -1,4 +1,4 @@
-﻿;|2.0|2023.07.01|1205,1206
+﻿;|2.8|2024.11.23|1205,1206
 CandySel := A_Args[1]
 if CF_IsFolder(CandySel)
 	goto 1206
@@ -52,6 +52,9 @@ else IniWrite %IconIndex%, %ini%, .ShellClassInfo, IconIndex
 if !ConfirmFileOperation
 	IniWrite 0, %ini%, .ShellClassInfo, ConfirmFileOp
 else IniWrite %ConfirmFileOperation%, %ini%, .ShellClassInfo, ConfirmFileOp
+
+IniDelete, %ini%, .ShellClassInfo, IconResource   ; 删除单独设置的图标条目
+;msgbox % ErrorLevel
 
 FileSetAttrib +SH, %ini%, 2	;Hide desktop.ini by setting +SH(system,hidden attributes)
 }

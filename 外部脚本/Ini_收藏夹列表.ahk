@@ -1,4 +1,4 @@
-﻿;|2.4|2023.10.03|1516
+﻿;|2.8|2024.11.21|1516
 #Persistent
 #SingleInstance Force
 Windy_CurWin_Id := A_Args[1]
@@ -9,11 +9,14 @@ IniMenuobj := ini2obj(IniMenuInifile)
 Global IniMenuobj, IniMenuInifile
 SetWorkingDir %A_ScriptDir%
 Menu, Tray, Icon, Shell32.dll, 174
+CombArr := ["文件", "文件夹", "程序", "命令", "网址", "注册表", "如意动作", "常用文本"]
 
 Gui, Destroy
-gui, add, listbox, x5 y5 vComb w80 h505 gMR, 文件||文件夹|程序|命令|网址|注册表|如意动作|常用文本
+Gui, Add, Edit, x5 y5 w607 vsearchkey
+Gui, Add, Button, xp+617 yp w60 gsearch default, 搜索
+gui, add, listbox, x5 yp+27 vComb w80 h505 gupdateListView, 文件||文件夹|程序|命令|网址|注册表|如意动作|常用文本|搜索结果
 
-Gui, Add, ListView, vMyListView gMyListView xp+82 y5 w525 h497 grid, N|文件名|地址
+Gui, Add, ListView, vMyListView gMyListView xp+82 yp w525 h497 grid, 序号|文件名|地址
 Gui, Add, Button, xp+535 yp w60 geditnewrow, 新增
 Gui, Add, Button, xp yp+28 w60 geditrow, 编辑
 Gui, Add, Button, xp yp+28 w60 gDelListItem, 删除
@@ -25,6 +28,7 @@ Gui, Add, Button, xp yp+40 w60 gopensetfile, 打开配置
 
 Menu, MyListViewMenu, Add, 删除条目, DelListItem
 Gosub updateListView
+Gui, Show, , Ini_收藏夹
 Return
 
 MyListView:
@@ -33,6 +37,11 @@ if (A_GuiEvent = "DoubleClick")
 	LV_GetText(Candy_Cmd, A_EventInfo, 3)
 	Gui, Submit, NoHide
 
+  if (Comb = "搜索结果")
+	{
+		LV_GetText(Comb, A_EventInfo, 1)
+	}
+  
 	if (Comb = "如意动作")
 	{
 		ExecSendToRuyi("",, Candy_Cmd)
@@ -81,25 +90,53 @@ if (A_GuiEvent = "DoubleClick")
 }
 return
 
-MR:
-Gosub updateListView
+search:
+Gui, Submit, NoHide
+if searchkey
+{
+  GuiControl, ChooseString, Comb, 搜索结果
+  RefreshData(Comb, searchkey)
+}
 return
 
 updateListView:
-Gui,Submit, NoHide
-RefreshData(Comb)
+Gui, Submit, NoHide
+if (Comb != "搜索结果")
+  RefreshData(Comb)
+else
+{
+  if searchkey
+    RefreshData(Comb, searchkey)
+}
 return
 
-RefreshData(sectname)
+RefreshData(sectname, skey := "")
 {
-	LV_Delete()
-	for index,element in IniMenuobj[sectname]
-	{
-		data_array := StrSplit(element, "|")
-		LV_Add("", index, data_array[2], data_array[1])
-	}
+  global CombArr
+  LV_Delete()
+  if !skey
+  {
+    for index,element in IniMenuobj[sectname]
+    {
+      data_array := StrSplit(element, "|")
+      LV_Add("", index, data_array[2], data_array[1])
+    }
+  }
+  else
+  {
+    for k, v in CombArr
+    {
+      for index,element in IniMenuobj[v]
+      {
+        data_array := StrSplit(element, "|")
+        if instr(data_array[1], skey) or instr(data_array[2], skey)
+        {
+          LV_Add("", v, data_array[2], data_array[1])
+        }
+      }
+    }
+  }
 	LV_ModifyCol()
-	Gui, Show, , Ini_收藏夹
 }
 
 GuiContextMenu:
@@ -184,6 +221,8 @@ return
 
 MoveRow_Up:
 Gui, Submit, NoHide
+if (Comb = "搜索结果")
+  return
 LV_MoveRow()
 LV_RowIndexOrder()
 LV_ListToObj(comb)
@@ -191,6 +230,8 @@ Return
 
 MoveRow_Down:
 Gui, Submit, NoHide
+if (Comb = "搜索结果")
+  return
 LV_MoveRow(0)
 LV_RowIndexOrder()
 LV_ListToObj(comb)
@@ -246,6 +287,8 @@ LV_ListToObj(SubObj)
 
 DelListItem:
 Gui, Submit, NoHide
+if (Comb = "搜索结果")
+  return
 RowNumber := 0, TmpArr := []
 Loop
 {
@@ -268,7 +311,6 @@ obj2ini(IniMenuobj, IniMenuInifile)
 RefreshData(Comb)
 return
 
-
 Editrow:
 RF := LV_GetNext(0, "F")
 if RF
@@ -277,12 +319,17 @@ if RF
 	LV_GetText(R_Name, RF, 2)
 	LV_GetText(R_Path, RF, 3)
 }
+else
+  return
 editnewrow:
+Gui, Submit, NoHide
+if (Comb = "搜索结果")
+  return
 Gui, 98:Destroy
 Gui, 98:+Owner1
 Gui, 1:+Disabled
 Gui, 98:Default
-Gui, Submit, NoHide
+;Gui, Submit, NoHide
 if !R_index && !R_Name && !R_Path
 	R_index := IniMenuobj[Comb].Count()+1
 Gui, Add, Text, x20 y20 w50 h20, 编号：

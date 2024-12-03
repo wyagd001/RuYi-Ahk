@@ -20,7 +20,7 @@ gui, add, DropDownList, xp+80 yp w550 vOut_Code hwndhcby, ANSI(中文简体)|UTF
 PostMessage, 0x0153, -1, 20,, ahk_id %hcby% 
 Gui, Add, Button, xp+560 yp w60 h30 gstopload, 停止查找
 
-Gui, Add, ListView, x10 yp+40 w700 h500 vfilelist Checked hwndHLV AltSubmit, 文件名|相对路径|扩展名|文件编码|大小(KB)|修改日期|完整路径
+Gui, Add, ListView, x10 yp+40 w700 h500 vfilelist Checked hwndHLV AltSubmit grid, 文件名|相对路径|扩展名|文件编码|大小(KB)|修改日期|完整路径
 Gui, Add, Button, xp yp+510 w60 h30 gcheckall, 全选
 Gui, Add, Button, xp+70 yp w60 h30 guncheckall, 全不选
 Gui, Add, Button, xp+70 yp w60 h30 gcheckunall, 反选

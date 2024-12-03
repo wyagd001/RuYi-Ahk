@@ -20,7 +20,7 @@ gui, add, Edit, xp+80 yp w550 vmyedit2 r3,
 Gui, Add, CheckBox, x10 yp+60 vzhuanyi h30, 对参数中的 \r, \n, \t 进行转义
 Gui, Add, CheckBox, xp+240 yp vregex h30, 使用正则替换
 
-Gui, Add, ListView, x10 yp+40 w700 h500 vfilelist Checked hwndHLV AltSubmit, 文件名|相对路径|扩展名|大小(KB)|修改时间|替换次数|完整路径
+Gui, Add, ListView, x10 yp+40 w700 h500 vfilelist Checked hwndHLV AltSubmit Grid, 文件名|相对路径|扩展名|大小(KB)|修改时间|替换次数|完整路径
 Gui, Add, Button, xp yp+510 w60 h30 guncheckall, 全不选
 Gui, Add, Button, xp+70 yp w60 h30 gEditfilefromlist, 编辑文件
 Gui, Add, Button, xp+70 yp w60 h30 gopenfilefromlist, 打开文件

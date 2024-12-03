@@ -1,4 +1,4 @@
-﻿;|2.7|2024.10.19|1220
+﻿;|2.8|2024.11.21|1220
 #Include <WinHttp>
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e9d2.ico"
@@ -12,13 +12,13 @@ settingobj := ini2obj(settingInifile)
 Global settingobj, settingInifile
 ColorsOn := settingobj["选项"]["显示颜色"]
 speccolor := settingobj["选项"]["仅五六列显示颜色"]
-Gui, Add, ListView, w750 h250 hwndHLV vgupiaolistview, 序号|股票代码|股票名称|价格点数|涨跌|涨幅|涨跌(元)|持仓份额|单价(元)|投入(元)|盈亏(元)|
+Gui, Add, ListView, w760 h250 hwndHLV vgupiaolistview, 序号|股票代码|股票名称|价格点数|涨跌|涨幅|涨跌(元)|持仓份额|单价(元)|投入(元)|盈亏(元)|
 CLV := New LV_Colors(HLV)
 Gui, Add, Button, grefresh, 刷新
 Gui, Add, CheckBox, xp+60 yp vColorsOn ggcolor h25, 是否显示颜色
 Gui, Add, CheckBox, xp+120 yp vspeccolor ggcolor h25, 仅5,6列显示颜色
 
-Gui, Add, Button, x770 y5 w60 geditnewrow, 新增
+Gui, Add, Button, x780 y5 w60 geditnewrow, 新增
 Gui, Add, Button, xp yp+28 w60 geditrow, 编辑
 Gui, Add, Button, xp yp+28 w60 gDelListItem, 删除
 
@@ -46,9 +46,9 @@ for k,v in settingobj["股票"]
 	code := GetStringIndex(v, 1), name := GetStringIndex(v, 2), fene := GetStringIndex(v, 3), chengben := GetStringIndex(v, 4)
 	Tmp_Obj := Gupiao(code)
 	if fene
-		LV_Add("", A_Index, code, name?name:Tmp_Obj["名称"], Tmp_Obj["现价"], Tmp_Obj["涨跌"], Tmp_Obj["涨幅"], Format("{:.2f}", fene * Tmp_Obj["涨跌"]), fene, chengben, Format("{:.2f}", fene * chengben), Format("{:.2f}", fene * Tmp_Obj["现价"] - fene * chengben) " / " Format("{:.2f}", (fene * Tmp_Obj["现价"] - fene * chengben) *100 / (fene * chengben)))
+		LV_Add("", A_Index, code, name?name:Tmp_Obj["名称"], Tmp_Obj["现价"], Tmp_Obj["涨跌"], Tmp_Obj["涨幅"], Format("{:.2f}", fene * Tmp_Obj["涨跌"]), fene, chengben, Format("{:.2f}", fene * chengben), Format("{:.2f}", fene * Tmp_Obj["现价"] - fene * chengben) " / " Format("{:.2f}", (fene * Tmp_Obj["现价"] - fene * chengben) *100 / (fene * chengben)) "`%")
 	else
-		LV_Add("", A_Index, code, name?name:Tmp_Obj["名称"], Tmp_Obj["现价"], Tmp_Obj["涨跌"], Tmp_Obj["涨幅"], fene * Tmp_Obj["涨跌"] )
+		LV_Add("", A_Index, code, name?name:Tmp_Obj["名称"], Tmp_Obj["现价"], Tmp_Obj["涨跌"], Tmp_Obj["涨幅"])
 }
 LV_ModifyCol()
 LV_ModifyCol(1, "Logical 40")

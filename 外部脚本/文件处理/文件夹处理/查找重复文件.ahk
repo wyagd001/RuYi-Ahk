@@ -13,7 +13,7 @@ Gui, Add, Button, xp+560 yp-2 w60 h30 gstartsearch2, 同名查找
 Gui, Add, Text, x10 yp+40 h25, 目标文件夹:
 Gui, Add, Edit, xp+80 yp-5 w550 h25 vtfolder,
 Gui, Add, Button, xp+560 yp h25 gseltfolder, ...
-Gui, Add, ListView, x10 yp+40 w700 h500 vfilelist Checked hwndHLV AltSubmit, 分组|序号|文件名|相对路径|大小|修改日期|完整路径|md5
+Gui, Add, ListView, x10 yp+40 w700 h500 vfilelist Checked hwndHLV AltSubmit Grid, 分组|序号|文件名|相对路径|大小|修改日期|完整路径|md5
 Gui, Add, Button, xp yp+510 w50 h30 guncheckall vuncheckallB, 全不选
 Gui, Add, Button, xp+55 yp w50 h30 gswitchcheck vswitchcheckB, 反选
 Gui, Add, Button, xp+55 yp w60 h30 gEditfilefromlist vEditfilefromlistB, 编辑文件

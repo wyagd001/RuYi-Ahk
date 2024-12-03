@@ -1,4 +1,4 @@
-﻿;|2.2|2023.08.04|1212
+﻿;|2.8|2024.11.24|1212
 CandySel := A_Args[1]
 IniMenuInifile := A_ScriptDir "\..\配置文件\外部脚本\ini菜单.ini"
 ATA_settingFile := A_ScriptDir "\..\配置文件\如一.ini"
@@ -98,6 +98,23 @@ if (A_thisMenu = "如意动作")
 	;MsgBox % Candy_Cmd
 	Return
 }
+
+if(A_thisMenu = "常用文本")
+{
+	if Windy_CurWin_Id
+	{
+		if WinExist("ahk_id" Windy_CurWin_id)
+			WinActivate, ahk_id %Windy_CurWin_id%
+	}
+	else
+		WinActivate, A
+	Candy_Cmd := StrReplace(Candy_Cmd, "\r", "`r")
+	Candy_Cmd := StrReplace(Candy_Cmd, "\n", "`n")
+	sleep 200
+	send, %Candy_Cmd%
+  return
+}
+
 if (RegExMatch(Candy_Cmd, "i)^(HKCU|HKCR|HKCC|HKU|HKLM|HKEY|计算机\\HK|\[HK)"))
 {
 	f_OpenReg(Candy_Cmd)
