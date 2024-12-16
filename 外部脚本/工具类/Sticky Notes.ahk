@@ -1,7 +1,7 @@
-﻿;|2.8|2024.09.03|1669
+﻿;|2.9|2024.12.13|1669
 ; 来源网址: https://www.autohotkey.com/boards/viewtopic.php?t=92366
 #SingleInstance, Ignore
-StickyNotesFolder := A_ScriptDir "\..\..\配置文件\外部脚本\ahk_note"
+StickyNotesFolder := A_ScriptDir "\..\..\配置文件\外部脚本\工具类\Sticky_Notes"
 if !FileExist(StickyNotesFolder)
   FileCreateDir, % StickyNotesFolder
 StickyNotesIni := StickyNotesFolder . "\Sticky Notes.ini"
@@ -11,6 +11,7 @@ if !FileExist(StickyNotesIni)
 	Settings := "
 (
 [StickyNotes]
+TabNames=001.txt
 
 [Settings]
 EditColor=0xFFFFFF

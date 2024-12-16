@@ -1,4 +1,4 @@
-﻿;|2.6|2024.05.28|1094
+﻿;|2.9|2024.12.14|1094
 /*
 TODO:
 - find a better way to make context sensitive hotkeys for when listbox is selected
@@ -25,50 +25,50 @@ if not A_IsAdmin
 	ExitApp
 }
 
-presets_ini_file := A_ScriptDir "\网络连接IP设置.ini"
-interfaces_tmpfile := A_ScriptDir "\interfaces.tmp"
-putty := A_ScriptDir "\putty.exe"
-Gui, Add, Text, x12 y9 w120 h20 , 网络连接
+presets_ini_file := A_ScriptDir "\..\..\配置文件\外部脚本\系统设置\网络连接IP设置.ini"
+interfaces_tmpfile := A_ScriptDir "\..\..\临时目录\interfaces.tmp"
+putty := A_ScriptDir "\..\..\引用程序\x32\putty.exe"
+Gui, Add, Text, x12 y9 w120 h20, 网络连接
 Gui, Add, DropDownList, x12 y29 w130 h100 vinterface gupdate_cmd, % get_interfaces_list(interfaces_tmpfile)
-Gui, Add, Button, x12 y59 w130 h20 gchang_interface_state, 切换连接状态
+Gui, Add, Button, x12 y59 w130 h20 gchange_interface_state, 切换连接状态
 
-Gui, Add, Text, x12 y89 w130 h20 , 保存的方案
+Gui, Add, Text, x12 y89 w130 h20, 保存的方案
 Gui, Add, ListBox, x12 y109 w130 h130 vpreset gpreset_select Hwndpresets_hwnd, % ini_get_sections(presets_ini_file)
 Gui, Add, Button, x12 y233 w30 h20 gpreset_up, 上
 Gui, Add, Button, x42 y233 w30 h20 gpreset_down, 下
 Gui, Add, Button, x102 y233 w30 h20 gpreset_delete, 删除
 
-Gui, Add, GroupBox, x152 y9 w260 h120 , IP
+Gui, Add, GroupBox, x152 y9 w260 h120, IP
 Gui, Add, CheckBox, x162 y29 w70 h20 vip_ignore gip_toggle, 忽略
 Gui, Add, CheckBox, x242 y29 w70 h20 vip_auto gip_toggle, 自动获取
 
-Gui, Add, Text, x162 y59 w80 h20 , IP地址
+Gui, Add, Text, x162 y59 w80 h20, IP地址
 Gui, Add, Custom, ClassSysIPAddress32 x242 y58 w120 h20 hwndhIPControl vcomp_ip gupdate_cmd
-Gui, Add, Text, x162 y79 w80 h20 , 子网掩码
+Gui, Add, Text, x162 y79 w80 h20, 子网掩码
 ;Gui, Add, Custom, ClassSysIPAddress32 x242 y79 w120 h20 vnetmask gupdate_cmd, 
 Gui, Add, Custom, ClassSysIPAddress32 x242 y80 w120 h20  hwndhnetmaskControl vnetmask gip_haschanged
-Gui, Add, Text, x162 y99 w80 h20 , 默认网关
+Gui, Add, Text, x162 y99 w80 h20, 默认网关
 Gui, Add, Custom, ClassSysIPAddress32 x242 y102 w120 h20 hwndhgatewayControl vgateway gupdate_cmd
 Gui, Add, Button, x372 y59 w30 h20 ggateway2comp_ip, <+1
 
-Gui, Add, GroupBox, x152 y139 w260 h100 , DNS
+Gui, Add, GroupBox, x152 y139 w260 h100, DNS
 Gui, Add, CheckBox, x160 y160 w40 h20 vdns_ignore gdns_toggle, 忽略
 Gui, Add, CheckBox, x210 y160 w65 h20 vdns_auto gdns_toggle, 自动获取
 
 Gui, Add, Button, x285 y159 w60 h20 gset_now_dns, 获取当前
 Gui, Add, Button, x350 y159 w60 h20 gset_google_dns, Google
-Gui, Add, Text, x162 y189 w80 h20 , 首选DNS服务器
+Gui, Add, Text, x162 y189 w80 h20, 首选DNS服务器
 Gui, Add, Custom, ClassSysIPAddress32 x242 y189 w120 h20 vdns_1 gupdate_cmd
-Gui, Add, Text, x162 y209 w80 h20 , 备用DNS服务器
+Gui, Add, Text, x162 y209 w80 h20, 备用DNS服务器
 Gui, Add, Custom, ClassSysIPAddress32 x242 y209 w120 h20 vdns_2 gupdate_cmd
 
-Gui, Add, Text, x12 y260 w120 h20 , Cmd
+Gui, Add, Text, x12 y260 w120 h20, Cmd
 Gui, Add, Edit, x12 y280 w400 h70 vcmd, Edit
 Gui, Add, Button, x432 y299 w100 h30 grun_cmd, 应用设置
 
 Gui, Add, Button, x432 y19 w100 h30 gsave, 保存方案
 
-Gui, Add, Text, x432 y69 w120 h20 , 其它
+Gui, Add, Text, x432 y69 w120 h20, 其它
 Gui, Add, Button, x432 y89 w100 h30 gping, ping 网关
 Gui, Add, Button, x535 y89 w100 h30 gbrowse, 浏览 网关
 Gui, Add, Button, x432 y129 w100 h30 gScanSubnet, 扫描局域网
@@ -152,31 +152,36 @@ else
 }
 return
 
-chang_interface_state:
+change_interface_state:
 gui, submit, nohide
 filedelete, error.tmp
-if interface contains  已启用
+if Instr(interface, "已启用") or Instr(interface, "Enabled")
 {
-	interface:=trim(StrReplace(interface,"已启用"))
-	Runwait,%comspec% /c netsh interface set interface name="%interface%" admin=disabled >error.tmp, ,Hide
-	check_error("error.tmp","已禁用" interface)
+	interface := trim(StrReplace(interface, "已启用"))
+  interface := trim(StrReplace(interface, "Enabled"))
+	Runwait, %comspec% /c netsh interface set interface name="%interface%" admin=disabled >error.tmp,, Hide
+	check_error("error.tmp", "已禁用" interface)
 }
-if interface contains  已禁用
+if Instr(interface, "已禁用") or Instr(interface, "Disabled")  
 {
-	interface:=trim(StrReplace(interface,"已禁用"))
-	Runwait,  %comspec% /c netsh interface set interface name="%interface%" admin=enabled >error.tmp,,Hide
-	check_error("error.tmp","已启用" interface)
+	interface := trim(StrReplace(interface, "已禁用"))
+  interface := trim(StrReplace(interface, "Disabled"))
+	Runwait, %comspec% /c netsh interface set interface name="%interface%" admin=enabled >error.tmp,, Hide
+	check_error("error.tmp", "已启用" interface)
 }
 
-GuiControl, , interface,|
-GuiControl, , interface, % get_interfaces_list(interfaces_tmpfile)
+GuiControl,, interface, |
+GuiControl,, interface, % get_interfaces_list(interfaces_tmpfile)
 gosub, update_cmd
 return
 
 get_interfaces_list(tmp_file) {
 	filedelete, % tmp_file
-	runwait, %comspec% /c "for /f "tokens=1`,3*" `%a in ('netsh interface show interface^|more +3') do echo `%a `%c>> "%tmp_file%"" , % A_ScriptDir ,hide
-	fileread, interfaces, % tmp_file
+	runwait, %comspec% /c "for /f "tokens=1`,3*" `%a in ('netsh interface show interface^|more +3') do echo `%a `%c>> "%tmp_file%"" , % A_ScriptDir, hide     ; Win10 文件编码为 UTF-8, Win7 为 ?
+  if (A_OSVersion != "WIN_7")
+    fileread, interfaces, *P65001 %tmp_file%
+  else
+    fileread, interfaces, %tmp_file%
 	filedelete, % tmp_file  ; don't leave nothing in the dir
 	stringreplace, interfaces, interfaces, `r`n, |, all
 	sort,interfaces, D| U
@@ -184,33 +189,33 @@ get_interfaces_list(tmp_file) {
 	return interfaces
 }
 
-check_error(tmp_file,msg)
+check_error(tmp_file, msg)
 {
-	fileread,error_msg,%tmp_file%
-	error_msg:=StrReplace(error_msg,"`r`n")
+	fileread, error_msg, %tmp_file%
+	error_msg := StrReplace(error_msg, "`r`n")
 	filedelete, %tmp_file%
 	if !error_msg
 	{
-		tooltip,%msg%。
-		sleep,1000
+		tooltip, %msg%。
+		sleep, 1000
 		tooltip
 		return
 	}
 	else
 	{
-		msgbox,,提示信息,% error_msg
+		msgbox,, 提示信息, % error_msg
 		return
 	}
 }
 
 ieproxy:
 gui, submit, nohide
-CF_RegWrite("REG_DWORD","HKCU","Software\Microsoft\Windows\CurrentVersion\Internet Settings","Proxyenable",ieproxy)
-CF_RegWrite("REG_SZ","HKCU","Software\Microsoft\Windows\CurrentVersion\Internet Settings","ProxyServer",ieproxyserver)
-dllcall("wininet\InternetSetOptionW","int","0","int","39","int","0","int","0")
-dllcall("wininet\InternetSetOptionW","int","0","int","37","int","0","int","0")
-tooltip,代理设置完毕。
-sleep,1000
+CF_RegWrite("REG_DWORD", "HKCU", "Software\Microsoft\Windows\CurrentVersion\Internet Settings", "Proxyenable", ieproxy)
+CF_RegWrite("REG_SZ", "HKCU", "Software\Microsoft\Windows\CurrentVersion\Internet Settings", "ProxyServer", ieproxyserver)
+dllcall("wininet\InternetSetOptionW", "int", "0", "int", "39", "int", "0", "int", "0")
+dllcall("wininet\InternetSetOptionW", "int", "0", "int", "37", "int", "0", "int", "0")
+tooltip, 代理设置完毕。
+sleep, 1000
 tooltip
 return
 
@@ -219,10 +224,10 @@ ip_haschanged:
 ControlGetFocus, WhichControl, A
 if WhichControl=Edit8
 {
-	IPoctet1:=IPCtrlGetAddress(hIPControl,1)
-	IPoctet2:=IPCtrlGetAddress(hIPControl,2)
-	IPoctet3:=IPCtrlGetAddress(hIPControl,3)
-	GWoctet4:=IPCtrlGetAddress(hgatewayControl,4)
+	IPoctet1:=IPCtrlGetAddress(hIPControl, 1)
+	IPoctet2:=IPCtrlGetAddress(hIPControl, 2)
+	IPoctet3:=IPCtrlGetAddress(hIPControl, 3)
+	GWoctet4:=IPCtrlGetAddress(hgatewayControl, 4)
 	if IPoctet1 between 1 and 127
 		IPCtrlSetAddress(hnetmaskControl, "255.0.0.0")
 	if IPoctet1 between 128 and 191
@@ -368,8 +373,10 @@ if not dns_ignore
 			cmd .= "netsh interface ip add dns name=""" interface """ addr=" dns_2 " index=2 validate=no & "
 	}	
 }
-cmd:=StrReplace(cmd,"已禁用 ")
-cmd:=StrReplace(cmd,"已启用 ")
+cmd := StrReplace(cmd, "已禁用 ") ; Win7
+cmd := StrReplace(cmd, "已启用 ")
+cmd := StrReplace(cmd, "Enabled ")  ; Win10
+cmd := StrReplace(cmd, "Disabled ")  ; Win10
 cmd := regexreplace(cmd, "& $", "")
 guicontrol,, cmd, % cmd
 return
@@ -433,21 +440,22 @@ if not dns_ignore
 
 gosub, update_gui
 
-if (A_GuiEvent == "DoubleClick")
+if (A_GuiEvent == "DoubleClick")   ; 双击动作
 	gosub, run_cmd
 return
 
 run_cmd:
 gui, submit, nohide
 filedelete, error.tmp
-cmd:=StrReplace(cmd,"&",">>error.tmp &") ">>error.tmp"
-RunWait, %comspec% /c %cmd%,,hide
-check_error("error.tmp","IP 设置应用完成")
+cmd := StrReplace(cmd, "&", ">>error.tmp &") ">>error.tmp"
+;msgbox % cmd
+RunWait, %comspec% /c %cmd%,, hide
+check_error("error.tmp", "IP 设置应用完成")
 return
 
 save:
 gui, submit, nohide
-inputbox, name, 保存设置到方案 , 请输入方案名称,,,,,,,, % comp_ip
+inputbox, name, 保存设置到方案, 请输入方案名称,,,,,,,, % comp_ip
 if ErrorLevel
 {
 	return
@@ -500,92 +508,92 @@ ping:
 return
 
 browse:
-	gui, submit, nohide
+gui, submit, nohide
 
-	; gt57's, from http://www.autohotkey.com/board/topic/84785-default-browser-path-and-executable/
-	; RegRead, browser, HKCR, .html  ; use this for XP, I think it was working on 7 too.
-	RegRead, browser, HKCU, Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.html\UserChoice, Progid
-	RegRead, browser_cmd, HKCR, %browser%\shell\open\command  ; Get path to default browser + options
+; gt57's, from http://www.autohotkey.com/board/topic/84785-default-browser-path-and-executable/
+; RegRead, browser, HKCR, .html  ; use this for XP, I think it was working on 7 too.
+RegRead, browser, HKCU, Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.html\UserChoice, Progid
+RegRead, browser_cmd, HKCR, %browser%\shell\open\command  ; Get path to default browser + options
 
-	; string has the form "path to browser" arg1 arg2 OR pathtobrowserwithoutspaces arg1 arg2
-	regexmatch(browser_cmd, "^("".*?""|[^\s]+) (.*)", browser_cmd_split)
-	
-	stringreplace, browser_cmd_split2, browser_cmd_split2, `%1, % gateway
-	
-	ShellRun(browser_cmd_split1, browser_cmd_split2)
+; string has the form "path to browser" arg1 arg2 OR pathtobrowserwithoutspaces arg1 arg2
+regexmatch(browser_cmd, "^("".*?""|[^\s]+) (.*)", browser_cmd_split)
+
+stringreplace, browser_cmd_split2, browser_cmd_split2, `%1, % gateway
+
+ShellRun(browser_cmd_split1, browser_cmd_split2)
 return
 
 ssh:
 telnet:
-	gui, submit, nohide
-	
-	ShellRun(putty, "-" A_ThisLabel " " gateway)
-	; run, "%putty%" -%A_ThisLabel% %gateway%
+gui, submit, nohide
+
+ShellRun(putty, "-" A_ThisLabel " " gateway)
+; run, "%putty%" -%A_ThisLabel% %gateway%
 return
 
 del::
 context_preset_delete:
-	guicontrolget, focused, FocusV
-	if (focused != "preset")
-	{
-		; send, %A_ThisHotkey%
-		send, {del}
-		return
-	}
+guicontrolget, focused, FocusV
+if (focused != "preset")
+{
+	; send, %A_ThisHotkey%
+	send, {del}
+	return
+}
 preset_delete:
-	gui, submit, nohide
-	ini_delete_section(presets_ini_file, preset)
-	guicontrol,, preset, % "|" ini_get_sections(presets_ini_file)
+gui, submit, nohide
+ini_delete_section(presets_ini_file, preset)
+guicontrol,, preset, % "|" ini_get_sections(presets_ini_file)
 return
 
 ^up::
 context_preset_up:
-	guicontrolget, focused, FocusV
-	if (focused != "preset")
-	{
-		; send, %A_ThisHotkey%
-		send, ^{up}
-		return
-	}
+guicontrolget, focused, FocusV
+if (focused != "preset")
+{
+	; send, %A_ThisHotkey%
+	send, ^{up}
+	return
+}
 preset_up:
-	gui, submit, nohide
-	ini_move_section_up(presets_ini_file, preset)
-	
-	guicontrol, +altsubmit, preset
-	gui, submit, nohide
-	
-	guicontrol,, preset, % "|" ini_get_sections(presets_ini_file)
+gui, submit, nohide
+ini_move_section_up(presets_ini_file, preset)
 
-	if (preset > 1)
-		preset -= 1
-	
-	guicontrol, choose, preset, % preset
-	guicontrol, -altsubmit, preset
+guicontrol, +altsubmit, preset
+gui, submit, nohide
+
+guicontrol,, preset, % "|" ini_get_sections(presets_ini_file)
+
+if (preset > 1)
+	preset -= 1
+
+guicontrol, choose, preset, % preset
+guicontrol, -altsubmit, preset
 return
 
 ^Down::
 context_preset_down:
-	guicontrolget, focused, FocusV
-	if (focused != "preset")
-	{
-		; send, %A_ThisHotkey%
-		send, ^{down}
-		return
-	}
+guicontrolget, focused, FocusV
+if (focused != "preset")
+{
+	; send, %A_ThisHotkey%
+	send, ^{down}
+	return
+}
 preset_down:
-	gui, submit, nohide
-	ini_move_section_down(presets_ini_file, preset)
-	
-	guicontrol, +altsubmit, preset
-	gui, submit, nohide
-	
-	guicontrol,, preset, % "|" ini_get_sections(presets_ini_file)
-	
-	if ( preset < LB_get_count(presets_hwnd) ) 
-		preset += 1
-	
-	guicontrol, choose, preset, % preset
-	guicontrol, -altsubmit, preset
+gui, submit, nohide
+ini_move_section_down(presets_ini_file, preset)
+
+guicontrol, +altsubmit, preset
+gui, submit, nohide
+
+guicontrol,, preset, % "|" ini_get_sections(presets_ini_file)
+
+if ( preset < LB_get_count(presets_hwnd) ) 
+	preset += 1
+
+guicontrol, choose, preset, % preset
+guicontrol, -altsubmit, preset
 return
 
 
@@ -866,10 +874,10 @@ PrintArr(Arr, Option := "w800 h200", GuiNum := 90)
 
 CF_RegRead(RootKey, SubKey, ValueName = "") {
 	RegRead, v, %RootKey%, %SubKey%, %ValueName%
-Return, v
+  Return, v
 }
 
 CF_RegWrite(ValueType, RootKey, SubKey, ValueName="", Value="") {
 	RegWrite, % ValueType, % RootKey, % SubKey, % ValueName, % Value
-Return
+  Return
 }

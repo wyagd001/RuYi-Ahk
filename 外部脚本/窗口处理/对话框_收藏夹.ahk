@@ -1,4 +1,4 @@
-﻿;|2.5|2024.03.24|1239
+﻿;|2.9|2024.12.14|1239
 ; 这里只是展示 TV 定位函数
 ; 注意 64 位主程序对 64 位程序打开的对话框有效, 对 32 位程序打开的对话框无效
 Menu, Tray, UseErrorLevel
@@ -56,7 +56,7 @@ Gui,DialogTv:Destroy
 exitapp
 
 DialogCandyMenu:
-IniMenuInifile := A_ScriptDir "\..\..\配置文件\外部脚本\ini菜单.ini"
+IniMenuInifile := A_ScriptDir "\..\..\配置文件\外部脚本\Ini_收藏夹.ini"
 IniMenuobj := ini2obj(IniMenuInifile)
 show_obj(IniMenuobj["对话框"])
 return

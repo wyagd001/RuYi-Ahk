@@ -1,4 +1,4 @@
-﻿;|2.8|2024.10.19|1333
+﻿;|2.9|2024.12.12|1333
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\f17f.ico"
 CandySel :=  A_Args[1]
@@ -10,7 +10,7 @@ Gui, Add, Edit, xp+80 yp-5 w550 h25 vsfolder, % CandySel
 Gui, Add, Text, x10 yp+40, 指定扩展名:
 Gui, Add, Edit, xp+80 yp-2 w550 vsExt, % "txt,ahk,md"
 Gui, Add, Text, x10 yp+32, 命令类型:
-Gui, Add, ComboBox, xp+80 yp-5 w550 h90 vcommand gupdateparam, 查找替换||文首添加一行|文末添加一行|文首删除一行|文末删除一行|
+Gui, Add, ComboBox, xp+80 yp-5 w550 h90 vcommand gupdateparam, 查找替换||文首添加一行|文末添加一行|文首删除一行|文末删除一行|删除包含指定字符的行
 Gui, Add, Button, xp+560 yp-2 w60 gruncommand, 执行命令
 
 gui, add, Text, x10 yp+38 w80 vmyparam1, 查找字符:
@@ -128,6 +128,11 @@ Loop, Files, %sfolder%\*.*, FR
 		;if instr(OMatchRead, myedit1)
 			;msgbox
 	}
+  else if (command = "删除包含指定字符的行")
+  {
+    MatchRead := RegExReplace(OMatchRead, "m)^(.*?)" myedit1 "(.*?)\R", , repalcecount)
+    ;msgbox % MatchRead
+  }
 	else if (command = "文首添加一行")
 		MatchRead := myedit1 "`r`n" OMatchRead
 	else if (command = "文首删除一行")
@@ -157,7 +162,7 @@ Loop, Files, %sfolder%\*.*, FR
 		MyFileObj.Close()
 	}
 
-	if (command = "查找替换") && repalcecount
+	if ((command = "查找替换") or (command = "删除包含指定字符的行"))&& repalcecount
 		LV_Add("", A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, sfolder), A_LoopFileName), A_LoopFileExt, Ceil(A_LoopFileSize / 1024), A_LoopFileTimeModified, repalcecount, A_LoopFilePath)
 	else
 		LV_Add("", A_LoopFileName, StrReplace(StrReplace(A_LoopFilePath, sfolder), A_LoopFileName), A_LoopFileExt, Ceil(A_LoopFileSize / 1024), A_LoopFileTimeModified, 0, A_LoopFilePath)

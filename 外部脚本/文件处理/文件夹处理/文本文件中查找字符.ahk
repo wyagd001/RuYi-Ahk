@@ -1,4 +1,4 @@
-﻿;|2.8|2024.09.13|1096
+﻿;|2.9|2024.10.13|1096
 ; Script Information ===========================================================
 ; Name:         File String Search
 ; Description:  Search files for a specific string (Inspired by TLM)
@@ -181,7 +181,7 @@ return
 ; Functions ====================================================================
 OnLoad() {
     Global ; Assume-global mode
-    run_iniFile = %A_ScriptDir%\文本文件中查找字符.ini
+    run_iniFile = %A_ScriptDir%\..\..\..\配置文件\外部脚本\文件处理\文件夹处理\文本文件中查找字符.ini
     Static Init := OnLoad() ; Call function
 		Menu, Tray, UseErrorLevel
 		Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\ede4.ico"

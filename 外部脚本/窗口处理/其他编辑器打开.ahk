@@ -1,5 +1,9 @@
-﻿;|2.3|2023.09.13|多条目
+﻿;|2.9|2024.12.13|多条目, 996
 CandySel := A_Args[1]
+;msgbox % CandySel
+CandySel := Deref(CandySel)
+;msgbox % CandySel
+/*
 if InStr(CandySel, "%A_ScriptDir%")
 {
 	RY_Dir := Deref("%A_ScriptDir%")
@@ -7,6 +11,8 @@ if InStr(CandySel, "%A_ScriptDir%")
 	CandySel := StrReplace(CandySel, "%A_ScriptDir%", RY_Dir)
 	;msgbox % CandySel
 }
+*/
+
 DetectHiddenWindows, On
 WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI
 Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")

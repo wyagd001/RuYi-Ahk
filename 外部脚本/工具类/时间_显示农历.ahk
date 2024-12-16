@@ -1,65 +1,65 @@
-﻿;|2.6|2024.04.08|1555
+﻿;|2.9|2024.12.08|1555
 ;Menu, Tray, UseErrorLevel
 ;Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\f739.ico"
 
 JCTF:
-	today := SubStr(A_Now, 1, 8)
-	Lunar_Year := Date_GetLunarDate(today, 1, 0, 0)
-	TX =
-	CTFSC:=[]
-	CTFArray := {"新年":"0101", "元宵节":"0115", "民歌节":"0303", "端午节":"0505", "七夕节":"0707", "中元节":"0715", "中秋节":"0815", "重阳节":"0909", "小年":"1224", "第二年新年":"0101"}
-		; ,"自定义节日一": "0601","自定义节日二": "0709","自定义节日三": "0827", "自定义节日四": "0924"
+today := SubStr(A_Now, 1, 8)
+Lunar_Year := Date_GetLunarDate(today, 1, 0, 0)
+TX =
+CTFSC:=[]
+CTFObj := {"新年":"0101", "元宵节":"0115", "民歌节":"0303", "端午节":"0505", "七夕节":"0707", "中元节":"0715", "中秋节":"0815", "重阳节":"0909", "小年":"1224", "第二年新年":"0101"}
+	; ,"自定义节日一": "0601","自定义节日二": "0709","自定义节日三": "0827", "自定义节日四": "0924"
 
-	for k,v in CTFArray
+for k,v in CTFObj
+{
+	if(k = "第二年新年")
+		CTFSC[k] := Date_GetDate(Lunar_Year+1 . v)
+	else
+		CTFSC[k] := Date_GetDate(Lunar_Year . v)
+}
+
+for k,v in CTFSC
+{
+	Leafdays := v
+	Leafdays -= today, days
+	if (Leafdays = 0)
 	{
-		if(k = "第二年新年")
-			CTFSC[k] := Date_GetDate(Lunar_Year+1 . v)
-		else
-			CTFSC[k] := Date_GetDate(Lunar_Year . v)
+		TX := k
 	}
-
-	for k,v in CTFSC
+	if(k = "第二年新年") && (Leafdays = 1)
 	{
-		Leafdays := v
-		Leafdays -= today, days
-		if (Leafdays = 0)
-		{
-			TX := k
-		}
-		if(k = "第二年新年") && (Leafdays = 1)
-		{
-			TX := "除夕"
-		}
+		TX := "除夕"
 	}
+}
 
-	CFArray := {"公历新年": "0101", "情人节": "0214", "劳动节": "0501", "儿童节": "0601", "教师节": "0910", "国庆节": "1001", "圣诞节": "1225"}
+CFObj := {"公历新年": "0101", "情人节": "0214", "劳动节": "0501", "儿童节": "0601", "教师节": "0910", "国庆节": "1001", "圣诞节": "1225"}
 
-	for k,v in CFArray
+for k,v in CFObj
+{
+	Leafdays := A_YYYY v
+	NLeafdays := A_YYYY+1 v
+	Leafdays -= today, days
+	NLeafdays -= today, days
+
+	if (Leafdays=0) or (NLeafdays=0)
 	{
-		Leafdays := A_YYYY v
-		NLeafdays := A_YYYY+1 v
-		Leafdays -= today, days
-		NLeafdays -= today, days
-
-		if (Leafdays=0) or (NLeafdays=0)
-		{
-			TX .= k
-		}
+		TX .= k
 	}
+}
 
-	qingmingdata := A_YYYY "040" qingming(A_YYYY)
-	if (qingmingdata = today)
-		TX .= "清明节"
+qingmingdata := A_YYYY "040" qingming(A_YYYY)
+if (qingmingdata = today)
+	TX .= "清明节"
 
-	dongzhidata := A_YYYY "12" dongzhi(A_YYYY)
-	if (dongzhidata = today)
-		TX .= "冬至"
+dongzhidata := A_YYYY "12" dongzhi(A_YYYY)
+if (dongzhidata = today)
+	TX .= "冬至"
 
-	if !TX
-	{
-		FormatTime, 返回周几, %A_YYYY%%A_MM%%A_DD%, ddd
-		TX := 返回周几
-	}
+if !TX
+{
+	FormatTime, 返回周几, %A_YYYY%%A_MM%%A_DD%, ddd
+	TX := 返回周几
+}
 
 if WinExist("AppBarWin ahk_class AutoHotkeyGUI")
 {

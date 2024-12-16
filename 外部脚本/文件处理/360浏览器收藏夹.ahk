@@ -6,6 +6,8 @@ Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e734.ico"
 CandySel := A_Args[1]
 if !CandySel
 	CandySel := A_AppData "\360se6\User Data\Default\a67cb9a4f61518f302b62d86e2814245\360sefav.dat"
+; A_AppData   C:\Users\Administrator\AppData\Roaming
+;msgbox % CandySel
 if !FileExist(CandySel)
 {
 	InputBox, CandySel, 360 浏览器收藏夹, 请输入 360 浏览器收藏夹文件 360sefav.dat 的路径,, 640, 140,,, Locale, 10

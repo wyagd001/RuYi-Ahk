@@ -1,4 +1,4 @@
-﻿;|2.8|2024.11.21|1220
+﻿;|2.9|2024.12.14|1220
 #Include <WinHttp>
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e9d2.ico"
@@ -7,7 +7,7 @@ SetFormat, float, 10.4
 ; <title>上证指数 3167.24 +1.08%(33.99)股票价格-行情-走势图-行情-金融界</title>
 ; [\+\-]?\d+\.\d+%?
 
-settingInifile := A_ScriptDir "\股票当天行情.ini"
+settingInifile := A_ScriptDir "\..\..\配置文件\外部脚本\工具类\股票当天行情.ini"
 settingobj := ini2obj(settingInifile)
 Global settingobj, settingInifile
 ColorsOn := settingobj["选项"]["显示颜色"]
@@ -214,7 +214,7 @@ openweb:
 RF := LV_GetNext(0, "F")
 if RF
 	LV_GetText(R_Code, RF, 2)
-run http://fund.eastmoney.com/%R_Code%.html
+run https://www.baidu.com/s?wd=%R_Code%
 return
 
 editrow:

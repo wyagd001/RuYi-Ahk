@@ -6,7 +6,7 @@ Random, Rand, 1, 7744
 FileReadLine, Rand_word, % Filename, % Rand
 FileEncoding UTF-8   ; 默认文本文件的编码
 
-WordIni := A_ScriptDir "\..\..\配置文件\外部脚本\word.ini"
+WordIni := A_ScriptDir "\..\..\配置文件\外部脚本\工具类\单行阅读器.ini"
 
 if !FileExist(WordIni)
 {
