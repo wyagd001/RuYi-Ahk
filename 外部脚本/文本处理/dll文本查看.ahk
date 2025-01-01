@@ -2,7 +2,7 @@
 ; %SystemRoot%\system32\shell32.dll,-16769
 ; @shell32.dll,-30397
 ; @shell32.dll,-30318
-; @%SystemRoot%\shell32.dll,-4153
+; @%SystemRoot%\system32\shell32.dll,-4153
 ; @%SystemRoot%\system32\zipfldr.dll,-10194
 ; @Windows.UI.Immersive.dll,-38306
 ; %SystemRoot%\System32\imageres.dll,-5203

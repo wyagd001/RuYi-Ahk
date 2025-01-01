@@ -1,4 +1,4 @@
-﻿;|2.8|2024.10.08|1598
+﻿;|2.9|2024.12.19|1598
 Gui, Add, Text, x10 y10 w60, 类型:
 Gui, Add, ComboBox, xp+70 yp w250 vFormulaTypeIndex gshowNameIndex AltSubmit, 常用||身份证|时间|重复|常规运算
 Gui, Add, Text, x10 yp+30 w60, 名称:
@@ -27,7 +27,7 @@ CY_Arr := ["=SUMIF(A1:A10,""支付宝"",B1:B10)"
 , "=IF(OR(A1=""技术部"",B1>90),900,0)"
 , "=MOD(SUMPRODUCT(LEFT((0&MID(A1,ROW(INDIRECT(""1:""&LEN(A1))),1))*2^MOD(ROW(INDIRECT(""1:""&LEN(A1)))+MOD(LEN(A1),2),2),1)+(0&MID((0&MID(A1,ROW(INDIRECT(""1:""&LEN(A1))),1))*2^MOD(ROW(INDIRECT(""1:""&LEN(A1)))+MOD(LEN(A1),2),2),2,1))),10)=0"]
 
-SFZ_ItemsStr := "1. 身份证提取生日||2. 身份证提取生日2|3. 计算年龄|4. 计算年龄2|5. 计算年龄3|6. 提取男女|7. 是否重复|8. 验证是否有效|9. 变18位身份证*|10.计算退休日期"
+SFZ_ItemsStr := "1. 身份证提取生日||2. 身份证提取生日2|3. 计算年龄|4. 计算年龄2|5. 计算年龄3|6. 提取男女|7. 是否重复|8. 验证是否有效|9. 变18位身份证*|10.计算退休日期|11.日期变星号"
 SFZ_Arr := ["=MID(A1,7,4)&""/""&MID(A1,11,2)&""/""&MID(A1,13,2)"
 , "=--TEXT(MID(A1,7,8),""0000-00-00"")"
 , "=(TODAY()-A1)/365"
@@ -37,7 +37,8 @@ SFZ_Arr := ["=MID(A1,7,4)&""/""&MID(A1,11,2)&""/""&MID(A1,13,2)"
 , "=IF(COUNTIF(A$1:A$10,A1&""*"")>1,""有重复"","""")"
 , "=IF(LEN(A1)<>18,""位数错误"",IF(MOD(SUMPRODUCT(MID(A1,ROW($1:$17),1)*2^(18-ROW($1:$17)))+IFERROR(--RIGHT(A1),10),11)<>1,""号码异常"",IF(ISERROR(--TEXT(MID(A1,7,8),""0-00-00"")),""日期错误"",IF(--TEXT(MID(A1,7,8),""0-00-00"")>TODAY(),""尚未生效"",""有效""))))"
 , "=IF(LEN(A1)=15,REPLACE(A1,7,,19)&MID(""10X98765432"",MOD(SUMPRODUCT(MID(REPLACE(A1,7,,19),ROW($1:$17),1)*2^(18-ROW($1:$17))),11)+1,1),IF(LEN(A1)=16,REPLACE(A1,7,,19),IF(LEN(A1)=17,A1&MID(""10X98765432"",MOD(SUMPRODUCT(MID(A1,ROW($1:$17),1)*2^(18-ROW($1:$17))),11)+1,1),IF(LEN(A1)=18,A1,""错误""))))"
-, "=EDATE(TEXT(MID(A1,7,8),""0!/00!/00""),MOD(MID(A1,15,3),2)*120+600)"]
+, "=EDATE(TEXT(MID(A1,7,8),""0!/00!/00""),MOD(MID(A1,15,3),2)*120+600)"
+, "=REPLACE(A1,13,4,""****"")"]
 
 ; 21915 表示 60 年, 20089 表示 55 年
 SJ_ItemsStr := "1. 判断季度||2. 距离合同到期还剩多少天|3. 生肖|4. 天数转为日期(以1900/1/1为起点)|5. 天数转为日期2(Date)|6. 日期转为距1900/1/1的天数(Value)|7. 计算退休日期|8. 计算退休日期|9. 计算日期是一年中的第几周|10.计算是一年中的第几天|11.计算本月的最后一天的日期|12.计算本月的第一天的日期"
@@ -105,11 +106,12 @@ else if (kind = "重复")
 	GuiControl,, FormulaNameIndex, % "|" CF_ItemsStr
 else if (kind = "常规运算")
 	GuiControl,, FormulaNameIndex, % "|" CGYS_ItemsStr
+
+gosub showFormula
 return
 
 showFormula:
 Gui Submit, NoHide
-;tooltip % FormulaNameIndex
 if (kind = "常用")
 	FormulaStr := CY_Arr[FormulaNameIndex]
 else if (kind = "身份证")
@@ -120,6 +122,7 @@ else if (kind = "重复")
 	FormulaStr := CF_Arr[FormulaNameIndex]
 else if (kind = "常规运算")
 	FormulaStr := CGYS_Arr[FormulaNameIndex]
+;tooltip % FormulaNameIndex " | " FormulaStr
 
 GuiControl,, FormulaEdit, % FormulaStr
 if Instr(FormulaStr, "COUNTIFS")

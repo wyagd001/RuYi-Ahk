@@ -1,4 +1,4 @@
-﻿;|2.9|2024.12.14|1317
+﻿;|2.9|2024.12.31|1317
 #Persistent
 #SingleInstance Force
 IniMenuInifile := A_ScriptDir "\..\配置文件\外部脚本\Ini_收藏夹.ini"
@@ -363,7 +363,7 @@ Gui Show, % " w" Window.Width " h" Window.Height, % Window.Title
 SetPixelColor("E9E9E9", hMenuHover)
 SetPixelColor("0078D7", hMenuSelect)
 Loop 4
-    SetPixelColor("D8D8D8", hDividerLine%A_Index%)
+  SetPixelColor("D8D8D8", hDividerLine%A_Index%)
 SelectMenu("MenuItem1")
 OnMessage(0x200, "WM_MOUSEMOVE")
 Return
@@ -419,8 +419,8 @@ Button1_OnClick() {
 
 SelectMenu(Control) {
 	Global
-    Loop % Navigation.Label.Length()
-        SetControlColor("808080", Navigation.Label[A_Index])  ; Color of the unchecked button on the left
+  Loop % Navigation.Label.Length()
+    SetControlColor("808080", Navigation.Label[A_Index])  ; Color of the unchecked button on the left
 
 	CurrentMenu := Control
 	, SetControlColor("237FFF", Control)  ; Color of the selected button on the left
@@ -629,6 +629,23 @@ ILButton(hBtn, images, cx=16, cy=16, align=4, margin="1,1,1,1")
 
 
 
+GuiDropFiles:
+CandySel := A_GuiEvent
+Rindex := SubStr(CurrentMenu, 9)
+if Rindex in 1,2,3,8
+{
+  SplitPath, CandySel,,, OutExtension, OutNameNoExt
+  if OutExtension
+    OutFileName := OutNameNoExt "．" OutExtension
+  else
+    OutFileName := OutNameNoExt
+
+  SecName := Navigation.Label[Rindex]
+  R_index := IniMenuobj[SecName].Count()+1
+  IniMenuobj[SecName][R_index] := CandySel "|" OutFileName
+  obj2ini(IniMenuobj, IniMenuInifile)
+}
+return
 
 GuiContextMenu:
 MouseGetPos,,, WinH, Contr

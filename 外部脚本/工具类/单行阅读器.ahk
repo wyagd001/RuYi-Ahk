@@ -1,4 +1,4 @@
-﻿;|2.8|2024.09.08|1670
+﻿;|2.9|2024.12.17|1670
 #SingleInstance, Ignore
 
 Filename := GetFullPathName(A_scriptdir "\..\..\引用程序\其它资源\8000.txt")
@@ -10,6 +10,7 @@ WordIni := A_ScriptDir "\..\..\配置文件\外部脚本\工具类\单行阅读�
 
 if !FileExist(WordIni)
 {
+  FileCreateDir, %A_ScriptDir%\..\..\配置文件\外部脚本\工具类
 	Settings := "
 (
 [Tabs]

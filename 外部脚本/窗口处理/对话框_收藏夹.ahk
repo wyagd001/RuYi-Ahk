@@ -1,8 +1,28 @@
-﻿;|2.9|2024.12.14|1239
+﻿;|2.9|2024.12.30|1239
 ; 这里只是展示 TV 定位函数
 ; 注意 64 位主程序对 64 位程序打开的对话框有效, 对 32 位程序打开的对话框无效
+; 资源管理器需要取消勾选 查看→导航窗格→显示所有文件夹 和 展开到打的文件夹, 因为显示太多目录导致找不到相应的节点
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e734.ico"
+;SetTitleMatchMode, Slow
+
+RegRead, NavPaneShowAllFolders, HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced, NavPaneShowAllFolders
+if NavPaneShowAllFolders
+{
+  RegWrite, REG_DWORD, HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced, NavPaneShowAllFolders, 0
+}
+RegRead, NavPaneExpandToCurrentFolder, HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced, NavPaneExpandToCurrentFolder
+if NavPaneExpandToCurrentFolder
+{
+  RegWrite, REG_DWORD, HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced, NavPaneExpandToCurrentFolder, 0
+}
+if NavPaneShowAllFolders or NavPaneExpandToCurrentFolder
+{
+  RefreshExplorer(Windy_CurWin_id)
+  msgbox % "修改了注册表, 需要重新打开对话框, 脚本才能正常定位到文件夹."
+  exitapp
+}
+
 DialogFav:
 Windy_CurWin_id := A_Args[1]
 if !Windy_CurWin_id
@@ -20,6 +40,7 @@ if (ProcessGetBits(Windy_CurWin_Pid) = 64) && (A_ptrSize = 4)
 	exitapp
 }
 sleep 50
+
 WinActivate, ahk_id %Windy_CurWin_id% 
 If WinActive("ahk_class #32770")
 {
@@ -58,7 +79,10 @@ exitapp
 DialogCandyMenu:
 IniMenuInifile := A_ScriptDir "\..\..\配置文件\外部脚本\Ini_收藏夹.ini"
 IniMenuobj := ini2obj(IniMenuInifile)
-show_obj(IniMenuobj["对话框"])
+show_obj(IniMenuobj["对话框"], "对话框收藏夹")
+Menu, 对话框收藏夹, add
+Menu, 对话框收藏夹, add, 添加当前路径到收藏夹, AddToFav
+menu, 对话框收藏夹, show
 return
 
 MenuHandler:
@@ -79,17 +103,22 @@ If WinExist("ahk_class #32770")
 	dpath := StrReplace(dpath, "\users\", "\用户\")
 	dpath := StrReplace(dpath, "\desktop", "\桌面")
 	dpath := StrReplace(dpath, "\Documents and Settings", "\用户")
-}
-if (A_OSVersion = "WIN_7")
-	TVPath_Set(hTreeView, (hdialogedit?"计算机\":instr(dpath, "桌面")?"":"桌面\计算机\") dpath, outMatchPath,,,10)
-else ; 适配 Win10
-	TVPath_Set(hTreeView, (hdialogedit=0?"此电脑\":"此电脑\") dpath, outMatchPath,,,20)
 
-;msgbox % (hdialogedit=0?"桌面\此电脑\":instr(dpath, "桌面")?"":"桌面\此电脑\") dpath
-ControlFocus, , ahk_id %hTreeView%
-if hdialogedit
-	ControlSend, , {Enter}, ahk_id %hTreeView%
-;ToolTip % (hdialogedit?"此电脑\":instr(dpath, "桌面")?"":"此电脑\") dpath "`n" hdialogedit
+  if (A_OSVersion = "WIN_7")
+    TVPath_Set(hTreeView, (hdialogedit?"计算机\":instr(dpath, "桌面")?"":"桌面\计算机\") dpath, outMatchPath,,,10)
+  else ; 适配 Win10
+    TVPath_Set(hTreeView, (hdialogedit=0?"此电脑\":"此电脑\") dpath, outMatchPath,,,20)
+
+  ;msgbox % (hdialogedit=0?"桌面\此电脑\":instr(dpath, "桌面")?"":"桌面\此电脑\") dpath
+  ControlFocus, , ahk_id %hTreeView%
+  if hdialogedit
+    ControlSend, , {Enter}, ahk_id %hTreeView%
+  ;ToolTip % (hdialogedit?"此电脑\":instr(dpath, "桌面")?"":"此电脑\") dpath "`n" hdialogedit
+}
+If WinExist("ahk_class RegEdit_RegEdit")
+{
+	TVPath_Set(hTreeView, "计算机\" dpath, outMatchPath)
+}
 return
 
 Cando_Dialogsetpath:
@@ -102,21 +131,26 @@ if (CTreeView != hTreeView)
 
 If WinExist("ahk_class #32770")
 {
+/*
 	hdrive := SubStr(dpath, 1, 2)
 	DriveGet, OutputVar, Label, %hdrive%
 	dpath := StrReplace(dpath, hdrive, OutputVar = ""?"本地磁盘 (" hdrive ")" : OutputVar " (" hdrive ")" )
 	dpath := StrReplace(dpath, "\users\", "\用户\")
 	dpath := StrReplace(dpath, "\desktop", "\桌面")
 	dpath := StrReplace(dpath, "\Documents and Settings", "\用户")
-;msgbox % dpath " - " hTreeView
-;msgbox % (hdialogedit=0?"此电脑\":instr(dpath, "桌面")?"":"桌面\此电脑\") "`n" hdialogedit
-if (A_OSVersion = "WIN_7")
-	TVPath_Set(hTreeView, (hdialogedit?"计算机\":instr(dpath, "桌面")?"":"桌面\计算机\") dpath, outMatchPath,,,10)
-else ; 适配 Win10
-	TVPath_Set(hTreeView, (hdialogedit=0?"此电脑\":"此电脑\") dpath, outMatchPath,,,10)
-ControlFocus, , ahk_id %hTreeView%
-if hdialogedit
-	ControlSend, , {Enter}, ahk_id %hTreeView%
+  msgbox % dpath " - " hTreeView
+*/
+
+	dpath := PathToPerson(dpath)
+  ;msgbox % dpath " - " hTreeView
+  ;msgbox % (hdialogedit=0?"此电脑\":instr(dpath, "桌面")?"":"桌面\此电脑\") "`n" hdialogedit
+  if (A_OSVersion = "WIN_7")
+    TVPath_Set(hTreeView, (hdialogedit?"计算机\":instr(dpath, "桌面")?"":"桌面\计算机\") dpath, outMatchPath,,,10)
+  else ; 适配 Win10
+    TVPath_Set(hTreeView, (hdialogedit=0?"此电脑\":"此电脑\") dpath, outMatchPath,,,30)
+  ControlFocus, , ahk_id %hTreeView%
+  if hdialogedit
+    ControlSend, , {Enter}, ahk_id %hTreeView%
 }
 If WinExist("ahk_class RegEdit_RegEdit")
 {
@@ -144,11 +178,166 @@ ProcessGetBits(vPID){   ;;获取进程位数
 	Return 64
 }
 
+AddToFav:
 !q::
-ControlGet, hTreeView, Hwnd,, SysTreeView321, A
-TVPath_Get(hTreeView, outPath)
-msgbox % outPath
+if Windy_CurWin_id
+{
+  ControlGet, hTreeView, Hwnd,, SysTreeView321, ahk_id %Windy_CurWin_id%
+  ControlGetText, url, Edit2, ahk_id %Windy_CurWin_id%
+  ControlGetText, url2, ToolbarWindow323, ahk_id %Windy_CurWin_id%
+  
+}
+else
+{
+  ControlGet, hTreeView, Hwnd,, SysTreeView321, A
+  ControlGetText, url, Edit2, A
+}
+
+;msgbox % outPath " | " url " | " url2 " | " Windy_CurWin_id " | " ErrorLevel
+addTarget := substr(url2, 5)
+if !addTarget   ; 目录选择
+{
+  ret := TVPath_Get(hTreeView, addTarget)
+  if (ret != "")  ; 成功
+    return
+}
+if fileexist(addTarget)
+{
+  SplitPath, addTarget, OutFileName
+  R_index := IniMenuobj["对话框"].Count()+1
+  IniMenuobj["对话框"][R_index] := addTarget "|" OutFileName
+  obj2ini(IniMenuobj, IniMenuInifile)
+}
+else
+{
+  SplitPath, addTarget, OutFileName
+  Gui,addtoDialog:Destroy
+  Gui addtoDialog:Default
+  gui, add, Text, x10 y10, 新添加文件夹:
+  gui, add, Edit, xp+90 yp w400 vmypath, % addTarget
+  gui, add, Text, x10 yp+30, 新添加菜单名:
+  gui, add, Edit, xp+90 yp w400 vmymenu, % OutFileName
+  gui, add, Button, x380 yp+30 gok, 确定
+  gui, add, Button, xp+40 yp gcancel, 取消
+  gui, show, , 将文件夹添加到收藏夹
+}
 return
+
+ok:
+Gui addtoDialog: Default 
+Gui, Submit, NoHide
+if fileexist(mypath)
+{
+  R_index := IniMenuobj["对话框"].Count()+1
+  IniMenuobj["对话框"][R_index] := mypath "|" mymenu
+  obj2ini(IniMenuobj, IniMenuInifile)
+  Gui addtoDialog: Destroy
+}
+else
+{
+  CF_ToolTip("文件夹不存在, 无法添加到收藏夹", 4000)
+}
+return
+
+cancel:
+Gui addtoDialog: Destroy
+return
+
+;dpath := StrReplace(dpath, "\desktop", "\桌面")
+;dpath := StrReplace(dpath, "\Documents and Settings", "\用户")
+PathToPerson(fpath)
+{
+  fpath := StrReplace(fpath, "\", "\", OutputVarCount)
+  tmp_Arr := []
+  loop %OutputVarCount%
+  {
+    ParentDir := upDir(A_Index, fpath, DirName)
+    ;msgbox % ParentDir "\" DirName
+    if (DirName = "desktop")
+    {
+      tmp_Arr[A_Index] := DirName
+      continue
+    }
+    if fileexist(ParentDir "\" DirName "\desktop.ini")
+    {
+      IniRead, LocalizedResourceName, % ParentDir "\" DirName "\desktop.ini", .ShellClassInfo, LocalizedResourceName, 0
+      if !LocalizedResourceName
+      {
+        tmp_Arr[A_Index] := DirName
+        continue
+      }
+      T_Arr := StrSplit(LocalizedResourceName, ",")
+      dllfile := Trim(T_Arr[1], " """)
+      dllfile := Deref(dllfile)
+      persname := TranslateMUI(StrReplace(dllfile, "@"), Abs(T_Arr[2]))
+      if !persname
+      {
+        tmp_Arr[A_Index] := DirName
+        continue
+      }
+      else
+      {
+        tmp_Arr[A_Index] := persname
+        continue
+      }
+    }
+    else
+    {
+      tmp_Arr[A_Index] := DirName
+      continue
+    }
+  }
+  loop %OutputVarCount%
+  {
+    tmp_p .= tmp_Arr[OutputVarCount] "\"
+    --OutputVarCount
+  }
+  SplitPath, fpath, , , , , OutDrive
+  DriveGet, OutputVar, Label, %OutDrive%
+  OutputVar := (OutputVar = "")?"本地磁盘 (" OutDrive ")" : OutputVar " (" OutDrive ")"
+  return RTrim(OutputVar "\" tmp_p, "\")
+}
+
+upDir(levels:=1, Dir:="", ByRef DirName := "") {
+    SplitPath, % Dir?Dir:A_ScriptDir, DirName, ParentDir
+    ;msgbox % DirName
+    return levels > 1 ? upDir(--levels, ParentDir, DirName) : ParentDir
+}
+
+TranslateMUI(resDll, resID)
+{
+	VarSetCapacity(buf, 256)
+	hDll := DllCall("LoadLibrary", "str", resDll, "Ptr")
+	Result := DllCall("LoadString", "uint", hDll, "uint", resID, "uint", &buf, "int", 128)
+	;msgbox % StrGet(&buf, Result)
+	VarSetCapacity(buf, -1)  ; 去除多余的 00
+	Return buf
+}
+
+Deref(String)
+{
+    spo := 1
+    out := ""
+    while (fpo:=RegexMatch(String, "(%(.*?)%)|``(.)", m, spo))
+    {
+        out .= SubStr(String, spo, fpo-spo)
+        spo := fpo + StrLen(m)
+        if (m1)
+            out .= %m2%
+        else switch (m3)
+        {
+            case "a": out .= "`a"
+            case "b": out .= "`b"
+            case "f": out .= "`f"
+            case "n": out .= "`n"
+            case "r": out .= "`r"
+            case "t": out .= "`t"
+            case "v": out .= "`v"
+            default: out .= m3
+        }
+    }
+    return out SubStr(String, spo)
+}
 
 ini2obj(file){
 	iniobj := {}
@@ -210,7 +399,7 @@ show_obj(obj, menu_name := ""){
 			Menu, % menu_name, add, % GetStringIndex(v, 2), MenuHandler
 	}
 	if main = 1
-		menu,% menu_name, show
+		menu, % menu_name, show
 	return
 }
 
@@ -896,4 +1085,87 @@ GetStringIndex(String, Index := "", MaxParts := -1, SplitStr := "|")
 	}
 	else
 		return arrCandy_Cmd_Str
+}
+
+RefreshExplorer(h_hwnd)
+{ ; by teadrinker on D437 @ tiny.cc/refreshexplorer
+	local Windows := ComObjCreate("Shell.Application").Windows
+	Windows.Item(ComObject(0x13, 8)).Refresh()
+	for Window in Windows
+		if (Window.Name != "Internet Explorer")
+			Window.Refresh()
+  If(IsDialog(h_hwnd))
+	{
+		WinGet, w_WinIDs, List, ahk_class #32770
+		Loop, %w_WinIDs%
+		{
+			w_WinID := w_WinIDs%A_Index%
+			ControlGet, w_CtrID, Hwnd,, SHELLDLL_DefView1, ahk_id %w_WinID%
+			ControlGet, w_CtrID, Hwnd,, SHELLDLL_DefView1, ahk_id %w_WinID%
+			ControlClick, DirectUIHWND2, ahk_id %w_WinID%,,,, NA x1 y30
+			SendMessage, 0x111, 0x7103,,, ahk_id %w_CtrID%
+		}
+	}
+}
+
+IsDialog(window=0)
+{
+	result:=0
+	If(window)
+		window := "ahk_id " window
+	Else
+		window:="A"
+	WinGetClass, wc, %window%
+	If(wc = "#32770")
+	{
+		;Check for new FileOpen dialog
+		ControlGet, hwnd, Hwnd, , DirectUIHWND3, %window%
+		If(hwnd)
+		{
+			ControlGet, hwnd, Hwnd, , SysTreeView321, %window%
+			If(hwnd)
+			{
+				ControlGet, hwnd, Hwnd, , Edit1, %window%
+				If(hwnd)
+				{
+					ControlGet, hwnd, Hwnd, , Button2, %window%
+					If(hwnd)
+					{
+						ControlGet, hwnd, Hwnd, , ComboBox2, %window%
+						If(hwnd)
+						{
+						ControlGet, hwnd, Hwnd, , ToolBarWindow323, %window%
+						If(hwnd)
+							result := 1
+						}
+					}
+				}
+			}
+		}
+		;Check for old FileOpen dialog
+		If(!result)
+		{
+			ControlGet, hwnd, Hwnd, , ToolbarWindow321, %window%          ;工具栏
+			If(hwnd)
+			{
+				ControlGet, hwnd, Hwnd, , SysListView321, %window%        ;文件列表
+				If(hwnd)
+				{
+					ControlGet, hwnd, Hwnd, , ComboBox3, %window%         ;文件类型下拉选择框
+					If(hwnd)
+					{
+						ControlGet, hwnd, Hwnd, , Button3, %window%       ;取消按钮
+						If(hwnd)
+						{
+							;ControlGet, hwnd, Hwnd , , SysHeader321 , %window%    ;详细视图的列标题
+							ControlGet, hwnd, Hwnd, , ToolBarWindow322, %window%  ;左侧导航栏
+							If(hwnd)
+								result := 2
+						}
+					}
+				}
+			}
+		}
+	}
+	Return result
 }

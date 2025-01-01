@@ -1,4 +1,4 @@
-﻿;|2.7|2024.07.10|1641
+﻿;|2.9|2024.12.31|1641
 #SingleInstance force
 persistent
 Windy_CurWin_Id := A_Args[1]
@@ -11,8 +11,16 @@ if !Windy_CurWin_Id
 }
 DetectHiddenWindows 0
 
-_ListView("SysListView321", Windy_CurWin_Id?Windy_CurWin_Id:"A").selectByInput()
- 
+;Index := ControlGetIndex("SysTabControl321", Windy_CurWin_Id?"ahk_id " Windy_CurWin_Id:"A")
+; 服务窗口没有 SysTabControl321 控件
+
+HWND := ControlGetFocus(Windy_CurWin_Id?"ahk_id " Windy_CurWin_Id:"A")
+ClassNN := ControlGetClassNN(HWND, Windy_CurWin_Id?"ahk_id " Windy_CurWin_Id:"A")
+if (ClassNN = "SysListView321")
+  _ListView("SysListView321", Windy_CurWin_Id?Windy_CurWin_Id:"A").selectByInput()
+else if (ClassNN = "SysListView322")
+  _ListView("SysListView322", Windy_CurWin_Id?Windy_CurWin_Id:"A").selectByInput()
+
 class _ListView {
  
     __new(ctl, winTitle:="") {
@@ -304,10 +312,16 @@ searchArr(arr, bAddPy:=false, bDistinct:=false) {
     KillAllProcess(*)
     {
       proname := oButton1.text
+      if (proname = "svchost.exe")
+      {
+        msgbox "无法批量结束 svchost.exe 进程"
+        Return
+      }
       b_index := 0
       While ProcessExist(proname)
       {
         ProcessClose proname
+        sleep 200
         b_index += 1
         if (b_index > 25)
           break

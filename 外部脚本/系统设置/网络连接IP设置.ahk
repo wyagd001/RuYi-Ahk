@@ -1,4 +1,4 @@
-﻿;|2.9|2024.12.14|1094
+﻿;|2.9|2024.12.17|1094
 /*
 TODO:
 - find a better way to make context sensitive hotkeys for when listbox is selected
@@ -26,6 +26,13 @@ if not A_IsAdmin
 }
 
 presets_ini_file := A_ScriptDir "\..\..\配置文件\外部脚本\系统设置\网络连接IP设置.ini"
+if !fileexist(presets_ini_file)
+{
+  FileCreateDir, %A_ScriptDir%\..\..\配置文件\外部脚本\系统设置
+  fileappend,, %presets_ini_file%
+  ;msgbox % ErrorLevel " - " A_LastError 
+  IniWrite, ip_ignore=0`nip_auto=1`ndns_ignore=0`ndns_auto=1, %presets_ini_file%, 自动获取
+}
 interfaces_tmpfile := A_ScriptDir "\..\..\临时目录\interfaces.tmp"
 putty := A_ScriptDir "\..\..\引用程序\x32\putty.exe"
 Gui, Add, Text, x12 y9 w120 h20, 网络连接

@@ -1,4 +1,4 @@
-﻿;|2.8|2024.09.21|1529
+﻿;|2.9|2024.12.21|1529
 #NoEnv
 #SingleInstance Ignore
 CandySel := A_Args[1]
@@ -37,9 +37,7 @@ if i
 {
   PlayMusic(i)
   gosub Lrc
-  ExecSendToRuyi("1529",, 1526)    ; 按钮颜色还原
-  Sleep 600
-  ExecSendToRuyi("1529||FF0000",, 1525)   ; 设置颜色
+  settimer, changeIcon, -3000
   onmessage(0x3B9, "ContinuePlay")
   OnExit, _exit
 }
@@ -48,6 +46,12 @@ return
 _exit:
 ExecSendToRuyi("1529",, 1526)
 ExitApp
+
+changeIcon:
+ExecSendToRuyi("1529",, 1526)    ; 按钮颜色还原
+Sleep 600
+ExecSendToRuyi("1529||FF0000",, 1525)   ; 设置颜色
+return
 
 ContinuePlay(w, l, msg, hwnd)
 {
@@ -67,28 +71,47 @@ ContinuePlay(w, l, msg, hwnd)
 
 PlayMusic(file)
 {
-	command := "open  """  file """"
-	h := DllCall("Winmm\mciSendString", "Str", command, "uint", NULL, "uint", 0, "uint", NULL) ;加载
-	if ErrorLevel
+  ;command := "open """ file """"  ; 无别名
+  DllCall("Winmm\mciSendString", "Str", "close myfile", "uint", NULL, "uint", 0, "uint", NULL)
+	command := "open """ file """ alias myfile"
+	h := DllCall("Winmm\mciSendString", "Str", command, "uint", NULL, "uint", 0, "uint", NULL) ; 加载
+	if ErrorLevel or h
 	{
 		;msgbox % h " - " ErrorLevel " - " A_LastError
-		FileAppend(h " - " ErrorLevel " - " A_LastError "`n")
+		FileAppend(h " - " ErrorLevel " - " A_LastError " - " file "`n")
 	}
-	command1 := "play """ file """ notify"
+  ;msgbox % command " | " h
+	;command1 := "play """ file """ notify"  ; 无别名
+  command1 := "play myfile notify"
 	;MsgBox % command1
 	; " wait"  加上 wait 脚本卡住, 不再响应, 直到播放完毕
-	h := DllCall("Winmm\mciSendString", "Str", command1, "uint", NULL, "uint", 0, "uint", A_ScriptHwnd)
+	hSound := DllCall("Winmm\mciSendString", "Str", command1, "uint", NULL, "uint", 0, "uint", A_ScriptHwnd)
 	if ErrorLevel
 	{
 		;msgbox % h " - " ErrorLevel " - " A_LastError
 		FileAppend(h " - " ErrorLevel " - " A_LastError "`n")
 	}
-	return
+	return hSound
 }
 
-RandomFile(path)  ; 文件夹随机次数平均, 对于文件夹中文件数量比较多的文件夹随机到的次数会减少
+!N::
+DllCall("Winmm\mciSendString", "Str", "stop myfile", "uint", NULL, "uint", 0, "uint", NULL)
+DllCall("Winmm\mciSendString", "Str", "close myfile", "uint", NULL, "uint", 0, "uint", NULL)
+;DllCall("Winmm\mciSendString", "Str", "seek myfile to end", "uint", NULL, "uint", 0, "uint", NULL)
+/*
+	Random, folderInd, 1, MusicFolderArr.Length()
+	i := RandomFile(MusicFolderArr[folderInd])
+  if i
+  {
+    PlayMusic(i)
+    gosub Lrc
+  }
+*/
+return
+
+RandomFile(hpath)  ; 文件夹随机次数平均, 对于文件夹中文件数量比较多的文件夹随机到的次数会减少
 {
-	if !path
+	if !hpath
 		return 0
 	static B_index := 0
 	B_index ++
@@ -97,16 +120,17 @@ RandomFile(path)  ; 文件夹随机次数平均, 对于文件夹中文件数量�
 		B_index = 0
 		return 0
 	}
-	FirstF := path
+	FirstF := hpath
 	objShell := ComObjCreate("Shell.Application")
-	if InStr(FileExist(path), "D")
+	if InStr(FileExist(hpath), "D")
 	{
-		objFolder := objShell.NameSpace(path)   
+		objFolder := objShell.NameSpace(hpath)   
 		;objFolderItem := objFolder.Self
 	}
 	else
 	{
-		SplitPath, path, name, dir
+		SplitPath, hpath, name, dir
+    ;msgbox % hpath
 		FileAppend(dir " " B_index "`n")
 		if (dir != FirstF)
 			objFolder := objShell.NameSpace(dir)

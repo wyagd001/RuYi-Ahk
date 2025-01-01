@@ -1,4 +1,4 @@
-﻿;|2.8|2024.10.29|1530
+﻿;|2.9|2024.12.29|1530
 区域选择方式 = 1
 iDraw := 0
 pToken := Gdip_Startup()
@@ -114,7 +114,8 @@ Gui, Add, Button, xp+45 yp gguiclose w40, 退出
 Gui, Add, Button, xp+45 yp gclear w40, 清
 Gui, Add, text, x5 yp+30 w60, 文件名:
 Gui, Add, Edit, xp+50 yp vjtfn w300, 
-Gui, Add, Button, xp+310 yp gQRcodeReader w80, 二维码识别
+Gui, Add, Button, xp+310 yp gQRcodeReader w70, 二维码识别
+Gui, Add, Button, xp+75 yp gopenpFolder w60, 默认目录
 Gui Show
 if A_OSVersion in Win_7,Win_8,Win_8.1
 	GuiControl, Disable, ocr
@@ -169,6 +170,10 @@ GetRelativeCursorPos(HWND, ByRef X, ByRef Y) {
    Y := NumGet(POINT, 4, "Int")
    Return True
 }
+
+openpFolder:
+run % A_ScriptDir "\..\..\截图目录"
+return
 
 save:
 gui, submit, NoHide

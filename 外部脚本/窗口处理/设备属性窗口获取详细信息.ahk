@@ -1,22 +1,28 @@
 ;|2.9|2024.12.7|1695
-
 ;==============================================================
 ; 2016-09-27: devmgmt.msc hotkeys
 ;==============================================================
+Windy_CurWin_id := A_Args[1]
 
-Is_mmc_window()
+if Is_mmc_window(Windy_CurWin_id)
+  devmgmt_DetailTabShowAllProperties()
+return
+
+Is_mmc_window(Winid := "")
 {
-	return dev_IsExeActive("mmc.exe")
+	return dev_IsExeActive("mmc.exe", Winid)
 }
 
-dev_IsExeActive(exefile)
+dev_IsExeActive(exefile, Winid := "")
 {
 	; exefilename sample :
 	; 	"notepad.exe"
 	; or 
 	;   "D:\portableapps\MPC-HC-Portable\App\MPC-HC\mpc-hc.exe"
-	
-	Awinid := dev_GetActiveHwnd() ; cache active window unique id
+	if Winid
+    Awinid := Winid
+  else
+    Awinid := dev_GetActiveHwnd() ; cache active window unique id
 	WinGet, exepath, ProcessPath, ahk_id %Awinid%
 
 	if(InStr(exefile, "\"))
@@ -82,8 +88,9 @@ devmgmt_IsViewingDetailTab(Awinid)
 }
 
 #If Is_mmc_window()
-
 F12:: devmgmt_DetailTabShowAllProperties()
+#If ;Is_mmc_window()
+
 devmgmt_DetailTabShowAllProperties()
 {
 	WinGet, Awinid, ID, A ; cache active window unique id
@@ -220,4 +227,3 @@ StrCountLines(str)
 	strlfs := RegExReplace(str, "[^\n]", "")
 	return strlen(strlfs)+1
 }
-#If ;Is_mmc_window()

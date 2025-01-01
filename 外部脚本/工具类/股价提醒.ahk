@@ -1,8 +1,17 @@
-﻿;|2.9|2024.12.14|1694
+﻿;|2.9|2024.12.31|1694
 if (A_DDDD = "星期六") or (A_DDDD = "星期日")
-exitapp
+  exitapp
+if (A_Hour < 9) or (A_Hour > 16)
+  exitapp
 #Include <WinHttp>
 settingInifile := A_ScriptDir "\..\..\配置文件\外部脚本\工具类\股价提醒.ini"
+if !fileexist(settingInifile)
+{
+  FileCreateDir, %A_ScriptDir%\..\..\配置文件\外部脚本\工具类
+  fileappend,, %settingInifile%
+  ;msgbox % ErrorLevel " - " A_LastError 
+  IniWrite, 000001|上证指数|>1.5`%|<-1.5`%, %settingInifile%, 监控, 1
+}
 settingobj := ini2obj(settingInifile)
 SetFormat, float, 10.4
 
@@ -40,28 +49,48 @@ for k, v in settingobj["监控"]
     if (fh = ">")
     {
       if (cur > nOut2)
-        MSGBOX %股票名称%%it%%cur%大于预警值%out2%
+      {
+        MSGBOX, 515, 股价提醒, %股票名称%%it% %cur% 大于预警值 %out2%!`n点击按钮“是”修改预警条件.
+        IfMsgBox, Yes
+          run notepad "%settingInifile%"
+      }
     }
     else if (fh = "<")
     {
       ;msgbox % cur " | " Out2
       if (cur < nOut2)
-        MSGBOX  %股票名称%%it%%cur%小于预警值%out2%
+      {
+        MSGBOX, 515, 股价提醒, %股票名称%%it% %cur% 小于预警值 %out2%!`n点击按钮“是”修改预警条件.
+        IfMsgBox, Yes
+          run notepad "%settingInifile%"
+      }
     }
     else if (fh = "=")
     {
       if (cur = nOut2)
-        MSGBOX  %股票名称%%it%%cur%等于预警值%out2%
+      {
+        MSGBOX, 515, 股价提醒, %股票名称%%it% %cur% 等于预警值 %out2%!`n点击按钮“是”修改预警条件.
+        IfMsgBox, Yes
+          run notepad "%settingInifile%"
+      }
     }
     else if (fh = ">=")
     {
       if (cur >= Out2)
-        MSGBOX  %股票名称%%it%%cur%大于等于预警值%out2%
+      {
+        MSGBOX, 515, 股价提醒, %股票名称%%it% %cur% 大于等于预警值 %out2%!`n点击按钮“是”修改预警条件.
+        IfMsgBox, Yes
+          run notepad "%settingInifile%"
+      }
     }
     else if (fh = "<=")
     {
       if (cur <= nOut2)
-        MSGBOX  %股票名称%%it%%cur%小于等于预警值%out2%
+      {
+        MSGBOX, 515, 股价提醒, %股票名称%%it% %cur% 小于等于预警值 %out2%!`n点击按钮“是”修改预警条件.
+        IfMsgBox, Yes
+          run notepad "%settingInifile%"
+      }
     }
     b_ind ++
   }

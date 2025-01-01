@@ -1,4 +1,4 @@
-﻿;|2.7|2024.07.13|1430
+﻿;|2.9|2024.12.20|1430
 #NoEnv
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\f597.ico"
@@ -7,6 +7,7 @@ SendMode Input
 lv := "kong" 
 Gui Add, ListView, Grid r20 w1200 Sort gMyListView Checked AltSubmit, idx|Process|Tooltip|Visible|hwnd|主进程句柄|idcmd|pid|uid|msgid|hicon|Class|tray|xuhao
 Gui, Add, button, gLoadTrayIconList, 重新载入
+Gui, Add, button, xp+60 gLoadTrayIconListToGui, 面板显示
 LoadTrayIconList()
 Gui Show, Center, 系统托盘图标管理器
 lv := "man"
@@ -23,32 +24,79 @@ LoadTrayIconList()
 
   Loop, % oIcons.MaxIndex()
   {
-      idx:= oIcons[A_Index].idx
-      tidcmd:= oIcons[A_Index].IDcmd
-      tpid := oIcons[A_Index].pid
-      tuid := oIcons[A_Index].uid
-      tmsgid := oIcons[A_Index].msgid
-      tproc := oIcons[A_Index].Process
-      thicon := Format("0x{1:x}", oIcons[A_Index].hicon)
-      IconIndex := IL_Add(ImageListID1, "HICON:" . thicon)
-      ttip := oIcons[A_Index].tooltip
-      tClass := oIcons[A_Index].Class
-      tray := oIcons[A_Index].Tray
-      thWnd := oIcons[A_Index].hWnd
-      if !samehwndobj[thWnd]
-        samehwndobj[thWnd] := 1
-      else
-        samehwndobj[thWnd] += 1
-      hWnd := Format("0x{1:x}", thWnd)
+    idx:= oIcons[A_Index].idx
+    tidcmd:= oIcons[A_Index].IDcmd
+    tpid := oIcons[A_Index].pid
+    tuid := oIcons[A_Index].uid
+    tmsgid := oIcons[A_Index].msgid
+    tproc := oIcons[A_Index].Process
+    thicon := Format("0x{1:x}", oIcons[A_Index].hicon)
+    IconIndex := IL_Add(ImageListID1, "HICON:" . thicon)
+    ttip := oIcons[A_Index].tooltip
+    tClass := oIcons[A_Index].Class
+    tray := oIcons[A_Index].Tray
+    thWnd := oIcons[A_Index].hWnd
+    if !samehwndobj[thWnd]
+      samehwndobj[thWnd] := 1
+    else
+      samehwndobj[thWnd] += 1
+    hWnd := Format("0x{1:x}", thWnd)
 
     vis := (tray == "Shell_TrayWnd") ? "Yes" : "No"
     
-      LV_Add("Icon" . IconIndex " check", idx, tproc, ttip, vis, thwnd, hWnd, tidcmd, tpid, tuid, tmsgid, thicon, tClass, tray, samehwndobj[thWnd])
+    LV_Add("Icon" . IconIndex " check", idx, tproc, ttip, vis, thwnd, hWnd, tidcmd, tpid, tuid, tmsgid, thicon, tClass, tray, samehwndobj[thWnd])
+  }
+  LV_ModifyCol()
+  LV_ModifyCol(3, "AutoHdr")
 }
 
-LV_ModifyCol()
-LV_ModifyCol(3, "AutoHdr")
+LoadTrayIconListToGui:
+h_arr := []
+samehwndobj := {}
+TIcons := TrayIcon_GetInfo()
+Gui SubM: Destroy
+Gui SubM: Default
+Gui, SubM: +AlwaysOnTop
+Loop, % TIcons.MaxIndex()
+{
+  idx:= TIcons[A_Index].idx
+  tidcmd:= TIcons[A_Index].IDcmd
+  tpid := TIcons[A_Index].pid
+  tuid := TIcons[A_Index].uid
+  tmsgid := TIcons[A_Index].msgid
+  tproc := TIcons[A_Index].Process
+  thicon := Format("0x{1:x}", TIcons[A_Index].hicon)
+  ;msgbox % thicon
+  IconIndex := IL_Add(ImageListID1, "HICON:" . thicon)
+  ttip := TIcons[A_Index].tooltip
+  tClass := TIcons[A_Index].Class
+  tray := TIcons[A_Index].Tray
+  thWnd := TIcons[A_Index].hWnd
+  if !samehwndobj[thWnd]
+    samehwndobj[thWnd] := 1
+  else
+    samehwndobj[thWnd] += 1
+
+  hWnd := Format("0x{1:x}", thWnd)
+
+  vis := (tray == "Shell_TrayWnd") ? "Yes" : "No"
+  if samehwndobj[thWnd] = 1
+    p_hwnd := hWnd
+  else
+    p_hwnd := hWnd "_" samehwndobj[thWnd]
+  ;msgbox % samehwndobj[thWnd] " | " p_hwnd
+  if (A_Index = 1)
+    Gui Add, pic, x10 w32 h32 v%p_hwnd% gclickpic, % "HICON:" . thicon
+  else
+  {
+    if InStr(p_hwnd, A_ScriptHwnd)
+      Gui Add, pic, xp+40 w32 h32 v%p_hwnd% gclickpic, % A_ScriptDir "\..\..\脚本图标\如意\f597.ico"
+    else
+      Gui Add, pic, xp+40 w32 h32 v%p_hwnd% gclickpic, % "HICON:" . thicon
+  }
 }
+Gui SubM: Show
+return
 
 MyListView:
 Critical
@@ -81,6 +129,26 @@ else if (A_GuiEvent = "RightClick")
   LV_GetText(xuhao, A_EventInfo, 14) 
   TrayIcon_Button(hWnd, "R",, xuhao)
 }
+return
+
+clickpic:
+;msgbox % A_GuiControl
+if InStr(A_GuiControl, "_")
+{
+  Array := StrSplit(A_GuiControl, "_")
+  if getkeystate("Shift")
+    TrayIcon_Button(Array[1], "R",, Array[2])
+  else
+    TrayIcon_Button(Array[1], "L",, Array[2])
+}
+else
+{
+  if getkeystate("Shift")
+    TrayIcon_Button(A_GuiControl, "R",, 1)
+  else
+    TrayIcon_Button(A_GuiControl, "L",, 1)
+}
+;msgbox % Array[1] " | " Array[2]
 return
 
 GuiEscape:

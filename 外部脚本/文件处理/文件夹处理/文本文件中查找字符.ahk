@@ -1,4 +1,4 @@
-﻿;|2.9|2024.10.13|1096
+﻿;|2.9|2024.12.17|1096
 ; Script Information ===========================================================
 ; Name:         File String Search
 ; Description:  Search files for a specific string (Inspired by TLM)
@@ -179,29 +179,38 @@ return
 ; ==============================================================================
 
 ; Functions ====================================================================
-OnLoad() {
-    Global ; Assume-global mode
-    run_iniFile = %A_ScriptDir%\..\..\..\配置文件\外部脚本\文件处理\文件夹处理\文本文件中查找字符.ini
-    Static Init := OnLoad() ; Call function
-		Menu, Tray, UseErrorLevel
-		Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\ede4.ico"
-    EditDir = %1%
-    if !EditDir
-      IniRead, EditDir, %run_iniFile%, 文件中查找字符, 路径, %A_Space%
-    IniRead, SEditDir, %run_iniFile%, 文件中查找字符, 固定查找目录, %A_Space%
-    IniRead, EditType, %run_iniFile%, 文件中查找字符, 类型, %A_Space%
-    IniRead, SEditType, %run_iniFile%, 文件中查找字符, 固定类型, %A_Space%
-    IniRead, EditString, %run_iniFile%, 文件中查找字符, 字符, %A_Space%
-    IniRead, notepad2, %A_ScriptDir%\..\..\..\配置文件\如一.ini, 其他程序, notepad2, Notepad.exe
-    if InStr(notepad2, "%A_ScriptDir%")
-		{
-			RY_Dir := Deref("%A_ScriptDir%")
-			RY_Dir := SubStr(RY_Dir, 1, InStr(RY_Dir, "\", 0, 0, 3) - 1)
-   		notepad2 := StrReplace(notepad2, "%A_ScriptDir%", RY_Dir)
-			notepad2 := FileExist(notepad2) ? notepad2 : "notepad.exe"
-   		;msgbox % notepad2
-		}
-    SearchStop := 0
+OnLoad()
+{
+  Global ; Assume-global mode
+  run_iniFile = %A_ScriptDir%\..\..\..\配置文件\外部脚本\文件处理\文件夹处理\文本文件中查找字符.ini
+  if !fileexist(run_iniFile)
+  {
+    FileCreateDir, %A_ScriptDir%\..\..\..\配置文件\外部脚本\文件处理\文件夹处理
+    fileappend,, %run_iniFile%
+    ;msgbox % ErrorLevel " - " A_LastError 
+    IniWrite, *.*|*.htm|*.ahk|*.txt|*.md, %run_iniFile%, 文件中查找字符, 固定类型
+    IniWrite, *.*, %run_iniFile%, 文件中查找字符, 类型
+  }
+  Static Init := OnLoad() ; Call function
+	Menu, Tray, UseErrorLevel
+	Menu, Tray, Icon, % A_ScriptDir "\..\..\..\脚本图标\如意\ede4.ico"
+  EditDir = %1%
+  if !EditDir
+    IniRead, EditDir, %run_iniFile%, 文件中查找字符, 路径, %A_Space%
+  IniRead, SEditDir, %run_iniFile%, 文件中查找字符, 固定查找目录, %A_Space%
+  IniRead, EditType, %run_iniFile%, 文件中查找字符, 类型, %A_Space%
+  IniRead, SEditType, %run_iniFile%, 文件中查找字符, 固定类型, %A_Space%
+  IniRead, EditString, %run_iniFile%, 文件中查找字符, 字符, %A_Space%
+  IniRead, notepad2, %A_ScriptDir%\..\..\..\配置文件\如一.ini, 其他程序, notepad2, Notepad.exe
+  if InStr(notepad2, "%A_ScriptDir%")
+	{
+		RY_Dir := Deref("%A_ScriptDir%")
+		RY_Dir := SubStr(RY_Dir, 1, InStr(RY_Dir, "\", 0, 0, 3) - 1)
+ 		notepad2 := StrReplace(notepad2, "%A_ScriptDir%", RY_Dir)
+		notepad2 := FileExist(notepad2) ? notepad2 : "notepad.exe"
+ 		;msgbox % notepad2
+	}
+  SearchStop := 0
 }
 
 OnUnload(ExitReason, ExitCode) {

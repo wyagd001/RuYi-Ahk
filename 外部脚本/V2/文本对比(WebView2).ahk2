@@ -1,4 +1,4 @@
-﻿;|2.7|2024.07.28|1350
+﻿;|2.9|2024.12.23|1350
 #Include <WebView2>
 
 Persistent
@@ -16,12 +16,16 @@ Text1 := definefunc(CandySel)
 ;msgbox text1
 return
 
-comparetext()
+comparetext(fp:="")
 {
 	Global
 	main := Gui("+Resize")
 	main.OnEvent("Close", _ExitApp)
-	main.Title := "文本比较"
+  if FileExist(CandySel)
+    SplitPath CandySel, &OutFileName
+  if FileExist(fp)
+    SplitPath fp, &OutFileName2
+	main.Title := OutFileName " - " OutFileName2 " 文本比较"
 	main.Show(Format("w{} h{}", A_ScreenWidth * 0.8, A_ScreenHeight * 0.6))
 
 	wvc := WebView2.CreateControllerAsync(main.Hwnd).await2()
@@ -43,17 +47,19 @@ comparetext()
 
 Receive_WM_COPYDATA(wParam, lParam, msg, hwnd)
 {
-	Global text2
+	Global CandySel, text2
 	StringAddress := NumGet(lParam, 2*A_PtrSize, "Ptr")  ; 获取 CopyDataStruct 的 lpData 成员.
 	CandySel2 := StrGet(StringAddress)  ; 从结构中复制字符串.
+  if (CandySel2 = CandySel)
+    return 0
 	text2 := definefunc(CandySel2)
 	;msgbox text2
 	if text2
 	{
 		generatehtml()
-		comparetext()
+		comparetext(CandySel2)
 	}
-return true
+  return true
 }
 
 generatehtml()

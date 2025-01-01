@@ -58,9 +58,9 @@ ImagePutEncodedBuffer(image, extension := "", quality := "") {
 
 ; Puts the image into the currently active explorer window.
 ;   default_dir -  Default Directory       |  string   ->   C:\Users\Me\Pictures
-;   background  -  Find Inactive Windows?  |  bool     ->   False
-ImagePutExplorer(image, default_dir := "", background_window := False) {
-   return ImagePut("Explorer", image, default_dir, background_window)
+;   inactive    -  Inactive Explorer Wnds? |  bool     ->   False
+ImagePutExplorer(image, default_dir := "", inactive := False) {
+   return ImagePut("Explorer", image, default_dir, inactive)
 }
 
 ; Puts the image into a file and returns its filepath.
@@ -318,13 +318,15 @@ class ImagePut {
 
       ; GdipImageForceValidation must be called immediately or it fails silently.
       bitmap:
+      outDimensions := [] ; Initialize width x height array
       (validate) && DllCall("gdiplus\GdipImageForceValidation", "ptr", pBitmap)
       (crop) && this.BitmapCrop(pBitmap, crop)
-      (scale) && this.BitmapScale(pBitmap, scale)
-      (upscale) && this.BitmapScale(pBitmap, upscale, 1)
-      (downscale) && this.BitmapScale(pBitmap, downscale, -1)
-      (minsize) && this.BitmapScale(pBitmap, minsize, 1, "join", True)
-      (maxsize) && this.BitmapScale(pBitmap, maxsize, -1, "meet", True)
+      (scale) && this.BitmapScale(pBitmap, scale,,,, outDimensions)
+      (upscale) && this.BitmapScale(pBitmap, upscale, 1,,, outDimensions)
+      (downscale) && this.BitmapScale(pBitmap, downscale, -1,,, outDimensions)
+      (minsize) && this.BitmapScale(pBitmap, minsize, 1, "join", True, outDimensions)
+      (maxsize) && this.BitmapScale(pBitmap, maxsize, -1, "meet", True, outDimensions)
+      (outDimensions.length() == 2) && this.BitmapScale(pBitmap, outDimensions) ; Scale only once
       (sprite) && this.BitmapSprite(pBitmap)
 
       ; Save frame delays and loop count for webp.
@@ -431,7 +433,7 @@ class ImagePut {
          return "SafeArray"
 
       ; A "screenshot" is an array of 4 numbers with an optional window.
-      if image.length() ~= "4|5"
+      if image.length() ~= "^(4|5)$"
       && image[1] ~= "^-?\d+$" && image[2] ~= "^-?\d+$" && image[3] ~= "^(?!0+$)\d+$" && image[4] ~= "^(?!0+$)\d+$"
       && image[1] > -65536 && image[1] < 65536 && image[2] > -65536 && image[2] < 65536 && image[3] < 65536 && image[4] < 65536
       && (image.HasKey(5) ? WinExist(image[5]) : True)
@@ -515,10 +517,13 @@ class ImagePut {
 
       ; For more helpful error messages: Catch file names without extensions!
       if not (image ~= "^-?\d+$") {
-         for i, extension in ["bmp","dib","rle","jpg","jpeg","jpe","jfif","gif","tif","tiff","png","ico","exe","dll"]
+         for i, extension in ["bmp","dib","rle","jpg","jpeg","jpe","jfif","gif","tif","tiff","png","ico","exe","dll"] {
             if FileExist(image "." extension)
-               throw Exception("A ." extension " file extension is required!", -4)
-
+               throw Exception("A ." extension " file extension is required!", -5)
+            speculate := RegExReplace(image, "(\.[^.]*)?$") "." extension
+            if FileExist(speculate)
+               throw Exception("Is it possible you meant to type " speculate " as the file extension instead?", -5)
+         }
          goto end
       }
 
@@ -688,7 +693,7 @@ class ImagePut {
       if (cotype = "URL") ; (pBitmap)
          return this.BitmapToURL(pBitmap)
 
-      if (cotype = "Explorer") ; (pBitmap, default_dir, background_window)
+      if (cotype = "Explorer") ; (pBitmap, default_dir, inactive)
          return this.BitmapToExplorer(pBitmap, p1, p2)
 
       if (cotype = "File") ; (pBitmap, filepath, quality)
@@ -781,7 +786,7 @@ class ImagePut {
       if (cotype = "URL") ; (stream)
          return this.StreamToURL(stream)
 
-      if (cotype = "Explorer") ; (stream, default_dir, background_window)
+      if (cotype = "Explorer") ; (stream, default_dir, inactive)
          return this.StreamToExplorer(stream, p1, p2)
 
       if (cotype = "File") ; (stream, filepath)
@@ -870,7 +875,7 @@ class ImagePut {
       return pBitmap := pBitmapCrop
    }
 
-   BitmapScale(ByRef pBitmap, scale, direction := 0, bound := "", preserveAspectRatio := False) {
+   BitmapScale(ByRef pBitmap, scale, direction := 0, bound := "", preserveAspectRatio := False, outDimensions := "") {
       ; min() specifies the greatest lower bound or the maximum size, fitting the image to the bounding box.
       ; max() specifies the least upper bound or the minimum size, filling the image to the bounding box.
       bound := !IsFunc(bound) && (bound ~= "^(?i:fit|meet|and|infimum)$") ? Func("min")
@@ -882,6 +887,10 @@ class ImagePut {
       DllCall("gdiplus\GdipGetImageWidth", "ptr", pBitmap, "uint*", width:=0)
       DllCall("gdiplus\GdipGetImageHeight", "ptr", pBitmap, "uint*", height:=0)
       DllCall("gdiplus\GdipGetImagePixelFormat", "ptr", pBitmap, "int*", format:=0)
+
+      ; Override the width and height with a previous transform. An empty array can be input to return safe_w and safe_h.
+      (outDimensions) && outDimensions.HasKey(1) && width := outDimensions[1]
+      (outDimensions) && outDimensions.HasKey(2) && height := outDimensions[2]
 
       ; Scale using a real number greater than 0.
       if !IsObject(scale) && scale ~= "^(?!0+$)\d+(\.\d+)?$" {
@@ -912,20 +921,25 @@ class ImagePut {
       if !IsSet(safe_w) || !IsSet(safe_h)
          throw Exception("Invalid scale.")
 
+      ; Force upscaling or downscaling.
+      if (direction > 0 and (safe_w < width && safe_h < height)) ; upscaling
+      or (direction < 0 and (safe_w > width && safe_h > height)) ; downscaling
+         safe_w := width, safe_h := height
+
       ; Minimum size is 1 x 1.
       safe_w := max(1, safe_w)
       safe_h := max(1, safe_h)
 
+      ; if outDimensions is set, then avoid modifying the bitmap at all. Instead, update the final dimensions in the out parameter.
+      if (outDimensions) {
+
+         outDimensions[1] := safe_w
+         outDimensions[2] := safe_h
+         return pBitmap
+      }
+
       ; Avoid drawing if no changes detected.
       if (safe_w = width && safe_h = height)
-         return pBitmap
-
-      ; Force upscaling.
-      if (direction > 0 and (safe_w < width && safe_h < height))
-         return pBitmap
-
-      ; Force downscaling.
-      if (direction < 0 and (safe_w > width && safe_h > height))
          return pBitmap
 
       ; Create a destination GDI+ Bitmap that owns its memory.
@@ -2573,13 +2587,11 @@ class ImagePut {
             return this.size // this.height
          }
       }
-
       pitch {
          get {
             return this.size // this.height
          }
       }
-
       saved := {} ; Store copies of ptr, size, width, and height to test for changes.
 
       pBitmap { ; Making .pBitmap dynamic ensures that wrapping the pointer is separate from GDI+ access.
@@ -3492,9 +3504,10 @@ class ImagePut {
       WS_VISIBLE                := 0x10000000   ; Show on creation.
       WS_EX_LAYERED             :=    0x80000   ; For UpdateLayeredWindow.
 
-      ; Default styles can be overwritten by previous functions.
+      ; Default parameters can be overwritten by previous functions.
       (style == "") && style := WS_POPUP | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
       (styleEx == "") && styleEx := WS_EX_TOPMOST | WS_EX_DLGMODALFRAME
+      (parent == "") && parent := 0
 
       ; Get Bitmap width and height.
       DllCall("gdiplus\GdipGetImageWidth", "ptr", pBitmap, "uint*", width:=0)
@@ -3558,7 +3571,7 @@ class ImagePut {
                ,    "int", NumGet(rect,  4, "int")
                ,    "int", NumGet(rect,  8, "int") - NumGet(rect,  0, "int")
                ,    "int", NumGet(rect, 12, "int") - NumGet(rect,  4, "int")
-               ,    "ptr", (parent != "") ? parent : A_ScriptHwnd
+               ,    "ptr", parent
                ,    "ptr", 0                        ; hMenu
                ,    "ptr", 0                        ; hInstance
                ,    "ptr", 0                        ; lpParam
@@ -3595,9 +3608,12 @@ class ImagePut {
       WS_EX_TOOLWINDOW          :=       0x80   ; Hides from Alt+Tab menu. Removes small icon.
       WS_EX_LAYERED             :=    0x80000   ; For UpdateLayeredWindow.
 
-      ; Default styles can be overwritten by previous functions.
+      ; Default parameters can be overwritten by previous functions.
       (style == "") && style := WS_POPUP | WS_VISIBLE
       (styleEx == "") && styleEx := WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED
+      (parent == "") && parent := 0
+      (playback == "") && playback := True
+      (cache == "") && cache := False
 
       ; Get Bitmap width and height.
       DllCall("gdiplus\GdipGetImageWidth", "ptr", pBitmap, "uint*", width:=0)
@@ -3711,7 +3727,7 @@ class ImagePut {
                ,    "int", y
                ,    "int", w
                ,    "int", h
-               ,    "ptr", (parent != "") ? parent : A_ScriptHwnd
+               ,    "ptr", parent
                ,    "ptr", 0                        ; hMenu
                ,    "ptr", 0                        ; hInstance
                ,    "ptr", 0                        ; lpParam
@@ -3880,7 +3896,7 @@ class ImagePut {
          }
 
          ; Start GIF Animation loop. Defaults to immediate playback.
-         if (playback == "" || playback == True)
+         if (playback)
             DllCall("PostMessage", "ptr", hwnd, "uint", 0x8001, "uptr", 0, "ptr", 0)
       }
 
@@ -4239,26 +4255,19 @@ class ImagePut {
       if (A_PtrSize = 8) {
          assembly := "
             ( Join`s Comments
-            48 89 4c 24 08                 ;   0: mov [rsp+8], rcx
-            48 89 54 24 10                 ;   5: mov [rsp+16], rdx
-            4c 89 44 24 18                 ;  10: mov [rsp+24], r8
-            4c 89 4c 24 20                 ;  15: mov [rsp+32], r9
-            48 83 ec 28                    ;  20: sub rsp, 40
-            49 b9 00 00 00 00 00 00 00 00  ;  24: mov r9, .. (lParam)
-            49 b8 00 00 00 00 00 00 00 00  ;  34: mov r8, .. (wParam)
-            ba 00 00 00 00                 ;  44: mov edx, .. (uMsg)
-            b9 00 00 00 00                 ;  49: mov ecx, .. (hwnd)
-            48 b8 00 00 00 00 00 00 00 00  ;  54: mov rax, .. (SendMessageW)
-            ff d0                          ;  64: call rax
-            48 83 c4 28                    ;  66: add rsp, 40
-            c3                             ;  70: ret
-            )"                             ;  71:
+            49 b9 00 00 00 00 00 00 00 00  ;   0: mov r9, .. (lParam)
+            49 b8 00 00 00 00 00 00 00 00  ;  10: mov r8, .. (wParam)
+            ba 00 00 00 00                 ;  20: mov edx, .. (uMsg)
+            b9 00 00 00 00                 ;  25: mov ecx, .. (hwnd)
+            48 b8 00 00 00 00 00 00 00 00  ;  30: mov rax, .. (SendMessageW)
+            48 ff e0                       ;  40: rex_jmp rax
+            )"                             ;  43:
          DllCall("crypt32\CryptStringToBinary", "str", assembly, "uint", 0, "uint", 0x4, "ptr", pcb, "uint*", ncb, "ptr", 0, "ptr", 0)
-         NumPut(SendMessageW, pcb + 56, "ptr")
-         NumPut(hwnd, pcb + 50, "int")
-         NumPut(uMsg, pcb + 45, "int")
-         NumPut(wParam, pcb + 36, "ptr")
-         NumPut(lParam, pcb + 26, "ptr")
+         NumPut(SendMessageW, pcb + 32, "ptr")
+         NumPut(hwnd, pcb + 26, "int")
+         NumPut(uMsg, pcb + 21, "int")
+         NumPut(wParam, pcb + 12, "ptr")
+         NumPut(lParam, pcb + 2, "ptr")
       }
       else {
          assembly := "
@@ -4387,55 +4396,51 @@ class ImagePut {
       return url
    }
 
-   BitmapToExplorer(pBitmap, default_dir := "", background_window := False) {
-      if directory := this.Explorer(default_dir, background_window)
-         return this.BitmapToFile(pBitmap, directory)
+   BitmapToExplorer(pBitmap, default_dir := "", inactive := False) {
+      directory := this.Explorer(inactive)
+      return this.BitmapToFile(pBitmap, directory ? directory : default_dir)
    }
 
-   StreamToExplorer(stream, default_dir := "", background_window := False) {
-      if directory := this.Explorer(default_dir, background_window)
-         return this.StreamToFile(stream, directory)
+   StreamToExplorer(stream, default_dir := "", inactive := False) {
+      directory := this.Explorer(inactive)
+      return this.StreamToFile(stream, directory ? directory : default_dir)
    }
 
-   Explorer(default_dir := "", background_window := False) {
-      ; Thanks @TheCrether
-      GetExplorer := (background_window) ? Func("WinExist") : Func("WinActive")
-      if (hwnd := %GetExplorer%("ahk_class ExploreWClass"))
-      or (hwnd := %GetExplorer%("ahk_class CabinetWClass"))
-        if tab := this.ExplorerTab(hwnd)
-            switch ComObjType(tab.Document, "Class") {
-               case "ShellFolderView":
-                  directory := tab.Document.Folder.Self.Path
-               default: ; case "HTMLDocument"
-                  directory := tab.LocationURL
-            }
-
-      if WinActive("ahk_class WorkerW") or WinActive("ahk_class Progman")
-         directory := A_Desktop
-
-      ; Returns the empty string if the directory is not found.
-      return directory ? directory : default_dir
-   }
-      ExplorerTab(hwnd) {
-         ; Thanks Lexikos - https://www.autohotkey.com/boards/viewtopic.php?f=83&t=109907
-         try ControlGet activeTab, Hwnd,, ShellTabWindowClass1, ahk_id %hwnd% ; File Explorer (Windows 11)
-         catch
-         try ControlGet activeTab, Hwnd,, TabWindowClass1, ahk_id %hwnd% ; IE
-         for window in ComObjCreate("Shell.Application").Windows {
-            if (window.hwnd != hwnd)
-               continue
-            if IsSet(activeTab) { ; The window has tabs, so make sure this is the right one.
-               static IID_IShellBrowser := "{000214E2-0000-0000-C000-000000000046}"
-               IShellBrowser := ComObjQuery(window, IID_IShellBrowser, IID_IShellBrowser)
-               DllCall(NumGet(NumGet(IShellBrowser+0)+A_PtrSize* 3), "ptr", IShellBrowser, "uint*", thisTab:=0), ObjRelease(IShellBrowser)
-               if (thisTab != activeTab)
-                  continue
-            }
-            return window ; Returns a ComObject with a .hwnd property
-         }
-         throw Exception("Could not locate active tab in Explorer window.")
+   Explorer(inactive := False) {
+      if WinActive("ahk_class WorkerW") || WinActive("ahk_class Progman")
+         return A_Desktop
+   
+      WinExistOrActive := (inactive) ? Func("WinExist") : Func("WinActive")
+      if (hwnd := %WinExistOrActive%("ahk_class ExploreWClass"))
+      or (hwnd := %WinExistOrActive%("ahk_class CabinetWClass")) {
+         window := this.ExplorerTab(hwnd)
+         return ComObjType(window.Document, "Class") == "ShellFolderView"
+            ? window.Document.Folder.Self.Path
+            : window.LocationURL             ; "HTMLDocument"
       }
+   
+      return "" ; No matching explorer windows found.
+   }
 
+   ExplorerTab(hwnd) {
+      ; Thanks Lexikos, @TheCrether - https://www.autohotkey.com/boards/viewtopic.php?f=83&t=109907
+      try ControlGet activeTab, Hwnd,, ShellTabWindowClass1, ahk_id %hwnd% ; File Explorer (Windows 11)
+      catch
+      try ControlGet activeTab, Hwnd,, TabWindowClass1, ahk_id %hwnd% ; IE
+      for window in ComObjCreate("Shell.Application").Windows {
+         if (window.hwnd != hwnd)
+            continue
+         if IsSet(activeTab) { ; The window has tabs, so make sure this is the right one.
+            static IID_IShellBrowser := "{000214E2-0000-0000-C000-000000000046}"
+            IShellBrowser := ComObjQuery(window, IID_IShellBrowser, IID_IShellBrowser)
+            DllCall(NumGet(NumGet(IShellBrowser+0)+A_PtrSize* 3), "ptr", IShellBrowser, "uint*", thisTab:=0), ObjRelease(IShellBrowser)
+            if (thisTab != activeTab)
+               continue
+         }
+         return window ; Returns a ComObject with a .hwnd property
+      }
+      throw Exception("Could not locate active tab in Explorer window.")
+   }
 
    BitmapToFile(pBitmap, filepath := "", quality := "") {
       extension := "png"
@@ -5428,10 +5433,6 @@ class ImageEqual extends ImagePut {
       loop 2
          if DllCall("gdiplus\GdipCloneImage", "ptr", SourceBitmap%A_Index%, "ptr*", pBitmap%A_Index%)
             throw Exception("Cloning Bitmap" A_Index " failed.")
-
-      DllCall("gdiplus\GdipGetImagePixelFormat", "ptr", pBitmap1, "int*", format3:=0)
-      if (format1 != format3)
-         throw Exception("Report this error to the developer.")
 
       width := width1, height := height1
 

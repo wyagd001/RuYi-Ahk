@@ -1,4 +1,5 @@
-﻿;|2.9|2024.12.14|1226
+﻿;|2.9|2024.12.31|1226
+Menu, Tray, UseErrorLevel
 Windy_CurWin_id := A_Args[1]
 
 Windo_对话框打开目录:
@@ -6,6 +7,9 @@ IniMenuInifile := A_ScriptDir "\..\..\配置文件\外部脚本\Ini_收藏夹.in
 IniMenuobj := ini2obj(IniMenuInifile)
 AllOpenFolder := GetAllWindowOpenFolder()
 
+Menu, JumpToFavFolder, DeleteAll
+Menu JumpToFavFolder, add, 添加文件夹到收藏夹, Add_JumpToFolder
+Menu JumpToFavFolder, add
 for k,v in IniMenuobj["对话框"]
 {
 	SubMenuName := GetStringIndex(v, 1)
@@ -32,6 +36,38 @@ ControlSend, edit1, {Enter}, Ahk_ID %Windy_CurWin_id%
 return
 
 nul:
+return
+
+Add_JumpToFolder:
+Gui addtoDialog:Destroy
+Gui addtoDialog:Default
+gui, add, Text, x10 y10, 新添加文件夹:
+gui, add, Edit, xp+90 yp w400 vmypath, 
+gui, add, Text, x10 yp+30, 新添加菜单名:
+gui, add, Edit, xp+90 yp w400 vmymenu,
+gui, add, Button, x380 yp+30 w50 gaddtoDialog_ok, 确定
+gui, add, Button, xp+60 yp w50 gaddtoDialog_cancel, 取消
+gui, show, , 将文件夹添加到收藏夹
+return
+
+addtoDialog_ok:
+Gui addtoDialog: Default 
+Gui, Submit, NoHide
+if fileexist(mypath)
+{
+  R_index := IniMenuobj["对话框"].Count()+1
+  IniMenuobj["对话框"][R_index] := mypath "|" mymenu
+  obj2ini(IniMenuobj, IniMenuInifile)
+  Gui addtoDialog: Destroy
+}
+else
+{
+  CF_ToolTip("文件夹不存在, 无法添加到收藏夹", 4000)
+}
+return
+
+addtoDialog_cancel:
+Gui addtoDialog: Destroy
 return
 
 ini2obj(file){
@@ -64,6 +100,20 @@ ini2obj(file){
 		}
 	}
 Return iniobj
+}
+
+obj2ini(obj, file){
+	if (!isobject(obj) or !file)
+		Return 0
+	for k,v in obj
+	{
+		for key,value in v
+		{
+			IniWrite, %value%, %file%, %k%, %key%
+			;fileappend %key%-%value%`n, %A_desktop%\123.txt
+		}
+	}
+  Return 1
 }
 
 GetAllWindowOpenFolder()
@@ -181,4 +231,16 @@ GetStringIndex(String, Index := "", MaxParts := -1, SplitStr := "|")
 	}
 	else
 		return arrCandy_Cmd_Str
+}
+
+CF_ToolTip(tipText, delay := 1000)
+{
+	ToolTip
+	ToolTip, % tipText
+	SetTimer, RemoveToolTip, % "-" delay
+  return
+
+  RemoveToolTip:
+    ToolTip
+  return
 }

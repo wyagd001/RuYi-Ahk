@@ -1,4 +1,4 @@
-﻿;|2.9|2024.12.08|1330
+﻿;|2.9|2024.12.17|1330
 ;date=20170101
 ;MsgBox,% Date_GetDate(date)
 ;MsgBox,% Date_GetDate(date,1) ;闰5月
@@ -15,7 +15,16 @@ TX =
 CTFSC:=[]
 CTFObj := {"新年":"0101", "元宵节":"0115", "民歌节":"0303", "端午节":"0505", "七夕节":"0707", "中元节":"0715", "中秋节":"0815", "重阳节":"0909", "小年":"1223", "第二年新年":"0101"}
 	; ,"自定义节日一": "0601","自定义节日二": "0709","自定义节日三": "0827", "自定义节日四": "0924"
-customCTFObj := ini2obj(A_ScriptDir "\..\..\配置文件\外部脚本\工具类\时间_节日提醒.ini")
+customIniFile := A_ScriptDir "\..\..\配置文件\外部脚本\工具类\时间_节日提醒.ini"
+if !fileexist(customIniFile)
+{
+  FileCreateDir, %A_ScriptDir%\..\..\配置文件\外部脚本\工具类
+  fileappend,, %customIniFile%
+  ;msgbox % ErrorLevel " - " A_LastError 
+  IniWrite, 0520, %customIniFile%, 农历节日, 爸爸生日
+  IniWrite, 0521, %customIniFile%, 公历节日, 妈妈生日
+}
+customCTFObj := ini2obj(customIniFile)
 ;msgbox % customCTFObj["农历节日"]["爸爸生日"]
 
 for k,v in CTFObj
@@ -75,6 +84,7 @@ if (dongzhidata = today)
 Easterdata := A_YYYY Easter(A_YYYY)
 if (Easterdata = today)
 	aTX .= "今天是复活节`n"
+
 if atx or TX
 {
   if WinExist("AppBarWin ahk_class AutoHotkeyGUI")
