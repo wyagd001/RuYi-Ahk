@@ -685,7 +685,7 @@ description: 如意百宝箱-Ahk 内置动作列表
 |1678|e8e7|运行选中代码|选中文本|将选中 Ahk 代码直接运行|canfunc&#124;RunAhkCode&#124;%CandySel%|
 |1679|e121|退休日期计算|无条件|根据身份证或出生日期计算退休日期|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\计算退休日期.ahk" "%CandySel%"|
 |1680|f69e|桌面画图|无条件|桌面画图工具|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\桌面画图.ahk"|
-|1681|e713|窗口监控|无条件|监控窗口的创建与关闭并记录显示到列表中|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\窗口处理\窗口监控.ahk"|
+|1681|e713|转农历|选中文本|查看选中日期的农历时间|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文本处理\数字_时间转农历.ahk" "%CandySel%"|
 |1682|e197|挂载为磁盘 X|选中文件夹|将选中网络文件夹挂载为虚拟磁盘 X:|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文件处理\文件夹处理\网络文件夹_本地磁盘.ahk" "%CandySel%" "X"|
 |1683|e159|卸载磁盘|选中驱动器|卸载网络文件夹挂载的虚拟磁盘|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文件处理\文件夹处理\网络文件夹_本地磁盘.ahk" "%CandySel%"|
 |1684|e197|挂载网络共享|无条件|挂载或卸载网络文件夹虚拟的磁盘|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文件处理\文件夹处理\网络文件夹_本地磁盘.ahk" "%CandySel%"|
@@ -703,3 +703,7 @@ description: 如意百宝箱-Ahk 内置动作列表
 |1696|e76c|下一首|无条件|文件夹随机播放下一首|SendMsgToATA&#124;1696|
 |1697|e8b7|设置图标|选中文件夹|设置选中文件夹的图标|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文件处理\文件夹处理\设置文件夹图标.ahk" "%CandySel%"|
 |1698|EDE3|所有动作|子面板|一键运行子面板中的所有动作的示例子面板|Gui&#124;打开子面板所有动作|
+|1699|ecaa|微信下载|无条件|打开微信的下载目录|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\窗口处理\微信下载目录.ahk"|
+|1700|ecaa|QQ下载|无条件|打开QQ的下载目录|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\窗口处理\QQ下载目录.ahk"|
+|1701|ecaa|选取整列|WPS 表格|Excel, WPS 表格快捷键 Ctrl + Shift + ↓|Keys&#124;^+{Down}|
+|1702|f4aa|拼音(WV2)|选中文件|使用 WebView2 显示选中文本的拼音|run&#124;"%B_Autohotkey2%" "%A_ScriptDir%\外部脚本\V2\汉字显示拼音(WebView2).ahk2" "%CandySel%"|
