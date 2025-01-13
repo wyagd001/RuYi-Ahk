@@ -8,6 +8,9 @@ SetFormat, float, 10.4
 ; [\+\-]?\d+\.\d+%?
 
 settingInifile := A_ScriptDir "\..\..\配置文件\外部脚本\工具类\股票当天行情.ini"
+if !fileexist(settingInifile)
+  FileCopy % A_ScriptDir "\..\..\配置文件\外部脚本\工具类\股票当天行情_默认配置.ini", % settingInifile
+
 settingobj := ini2obj(settingInifile)
 Global settingobj, settingInifile
 ColorsOn := settingobj["选项"]["显示颜色"]

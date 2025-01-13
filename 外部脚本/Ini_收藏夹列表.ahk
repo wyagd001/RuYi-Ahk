@@ -4,17 +4,22 @@
 Windy_CurWin_Id := A_Args[1]
 
 IniMenuInifile := A_ScriptDir "\..\配置文件\外部脚本\Ini_收藏夹.ini"
-ATA_settingFile := A_ScriptDir "\..\配置文件\如一.ini"
+if !fileexist(IniMenuInifile)
+  FileCopy % A_ScriptDir "\..\..\配置文件\外部脚本\Ini_收藏夹_默认配置.ini", % IniMenuInifile
+CurrentWebBrowserOpen_IniFile := A_ScriptDir "\..\配置文件\外部脚本\运行选中的文本.ini"
+if !fileexist(CurrentWebBrowserOpen_IniFile)
+  FileCopy % A_ScriptDir "\..\..\配置文件\外部脚本\运行选中的文本_默认配置.ini", % CurrentWebBrowserOpen_IniFile
+
 IniMenuobj := ini2obj(IniMenuInifile)
 Global IniMenuobj, IniMenuInifile
 SetWorkingDir %A_ScriptDir%
 Menu, Tray, Icon, Shell32.dll, 174
-CombArr := ["文件", "文件夹", "程序", "命令", "网址", "注册表", "如意动作", "常用文本"]
+CombArr := ["文件", "文件夹", "程序", "命令", "网址", "注册表", "对话框", "对话框_子文件夹", "如意动作", "常用文本"]
 
 Gui, Destroy
 Gui, Add, Edit, x5 y5 w607 vsearchkey
 Gui, Add, Button, xp+617 yp w60 gsearch default, 搜索
-gui, add, listbox, x5 yp+27 vComb w80 h505 gupdateListView, 文件||文件夹|程序|命令|网址|注册表|如意动作|常用文本|搜索结果
+gui, add, listbox, x5 yp+27 vComb w80 h505 gupdateListView, 文件||文件夹|程序|命令|网址|注册表|对话框|对话框_子文件夹|如意动作|常用文本|搜索结果
 
 Gui, Add, ListView, vMyListView gMyListView xp+82 yp w525 h497 grid, 序号|文件名|地址
 Gui, Add, Button, xp+535 yp w60 geditnewrow, 新增
@@ -63,6 +68,7 @@ if (A_GuiEvent = "DoubleClick")
 		Candy_Cmd := StrReplace(Candy_Cmd, "\n", "`n")
 		sleep 200
 		send, %Candy_Cmd%
+    ;msgbox % Candy_Cmd
 	}
 
 	; 注册表
@@ -573,9 +579,9 @@ Deref(String)
 
 CurrentWebOpen:
 ; ATA_filepath 含有 "/" 字符时, 使用浏览器打开, 网址中不支持中文字符
-IniRead, Default_Browser, %ATA_settingFile%, Browser, Default_Browser, %A_Space%
-IniRead, url, %ATA_settingFile%, Browser, Default_Url
-IniRead, InUse_Browser, %ATA_settingFile%, Browser, InUse_Browser
+IniRead, Default_Browser, %CurrentWebBrowserOpen_IniFile%, Browser, Default_Browser, %A_Space%
+IniRead, url, %CurrentWebBrowserOpen_IniFile%, Browser, Default_Url
+IniRead, InUse_Browser, %CurrentWebBrowserOpen_IniFile%, Browser, InUse_Browser
 ;msgbox % Default_Browser " - " ATA_filepath
 If Default_Browser
 {

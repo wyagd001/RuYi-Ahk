@@ -1,6 +1,8 @@
-﻿;|2.9|2024.12.14|1213
+﻿;|2.9|2024.01.08|1213
 CandySel := A_Args[1]
 IniMenuInifile := A_ScriptDir "\..\配置文件\外部脚本\Ini_收藏夹.ini"
+if !fileexist(IniMenuInifile)
+  FileCopy % A_ScriptDir "\..\..\配置文件\外部脚本\Ini_收藏夹_默认配置.ini", % IniMenuInifile
 IniMenuobj := ini2obj(IniMenuInifile)
 show_openwith(IniMenuobj["程序"])
 return

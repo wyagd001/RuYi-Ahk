@@ -1,4 +1,4 @@
-﻿;|2.6|2024.05.14|1225
+﻿;|2.9|2025.01.07|1225
 #SingleInstance force
 #InputLevel 10   ; 优先级设置比如意中的高, 按下相同热键后先触发脚本自身的
 Menu, Tray, UseErrorLevel
@@ -12,8 +12,14 @@ if InStr(notepad2, "%A_ScriptDir%")
 	RY_Dir := SubStr(RY_Dir, 1, InStr(RY_Dir, "\", 0, 0, 3) - 1)
 	notepad2 := StrReplace(notepad2, "%A_ScriptDir%", RY_Dir)
 }
-IniRead, flibfolder1, %A_ScriptDir%\..\..\..\配置文件\如一.ini, 外部脚本, 文件库文件夹一, G:\Music
-IniRead, flibfolder2, %A_ScriptDir%\..\..\..\配置文件\如一.ini, 外部脚本, 文件库文件夹二, G:\资料\脚本收集
+
+peizhiinifile := A_ScriptDir "\..\..\..\配置文件\外部脚本\文件处理\文件夹处理\数据库_文件库中搜索文件.ini"
+if !fileexist(peizhiinifile)
+  FileCopy % A_ScriptDir "\..\..\配置文件\外部脚本\文件处理\文件夹处理\数据库_文件库中搜索文件_默认配置.ini", % peizhiinifile
+
+IniRead, flibfolder1, % peizhiinifile, 文件库, 文件库文件夹一, G:\Music
+IniRead, flibfolder2, % peizhiinifile, 文件库, 文件库文件夹二, G:\资料\脚本收集
+
 if fileexist(A_Args[1])  ; 参数为文件时设置 CandySel
 {
 	CandySel :=  A_Args[1]   
@@ -172,7 +178,7 @@ if fileexist(flibfolder2)
 		filelistarray[a_loopfilefullpath] := 1
 	}
 }
-if fileexist("H:\备份\资料备份\脚本收集\AutoHotkey\Ahk_L")
+if fileexist("H:\备份\资料备份\脚本收集\AutoHotkey\Ahk_L")   ;  没有写入配置的文件库的第三个文件夹
 {
 	Loop, Files, H:\备份\资料备份\脚本收集\AutoHotkey\Ahk_L\*.*, FR
 	{
@@ -181,11 +187,12 @@ if fileexist("H:\备份\资料备份\脚本收集\AutoHotkey\Ahk_L")
 		filelistarray[a_loopfilefullpath] := 1
 	}
 }
-if fileexist("G:\Github")
+if fileexist("G:\Github")  ;  没有写入配置的文件库的第四个文件夹
 	StackLoop("G:\Github")
+
 tooltip 遍历文件完成.
-if !fileexist(flibfolder1) && !fileexist(flibfolder2) && !fileexist("G:\Github")
-	msgbox % "配置文件中 [外部脚本] 下的 ""文件库文件夹一"" 和 ""文件库文件夹二"" 项目设置的文件夹都不存在, 请检查 如一.ini 文件."
+if !fileexist(flibfolder1) && !fileexist(flibfolder2)
+	msgbox % "配置文件中 [文件库] 下的 ""文件库文件夹一"" 和 ""文件库文件夹二"" 项目设置的文件夹都不存在, 请检查 数据库_文件库中搜索文件.ini 文件."
 Else
 	updateFlib()
 ;MsgBox, % ElapsedTime / 1000
@@ -542,7 +549,7 @@ updateFlib()
 	for k,v in flibarray
 	{
 		if !filelistarray.Delete(v)
-		deletefilelistarray.Push(v)
+      deletefilelistarray.Push(v)
 	}
 
 	if filelistarray.Count()

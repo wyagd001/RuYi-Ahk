@@ -1,7 +1,10 @@
-﻿;|2.3|2023.09.13|1070,1423
+﻿;|2.9|2025.01.07|1070,1423
 #SingleInstance force
 #include <ImagePut>
-ATA_settingFile := A_ScriptDir "\..\..\配置文件\如一.ini"
+ATA_settingFile := A_ScriptDir "\..\..\配置文件\外部脚本\文件处理\文件预览.ini"
+RY_settingFile := A_ScriptDir "\..\..\配置文件\如一.ini"
+if !fileexist(ATA_settingFile)
+  FileCopy % A_ScriptDir "\..\..\配置文件\外部脚本\文件处理\文件预览_默认配置.ini", % ATA_settingFile
 ATA_filepath := A_Args[1]
 if(A_Cursor="IBeam") or IsRenaming()
 {
@@ -69,7 +72,7 @@ return
 F6::
 if !notepad2
 {
-	IniRead, notepad2, %ATA_settingFile%, 其他程序, notepad2, Notepad.exe
+	IniRead, notepad2, %RY_settingFile%, 其他程序, notepad2, Notepad.exe
 	if InStr(notepad2, "%A_ScriptDir%")
 	{
 		RY_Dir := Deref("%A_ScriptDir%")
@@ -298,7 +301,7 @@ Tmp_Str := ""
 return
 
 Cando_xls_prew:
-IniRead, AutoHotkeyU32, %ATA_settingFile%, 其他程序, AutoHotkeyU32, %A_Space%
+IniRead, AutoHotkeyU32, %RY_settingFile%, 其他程序, AutoHotkeyU32, %A_Space%
 if fileexist(AutoHotkeyU32)
 	run, "%AutoHotkeyU32%" "%A_ScriptDir%\..\..\引用程序\输出excel数据到GUI.ahk" "%Prew_File%"
 else
@@ -306,8 +309,8 @@ else
 exitapp
 
 Cando_rar_prew:
-	IniRead, 7z, %ATA_settingFile%, 其他程序, 7z, %A_Space%
-	IniRead, winrar, %ATA_settingFile%, 其他程序, winrar, %A_Space%
+	IniRead, 7z, %RY_settingFile%, 其他程序, 7z, %A_Space%
+	IniRead, winrar, %RY_settingFile%, 其他程序, winrar, %A_Space%
 	if !7z
 	{
 		msgbox 没有找到 7z 程序，请检查设置文件 [如一.ini] 中 [其他程序] 的7z条目，文件无法预览程序退出。

@@ -167,6 +167,7 @@ UpdateLayeredWindow(hwnd, hdc, x:="", y:="", w:="", h:="", Alpha:=255)
 	if (w = "") || (h = "") {
 		WinGetRect(hwnd,,, &w, &h)
 	}
+  w := Integer(w), h := Integer(h)
 
 	return DllCall("UpdateLayeredWindow"
 		, "UPtr", hwnd

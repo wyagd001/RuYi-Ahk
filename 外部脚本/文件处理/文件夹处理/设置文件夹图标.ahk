@@ -11,7 +11,7 @@ if fileexist(desktopfile)
 SetBatchLines -1
 
 Gui Font, s9, Segoe UI
-Gui Add, Text, x10 y10 w80 h23 gshowicon, 当前图标:
+Gui Add, Text, x10 y10 w80 h23, 当前图标:
 Gui Add, Edit, xp+60 yp w400 h21 viconf gshowicon
 Gui Add, Button, xp+410 yp w80 h23 gsIcon, 选择图标
 if cur_icon
@@ -81,13 +81,13 @@ gui, submit, nohide
 if iconf
 {
   Array := StrSplit(iconf, ",")
-    if (Array[2] < 0)
-    {
-      Icon_index := IndexOfIconResource(ExpandEnvVars(Array[1]), abs(Array[2]))
-      ;msgbox % Icon_index
-    }
-    else
-      Icon_index := Array[2] + 1
+  if (Array[2] < 0)
+  {
+    Icon_index := IndexOfIconResource(ExpandEnvVars(Array[1]), abs(Array[2]))
+    ;msgbox % Icon_index
+  }
+  else
+    Icon_index := Array[2] + 1
   GuiControl,, iconp, % Array[1] ? "*Icon" Icon_index " " Array[1] : "*Icon0" " " iconf
 }
 return

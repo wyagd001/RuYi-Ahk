@@ -1,4 +1,4 @@
-﻿;|2.9|2024.12.17|1094
+﻿;|2.9|2025.01.08|1094
 /*
 TODO:
 - find a better way to make context sensitive hotkeys for when listbox is selected
@@ -29,9 +29,13 @@ presets_ini_file := A_ScriptDir "\..\..\配置文件\外部脚本\系统设置\�
 if !fileexist(presets_ini_file)
 {
   FileCreateDir, %A_ScriptDir%\..\..\配置文件\外部脚本\系统设置
-  fileappend,, %presets_ini_file%
-  ;msgbox % ErrorLevel " - " A_LastError 
-  IniWrite, ip_ignore=0`nip_auto=1`ndns_ignore=0`ndns_auto=1, %presets_ini_file%, 自动获取
+  if fileexist(A_ScriptDir "\..\..\配置文件\外部脚本\系统设置\网络连接IP设置_默认配置.ini")
+    FileCopy % A_ScriptDir "\..\..\配置文件\外部脚本\系统设置\网络连接IP设置_默认配置.ini", % presets_ini_file
+  else
+  {
+    fileappend,, %presets_ini_file%
+    IniWrite, ip_ignore=0`nip_auto=1`ndns_ignore=0`ndns_auto=1, %presets_ini_file%, 自动获取
+  }
 }
 interfaces_tmpfile := A_ScriptDir "\..\..\临时目录\interfaces.tmp"
 putty := A_ScriptDir "\..\..\引用程序\x32\putty.exe"

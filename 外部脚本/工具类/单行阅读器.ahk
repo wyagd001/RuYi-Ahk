@@ -1,4 +1,4 @@
-﻿;|2.9|2024.12.17|1670
+﻿;|2.9|2025.01.07|1670
 #SingleInstance, Ignore
 
 Filename := GetFullPathName(A_scriptdir "\..\..\引用程序\其它资源\8000.txt")
@@ -43,7 +43,7 @@ Color14=0
 Color15=0
 Color16=0
 )"
-	FileAppend, %Settings%, %WordIni%
+	FileAppend, %Settings%, %WordIni%, CP0
 }
 
 IniRead, EditC, %WordIni%, Settings, EditColor

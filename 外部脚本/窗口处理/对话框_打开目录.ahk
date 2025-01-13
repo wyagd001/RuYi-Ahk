@@ -1,9 +1,11 @@
-﻿;|2.9|2024.12.31|1226
+﻿;|2.9|2024.01.08|1226
 Menu, Tray, UseErrorLevel
 Windy_CurWin_id := A_Args[1]
 
 Windo_对话框打开目录:
 IniMenuInifile := A_ScriptDir "\..\..\配置文件\外部脚本\Ini_收藏夹.ini"
+if !fileexist(IniMenuInifile)
+  FileCopy % A_ScriptDir "\..\..\配置文件\外部脚本\Ini_收藏夹_默认配置.ini", % IniMenuInifile
 IniMenuobj := ini2obj(IniMenuInifile)
 AllOpenFolder := GetAllWindowOpenFolder()
 
@@ -16,6 +18,19 @@ for k,v in IniMenuobj["对话框"]
 	Menu JumpToFavFolder, add, %SubMenuName%, Windo_JumpToFolder
 }
 Menu DialogMenu, Add, 收藏的文件夹, :JumpToFavFolder
+
+if isobject(IniMenuobj["对话框_子文件夹"])
+{
+  Menu, JumpToFavFolder2, add
+  Menu, JumpToFavFolder2, DeleteAll
+  Menu, JumpToFavFolder2, add, 添加当前路径到收藏夹, Add_JumpToFolder
+  Menu, JumpToFavFolder2, add
+  for k,v in IniMenuobj["对话框_子文件夹"]
+  {
+    Menu, JumpToFavFolder2, add, % GetStringIndex(v, 1), Windo_JumpToFolder
+  }
+}
+menu, DialogMenu, add, 子文件夹, :JumpToFavFolder2
 Menu DialogMenu, Add
 
 Menu DialogMenu, Add, ▼▼跳转到打开的文件夹▼▼, nul
@@ -25,7 +40,7 @@ for k, v in AllOpenFolder
 {
 	Menu DialogMenu, add, %v%, Windo_JumpToFolder
 }
-
+Menu DialogMenu, add, %A_desktop%, Windo_JumpToFolder
 Menu DialogMenu, Show
 Menu, DialogMenu, DeleteAll
 return

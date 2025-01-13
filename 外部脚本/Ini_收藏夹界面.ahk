@@ -2,7 +2,12 @@
 #Persistent
 #SingleInstance Force
 IniMenuInifile := A_ScriptDir "\..\配置文件\外部脚本\Ini_收藏夹.ini"
-ATA_settingFile := A_ScriptDir "\..\配置文件\如一.ini"
+if !fileexist(IniMenuInifile)
+  FileCopy % A_ScriptDir "\..\..\配置文件\外部脚本\Ini_收藏夹_默认配置.ini", % IniMenuInifile
+CurrentWebBrowserOpen_IniFile := A_ScriptDir "\..\配置文件\外部脚本\运行选中的文本.ini"
+if !fileexist(CurrentWebBrowserOpen_IniFile)
+  FileCopy % A_ScriptDir "\..\..\配置文件\外部脚本\运行选中的文本_默认配置.ini", % CurrentWebBrowserOpen_IniFile
+
 IniMenuobj := ini2obj(IniMenuInifile)
 SetWorkingDir %A_ScriptDir%
 Menu, Tray, Icon, Shell32.dll, 174
@@ -813,9 +818,9 @@ Deref(String)
 
 CurrentWebOpen:
 ; ATA_filepath 含有 "/" 字符时, 使用浏览器打开, 网址中不支持中文字符
-IniRead, Default_Browser, %ATA_settingFile%, Browser, Default_Browser, %A_Space%
-IniRead, url, %ATA_settingFile%, Browser, Default_Url
-IniRead, InUse_Browser, %ATA_settingFile%, Browser, InUse_Browser
+IniRead, Default_Browser, %CurrentWebBrowserOpen_IniFile%, Browser, Default_Browser, %A_Space%
+IniRead, url, %CurrentWebBrowserOpen_IniFile%, Browser, Default_Url
+IniRead, InUse_Browser, %CurrentWebBrowserOpen_IniFile%, Browser, InUse_Browser
 ;msgbox % Default_Browser " - " ATA_filepath
 If Default_Browser
 {

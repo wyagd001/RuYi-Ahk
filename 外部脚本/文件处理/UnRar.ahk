@@ -1,4 +1,4 @@
-﻿;|2.0|2023.07.01|1271
+﻿;|2.9|2024.01.09|1271
 #NoEnv
 #SingleInstance force
 ; 1271
@@ -217,7 +217,10 @@ struct RARHeaderDataEx
 		{
 			If !Passwords	
 			{
-				FileRead, src, *P65001 %A_ScriptDir%\..\..\配置文件\解压密码.txt	; 1200 unicode or 65001 UTF-8
+        passtxtfile := A_ScriptDir "\..\..\配置文件\外部脚本\文件处理\解压密码.txt"
+        if !fileexist(passtxtfile)
+          FileCopy % A_ScriptDir "\..\..\配置文件\外部脚本\文件处理\解压密码_默认配置.txt", % passtxtfile
+				FileRead, src, *P65001 %passtxtfile%    ; 1200 unicode or 65001 UTF-8
 				Passwords := StrSplit(RegExReplace(src, "[`r`n]+", "`n"), "`n")	; Initialise array, skip blank lines
 				;msgbox % Array_ToString(Passwords)
 			}
@@ -261,7 +264,7 @@ struct RARHeaderDataEx
 			UnRARLog .= "Password #" PasswordIdx ": " TryPassword "`n"
 			If Passwords.Length() < PasswordIdx
 			{
-				FileAppend, `n%TryPassword%, %A_ScriptDir%\..\..\配置文件\解压密码.txt, UTF-8
+				FileAppend, `n%TryPassword%, %passtxtfile%, UTF-8
 				Passwords[PasswordIdx] := TryPassword
 			}  
 		}

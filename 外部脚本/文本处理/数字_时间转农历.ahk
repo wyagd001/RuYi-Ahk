@@ -1,151 +1,68 @@
-﻿;|2.9|2025.01.08|1330
-;date=20170101
-;MsgBox,% Date_GetDate(date)
-;MsgBox,% Date_GetDate(date,1) ;闰5月
-;MsgBox,% Date_GetLunarDate(20180215)
-;MsgBox,% Date_GetLunarDate(A_Now)
-;MsgBox,% Date_GetLunarDate(A_Now-1*1000000)  
-Menu, Tray, UseErrorLevel
-Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\f739.ico"
+﻿;|2.9|2025.01.10|1681
+CandySel := Trim(A_Args[1])
+;CandySel := 20250101
+CandySel := StrReplace(CandySel, "-")
+CandySel := StrReplace(CandySel, "/")
+Cando_时间戳转换:
+Gui, 66: Destroy
+Gui, 66: Default
 
-JCTF:
-today := SubStr(A_Now, 1, 8)
-Lunar_Year := Date_GetLunarDate(today, 1)
-TX =
-CTFSC:=[]
-CTFObj := {"新年":"0101", "元宵节":"0115", "民歌节":"0303", "端午节":"0505", "七夕节":"0707", "中元节":"0715", "中秋节":"0815", "重阳节":"0909", "小年":"1223", "第二年新年":"0101"}
-	; ,"自定义节日一": "0601","自定义节日二": "0709","自定义节日三": "0827", "自定义节日四": "0924"
-customIniFile := A_ScriptDir "\..\..\配置文件\外部脚本\工具类\时间_节日提醒.ini"
-if !fileexist(customIniFile)
-{
-  FileCreateDir, %A_ScriptDir%\..\..\配置文件\外部脚本\工具类
-  if !fileexist(A_ScriptDir "\..\..\配置文件\外部脚本\工具类\时间_节日提醒_默认配置.ini")
-    FileCopy % A_ScriptDir "\..\..\配置文件\外部脚本\工具类\时间_节日提醒_默认配置.ini", % customIniFile
-  else
-  {
-    fileappend,, %customIniFile%
-    ;msgbox % ErrorLevel " - " A_LastError 
-    IniWrite, 0520, %customIniFile%, 农历节日, 爸爸生日
-    IniWrite, 0521, %customIniFile%, 公历节日, 妈妈生日
-  }
-}
-customCTFObj := ini2obj(customIniFile)
-;msgbox % customCTFObj["农历节日"]["爸爸生日"]
+Gui, add, text, x10 y10 cBlue ggetNowT, 时间:
+Gui, add, Edit, xp+70 yp w200 h24 vxd_Time, % CandySel
+Gui, add, button, xp+210 yp w60 h25 gxd2ct, 转换
 
-for k,v in CTFObj
-{
-	if(k = "第二年新年")
-		CTFSC[k] := Date_GetDate(Lunar_Year+1 . v)
-	else
-		CTFSC[k] := Date_GetDate(Lunar_Year . v)
-}
-for k,v in customCTFObj["农历节日"]
-{
-  CTFSC[k] := Date_GetDate(Lunar_Year . v)
-}
+Gui, add, text, x10 yp+38 cBlue ggetNowT2, 农历:
+Gui, add, Edit, xp+70 yp w200 h24 vct_Time, 
+Gui, add, button, xp+210 yp w60 h25 gct2xd Default, 转换
 
-for k,v in CTFSC
-{
-	Leafdays := v
-	Leafdays -= today, days
-	if (Leafdays = 0)
-	{
-		TX .= "今天是" k " " Date_GetLunarDate(today) " `n"
-	}
-	if(k = "第二年新年") && (Leafdays = 1)
-	{
-		TX .= "今天是除夕`n"
-	}
-}
+Gui, add, text, x10 yp+38,周几:
+Gui, add, Edit, xp+70 yp w200 h24 vzj,
 
-aTX =
-CFObj := {"公历新年": "0101", "情人节": "0214", "劳动节": "0501", "儿童节": "0601", "建党节": "0701", "建军节": "0801", "教师节": "0910", "国庆节": "1001", "圣诞节": "1225"}
-for k,v in customCTFObj["公历节日"]
-{
-  CFObj[k] := v
-}
+Gui, show, w400 h170, 时间转农历
+if CandySel
+  gosub xd2ct
+Return
 
-for k,v in CFObj
-{
-	Leafdays := A_YYYY v
-	NLeafdays := A_YYYY+1 v
-	Leafdays -= today, days
-	NLeafdays -= today, days
+66GuiClose:
+66Guiescape:
+Gui,66: Destroy
+exitapp
+Return
 
-	if (Leafdays=0) or (NLeafdays=0)
-	{
-		aTX .= "今天是" k "`n"
-	}
-}
-
-qingmingdata := A_YYYY "040" qingming(A_YYYY)
-if (qingmingdata = today)
-	aTX .= "今天是清明节`n"
-
-dongzhidata := A_YYYY "12" dongzhi(A_YYYY)
-if (dongzhidata = today)
-	aTX .= "今天是冬至`n"
-
-Easterdata := A_YYYY Easter(A_YYYY)
-if (Easterdata = today)
-	aTX .= "今天是复活节`n"
-
-if atx or TX
-{
-  if WinExist("AppBarWin ahk_class AutoHotkeyGUI")
-  {
-    loop 3
-    {
-      h := ExecSendToRuyi(strreplace(TX, "今天是") "`n" strreplace(atx, "今天是") "|red",, 1527)
-      if h
-        break
-    }
-  }
-  if TX
-    msgbox % TX
-  if atx
-    msgbox % atx
-}
+xd2ct:
+Gui, 66: Default
+Gui, Submit, NoHide
+ct_Time := Date_GetLunarDate(xd_Time)
+GuiControl,, ct_Time, % ct_Time
+FormatTime, OutputVar, % xd_Time, WDay
+FormatTime, OutputVar2, % xd_Time, YWeek
+FormatTime, OutputVar3, % xd_Time, YDay
+GuiControl,, zj, % "周" OutputVar " 第" OutputVar3 "天 " substr(OutputVar2, 1, 4) "年第" substr(OutputVar2, 5) "周"
 return
 
-qingming(Nyear)   ; 年份支持 1700-3100
-{
-	if (Nyear = 2232) {
-		return 4
-	}
-	coefficient := [5.15, 5.37, 5.59, 4.82, 5.02, 5.26, 5.48, 4.70, 4.92, 5.135, 5.36, 4.60, 4.81, 5.04, 5.26]
-	mod := Mod(Nyear, 100)
-	return Floor(mod * 0.2422 + coefficient[Floor(Nyear / 100 - 16)] - Floor(mod / 4))
-}
+ct2xd:
+Gui, 66: Default
+Gui, Submit, NoHide
+xd_Time := Date_GetDate(ct_Time, 0)
+GuiControl,, xd_Time, % xd_Time
 
-dongzhi(Nyear)   ; 年份支持 1700-3100
-{
-	if (Nyear = 2232) {
-		return 23
-	}
-	if (Nyear = 2227) or (Nyear = 3068) {
-		return 22
-	}
-	coefficient := [22.11, 22.39, 22.66, 21.90, 22.18, 22.472, 22.72, 21.995, 22.27, 22.51, 22.75, 22.02, 22.27, 22.519, 22.80]
-	mod := Mod(Nyear, 100)
-	return Floor(mod * 0.2422 + coefficient[Floor(Nyear / 100 - 16)] - Floor(mod / 4))
-}
+FormatTime, OutputVar, % xd_Time, WDay
+FormatTime, OutputVar2, % xd_Time, YWeek
+FormatTime, OutputVar3, % xd_Time, YDay
+GuiControl,, zj, % "周" OutputVar " 第" OutputVar3 "天 " substr(OutputVar2, 1, 4) "年第" substr(OutputVar2, 5) "周"
+return
 
-Easter(Nyear)
-{
-	X := Nyear
-	K  := Floor(X/100)
-	M  := 15+Floor((3*K+3)/4)-Floor((8*K+13)/25)
-	S  := 2-Floor((3*K+3)/4)
-	A  := Mod(X,19)
-	D  := Mod(19*A+M,30)
-	R  := Floor(D/29)+(Floor(D/28)-Floor(D/29))*Floor(A/11)
-	OG := 21+D-R
-	SZ := 7-Mod(X+Floor(X/4)+S,7)
-	OE := 7-Mod(OG-SZ,7)
-	OS := OG+OE     ; 复活节（星期日）的3月日期 (可能延长到4月), (3月32日= 4月1日等.)
-	return (OS > 31 ? "04" SubStr("0"OS-31,-1) : "03" OS)
-}
+delval:
+whichcontrol := substr(A_GuiControl, 2)
+GuiControl,, % whichcontrol
+return
+
+getNowT:
+GuiControl,, xd_Time, % A_Now
+Return
+getNowT2:
+GuiControl,, ct_Time, % substr(A_Now, 1, 8)
+Return
 
 /*
 <参数>
@@ -475,61 +392,4 @@ dec2hex(d)
 	h := d+0
 	SetFormat, IntegerFast, %BackUp_FmtInt%
 return h
-}
-
-ExecSendToRuyi(ByRef StringToSend := "", Title := "如一 ahk_class AutoHotkey", wParam := 0, Msg := 0x4a) {
-	VarSetCapacity(CopyDataStruct, 3*A_PtrSize, 0)
-	SizeInBytes := (StrLen(StringToSend) + 1) * (A_IsUnicode ? 2 : 1)
-	NumPut(SizeInBytes, CopyDataStruct, A_PtrSize)
-	NumPut(&StringToSend, CopyDataStruct, 2*A_PtrSize)
-
-	DetectHiddenWindows, On
-	if Title is integer
-	{
-		SendMessage, Msg, wParam, &CopyDataStruct,, ahk_id %Title%
-		;msgbox % ErrorLevel  "qq"
-	}
-	else if Title is not integer
-	{
-		SetTitleMatchMode 2
-		sendMessage, Msg, wParam, &CopyDataStruct,, %Title%
-	}
-	DetectHiddenWindows, Off
-	return ErrorLevel
-}
-
-ini2obj(file)
-{
-	iniobj := {}
-	FileRead, filecontent, %file% ; 加载文件到变量
-  ;msgbox % filecontent
-	StringReplace, filecontent, filecontent, `r, , All
-	StringSplit, line, filecontent, `n, , ; 用函数分割变量为伪数组
-	Loop ;循环
-	{
-		if A_Index > %line0%
-			Break
-		content = % line%A_Index% ; 赋值当前行
-		if (instr(content, ";") = 1)  ; 每行第一个字符为 ; 为注释跳过
-			continue
-		FSection := RegExMatch(content, "\[.*\]") ; 正则表达式匹配 section
-		if FSection = 1 ; 如果找到
-		{
-			TSection := RegExReplace(content, "\[(.*)\]", "$1") ; 正则替换并赋值临时section $为向后引用
-			iniobj[TSection] := {}
-		}
-		Else
-		{
-			FKey := RegExMatch(content, "^.*=.*")    ; 正则表达式匹配key
-			if FKey
-			{
-				TKey := RegExReplace(content, "^(.*?)=.*", "$1")   ; 正则替换并赋值临时key
-				;StringReplace, TKey, TKey, ., _, All               ; 会将键中的 "." 自动替换为 "_". 快捷键中有 ., 所以注释掉了
-				TValue := RegExReplace(content, "^.*?=(.*)", "$1") ; 正则替换并赋值临时value
-				if TKey
-					iniobj[TSection][TKey] := TValue
-			}
-		}
-	}
-	Return iniobj
 }

@@ -1,4 +1,4 @@
-﻿;|2.9|2024.12.30|1239
+﻿;|2.9|2025.01.08|1239
 ; 这里只是展示 TV 定位函数
 ; 注意 64 位主程序对 64 位程序打开的对话框有效, 对 32 位程序打开的对话框无效
 ; 资源管理器需要取消勾选 查看→导航窗格→显示所有文件夹 和 展开到打的文件夹, 因为显示太多目录导致找不到相应的节点
@@ -78,8 +78,26 @@ exitapp
 
 DialogCandyMenu:
 IniMenuInifile := A_ScriptDir "\..\..\配置文件\外部脚本\Ini_收藏夹.ini"
+if !fileexist(IniMenuInifile)
+  FileCopy % A_ScriptDir "\..\..\配置文件\外部脚本\Ini_收藏夹_默认配置.ini", % IniMenuInifile
 IniMenuobj := ini2obj(IniMenuInifile)
+Menu, 对话框收藏夹, DeleteAll
+Menu, 对话框收藏夹, add, 编辑配置文件, notepadopen
+Menu, 对话框收藏夹, add
 show_obj(IniMenuobj["对话框"], "对话框收藏夹")
+
+if isobject(IniMenuobj["对话框_子文件夹"])
+{
+  Menu, 对话框收藏夹, add
+  Menu, 对话框收藏夹_子文件夹, DeleteAll
+  for k,v in IniMenuobj["对话框_子文件夹"]
+  {
+    Menu, 对话框收藏夹_子文件夹, add, % GetStringIndex(v, 2), MenuHandler
+  }
+  Menu, 对话框收藏夹_子文件夹, add
+  Menu, 对话框收藏夹_子文件夹, add, 添加当前路径到收藏夹, AddToFav
+  menu, 对话框收藏夹, add, 子文件夹, :对话框收藏夹_子文件夹
+}
 Menu, 对话框收藏夹, add
 Menu, 对话框收藏夹, add, 添加当前路径到收藏夹, AddToFav
 menu, 对话框收藏夹, show
@@ -87,7 +105,11 @@ return
 
 MenuHandler:
 ;msgbox % IniMenuobj["对话框"][A_ThisMenuItemPos]
-dpath := GetStringIndex(IniMenuobj["对话框"][A_ThisMenuItemPos], 1)
+;msgbox % A_ThisMenu
+if (A_ThisMenu = "对话框收藏夹")
+  dpath := GetStringIndex(IniMenuobj["对话框"][A_ThisMenuItemPos], 1)
+else if (A_ThisMenu = "对话框收藏夹_子文件夹")
+  dpath := GetStringIndex(IniMenuobj["对话框_子文件夹"][A_ThisMenuItemPos], 1)
 ;msgbox % dpath
 gosub Cando_Dialogsetpath
 return
@@ -204,8 +226,16 @@ if !addTarget   ; 目录选择
 if fileexist(addTarget)
 {
   SplitPath, addTarget, OutFileName
-  R_index := IniMenuobj["对话框"].Count()+1
-  IniMenuobj["对话框"][R_index] := addTarget "|" OutFileName
+  if (A_ThisMenu = "对话框收藏夹")
+  {
+    R_index := IniMenuobj["对话框"].Count()+1
+    IniMenuobj["对话框"][R_index] := addTarget "|" OutFileName
+  }
+  else if (A_ThisMenu = "对话框收藏夹_子文件夹")
+  {
+    R_index := IniMenuobj["对话框_子文件夹"].Count()+1
+    IniMenuobj["对话框_子文件夹"][R_index] := addTarget "|" OutFileName
+  }
   obj2ini(IniMenuobj, IniMenuInifile)
 }
 else
@@ -228,8 +258,16 @@ Gui addtoDialog: Default
 Gui, Submit, NoHide
 if fileexist(mypath)
 {
-  R_index := IniMenuobj["对话框"].Count()+1
-  IniMenuobj["对话框"][R_index] := mypath "|" mymenu
+  if (A_ThisMenu = "对话框收藏夹")
+  {
+    R_index := IniMenuobj["对话框"].Count()+1
+    IniMenuobj["对话框"][R_index] := mypath "|" mymenu
+  }
+  else if (A_ThisMenu = "对话框收藏夹_子文件夹")
+  {
+    R_index := IniMenuobj["对话框_子文件夹"].Count()+1
+    IniMenuobj["对话框_子文件夹"][R_index] := mypath "|" mymenu
+  }
   obj2ini(IniMenuobj, IniMenuInifile)
   Gui addtoDialog: Destroy
 }
@@ -241,6 +279,11 @@ return
 
 cancel:
 Gui addtoDialog: Destroy
+return
+
+notepadopen:
+if fileexist( np2 := A_ScriptDir "\..\..\引用程序\x32\Notepad2.exe")
+  run "%np2%" "%IniMenuInifile%"
 return
 
 ;dpath := StrReplace(dpath, "\desktop", "\桌面")
@@ -392,11 +435,11 @@ show_obj(obj, menu_name := ""){
 		Random, rand, 100000000, 999999999
 		menu_name = %A_Now%%rand%
 	}
-	Menu, % menu_name, add,
-	Menu, % menu_name, DeleteAll
+	;Menu, % menu_name, add,
+	;Menu, % menu_name, DeleteAll
 	for k,v in obj
 	{
-			Menu, % menu_name, add, % GetStringIndex(v, 2), MenuHandler
+		Menu, % menu_name, add, % GetStringIndex(v, 2), MenuHandler
 	}
 	if main = 1
 		menu, % menu_name, show

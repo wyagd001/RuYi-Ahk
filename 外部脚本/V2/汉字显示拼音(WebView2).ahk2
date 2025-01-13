@@ -1,0 +1,78 @@
+﻿;|2.9|2025.01.11|1702
+#Include <WebView2>
+
+Persistent
+CandySel := ""
+Try CandySel := A_Args[1]
+if !CandySel
+{
+	DetectHiddenWindows 1
+	Try CandySel := ControlGetText("Edit1", "获取当前窗口信息_") 
+	DetectHiddenWindows 0
+}
+;CandySel := "你好"
+generatehtml(CandySel)
+OpenDocxWithWebView2(CandySel)
+return
+
+/*
+q::
+{
+SplitPath CandySel, &oname, &odir
+wv.ExecuteScript('load("' oname '");', 0)
+}
+*/
+
+OpenDocxWithWebView2(zhzf)
+{
+	Global
+	main := Gui("+Resize")
+	main.OnEvent("Close", _ExitApp)
+	main.Title := zhzf " - 拼音"
+	main.Show(Format("w{} h{}", A_ScreenWidth * 0.3, A_ScreenHeight * 0.3))
+
+	wvc := WebView2.CreateControllerAsync(main.Hwnd,{AdditionalBrowserArguments: "--disable-web-security='true'"}).await2()
+	;msgbox main.Hwnd
+	wv := wvc.CoreWebView2
+	nwr := wv.NewWindowRequested(NewWindowRequestedHandler)
+  wv.Navigate(A_ScriptDir "\..\..\临时目录\cnchar.html")
+
+	NewWindowRequestedHandler(wv2, arg) {
+    deferral := arg.GetDeferral()
+    arg.NewWindow := wv2
+		deferral.Complete()
+	}
+
+	_ExitApp(*) {
+    Global
+    ExitApp(0)
+	}
+}
+
+generatehtml(hz)
+{
+  html_code := 
+(
+'<html>
+<head>
+<script src="https://fastly.jsdelivr.net/npm/cnchar/cnchar.min.js"></script>
+<script src="https://fastly.jsdelivr.net/npm/cnchar-poly/cnchar.poly.min.js"></script>
+</head>
+<body>
+<script>
+        // 等待 cnchar.js 加载完成
+        document.addEventListener("DOMContentLoaded", function () {
+            // 使用 cnchar.js 的函数
+            var spell = cnchar.spell("' hz '", "tone");
+            document.write("' hz '"+ ": " + spell);
+        });
+</script>
+</body>
+</html>
+)'
+
+try FileDelete A_ScriptDir "\..\..\临时目录\cnchar.html"
+sleep 300
+FileAppend html_code, A_ScriptDir "\..\..\临时目录\cnchar.html", "`UTF-8"
+sleep 300
+}
