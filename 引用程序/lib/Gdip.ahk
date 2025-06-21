@@ -3167,7 +3167,7 @@ Gdip_CreateBitmap(Width, Height, PixelFormat:=0, Stride:=0, Scan0:=0) {
 Gdip_CreateBitmapFromClipboard() {
 ; modified by Marius Șucan
 
-   pid := DllCall("GetCurrentProcessId","uint")
+   pid := DllCall("GetCurrentProcessId", "uint")  ; 获取脚本自身的 pid 和 hwnd
    hwnd := WinExist("ahk_pid " . pid)
    if !DllCall("IsClipboardFormatAvailable", "uint", 8)  ; CF_DIB = 8
    {

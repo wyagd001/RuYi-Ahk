@@ -1,7 +1,7 @@
-﻿;|2.9|2025.01.07|1694
+﻿;|2.9|2025.01.17|1694
 if (A_DDDD = "星期六") or (A_DDDD = "星期日")
   exitapp
-if (A_Hour < 9) or (A_Hour > 16)
+if (A_Hour < 9) or (A_Hour > 16) or (A_Hour = 12)
   exitapp
 #Include <WinHttp>
 settingInifile := A_ScriptDir "\..\..\配置文件\外部脚本\工具类\股价提醒.ini"
@@ -29,6 +29,8 @@ for k, v in settingobj["监控"]
   Tmp_涨幅 := strreplace(Tmp_涨幅, "%")
   Tmp_价格 := Tmp_Obj["价格"]
   ;msgbox % Tmp_涨幅 "-" Tmp_价格
+  if !Tmp_涨幅
+    continue
   b_ind := 3
   loop 3
   {

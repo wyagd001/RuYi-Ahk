@@ -1,4 +1,4 @@
-﻿;|2.9|2025.01.04|1699
+﻿;|2.9|2025.04.06|1699
 WeChatFolder := A_MyDocuments "\WeChat Files"
 F_Arr := [], F_Ind := 1
 Loop, Files, %WeChatFolder%\*.*, D
@@ -23,6 +23,42 @@ else if (F_Arr.Length() = 1)
   else
     run % dpath
   ;msgbox % F_Arr[1]
+}
+else
+{
+  loop Files, D:\*, D
+  {
+    ;msgbox % A_LoopFileFullPath
+    if fileexist(A_LoopFileFullPath "\WeChat Files")
+    {
+      WeChatFolder := A_LoopFileFullPath "\WeChat Files"
+      ;msgbox % WeChatFolder
+      Loop, Files, %WeChatFolder%\*.*, D
+      {
+        if fileexist(WeChatDownloadFolder := WeChatFolder "\" A_LoopFileName "\FileStorage\File")
+        {
+          if !CF_FolderOnlyOneFolder(WeChatDownloadFolder)
+          {
+            F_Arr[F_Ind++] := WeChatDownloadFolder "|" A_LoopFileName
+          }
+        }
+      }
+      if (F_Arr.Length() > 1)
+      {
+        show_obj(F_Arr)
+      }
+      else if (F_Arr.Length() = 1)
+      {
+        dpath := GetStringIndex(F_Arr[1], 1)
+        if fileexist(dpath "\" A_YYYY "-" A_MM)
+          run % dpath "\" A_YYYY "-" A_MM
+        else
+          run % dpath
+        ;msgbox % F_Arr[1]
+      }
+    break
+    }
+  }
 }
 return
 

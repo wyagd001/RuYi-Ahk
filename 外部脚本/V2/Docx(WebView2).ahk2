@@ -30,7 +30,7 @@ OpenDocxWithWebView2(docxfilepath)
 	main := Gui("+Resize")
 	main.OnEvent("Close", _ExitApp)
 	main.Title := oname " - Docx 文档阅读"
-	main.Show(Format("w{} h{}", A_ScreenWidth * 0.8, A_ScreenHeight * 0.92))
+	main.Show("xCenter yCenter" Format("w{} h{}", A_ScreenWidth * 0.8, A_ScreenHeight * 0.92))
 
 	wvc := WebView2.CreateControllerAsync(main.Hwnd,{AdditionalBrowserArguments: "--disable-web-security='true'"}).await2()
 	;msgbox main.Hwnd

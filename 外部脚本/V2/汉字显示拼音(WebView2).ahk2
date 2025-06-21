@@ -1,4 +1,4 @@
-﻿;|2.9|2025.01.11|1702
+﻿;|2.9|2025.05.11|1702
 #Include <WebView2>
 
 Persistent
@@ -63,7 +63,7 @@ generatehtml(hz)
         // 等待 cnchar.js 加载完成
         document.addEventListener("DOMContentLoaded", function () {
             // 使用 cnchar.js 的函数
-            var spell = cnchar.spell("' hz '", "tone");
+            var spell = cnchar.spell("' hz '", "tone", "poly");
             document.write("' hz '"+ ": " + spell);
         });
 </script>
