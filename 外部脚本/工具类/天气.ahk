@@ -1,5 +1,12 @@
-﻿;|2.7|2024.07.11|1554
-#Include <WinHttp>
+﻿;|2.9|2025.06.21|1554
+;#Include <WinHttp>
+A_iniFile = %A_ScriptDir%\..\..\配置文件\自定义\RY_程序保存_如一.ini
+B_iniFile = %A_ScriptDir%\..\..\配置文件\如一.ini
+
+IniRead, 额外任务栏_Pos, %A_iniFile%, 配置, 额外任务栏_Pos, %A_Space%
+if !额外任务栏_Pos
+  IniRead, 额外任务栏_Pos, %B_iniFile%, 配置, 额外任务栏_Pos, %A_Space%
+;msgbox % 额外任务栏_Pos " - " B_iniFile
 
 CandySel := A_Args[1]
 ; CandySel := 101300501
@@ -21,7 +28,10 @@ if WinExist("AppBarWin ahk_class AutoHotkeyGUI")
 {
 	loop 3
 	{
-		h := ExecSendToRuyi(atmp "`n" htype0 "`n"  strreplace(low0, "℃") "-"  strreplace(high0, "℃") "|red",, 1527)
+    if (额外任务栏_Pos != "上")
+      h := ExecSendToRuyi(atmp "`n" htype0 "`n"  strreplace(low0, "℃") "-"  strreplace(high0, "℃") "|red",, 1527)
+    else
+      h := ExecSendToRuyi(atmp "`n" htype0 "  "  strreplace(low0, "℃") "-"  strreplace(high0, "℃") "|red",, 1527)
 		;FileAppend("`n" A_now ": " h)
 		if h
 			break

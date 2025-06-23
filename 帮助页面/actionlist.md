@@ -707,3 +707,12 @@ description: 如意百宝箱-Ahk 内置动作列表
 |1700|ecaa|QQ下载|无条件|打开QQ的下载目录|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\窗口处理\QQ下载目录.ahk"|
 |1701|ecaa|选取整列|WPS 表格|Excel, WPS 表格快捷键 Ctrl + Shift + ↓|Keys&#124;^+{Down}|
 |1702|f4aa|拼音(WV2)|选中文件|使用 WebView2 显示选中文本的拼音|run&#124;"%B_Autohotkey2%" "%A_ScriptDir%\外部脚本\V2\汉字显示拼音(WebView2).ahk2" "%CandySel%"|
+|1703|e8ec|动作编辑|无条件@如意|动作内容编辑窗口|Cando&#124;ActionEditM|
+|1704|F413|复制类名|任意窗口|复制窗口的类|Setclip&#124;%Windy_CurWin_Class%|
+|1705|F413|复制进程名|任意窗口|复制窗口进程的进程名, 如 notepad.exe|Setclip&#124;%Windy_CurWin_ProcName%|
+|1706|F413|复制控件类|任意窗口|复制鼠标下控件的类名|Setclip&#124;%Windy_CurWin_ClassNN%|
+|[1707](http://127.0.0.1:5151/runcom?aabb=1707)|e947|关闭所有|任意窗口|关闭所有窗口(只限于任务栏上可见的窗口)|Run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\窗口处理\关闭所有窗口.ahk"|
+|1708|e121|计算BMI|无条件@数字|根据身高体重计算身体质量指数(BMI)|Run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\身体质量指数(BMI).ahk" "%CandySel%"|
+|1709|e906|透明穿透|任意窗口|将当前窗口设为置顶,透明度设为50%,并点击穿透|Canfunc&#124;CF_WinSetTransparentAndPenetrate&#124;%Windy_CurWin_id%&#124;128|
+|1710|e906|穿透恢复|无条件|将设为置顶透明并点击穿透的窗口恢复原状|Canfunc&#124;CF_WinSetTransparentAndPenetrate&#124;&#124;256|
+|1711|e121|经纬度|无条件@数字|经纬度换算|Run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\经纬度转换.ahk" "%CandySel%"|

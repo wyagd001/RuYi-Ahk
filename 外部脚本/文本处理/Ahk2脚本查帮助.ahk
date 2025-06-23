@@ -1,57 +1,67 @@
-﻿;|2.0|2023.07.01|1111
+﻿;|2.9|2025.06.22|1111
 CandySel := A_Args[1]
 /*
 说明：如果是有独立的页面，则直接指向独立页面
 否则，就是搜索
 */
 Cando_查新版帮助:
-	ahk中文帮助 := A_ScriptDir "\..\..\引用程序\2.0\AutoHotkey2.0.chm"
-	Ahk帮助标题 := "AutoHotkey v2 中文帮助"
-	Ahk关键字表=Array;Block;BlockInput;Break;Buffer;CallbackCreate;CaretGetPos;Catch;Class;Chr;Click;ClipboardAll;ClipWait;ComCall;ComObjActive;ComObjArray;ComObjConnect;ComObject;ComObjFlags;ComObjFromPtr;ComObjGet;ComObjQuery;ComObjType;ComObjValue;ComValue;Continue;Control;ControlAddItem;ControlChooseIndex;ControlChooseString;ControlClick;ControlDeleteItem;ControlFindItem;ControlFocus;ControlGetChecked;ControlGetChoice;ControlGetClassNN;ControlGetEnabled;ControlGetFocus;ControlGetHwnd;ControlGetIndex;ControlGetItems;ControlGetPos;ControlGetStyle;ControlGetText;ControlGetVisible;ControlHide;ControlHideDropDown;ControlMove;ControlSend;ControlSetChecked;ControlSetEnabled;ControlSetStyle;ControlSetText;ControlShow;ControlShowDropDown;CoordMode;Critical;DateAdd;DateDiff;DetectHiddenText;DetectHiddenWindows;DirCopy;DirCreate;DirDelete;DirExist;DirMove;DirSelect;DllCall;Download;Drive;DriveEject;DriveGetCapacity;DriveGetFileSystem;DriveGetLabel;DriveGetList;DriveGetSerial;DriveGetSpaceFree;DriveGetStatus;DriveGetStatusCD;DriveGetType;DriveLock;DriveSetLabel;DriveUnlock;Edit;EditGetCurrentCol;EditGetCurrentLine;EditGetLine;EditGetLineCount;EditGetSelectedText;EditPaste;Else;EnvGet;EnvSet;Exit;ExitApp;FileAppend;FileCopy;FileCreateShortcut;FileDelete;FileEncoding;FileExist;FileGetAttrib;FileGetShortcut;FileGetSize;FileGetTime;FileGetVersion;FileInstall;FileMove;FileOpen;FileRead;FileRecycle;FileRecycleEmpty;FileSelect;FileSetAttrib;FileSetTime;Finally;Float;For;Format;FormatTime;GetKeyName;GetKeySC;GetKeyState;GetKeyVK;GetMethod;Goto;GroupActivate;GroupAdd;GroupClose;GroupDeactivate;Gui;GuiControl;GuiControlGet;GuiControls;Hotkey;Hotstring;If;ImageSearch;index;IniDelete;IniRead;IniWrite;Input;InputBox;InputHook;InStr;Integer;Is;IsLabel;IsObject;IsSet;KeyHistory;KeyWait;ListHotkeys;ListLines;ListVars;ListView;ListViewGetContent;LoadPicture;Loop;LoopFiles;LoopParse;LoopRead;LoopReg;Map;Menu;MenuFromHandle;MenuSelect;MonitorGet;MonitorGetCount;MonitorGetName;MonitorGetPrimary;MonitorGetWorkArea;MouseClick;MouseClickDrag;MouseGetPos;MouseMove;MsgBox;NumGet;NumPut;ObjAddRef;ObjBindMethod;Object;OnClipboardChange;OnError;OnExit;OnMessage;Ord;OutputDebug;Pause;PixelGetColor;PixelSearch;PostMessage;Process;ProcessClose;ProcessExist;ProcessGetName;ProcessGetParent;ProcessSetPriority;ProcessWait;ProcessWaitClose;Random;RegCreateKey;RegDelete;RegDeleteKey;RegExMatch;RegExReplace;RegRead;RegWrite;Reload;Return;Run;RunAs;Send;SendLevel;SendMode;SetBatchLines;SetControlDelay;SetDefaultMouseSpeed;SetEnv;SetExpression;SetFormat;SetKeyDelay;SetMouseDelay;SetNumScrollCapsLockState;SetRegView;SetStoreCapslockMode;SetTimer;SetTitleMatchMode;SetWinDelay;SetWorkingDir;Shutdown;Sleep;Sort;SoundBeep;SoundGet;SoundGetWaveVolume;SoundPlay;SoundSet;SoundSetWaveVolume;SplashTextOn;SplitPath;StatusBarGetText;StatusBarWait;StrCompare;StrGet;String;StrLen;StrLower;StrPtr;StrPut;StrReplace;StrSplit;;SubStr;Suspend;Switch;SysGet;SysGetIPAddresses;Thread;Throw;ToolTip;TraySetIcon;TrayTip;TreeView;Trim;Try;Type;Until;VarSetStrCapacity;VerCompare;While;WinActivate;WinActivateBottom;WinActive;WinClose;WinExist;WinGetClass;WinGetClientPos;WinGetControls;WinGetControlsHwnd;WinGetCount;WinGetID;WinGetIDLast;WinGetList;WinGetMinMax;WinGetPID;WinGetPos;WinGetProcessName;WinGetProcessPath;WinGetStyle;WinGetText;WinGetTitle;WinGetTransColor;WinGetTransparent;WinHide;WinKill;WinMaximize;WinMinimize;WinMinimizeAll;WinMove;WinMoveBottom;WinMoveTop;WinRedraw;WinRestore;WinSetAlwaysOnTop;WinSetEnabled;WinSetRegion;WinSetStyle;WinSetTitle;WinSetTransColor;WinSetTransparent;WinShow;WinWait;WinWaitActive;WinWaitClose;#ClipboardTimeout;#DllLoad;#ErrorStdOut;#HotIf;#HotIfTimeout;#Include;#InputLevel;#MaxThreads;#MaxThreadsBuffer;#MaxThreadsPerHotkey;#NoTrayIcon;#Requires;#SingleInstance;#SuspendExempt;#UseHook;#Warn;#WinActivateForce
-	Ahk被查关键字=i)(^|;)%CandySel%($|;)
+ahk中文帮助 := A_ScriptDir "\..\..\引用程序\2.0\AutoHotkey2.0.chm"
+Ahk帮助标题 := "AutoHotkey v2 中文帮助"
+Ahk关键字表=Array;Block;BlockInput;Break;Buffer;CallbackCreate;CaretGetPos;Catch;Class;Chr;Click;ClipboardAll;ClipWait;ComCall;ComObjActive;ComObjArray;ComObjConnect;ComObject;ComObjFlags;ComObjFromPtr;ComObjGet;ComObjQuery;ComObjType;ComObjValue;ComValue;Continue;Control;ControlAddItem;ControlChooseIndex;ControlChooseString;ControlClick;ControlDeleteItem;ControlFindItem;ControlFocus;ControlGetChecked;ControlGetChoice;ControlGetClassNN;ControlGetEnabled;ControlGetFocus;ControlGetHwnd;ControlGetIndex;ControlGetItems;ControlGetPos;ControlGetStyle;ControlGetText;ControlGetVisible;ControlHide;ControlHideDropDown;ControlMove;ControlSend;ControlSetChecked;ControlSetEnabled;ControlSetStyle;ControlSetText;ControlShow;ControlShowDropDown;CoordMode;Critical;DateAdd;DateDiff;DetectHiddenText;DetectHiddenWindows;DirCopy;DirCreate;DirDelete;DirExist;DirMove;DirSelect;DllCall;Download;Drive;DriveEject;DriveGetCapacity;DriveGetFileSystem;DriveGetLabel;DriveGetList;DriveGetSerial;DriveGetSpaceFree;DriveGetStatus;DriveGetStatusCD;DriveGetType;DriveLock;DriveSetLabel;DriveUnlock;Edit;EditGetCurrentCol;EditGetCurrentLine;EditGetLine;EditGetLineCount;EditGetSelectedText;EditPaste;Else;EnvGet;EnvSet;Exit;ExitApp;FileAppend;FileCopy;FileCreateShortcut;FileDelete;FileEncoding;FileExist;FileGetAttrib;FileGetShortcut;FileGetSize;FileGetTime;FileGetVersion;FileInstall;FileMove;FileOpen;FileRead;FileRecycle;FileRecycleEmpty;FileSelect;FileSetAttrib;FileSetTime;Finally;Float;For;Format;FormatTime;GetKeyName;GetKeySC;GetKeyState;GetKeyVK;GetMethod;Goto;GroupActivate;GroupAdd;GroupClose;GroupDeactivate;Gui;GuiControl;GuiControlGet;GuiControls;Hotkey;Hotstring;If;ImageSearch;index;IniDelete;IniRead;IniWrite;Input;InputBox;InputHook;InStr;Integer;Is;IsLabel;IsObject;IsSet;KeyHistory;KeyWait;ListHotkeys;ListLines;ListVars;ListView;ListViewGetContent;LoadPicture;Loop;LoopFiles;LoopParse;LoopRead;LoopReg;Map;Menu;MenuFromHandle;MenuSelect;MonitorGet;MonitorGetCount;MonitorGetName;MonitorGetPrimary;MonitorGetWorkArea;MouseClick;MouseClickDrag;MouseGetPos;MouseMove;MsgBox;NumGet;NumPut;ObjAddRef;ObjBindMethod;Object;OnClipboardChange;OnError;OnExit;OnMessage;Ord;OutputDebug;Pause;PixelGetColor;PixelSearch;PostMessage;Process;ProcessClose;ProcessExist;ProcessGetName;ProcessGetParent;ProcessSetPriority;ProcessWait;ProcessWaitClose;Random;RegCreateKey;RegDelete;RegDeleteKey;RegExMatch;RegExReplace;RegRead;RegWrite;Reload;Return;Run;RunAs;Send;SendLevel;SendMode;SetBatchLines;SetControlDelay;SetDefaultMouseSpeed;SetEnv;SetExpression;SetFormat;SetKeyDelay;SetMouseDelay;SetNumScrollCapsLockState;SetRegView;SetStoreCapslockMode;SetTimer;SetTitleMatchMode;SetWinDelay;SetWorkingDir;Shutdown;Sleep;Sort;SoundBeep;SoundGet;SoundGetWaveVolume;SoundPlay;SoundSet;SoundSetWaveVolume;SplashTextOn;SplitPath;StatusBarGetText;StatusBarWait;StrCompare;StrGet;String;StrLen;StrLower;StrPtr;StrPut;StrReplace;StrSplit;;SubStr;Suspend;Switch;SysGet;SysGetIPAddresses;Thread;Throw;ToolTip;TraySetIcon;TrayTip;TreeView;Trim;Try;Type;Until;VarSetStrCapacity;VerCompare;While;WinActivate;WinActivateBottom;WinActive;WinClose;WinExist;WinGetClass;WinGetClientPos;WinGetControls;WinGetControlsHwnd;WinGetCount;WinGetID;WinGetIDLast;WinGetList;WinGetMinMax;WinGetPID;WinGetPos;WinGetProcessName;WinGetProcessPath;WinGetStyle;WinGetText;WinGetTitle;WinGetTransColor;WinGetTransparent;WinHide;WinKill;WinMaximize;WinMinimize;WinMinimizeAll;WinMove;WinMoveBottom;WinMoveTop;WinRedraw;WinRestore;WinSetAlwaysOnTop;WinSetEnabled;WinSetRegion;WinSetStyle;WinSetTitle;WinSetTransColor;WinSetTransparent;WinShow;WinWait;WinWaitActive;WinWaitClose;#ClipboardTimeout;#DllLoad;#ErrorStdOut;#HotIf;#HotIfTimeout;#Include;#InputLevel;#MaxThreads;#MaxThreadsBuffer;#MaxThreadsPerHotkey;#NoTrayIcon;#Requires;#SingleInstance;#SuspendExempt;#UseHook;#Warn;#WinActivateForce
+Ahk被查关键字=i)(^|;)%CandySel%($|;)
 
-;有doc可打开
-	if RegExMatch(Ahk关键字表, Ahk被查关键字)
+if !CandySel
+{
+	IfWinNotExist,%Ahk帮助标题%
 	{
-		IfWinNotExist, %Ahk帮助标题%
-		{
-			;VarSetCapacity(ak, ak_size := 8+5*A_PtrSize+4, 0) ; HH_AKLINK struct
-			;NumPut(ak_size, ak, 0, "UInt")
-			;NumPut(&CandySel, ak, 8)
-			;if !DllCall("HHCtrl.ocx\HtmlHelp", "Ptr", hGui, "str", ahk中文帮助, "UInt", 0x000D, "ptr", &ak)
-			;{
-			;	msgbox % ErrorLevel " - " A_LastError
-				Run, %ahk中文帮助%
-				WinWait, %Ahk帮助标题%,, 5
-				WinActivate, %Ahk帮助标题%
-				sleep, 2000
-				wb := WBGet("ahk_class HH Parent")
-				StringReplace, 直接打开, CandySel, #, _
-				Ahk跳转的地址 = /docs/lib/%直接打开%.htm
-				myURL = mk:@MSITStore:%ahk中文帮助%::%Ahk跳转的地址%
-
-				wb.Navigate(myURL)
-				wb := ""
-		Return
-		}
-		IfWinExist,%Ahk帮助标题%
-		{
-			WinActivate, %Ahk帮助标题%
-			gosub monishuru
-		}
+		Run, %ahk中文帮助%
+		WinWait,%Ahk帮助标题%,,5
 	}
-;没有则搜索
-	Else
+	WinActivate, %Ahk帮助标题%
+  return
+}
+; 有doc可打开
+if RegExMatch(Ahk关键字表, Ahk被查关键字)
+{
+	IfWinNotExist, %Ahk帮助标题%
 	{
-;是否已经运行
-		IfWinNotExist,%Ahk帮助标题%
-		{
+		;VarSetCapacity(ak, ak_size := 8+5*A_PtrSize+4, 0) ; HH_AKLINK struct
+		;NumPut(ak_size, ak, 0, "UInt")
+		;NumPut(&CandySel, ak, 8)
+		;if !DllCall("HHCtrl.ocx\HtmlHelp", "Ptr", hGui, "str", ahk中文帮助, "UInt", 0x000D, "ptr", &ak)
+		;{
+		;	msgbox % ErrorLevel " - " A_LastError
 			Run, %ahk中文帮助%
-			WinWait,%Ahk帮助标题%,,5
-		}
-		WinActivate, %Ahk帮助标题%
-		gosub monishuru2
+			WinWait, %Ahk帮助标题%,, 5
+			WinActivate, %Ahk帮助标题%
+			sleep, 2000
+			wb := WBGet("ahk_class HH Parent")
+			StringReplace, 直接打开, CandySel, #, _
+			Ahk跳转的地址 = /docs/lib/%直接打开%.htm
+			myURL = mk:@MSITStore:%ahk中文帮助%::%Ahk跳转的地址%
+
+			wb.Navigate(myURL)
+			wb := ""
+	Return
 	}
+	IfWinExist, %Ahk帮助标题%
+	{
+		WinActivate, %Ahk帮助标题%
+		gosub monishuru
+	}
+}
+; 没有则搜索
+Else
+{
+  ; 是否已经运行
+	IfWinNotExist, %Ahk帮助标题%
+	{
+		Run, %ahk中文帮助%
+		WinWait, %Ahk帮助标题%,, 5
+	}
+	WinActivate, %Ahk帮助标题%
+	gosub monishuru2
+}
 Return
 
 monishuru:
