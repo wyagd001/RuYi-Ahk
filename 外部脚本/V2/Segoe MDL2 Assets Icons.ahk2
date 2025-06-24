@@ -1,4 +1,4 @@
-﻿;|2.9|2024.07.28|17XX
+﻿;|2.9|2025.06.23|0000
 ; 来源网址: https://www.autohotkey.com/boards/viewtopic.php?f=83&t=137790
 /*
 This script provides a searchable picker for Segoe MDL2 Assets icons.
@@ -167,6 +167,8 @@ SetWindowIcon(hwnd, iconFile, iconIndex := 0) {
 
 GetRuYiDir()
 {
+  if FileExist(A_ScriptDir "\如一.exe")
+    return A_ScriptDir
   if FileExist(A_ScriptDir "\..\如一.exe")
     return GetFullPathName(A_ScriptDir "\..")
   else if FileExist(A_ScriptDir "\..\..\如一.exe")
