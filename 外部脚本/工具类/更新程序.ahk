@@ -1,6 +1,6 @@
 ﻿;|2.9|2025.06.24|0000
 ruyiexefile := A_Args[1]
-:ruyiexefile := "如一.exe"
+;ruyiexefile := "如一.exe"
 if !ruyiexefile
 	ExitApp
 if instr(ruyiexefile, "_x32")
