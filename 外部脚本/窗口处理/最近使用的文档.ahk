@@ -1,4 +1,4 @@
-﻿;|2.4|2023.10.09|1121
+﻿;|2.9|2025.07.05|1121
 RecentFolderPath := upDir(A_StartMenu) "\Recent"
 DetectHiddenWindows, On
 WinGetTitle, h_hwnd, 获取当前窗口信息 ;ahk_class AutoHotkeyGUI
@@ -20,6 +20,8 @@ else if (Windy_CurWin_Class = "CabinetWClass") or (Windy_CurWin_Class = "Progman
 	menu, % LnkFolderMenu(RecentFolderPath, "","收藏夹",0,2), show
 else if (Windy_CurWin_Class = "WinRarWindow")
 	menu, % LnkFolderMenu(RecentFolderPath, "rar,zip,7z","收藏夹",0,2), show
+else if (Windy_CurWin_Class = "XLMAIN") or (Windy_CurWin_Class = "OpusApp")
+	menu, % LnkFolderMenu(RecentFolderPath, "doc,docx,xls,xlsx","收藏夹",0,2), show
 return
 
 ; LnkFolderMenu 函数参数
@@ -92,7 +94,7 @@ LnkFolderMenu(FolderPath, SpecifyExt:="*", MenuName:="", ShowIcon:=1, ShowOpenFo
 			;msgbox %  pos "`n" A_LoopFileLongPath "`n" ParentFolderDirectory "`n" A_LoopFileName
 			FileMenuName := FileName
 			;msgbox % FileMenuName "|" FileItem2
-			if (Array[1] = "*") or (Array[1] = "" && !Instr(FileMenuName, ".")) or (fileExt = Array[1]) or (fileExt = Array[2]) or (fileExt = Array[3]) or (fileExt = Array[4]) or (fileExt = Array[5])
+			if (Array[1] = "*") or (Array[1] = "" && !Instr(FileMenuName, ".")) or (fileExt != "" && ((fileExt = Array[1]) or (fileExt = Array[2]) or (fileExt = Array[3]) or (fileExt = Array[4]) or (fileExt = Array[5])))
 			{
 				FileGetShortcut, %FileItem2%, OutTarget
 				if fileexist(OutTarget)
@@ -194,7 +196,7 @@ LnkFolderMenu(FolderPath, SpecifyExt:="*", MenuName:="", ShowIcon:=1, ShowOpenFo
 			;msgbox %  pos "`n" A_LoopFileLongPath "`n" ParentFolderDirectory "`n" A_LoopFileName
 			FileMenuName := FileName
 
-			if (Array[1] = "*") or (Array[1] = "" && !Instr(FileMenuName, ".")) or (fileExt = Array[1]) or (fileExt = Array[2]) or (fileExt = Array[3]) or (fileExt = Array[4]) or (fileExt = Array[5])
+			if (Array[1] = "*") or (Array[1] = "" && !Instr(FileMenuName, ".")) or (fileExt != "" && ((fileExt = Array[1]) or (fileExt = Array[2]) or (fileExt = Array[3]) or (fileExt = Array[4]) or (fileExt = Array[5])))
 			{
 				FileGetShortcut, %FileItem2%, OutTarget
 				if fileexist(OutTarget)

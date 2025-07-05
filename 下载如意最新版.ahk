@@ -40,7 +40,10 @@ updateexe()
 
   FileReadLine, FirstText, %IniFile%, 1
   if InStr(FirstText, "[action]")
-    FileMove, % IniFile, % A_ScriptDir "\配置文件\内置动作.ini", 1
+  {
+    FileCopy, %内置动作文件%, % A_ScriptDir "\配置文件\内置动作.ini.bak", 1
+    FileMove, % IniFile, % 内置动作文件, 1
+  }
   else
   {
     FileDelete, % IniFile
@@ -48,7 +51,7 @@ updateexe()
     FileGetSize, OutputVar, % IZip_File, K
     if (OutputVar > 20)
     {
-      FileCopy, %内置动作文件%, % A_ScriptDir "\临时目录\内置动作.bak.ini", 1
+      FileCopy, %内置动作文件%, % A_ScriptDir "\配置文件\内置动作.ini.bak", 1
       Run, %7ZG% x "%IZip_File%" -aoa -o"%解包_目录%"
     }
   }

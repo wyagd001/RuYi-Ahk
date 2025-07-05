@@ -1,5 +1,19 @@
-﻿;|2.0|2023.07.01|1040
+﻿;|2.9|2025.07.01|1040
 CandySel :=  A_Args[1]
+cfiles := 0
+Loop, Files, % CandySel "\*.*", DF
+{
+  cfiles ++
+  if (cfiles > 10)
+    break
+}
+if (cfiles > 10)
+{
+  MsgBox, 4, 解散文件夹, % "该文件夹下的文件超过10个, 你是否确认要解散它?"
+  IfMsgBox No
+    exitapp
+}
+
 SplitPath, CandySel,, CandySel_ParentPath
 ; 1040
 ErrorCount := MoveFilesAndFolders(CandySel "\*.*", CandySel_ParentPath)

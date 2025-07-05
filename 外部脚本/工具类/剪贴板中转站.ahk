@@ -1,4 +1,4 @@
-﻿;|2.9|2025.01.20|1xxx
+﻿;|2.9|2025.01.20|1714
 #InstallKeybdHook
 #include <Gdip>
 pToken := Gdip_Startup()

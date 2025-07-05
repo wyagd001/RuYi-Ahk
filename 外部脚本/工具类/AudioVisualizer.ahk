@@ -122,20 +122,20 @@ CreateTrayIcon(spectrum)
     X := [2,8,14,20,26]
     Loop 5
         Gdip_FillRectangle(G, pBrushBack, X[A_Index], 32-spectrum[A_Index], 4, 32)
-;tooltip % pBitmap
-	hIcon := Gdip_CreateHICONFromBitmap(pBitmap)
-;msgbox % hIcon
-	Gdip_DeleteBrush(pBrushBack)
+    ;tooltip % pBitmap
+    hIcon := Gdip_CreateHICONFromBitmap(pBitmap)
+    ;msgbox % hIcon
+    Gdip_DeleteBrush(pBrushBack)
     Gdip_DeleteGraphics(G)
     Gdip_DisposeImage(pBitmap)
 		;tooltip % hIcon
-	Menu, Tray, Icon, HICON:*%hIcon%
-	if WinExist("AppBarWin ahk_class AutoHotkeyGUI")
-	{
-		ExecSendToRuyi("HICON:*" hIcon,, 1624)
-		sleep 250
-	}
-	DestroyIcon(hIcon)
+    Menu, Tray, Icon, HICON:*%hIcon%
+    if WinExist("AppBarWin ahk_class AutoHotkeyGUI")
+    {
+      ExecSendToRuyi("HICON:*" hIcon,, 1624)
+      sleep 250
+    }
+    DestroyIcon(hIcon)
 }
 
 ChooseColor(pRGB := 0, hOwner := 0, DlgX := 0, DlgY := 0, Palette*)
@@ -258,3 +258,7 @@ ExecSendToRuyi(ByRef StringToSend := "", Title := "如一 ahk_class AutoHotkey",
 	DetectHiddenWindows, Off
 	return ErrorLevel
 }
+
+#!q::
+Menu, Tray, show
+return
