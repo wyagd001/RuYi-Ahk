@@ -1,4 +1,4 @@
-﻿;|2.6|2024.04.22|1543
+﻿;|3.0|2025.07.16|1543
 CandySel := A_Args[1]
 tmp_Str := ""
 GuiText(tmp_Str, "根据文件列表批量创建文件, 一行一个", "qq", 500)
@@ -6,13 +6,26 @@ return
 
 GuiText(Gtext, Title:="", Label:="", w:=300, l:=20)
 {
-	global myedit, TextGuiHwnd, gp, st, end, step, long, pref, suff, gp2, dstep, stt, edt, dstep, tstyle
-	Gui,GuiText: Destroy
-	Gui,GuiText: Default
+	global
+	Gui, GuiText: Destroy
+	Gui, GuiText: Default
 	Gui, +HwndTextGuiHwnd +Resize
-	Gui, Add, Edit, Multi w%w% r%l% vmyedit ;-WantReturn
+	Gui, Add, text, x10 y10 w70, 目标文件夹:
+	Gui, Add, Edit, xp+80 yp-3 w420, % CandySel
+
+	Gui, Add, Edit, Multi x10 w%w% r%l% vmyedit Hwndhedit ;-WantReturn
 	;tooltip % "xp yp+30+" 20*l
-	Gui, Add, Radio, % "xp h25 vgp yp+" 15*l, 阿拉伯数字
+  Gui, Add, Button, % "xp h25 gaddfolder yp+" 15*l-5, 新增文件夹
+  Gui, Add, Button, % "xp+90 h25 gaddfile yp", 新增文件
+  Gui, Add, Button, % "xp+80 h25 gdelff yp", 删除
+	Gui, Add, text, x10 yp+35 w60, 替换:
+  Gui, Add, text, x10 yp+25 w70, 搜索字符串:
+	Gui, Add, Edit, xp+80 yp-2 w120 vstext
+  Gui, Add, text, xp+180 yp+2 w70, 替换为:
+	Gui, Add, Edit, xp+60 yp-2 w120 vrtext
+  Gui, Add, Button, xp+140 h25 yp-3 gretxt, 替换
+
+	Gui, Add, Radio, % "x10 h25 vgp yp+" 30, 阿拉伯数字
 	Gui, Add, Radio, xp+180 h25 vgp2 yp, 日期
 	Gui, Add, text, x10 yp+30 w60, 起始:
 	Gui, Add, Edit, xp+60 yp w80 gwline
@@ -127,6 +140,89 @@ return
 getnow:
 GuiControl,, stt, % substr(A_now, 1, 8)
 GuiControl,, edt, % substr(A_now, 1, 8)
+return
+
+addfolder:
+Gui, GuiText: Submit, NoHide
+ControlGet, OutputLine, CurrentLine,,, ahk_id %hedit%
+ControlGet, OutputLineText, Line, %OutputLine%,, ahk_id %hedit%
+if !OutputLineText
+{
+  myedit := "新建文件夹`n" myedit
+  Sort myedit, U
+  GuiControl,, myedit, % Trim(myedit, "`n")
+}
+else
+{
+  myedit := Strreplace(myedit, OutputLineText "`n", OutputLineText "`n" OutputLineText "\新建文件夹`n", , 1)
+	Fline_array1 := {}
+  newStr := ""
+	Loop, Parse, myedit, `n, `r
+	{
+		if StrLen(A_LoopField) && Trim(A_LoopField, " `t")
+		{
+			if !Fline_array1[A_LoopField]
+			{
+				Fline_array1[A_LoopField] := 1
+				newStr .= A_LoopField "`n"
+			}
+			else
+				continue
+		}
+		else   ; 空行
+			newStr .= A_LoopField "`n"
+	}
+  GuiControl,, myedit, % newStr
+}
+;msgbox % OutputVar " - " OutputVar2
+return
+
+addfile:
+Gui, GuiText: Submit, NoHide
+ControlGet, OutputLine, CurrentLine,,, ahk_id %hedit%
+ControlGet, OutputLineText, Line, %OutputLine%,, ahk_id %hedit%
+if !OutputLineText
+{
+  myedit := "新建文件.txt`n" myedit
+  Sort myedit, U
+  GuiControl,, myedit, % Trim(myedit, "`n")
+}
+else
+{
+  myedit := Strreplace(myedit, OutputLineText "`n", OutputLineText "`n" OutputLineText "\新建文件.txt`n", , 1)
+	Fline_array1 := {}
+  newStr := ""
+	Loop, Parse, myedit, `n, `r
+	{
+		if StrLen(A_LoopField) && Trim(A_LoopField, " `t")
+		{
+			if !Fline_array1[A_LoopField]
+			{
+				Fline_array1[A_LoopField] := 1
+				newStr .= A_LoopField "`n"
+			}
+			else
+				continue
+		}
+		else   ; 空行
+			newStr .= A_LoopField "`n"
+	}
+  GuiControl,, myedit, % newStr
+}
+return
+
+delff:
+Gui, GuiText: Submit, NoHide
+ControlGet, OutputLine, CurrentLine,,, ahk_id %hedit%
+ControlGet, OutputLineText, Line, %OutputLine%,, ahk_id %hedit%
+myedit := Strreplace(myedit, OutputLineText "`n")
+GuiControl,, myedit, % myedit
+return
+
+retxt:
+Gui, GuiText: Submit, NoHide
+myedit := Strreplace(myedit, stext, rtext)
+GuiControl,, myedit, % myedit
 return
 
 AutoDate(StartLongDate := "", EndLongDate := "", step := 1, DateFormat := "yyyy年MM月dd日-dddd"){

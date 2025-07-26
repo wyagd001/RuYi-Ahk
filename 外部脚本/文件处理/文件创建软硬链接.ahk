@@ -1,4 +1,4 @@
-﻿;|2.0|2023.07.01|1045
+﻿;|3.0|2025.07.25|1045
 CandySel := A_Args[1]
 SplitPath, CandySel, CandySel_FileName, CandySel_ParentPath, CandySel_Ext, CandySel_FileNameNoExt, CandySel_Drive
 CandySel_Ext := CF_IsFolder(CandySel) ? "Folder" : CandySel_Ext
@@ -49,7 +49,14 @@ if SHHL_Type_Hardlink
 	if returnVal
 		guicontrol,, SHHL_descr, 创建文件硬链接成功！
 	else
-		guicontrol,, SHHL_descr, 失败！错误代码: %A_LastError%。
+  {
+    if (A_LastError=183)
+    {
+      guicontrol,, SHHL_descr, 失败！错误代码: %A_LastError%。`n链接文件已经存在, 无法创建。请删除链接文件后再次创建！
+    }
+    else
+      guicontrol,, SHHL_descr, 失败！错误代码: %A_LastError%。
+  }
 }
 else if SHHL_Type_SymbolicLink && (CandySel_Ext = "Folder")
 {

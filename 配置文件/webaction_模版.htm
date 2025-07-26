@@ -1,0 +1,71 @@
+<html lang="zh">
+<head>
+<title>如意网页动作列表</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style>
+table tr:nth-child(odd) {
+background-color: #f2f2f2;
+}
+table tr:nth-child(even) {
+background-color: #ffffff;
+}
+</style>
+<script type="text/javascript">
+function post(url, params) {
+var temp = document.createElement("form");
+temp.action = url;
+temp.method = "post";
+temp.style.display = "none";
+for (var x in params) {
+var opt = document.createElement("textarea");
+opt.name = x;
+opt.value = params[x];
+temp.appendChild(opt);
+}
+document.body.appendChild(temp);
+temp.submit();
+return temp;
+}
+</script>
+<script type="text/javascript">
+var table = document.getElementById("mytable");
+var rows = table.getElementsByTagName("tr");
+for (var i = 0; i< rows.length; i++) {
+if (i % 2 == 0) {
+rows[i].style.backgroundColor = "#f2f2f2";
+} else {
+rows[i].style.backgroundColor = "#ffffff";
+}
+}
+</script>
+<script type="text/javascript">
+function onSearch(obj){     //js函数开始
+  setTimeout(function(){     //因为是即时查询，需要用setTimeout进行延迟，让值写入到input内，再读取
+    var storeId = document.getElementById('mytable');   //获取table的id标识
+    var rowsLength = storeId.rows.length;    //表格总共有多少行
+    var key = obj.value.toUpperCase();   //获取输入框的值
+    var searchCol = 1;    //要搜索的哪一列，这里是第一列，从0开始数起
+    for(var i=1;i<rowsLength;i++){   //按表的行数进行循环，本例第一行是标题，所以i=1，从第二行开始筛选（从0数起）
+      var searchText = storeId.rows[i].cells[searchCol].innerHTML;     //取得table行，列的值
+      var searchText1 = storeId.rows[i].cells[2].innerHTML;
+      if(searchText.toUpperCase().indexOf(key) > -1|| searchText1.toUpperCase().indexOf(key) > -1){  //用match函数进行筛选，如果input的值，即变量 key的值为空，返回的是ture，
+        storeId.rows[i].style.display='';    //显示行操作，
+      }else{
+        storeId.rows[i].style.display='none';     //隐藏行操作
+      }
+    }
+  },200);   //200为延时时间
+}
+</script>
+</head>
+<body>
+<h1>如意网页动作列表</h1>
+<div >搜索: <input name="key" type="text" id="key" onkeydown="onSearch(this)" value="" />
+<table id="mytable">
+    <tr>
+        <th style="width:40px">编号</th>
+        <th>名称</th>
+        <th>动作描说明</th>
+        <th>动作执行条件(或作用对象)</th>
+    </tr>
+    <tr>

@@ -1,4 +1,4 @@
-﻿;|2.7|2024.07.14|1611
+﻿;|3.0|2025.07.18|1611
 ; A_Variables - AutoHotkey Built-in Variables v1.1.2
 #SingleInstance Force
 #NoEnv
@@ -35,6 +35,7 @@ SoundDeviceProperties := objWMIService.ExecQuery("Select * From Win32_SoundDevic
 NetworkAdapterProperties := objWMIService.ExecQuery("Select * From Win32_NetworkAdapter")._NewEnum
 NetworkAdapterConfigProperties := objWMIService.ExecQuery("Select * From Win32_NetworkAdapterConfiguration WHERE IPEnabled = True")._NewEnum
 PrinterProperties := objWMIService.ExecQuery("Select * From Win32_Printer")._NewEnum
+LocalShare := objWMIService.ExecQuery("Select * From Win32_Share")._NewEnum
 
 While colSettings[strOSItem] 
 {
@@ -181,6 +182,14 @@ While PrinterProperties[objProperty]
 	YingJianObj["打印机" B_Index]["默认打印机"] := objProperty["Default"]
 	YingJianObj["打印机" B_Index]["端口"] := objProperty["PortName"]
 }
+B_Index := 0
+While LocalShare[objProperty]
+{
+	B_index ++
+	YingJianObj["共享目录" B_Index] := {}
+	YingJianObj["共享目录" B_Index]["名称"] := objProperty["Name"]
+	YingJianObj["共享目录" B_Index]["路径"] := objProperty["Path"]
+}
 
 ; AutoHotkey Information
 G.Push([10, "AutoHotkey信息"])
@@ -324,7 +333,13 @@ A.Push(["网络适配器1", YingJianObj["网络适配器1"]["名称"]  " (" Ceil
 B_Index := 1
 while IsObject(YingJianObj["打印机" B_Index])
 {
-	A.Push(["打印机" B_Index, YingJianObj["打印机" B_Index]["名称"] " - " YingJianObj["打印机" B_Index]["端口"] (YingJianObj["打印机" B_Index]["默认打印机"]?" - 默认打印机":""), 180])
+	A.Push(["打印机" B_Index, YingJianObj["打印机" B_Index]["名称"] " - " YingJianObj["打印机" B_Index]["端口"] (YingJianObj["打印机" B_Index]["默认打印机"]?" - 默认打印机":""), 180, "打印机"])
+	B_Index ++
+}
+B_Index := 1
+while IsObject(YingJianObj["共享目录" B_Index])
+{
+	A.Push(["共享目录" B_Index, YingJianObj["共享目录" B_Index]["名称"] " - " YingJianObj["共享目录" B_Index]["路径"], 150, "打开共享"])
 	B_Index ++
 }
 
@@ -481,6 +496,10 @@ else if (Text = "msinfo32")
 	run msinfo32.exe
 else if (Text = "ipconfig")
 	run cmd /k ipconfig /all
+else if (Text = "打开共享")
+  run, % "\\" A_ComputerName
+else if (Text = "打印机")
+  run, control printers
 return
 
 LV_InsertGroup(hLV, GroupID, Header, Index := -1) {
@@ -569,6 +588,7 @@ for objItem in ComObjGet("winmgmts:\\.\root\CIMV2").ExecQuery("SELECT * FROM Win
 return
 
 AutoXYWH(DimSize, cList*){   ;https://www.autohotkey.com/boards/viewtopic.php?t=1079
+  local a
   Static cInfo := {}
 
   If (DimSize = "reset")

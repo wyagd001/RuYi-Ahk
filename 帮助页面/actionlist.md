@@ -562,7 +562,7 @@ description: 如意百宝箱-Ahk 内置动作列表
 |1549|f1ad|搜狗输入法|任意窗口|激活搜狗拼音输入法|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\系统设置\激活指定输入法.ahk" "搜狗拼音输入法" %Windy_CurWin_id%|
 |1550|E77F|显示剪贴板|剪贴板|显示剪贴板当前的内容|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\显示剪贴板内容.ahk"|
 |1551|f408|设置权限EO|选中文件|设置选中文件(夹)的权限|run&#124;cmd.exe /c takeown /f "%candysel%" && icacls "%candysel%" /grant EveryOne:F|
-|1552|e8c1|语言设置|无条件|打开系统语言设置(Win7+)@控制面板|run&#124;rundll32.exe shell32.dll,Control_RunDLL input.dll|
+|[1552](http://127.0.0.1:5151/runcom?aabb=1552)|e8c1|语言设置|无条件|打开系统语言设置(Win7+)@控制面板|run&#124;rundll32.exe shell32.dll,Control_RunDLL input.dll|
 |1553|e759|OCR|选中文件|使用本地OCR识别本地图片|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文件处理\本地OCR(Vis2).ahk" "%CandySel%"|
 |1554|E753|天气|无条件|利用免费的天气api显示当天气温|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\天气.ahk" "101300501"|
 |1555|e121|农历时间|无条件|显示农历时间|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\时间_显示农历.ahk"|
@@ -571,16 +571,16 @@ description: 如意百宝箱-Ahk 内置动作列表
 |1558|e1e3|移动窗口|无条件|移动当前鼠标下的窗口|canfunc&#124;CF_WinMove&#124;%Windy_CurWin_id%&#124;0~&#124;0~&#124;720~&#124;870|
 |1559|e720|语音动作|无条件|开始语音识别,按说出的动作名称执行动作|run&#124;"%B_Autohotkey2%" "%A_ScriptDir%\外部脚本\V2\语音动作.ahk2"|
 |1560|e775|输入法指示|无条件|工具: 在鼠标旁边显示当前窗口输入法状态(A, 中, 英)|run&#124;"%B_Autohotkey2%" "%A_ScriptDir%\外部脚本\V2\显示输入法状态.ahk2"|
-|1561|e895|检测更新|无条件|检测如意主程序更新|Cando&#124;TM_UpdateCheck|
-|1562|e895|更新脚本|无条件|检测如意外部脚本更新|Cando&#124;TM_updatewbscript|
-|1563|e895|更新引用|无条件|检测如意引用程序更新|Cando&#124;TM_updateYYpro|
+|[1561](http://127.0.0.1:5151/runcom?aabb=1561)|e895|检测更新|无条件|检测如意主程序更新|Cando&#124;TM_UpdateCheck|
+|[1562](http://127.0.0.1:5151/runcom?aabb=1562)|e895|更新脚本|无条件|检测如意外部脚本更新|Cando&#124;TM_updatewbscript|
+|[1563](http://127.0.0.1:5151/runcom?aabb=1563)|e895|更新引用|无条件|检测如意引用程序更新|Cando&#124;TM_updateYYpro|
 |1564|e8c8|提取文件|选中文件夹|将选中文件夹中的所有文件(不包括文件夹) 复制到同级文件夹中(可指定扩展名)|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文件处理\文件夹处理\复制文件夹下的所有文件到同级目录.ahk" "%CandySel%" "jpg"|
 |1565|e121|天数计算|无条件|计算两个日期之间的天数, 或指定日期加上或减去指定天数得到的日期|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\时间_天数计算.ahk"|
 |1566|e8c8|发送到|选中文件|复制/移动选中文件到指定的目录, 如果参数2没有指定文件夹则默认为桌面.|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文件处理\复制选中文件到指定的文件夹.ahk" "%CandySel%"|
 |1567|eb56|文件头|选中文件|通过文件头判断文件真实扩展名|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文件处理\文件头分析文件格式.ahk" "%CandySel%"|
 |1568|ea5b|贴边隐藏|任意窗口|窗口贴边隐藏, 参数为上下左右,鼠标移到边缘后自动显示隐藏窗口,鼠标移开后继续自动隐藏|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\窗口处理\窗口_贴边隐藏.ahk" "%Windy_CurWin_id%" "左"|
 |1569|e995|音量控制|无条件|控制扬声器,麦克风等播放录制设备的音量|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\系统设置\音量控制.ahk"|
-|1570|e1d6|麦克风静音|无条件|所有麦克风静音切换|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\系统设置\麦克风静音.ahk"|
+|[1570](http://127.0.0.1:5151/runcom?aabb=1570)|e1d6|麦克风静音|无条件|所有麦克风静音切换|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\系统设置\麦克风静音.ahk"|
 |1571|e812|[转上标](/actions/1571.md)|选中文本|如果有选中文本, 将选中字符转为上标,如果没有选中字符, 则选择前一个字符|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文本处理\字符转上标.ahk" "%CandySel%" "%Windy_CurWin_Id%"|
 |1572|e813|[转下标](/actions/1572.md)|选中文本|如果有选中文本, 将选中字符转为下标,如果没有选中字符, 则选择前一个字符|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文本处理\字符转下标.ahk" "%CandySel%" "%Windy_CurWin_Id%"|
 |1573|e164|ASCII|无条件|ASCII 字符表和网络字符表|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文本处理\ASCII.ahk" "%CandySel%"|
@@ -600,20 +600,20 @@ description: 如意百宝箱-Ahk 内置动作列表
 |1587|e750|系统错误|无条件|查询系统错误编号|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文本处理\查询系统错误编号.ahk" "%CandySel%"|
 |1588|edc6|一键替换|选中文本|将选中文本一键替换为预设的文本|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文本处理\一键替换.ahk" "%CandySel%" "%Windy_CurWin_Id%"|
 |1589|e74e|TC启动|任意窗口|TC 文件管理器启动后自动点击数字按钮|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\窗口处理\TC启动后自动点击进入.ahk"|
-|1590|f128|鼠标轨迹|无条件|工具: 鼠标轨迹|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\鼠标轨迹.ahk"|
-|1591|e957|数字语音|无条件|工具: 小键盘按键带语音|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\语音数字.ahk"|
+|[1590](http://127.0.0.1:5151/runcom?aabb=1590)|f128|鼠标轨迹|无条件|工具: 鼠标轨迹|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\鼠标轨迹.ahk"|
+|[1591](http://127.0.0.1:5151/runcom?aabb=1591)|e957|数字语音|无条件|工具: 小键盘按键带语音|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\语音数字.ahk"|
 |1592|e706|屏幕亮度|无条件|设置屏幕亮度为85, 参数1为亮度值(如"+10"/85), 参数2为对比度值(如"+10"/85)|run&#124;"%B_Autohotkey2%" "%A_ScriptDir%\外部脚本\V2\屏幕亮度.ahk2" "85" "0"|
 |1593|e706|屏幕对比度|无条件|设置屏幕对比度为60, 参数1为亮度值(如"-10"/85), 参数2为对比度值(如"-10"/85)|run&#124;"%B_Autohotkey2%" "%A_ScriptDir%\外部脚本\V2\屏幕亮度.ahk2" "0" "60"|
 |1594|e8b9|置底|任意窗口|将窗口放到底部(类似按下 Alt+Esc)|canfunc&#124;CF_WinMoveBottom&#124;%Windy_CurWin_id%|
 |1595|f742|修改标题|任意窗口|修改窗口标题|canfunc&#124;CF_WinSetTitle&#124;%Windy_CurWin_id%|
 |1596|ede5|中键增强|任意窗口|中键增强|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\鼠标中键增强.ahk" %Windy_CurWin_id%|
 |1597|e8c8|复制结构|选中文件夹|将选中文件夹的结构复制到剪贴板中|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文件处理\文件夹处理\复制文件夹结构到当前目录.ahk" "%CandySel%" 0|
-|1598|f45e|公式助手|无条件|WPS 表格公式助手|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\窗口处理\公式助手.ahk"|
+|[1598](http://127.0.0.1:5151/runcom?aabb=1598)|f45e|公式助手|无条件|WPS 表格公式助手|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\窗口处理\公式助手.ahk"|
 |1599|e7b3|验证银行卡|选中文本|选中银行卡号, 验证是否有效|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文本处理\验证银行卡.ahk" "%CandySel%"|
-|1600|f56d|设备和打印机|无条件|打开设备和打印机页面@控制面板|run&#124;control printers|
+|[1600](http://127.0.0.1:5151/runcom?aabb=1600)|f56d|设备和打印机|无条件|打开设备和打印机页面@控制面板|run&#124;control printers|
 |1601|e713|服务改手动|无条件|启用打印服务改为手动模式,系统服务管理(启动,停止,获取列表,获取服务信息)|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\系统设置\服务管理.ahk" "Spooler" "3"|
 |1602|f56d|默认打印机|无条件|设置默认打印机|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\系统设置\设置默认打印机.ahk"|
-|1603|f10d|Win11菜单|无条件|win11右键菜单变为传统菜单|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\注册表\Win11右键菜单.ahk"|
+|[1603](http://127.0.0.1:5151/runcom?aabb=1603)|f10d|Win11菜单|无条件|win11右键菜单变为传统菜单|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\注册表\Win11右键菜单.ahk"|
 |1604|e16d|隐藏文件|选中文件|切换选中文件的隐藏属性|canfunc&#124;CF_FileSetAttrib&#124;%CandySel%&#124;^H|
 |1605|E753|天气2|无条件|利用免费的天气api显示当天气温|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\天气2.ahk"|
 |1612|e191|高亮线|ET|ET_在当前选中的单元格下显示一条线|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\窗口处理\ET_设置高亮线.ahk" "%CandySel%" "%Windy_CurWin_Id%"|
@@ -623,13 +623,13 @@ description: 如意百宝箱-Ahk 内置动作列表
 |1616|f22c|复制文件|选中文件|执行指定文件的右键菜单(剪贴,复制,删除,属性等)|canfunc&#124;InvokeVerb&#124;复制&#124;%CandySel%|
 |1617|e8c6|剪切文件|选中文件|执行指定文件的右键菜单(剪贴,复制,删除,属性等)|canfunc&#124;InvokeVerb&#124;剪切&#124;%CandySel%|
 |1618|ed2b|文件属性|选中文件|执行指定文件的右键菜单(剪贴,复制,删除,属性等)|canfunc&#124;InvokeVerb&#124;属性&#124;%CandySel%|
-|1619|f22c|网络和共享|无条件|网络和共享中心|run&#124;control /name Microsoft.NetworkAndSharingCenter|
-|1620|f22c|网络和共享|无条件|网络和共享中心|run&#124;shell:::{8E908FC9-BECC-40F6-915B-F4CA0E70D03D}|
+|[1619](http://127.0.0.1:5151/runcom?aabb=1619)|f22c|网络和共享|无条件|网络和共享中心|run&#124;control /name Microsoft.NetworkAndSharingCenter|
+|[1620](http://127.0.0.1:5151/runcom?aabb=1620)|f22c|网络和共享|无条件|网络和共享中心|run&#124;shell:::{8E908FC9-BECC-40F6-915B-F4CA0E70D03D}|
 |1621|e1c6|添加到替换|选中文本|将选中文本添加到一键替换配置文件|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文本处理\添加单词到一键替换文件.ahk" "%CandySel%"|
-|1622|e70a|清理托盘|无条件|清理强制结束进程后残留的系统托盘图标|canfunc&#124;TrayIcon_Clean|
+|[1622](http://127.0.0.1:5151/runcom?aabb=1622)|e70a|清理托盘|无条件|清理强制结束进程后残留的系统托盘图标|canfunc&#124;TrayIcon_Clean|
 |1623|e7c4|文件拆分|选中文件|将动作1548合并的文本文件拆分到桌面|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文件处理\合并的文本文件拆分到桌面.ahk" "%CandySel%"|
 |1624|f13f|更改图标|指定参数|更改额外任务栏最上面文本的图标|Cando&#124;ABPSetPic|
-|1625|f61f|可视化声音|无条件|当系统播放声音时,通过更改额外任务栏的图标可视化音量|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\AudioVisualizer.ahk"|
+|[1625](http://127.0.0.1:5151/runcom?aabb=1625)|f61f|可视化声音|无条件|当系统播放声音时,通过更改额外任务栏的图标可视化音量|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\AudioVisualizer.ahk"|
 |1626|E70F|NotePad2打开|选中文件|使用 NotePad2 打开选定文件|openwith&#124;%Notepad2%|
 |1627|E70F|Hex打开|选中文件|使用 HexEditor 打开选定文件|openwith&#124;%A_ScriptDir%\引用程序\x32\MiTeC_Hexadecimal_Editor.exe|
 |1628|ed2a|新建菜单|无条件|显示资源管理器新建菜单|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文件处理\文件夹处理\新建菜单.ahk" "%Windy_CurWin_id%"|
@@ -656,12 +656,12 @@ description: 如意百宝箱-Ahk 内置动作列表
 |1649|e8b9|设为桌面|任意窗口|将窗口设为桌面(将窗口放到桌面层)|canfunc&#124;AttachToDesktop&#124;%Windy_CurWin_id%&#124;1|
 |1650|e8b9|恢复正常|任意窗口|将设为桌面的窗口恢复正常|canfunc&#124;AttachToDesktop|
 |1651|ea86|查看图片|选中文件|使用系统的照片查看器打开图片|canfunc&#124;viewpic&#124;%CandySel%|
-|1652|e768|自定义用户文件夹|无条件|自定义注册表中的用户文件夹(User Shell Folders)|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\注册表\自定义User Shell Folders.ahk"|
+|[1652](http://127.0.0.1:5151/runcom?aabb=1652)|e768|自定义用户文件夹|无条件|自定义注册表中的用户文件夹(User Shell Folders)|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\注册表\自定义User Shell Folders.ahk"|
 |1653|f408|文字识别|无条件|拖动鼠标区域截图并文字识别(64位系统,需自行下载 PaddleOCR 或 RapidOCR 模块)|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\小区域文字识别.ahk"|
-|1654|e80a|数字华容道|无条件|1-15 的数字单滑块拼图游戏|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\游戏\数字华容道.ahk"|
+|[1654](http://127.0.0.1:5151/runcom?aabb=1654)|e80a|数字华容道|无条件|1-15 的数字单滑块拼图游戏|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\游戏\数字华容道.ahk"|
 |1655|e74b|运行动作|指定参数|指定参数运行指定的动作|Cando&#124;SpecifyOptRun&#124;1216&#124;{Space}|
 |1656|e71e|进程打开的文件|特定窗口|查看窗口进程打开占用的文件|run&#124;"%B_Autohotkey2%" "%A_ScriptDir%\外部脚本\窗口处理\GetOpenedFiles.ahk2" "%Windy_CurWin_Id%"|
-|1657|ec16|FTP|无条件|打开FTP服务器共享如意目录|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\打开FTP服务器共享如意目录.ahk"|
+|[1657](http://127.0.0.1:5151/runcom?aabb=1657)|ec16|FTP|无条件|打开FTP服务器共享如意目录|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\打开FTP服务器共享如意目录.ahk"|
 |1658|ede4|查找大文件|选中文件夹|列出选中文件夹中的最大文件|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文件处理\文件夹处理\查找大文件.ahk" "%CandySel%"|
 |1659|ede4|查找大文件夹|选中文件夹|列出选中文件夹中的最大文件夹|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文件处理\文件夹处理\查找大文件夹.ahk" "%CandySel%"|
 |1660|E70F|APK解析|选中文件|查看选中的Apk的包名和版本号|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文件处理\Apk信息.ahk" "%CandySel%"|
@@ -703,8 +703,8 @@ description: 如意百宝箱-Ahk 内置动作列表
 |1696|e76c|下一首|无条件|文件夹随机播放下一首|SendMsgToATA&#124;1696|
 |1697|e8b7|设置图标|选中文件夹|设置选中文件夹的图标|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文件处理\文件夹处理\设置文件夹图标.ahk" "%CandySel%"|
 |1698|EDE3|所有动作|子面板|一键运行子面板中的所有动作的示例子面板|Gui&#124;打开子面板所有动作|
-|1699|ecaa|微信下载|无条件|打开微信的下载目录|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\窗口处理\微信下载目录.ahk"|
-|1700|ecaa|QQ下载|无条件|打开QQ的下载目录|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\窗口处理\QQ下载目录.ahk"|
+|[1699](http://127.0.0.1:5151/runcom?aabb=1699)|ED43|微信下载|无条件|打开微信的下载目录|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\窗口处理\微信下载目录.ahk"|
+|[1700](http://127.0.0.1:5151/runcom?aabb=1700)|ED43|QQ下载|无条件|打开QQ的下载目录|run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\窗口处理\QQ下载目录.ahk"|
 |1701|ecaa|选取整列|WPS 表格|Excel, WPS 表格快捷键 Ctrl + Shift + ↓|Keys&#124;^+{Down}|
 |1702|f4aa|拼音(WV2)|选中文件|使用 WebView2 显示选中文本的拼音|run&#124;"%B_Autohotkey2%" "%A_ScriptDir%\外部脚本\V2\汉字显示拼音(WebView2).ahk2" "%CandySel%"|
 |1703|e8ec|动作编辑|无条件@如意|动作内容编辑窗口|Cando&#124;ActionEditM|
@@ -713,13 +713,16 @@ description: 如意百宝箱-Ahk 内置动作列表
 |1706|F413|复制控件类|任意窗口|复制鼠标下控件的类名|Setclip&#124;%Windy_CurWin_ClassNN%|
 |[1707](http://127.0.0.1:5151/runcom?aabb=1707)|e947|关闭所有|任意窗口|关闭所有窗口(只限于任务栏上可见的窗口)|Run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\窗口处理\关闭所有窗口.ahk"|
 |1708|e121|计算BMI|无条件@数字|根据身高体重计算身体质量指数(BMI)|Run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\身体质量指数(BMI).ahk" "%CandySel%"|
-|1709|e906|透明穿透|任意窗口|将当前窗口设为置顶,透明度设为50%,并点击穿透|Canfunc&#124;CF_WinSetTransparentAndPenetrate&#124;%Windy_CurWin_id%&#124;128|
-|1710|e906|穿透恢复|无条件|将设为置顶透明并点击穿透的窗口恢复原状|Canfunc&#124;CF_WinSetTransparentAndPenetrate&#124;&#124;256|
-|1711|e121|经纬度|无条件@数字|经纬度换算|Run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\经纬度转换.ahk" "%CandySel%"|
-|1712|E77C|录音机|无条件@系统程序|打开系统录音机(Win7)|Run&#124;SoundRecorder.exe|
-|1713|F466|IE|无条件@系统程序|打开系统IE浏览器|Run&#124;iexplore.exe|
-|1714|E121|中转站|无条件@剪贴板|显示一个置顶窗口,可以将复制的文本,位图,文件(也能拖拽文件到该窗口)暂存其中,通过拖拽将其在其他窗口打开|Run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\剪贴板中转站.ahk"|
-|1715|EA18|防火墙|无条件@系统程序|打开系统防火墙界面|Run&#124;firewall.cpl|
-|1716|EA18|防火墙开|无条件@系统程序|开启系统防火墙|Run&#124;cmd /c netsh advfirewall set allprofiles state on&#124;&#124;Hide|
-|1717|EA18|防火墙关|无条件@系统程序|关闭系统防火墙|Run&#124;cmd /c netsh advfirewall set allprofiles state off&#124;&#124;Hide|
-|1718|EB05|占用分析|无条件@第三方程序|打开Spacesniffer扫描选中文件夹|Run&#124;"%A_ScriptDir%\引用程序\x32\SpaceSniffer.exe" scan "%CandySel%"|
+|1709|EDE5|透明穿透|任意窗口|将当前窗口设为置顶,透明度设为50%,并点击穿透|Canfunc&#124;CF_WinSetTransparentAndPenetrate&#124;%Windy_CurWin_id%&#124;128|
+|1710|F5EE|穿透恢复|无条件|将设为置顶透明并点击穿透的窗口恢复原状|Canfunc&#124;CF_WinSetTransparentAndPenetrate&#124;&#124;256|
+|1711|E139|经纬度|无条件@数字|经纬度换算|Run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\经纬度转换.ahk" "%CandySel%"|
+|[1712](http://127.0.0.1:5151/runcom?aabb=1712)|E77C|录音机|无条件@系统程序|打开系统录音机(Win7)|Run&#124;SoundRecorder.exe|
+|[1713](http://127.0.0.1:5151/runcom?aabb=1713)|F466|IE|无条件@系统程序|打开系统IE浏览器|Run&#124;iexplore.exe|
+|1714|F3E2|中转站|无条件@剪贴板|显示一个置顶窗口,可以将复制的文本,位图,文件(也能拖拽文件到该窗口)暂存其中,通过拖拽将其在其他窗口打开|Run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\剪贴板中转站.ahk"|
+|[1715](http://127.0.0.1:5151/runcom?aabb=1715)|EA18|防火墙|无条件@系统程序|打开系统防火墙界面|Run&#124;firewall.cpl|
+|[1716](http://127.0.0.1:5151/runcom?aabb=1716)|EA18|防火墙开|无条件@系统程序|开启系统防火墙|Run&#124;cmd /c netsh advfirewall set allprofiles state on&#124;&#124;Hide|
+|[1717](http://127.0.0.1:5151/runcom?aabb=1717)|E1DE|防火墙关|无条件@系统程序|关闭系统防火墙|Run&#124;cmd /c netsh advfirewall set allprofiles state off&#124;&#124;Hide|
+|1718|EB05|占用分析|选中文件夹@第三方程序|打开 Spacesniffer 扫描选中文件夹|Run&#124;"%A_ScriptDir%\引用程序\x32\SpaceSniffer.exe" scan "%CandySel%"|
+|1719|E8EC|动作网页|无条件@如意|生成无条件或任意窗口动作的网页 webaction.htm|Cando&#124;GenerateWebActionsPage|
+|1720|E8CB|粘贴到文件|选中文件|将剪贴板内容粘贴到选中的文件(先删除后粘贴)|Run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文件处理\粘贴到选中文件.ahk" "%CandySel%"|
+|1721|E139|GPS|选中文件夹|查看选中文件夹中图片文件中的GPS信息|Run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文件处理\文件夹处理\文件_gps.ahk" "%CandySel%"|
