@@ -54,18 +54,6 @@ if (A_GuiEvent = "DoubleClick") or (A_GuiEvent = "R")
 }
 return
 
-CF_ToolTip(tipText, delay := 1000)
-{
-	ToolTip
-	ToolTip, % tipText
-	SetTimer, RemoveToolTip, % "-" delay
-return
-
-RemoveToolTip:
-	ToolTip
-return
-}
-
 GetExtendedProperties(FilePath) {
    ; The properties in 'Exclude' caused problems during my tests
    Static Exclude := {"System.SharedWith": 1}

@@ -1,17 +1,8 @@
 ﻿;|2.0|2023.07.01|1116
-CF_RegWrite("REG_DWORD", "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "Hidden", 2)
-CF_RegWrite("REG_DWORD", "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "ShowSuperHidden", 0)
+CF_RegWrite(2, "REG_DWORD", "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "Hidden")
+CF_RegWrite(0, "REG_DWORD", "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "ShowSuperHidden")
 RefreshExplorer()
 return
-
-CF_RegWrite(ValueType, KeyName, ValueName="", Value="")
-{
-	RegWrite, % ValueType, % KeyName, % ValueName, % Value
-	if ErrorLevel
-	Return %A_LastError%
-	else
-	Return 0
-}
 
 RefreshExplorer()
 { ; by teadrinker on D437 @ tiny.cc/refreshexplorer

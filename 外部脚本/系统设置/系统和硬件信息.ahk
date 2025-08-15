@@ -185,6 +185,8 @@ While PrinterProperties[objProperty]
 B_Index := 0
 While LocalShare[objProperty]
 {
+  if (SubStr(objProperty["Name"], 0) = "$")
+    continue
 	B_index ++
 	YingJianObj["共享目录" B_Index] := {}
 	YingJianObj["共享目录" B_Index]["名称"] := objProperty["Name"]

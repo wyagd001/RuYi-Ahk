@@ -138,18 +138,6 @@ Quit(Msg) {
 Return
 }
 
-CF_ToolTip(tipText, delay := 1000)
-{
-	ToolTip
-	ToolTip, % tipText
-	SetTimer, RemoveToolTip, % "-" delay
-return
-
-RemoveToolTip:
-	ToolTip
-return
-}
-
 ; https://www.autohotkey.com/board/topic/64362-7zip-7-zip32dll-library-without-commandline-ahk-l/page-1
 
 /*

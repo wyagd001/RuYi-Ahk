@@ -1,24 +1,42 @@
-﻿;|2.8|2024.09.18|1676
+﻿;|3.0|2025.07.25|1676
 #SingleInstance Force
 #NoEnv
 SetWorkingDir %A_ScriptDir%
 SetBatchLines -1
 CandySel := A_Args[1]
 
+A_RuYiDir := RuYi_GetRuYiDir()
+RY_AsettingFile := A_RuYiDir "\配置文件\如一.ini"
+RY_CsettingFile := A_RuYiDir "\配置文件\自定义\其他程序.ini"
+IniRead, githubproxy, %RY_CsettingFile%, 其他程序, githubproxy
+if githubproxy && InStr(githubproxy, "http")
+  GithubProxy_Arr := StrSplit(githubproxy, ",", " ")
+else
+{
+  IniRead, githubproxy, %RY_AsettingFile%, 其他程序, githubproxy
+  if githubproxy && InStr(githubproxy, "http")
+    GithubProxy_Arr := StrSplit(githubproxy, ",", " ")
+}
+
 Gui Font, s9, Segoe UI
-Gui Add, Text, x15 y15 w75 h31 +0x200, 网址
-Gui Add, ComboBox, x125 y20 w400 vourl ggrurl, https://github.com/wyagd001/RuYi-Ahk||https://github.com/FuPeiJiang/VD.ahk|https://github.com/iseahound/ImagePut
+Gui Add, Text, x15 y15 w75 h31 +0x200, 网址:
+Gui Add, ComboBox, x100 y20 w420 vourl ggrurl, https://github.com/wyagd001/RuYi-Ahk||https://github.com/FuPeiJiang/VD.ahk|https://github.com/iseahound/ImagePut
 ;Gui Add, Radio, x126 y80 w120 h23 vcrurl, 原始文件
 ;Gui Add, Radio, x254 y80 w120 h23 vczip, 库打包zip
-Gui Add, Text, x15 y90 w75 h31 +0x200, 原始URL
-Gui Add, Edit, x125 y90 w399 h49 vrurl ggdurl
+Gui Add, Text, x15 y60 w75 h31 +0x200, 原始URL:
+Gui Add, Edit, x100 y60 w420 h49 vrurl ggdurl
 ;Gui Add, DropDownList, x128 y174 w120, 随机代理|代理1|代理2|代理3|代理4|代理5|代理6|
-Gui Add, Text, x15 y170 w75 h31 +0x200, 下载地址
-Gui Add, Edit, x125 y170 w399 h49 vdurl
-Gui Add, Button, x129 y240 w80 h23 gdownload, 下载
-Gui Add, Button, x237 y240 w80 h23 gGuiClose, 取消
+Gui Add, Text, x15 y120 w75 h31 +0x200, 下载URL:
+Gui Add, Edit, x100 y120 w420 h49 vdurl
+Gui Add, Text, x15 y180 w75 h31 +0x200, 下载地址:
+Gui Add, ComboBox, x100 y180 w420 h90 r6 vdpath hwndhcbx, %A_desktop%||
+PostMessage, 0x153, -1, 49,, AHK_ID %hcbx% ; CB_SETITEMHEIGHT = 0x153
+;PostMessage, 0x153, -1, 50,, ahk_id %hcbx%  ; Set height of selection field.
+;PostMessage, 0x153,  0, 50,, ahk_id %hcbx%  ; Set height of list items.
+Gui Add, Button, x300 y240 w80 h30 gdownload, 下载
+Gui Add, Button, x400 y240 w80 h30 gGuiClose, 取消
 
-Gui Show, w550 h290, Github 文件下载
+Gui Show, w550 h280, Github 文件下载
 if CandySel
 {
   GuiControl,, ourl, % CandySel
@@ -69,15 +87,22 @@ return
 
 gdurl:
 gui Submit, nohide
-proxy := ["https://mirror.ghproxy.com/", "https://slink.ltd/", "https://moeyy.cn/gh-proxy/", "https://ghproxy.cc/", "https://cf.ghproxy.cc/", "https://gh.api.99988866.xyz/", "https://gh.ddlc.top/", "https://github.moeyy.xyz/", "https://ghps.cc/", "https://gitdl.cn/", "https://ghproxy.net/", "https://ghp.ci/", "https://github.tmby.shop/", "https://gh-proxy.com/", "https://gh.con.sh/", "https://ghproxy.cn/"]
-Random, Tmp_Var, 1, 16
-
-GuiControl,, durl, % proxy[Tmp_Var] rurl
+Random, Tmp_Var, 1, 9
+GuiControl,, durl, % GithubProxy_Arr[Tmp_Var] rurl
 return
 
 download:
 gui Submit, nohide
 SplitPath, rurl, OutFileName
 ;msgbox % OutFileName
-UrlDownloadToFile, % durl, %A_desktop%\%OutFileName%
+if fileexist(dpath) && CF_IsFolder(dpath)
+  UrlDownloadToFile, % durl, %dpath%\%OutFileName%
+else
+{
+  GuiControl, Text, dpath, % A_desktop
+  UrlDownloadToFile, % durl, %A_desktop%\%OutFileName%
+}
+tooltip, 文件下载完毕!
+sleep 3000
+Tooltip
 return

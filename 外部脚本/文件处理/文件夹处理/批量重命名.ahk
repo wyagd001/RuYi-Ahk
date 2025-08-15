@@ -1603,18 +1603,6 @@ ZTrim( N := "" )
 Return ( V0 = "-" ? "-" : ""   )  ( V1 = "" ? 0 : V1 )   ( V2 <> "" ? "." V2 : "" )
 }
 
-CF_ToolTip(tipText, delay := 1000)
-{
-	ToolTip
-	ToolTip, % tipText
-	SetTimer, RemoveToolTip, % "-" delay
-return
-
-RemoveToolTip:
-	ToolTip
-return
-}
-
 /*
 ; 注意一些信息无法正确获取, 如 "日期", 请使用其他值来代替
 Parameters:

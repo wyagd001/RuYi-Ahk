@@ -11,7 +11,6 @@ MouseGetPos, lastx, lasty, UID, ClassNN ; 获取指针下窗口的 ID 和控件�
 WinGetClass, 窗口类, ahk_id %UID% ; 根据 ID 获得窗口类名
 WinExist("ahk_id " UID)
 ControlGetText, OutputText, %ClassNN%
-;FileAppend(窗口类 "`n",  "123.log")
 ; 任务栏自动关闭窗口
 If (窗口类 = "Shell_TrayWnd") ; 指针是否在任务栏上
 {
@@ -174,15 +173,6 @@ IsMouseOverFileList()
 IsInArea(px,py,x,y,w,h)
 {
 	Return (px>x&&py>y&&px<x+w&&py<y+h)
-}
-
-CF_IsFolder(sfile){
-	if InStr(FileExist(sfile), "D")
-	|| (sfile = """::{20D04FE0-3AEA-1069-A2D8-08002B30309D}""")
-	;|| SubStr(sfile, 1, 2) = "\\"
-		return 1
-	else
-		return 0
 }
 
 GetSelectedFiles(FullName=1, hwnd=0)

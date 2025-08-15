@@ -2220,18 +2220,6 @@ _AscendingLinesL(a1, a2) ; used by TF_Stat
 	 Return StrLen(a2) - StrLen(a1)
 	}
 
-CF_ToolTip(tipText, delay := 1000)
-{
-	ToolTip
-	ToolTip, % tipText
-	SetTimer, RemoveToolTip, % "-" delay
-return
-
-RemoveToolTip:
-	ToolTip
-return
-}
-
 ; http://ebstudio.info/home/xdoc2txt.html
 Class xd2txlib {
 Static xd2txlibdll := A_ScriptDir . "\..\..\引用程序" (A_PtrSize=8 ? "\x64\" : "\x32\") . "xd2txlib.dll"
@@ -2441,15 +2429,6 @@ GetFocusedControl()
    }
    focusedHwnd := NumGet(guiThreadInfo,8+A_PtrSize, "Ptr") ;focusedHwnd := *(addr + 12) + (*(addr + 13) << 8) +  (*(addr + 14) << 16) + (*(addr + 15) << 24)
    Return focusedHwnd
-}
-
-CF_IsFolder(sfile){
-	if InStr(FileExist(sfile), "D")
-	|| (sfile = """::{20D04FE0-3AEA-1069-A2D8-08002B30309D}""")
-	;|| (SubStr(sfile, 1, 2) = "\\")   ; 局域网共享文件夹 如 \\Win11\Soft
-		return 1
-	else
-		return 0
 }
 
 PathU(Filename) { ;  PathU v0.91 by SKAN on D35E/D68M @ tiny.cc/pathu

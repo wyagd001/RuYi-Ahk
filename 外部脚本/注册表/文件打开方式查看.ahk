@@ -1,4 +1,4 @@
-﻿;|2.0|2023.07.01|1004
+﻿;|3.0|2025.08.11|1004
 #SingleInstance force
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\E7AC.ico"
@@ -93,10 +93,10 @@ return
 
 save:
 gui, submit, nohide
-CF_RegWrite("REG_EXPAND_SZ", "HKEY_CLASSES_ROOT\" ext_class "\DefaultIcon",, ext_Icon)
-CF_RegWrite("REG_SZ", "HKEY_CLASSES_ROOT\" ext_class,, ext_newmenuname)
+CF_RegWrite(ext_Icon, "REG_EXPAND_SZ", "HKEY_CLASSES_ROOT\" ext_class "\DefaultIcon")
+CF_RegWrite(ext_newmenuname, "REG_SZ", "HKEY_CLASSES_ROOT\" ext_class)
 if ext_nmn
-	CF_RegWrite("REG_SZ", "HKEY_CLASSES_ROOT\" ext_class, "FriendlyTypeName", ext_nmn)
+	CF_RegWrite(ext_nmn, "REG_SZ", "HKEY_CLASSES_ROOT\" ext_class, "FriendlyTypeName")
 return
 
 GuiEscape:
@@ -164,15 +164,6 @@ readextclassopen(class)
 	return OutputVar
 }
 
-CF_RegWrite(ValueType, KeyName, ValueName="", Value="")
-{
-	RegWrite, % ValueType, % KeyName, % ValueName, % Value
-	if ErrorLevel
-	Return %A_LastError%
-	else
-	Return 0
-}
-
 readnewmenuname(ext, ByRef nmn)
 {
 	RegRead, Tmp_val, HKEY_CLASSES_ROOT\%ext%,
@@ -221,11 +212,11 @@ ExistShellNew(ext) {
 
 TranslateMUI(resDll, resID)
 {
-VarSetCapacity(buf, 256)
-hDll := DllCall("LoadLibrary", "str", resDll, "Ptr")
-Result := DllCall("LoadString", "uint", hDll, "uint", resID, "uint", &buf, "int", 128)
-VarSetCapacity(buf, -1)
-Return buf
+  VarSetCapacity(buf, 256)
+  hDll := DllCall("LoadLibrary", "str", resDll, "Ptr")
+  Result := DllCall("LoadString", "uint", hDll, "uint", resID, "uint", &buf, "int", 128)
+  VarSetCapacity(buf, -1)
+  Return buf
 }
 
 IndexOfIconResource(Filename, ID)

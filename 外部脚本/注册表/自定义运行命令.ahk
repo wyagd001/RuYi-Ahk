@@ -187,12 +187,3 @@ CF_OpenFolder(sfile, OnlyFolder := 1){
 	else
 		Run, % "explorer.exe /select," sfile
 }
-
-CF_IsFolder(sfile){
-	if InStr(FileExist(sfile), "D")
-	|| (sfile = """::{20D04FE0-3AEA-1069-A2D8-08002B30309D}""")
-	;|| (SubStr(sfile, 1, 2) = "\\")   ; 局域网共享文件夹 如 \\Win11\Soft
-		return 1
-	else
-		return 0
-}

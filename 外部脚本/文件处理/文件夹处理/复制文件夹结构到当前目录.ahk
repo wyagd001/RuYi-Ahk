@@ -63,15 +63,6 @@ CopyDirStructureToClip(_inpath, subcounter := 0)
 	Return _problem
 }
 
-CF_IsFolder(sfile){
-	if InStr(FileExist(sfile), "D")
-	|| (sfile = """::{20D04FE0-3AEA-1069-A2D8-08002B30309D}""")
-	;|| (SubStr(sfile, 1, 2) = "\\")
-		return 1
-	else
-		return 0
-}
-
 PathU(Filename) { ;  PathU v0.91 by SKAN on D35E/D68M @ tiny.cc/pathu
 Local OutFile
   VarSetCapacity(OutFile, 520)

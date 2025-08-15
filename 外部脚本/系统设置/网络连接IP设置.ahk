@@ -1,4 +1,4 @@
-﻿;|2.9|2025.01.08|1094
+﻿;|3.0|2025.08.12|1094
 /*
 TODO:
 - find a better way to make context sensitive hotkeys for when listbox is selected
@@ -86,6 +86,8 @@ Gui, Add, Button, x432 y129 w100 h30 gScanSubnet, 扫描局域网
 Gui, Add, Button, x535 y129 w100 h30 gGetAdaptersInfo, 查看网卡信息
 Gui, Add, Button, x432 y169 w100 h30 gtelnet, telnet 网关
 Gui, Add, Button, x535 y169 w100 h30 gssh, ssh 网关
+Gui, Add, Button, x432 y209 w100 h30 glocalnet, 网络连接
+Gui, Add, Button, x535 y209 w100 h30 glocalweb, 网络
 
 Gui, Add, Text, x610 y340 w40 h20 vshowmoretext gshowmore,更多∨
 
@@ -149,8 +151,8 @@ ExitApp
 showmore:
 if !showmore
 {
-	GuiControl,,ieproxy,% CF_regread("HKCU","Software\Microsoft\Windows\CurrentVersion\Internet Settings","Proxyenable")
-	GuiControl,,ieproxyserver,% CF_regread("HKCU","Software\Microsoft\Windows\CurrentVersion\Internet Settings","ProxyServer")
+	GuiControl,,ieproxy,% CF_regread("HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings","Proxyenable")
+	GuiControl,,ieproxyserver,% CF_regread("HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings","ProxyServer")
 	gui,show,w650 h510
 	GuiControl,,showmoretext,收起∧
 	showmore:=1
@@ -221,8 +223,8 @@ check_error(tmp_file, msg)
 
 ieproxy:
 gui, submit, nohide
-CF_RegWrite("REG_DWORD", "HKCU", "Software\Microsoft\Windows\CurrentVersion\Internet Settings", "Proxyenable", ieproxy)
-CF_RegWrite("REG_SZ", "HKCU", "Software\Microsoft\Windows\CurrentVersion\Internet Settings", "ProxyServer", ieproxyserver)
+CF_RegWrite(ieproxy, "REG_DWORD", "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings", "Proxyenable")
+CF_RegWrite(ieproxyserver, "REG_SZ", "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings", "ProxyServer")
 dllcall("wininet\InternetSetOptionW", "int", "0", "int", "39", "int", "0", "int", "0")
 dllcall("wininet\InternetSetOptionW", "int", "0", "int", "37", "int", "0", "int", "0")
 tooltip, 代理设置完毕。
@@ -540,6 +542,16 @@ gui, submit, nohide
 
 ShellRun(putty, "-" A_ThisLabel " " gateway)
 ; run, "%putty%" -%A_ThisLabel% %gateway%
+return
+
+localnet:
+Run ::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}
+; ncpa.cpl
+; Explorer.exe ::{7007ACC7-3202-11D1-AAD2-00805FC1270E}
+return
+
+localweb:
+Run ::{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}
 return
 
 del::
@@ -881,14 +893,4 @@ PrintArr(Arr, Option := "w800 h200", GuiNum := 90)
     loop % LV_GetCount("Column")
         LV_ModifyCol(A_Index, "AutoHdr")
     Gui, %GuiNum%: Show,, Array
-}
-
-CF_RegRead(RootKey, SubKey, ValueName = "") {
-	RegRead, v, %RootKey%, %SubKey%, %ValueName%
-  Return, v
-}
-
-CF_RegWrite(ValueType, RootKey, SubKey, ValueName="", Value="") {
-	RegWrite, % ValueType, % RootKey, % SubKey, % ValueName, % Value
-  Return
 }

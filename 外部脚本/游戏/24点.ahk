@@ -50,14 +50,11 @@ if (showmode = "listview")
     else if ((A_Index > 100) && (A_Index <= 150))
     {
       LV_Modify(A_Index - 100, "col3", v)
-      ;FileAppend((A_Index - 50) v "`n")
     }
     else if ((A_Index > 150) && (A_Index <= 200))
     {
       LV_Modify(A_Index - 150, "col4", v)
-      ;FileAppend((A_Index - 75) v "`n")
     }
-    ;FileAppend(A_Index "`n")
   }
   LV_ModifyCol()
 }

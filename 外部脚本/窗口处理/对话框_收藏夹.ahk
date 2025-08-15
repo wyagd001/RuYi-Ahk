@@ -6,6 +6,7 @@ Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e734.ico"
 ;SetTitleMatchMode, Slow
 
+/*
 RegRead, NavPaneShowAllFolders, HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced, NavPaneShowAllFolders
 if NavPaneShowAllFolders
 {
@@ -22,6 +23,7 @@ if NavPaneShowAllFolders or NavPaneExpandToCurrentFolder
   msgbox % "修改了注册表, 需要重新打开对话框, 脚本才能正常定位到文件夹."
   exitapp
 }
+*/
 
 DialogFav:
 Windy_CurWin_id := A_Args[1]
@@ -64,10 +66,11 @@ Gui DialogTv:Destroy
 Gui DialogTv:New
 Gui DialogTv:Default 
 Gui, Add, Picture, x0 y0 w24 h24 vhpic gDialogCandyMenu, %A_ScriptDir%\..\..\脚本图标\如意\e1ce.ico
+Gui, Add, button, x+0 yp+0 w30 h25 gcurropenedpath, 当前
 Gui, Add, Edit, x+0 yp+0 w300 h25 vdpath
-Gui, Add, button,  x+0 yp+0 w30 h25 Default gsetpath, Go!
-Gui, Add, button,  x+0 yp+0 w30 h25 gDialogTvGuiEscape, X
-gui, show, % "x" . hX . " y" . ((hY>30)?(hy-30):(hy+30)) . " w380 h1"
+Gui, Add, button, x+0 yp+0 w30 h25 Default gsetpath, Go!
+Gui, Add, button, x+0 yp+0 w30 h25 gDialogTvGuiEscape, X
+gui, show, % "x" . hX . " y" . ((hY>30)?(hy-30):(hy+30)) . " w410 h1"
 gui, -Caption -Border +AlwaysOnTop +Owner
 SetTimer, Watchhdialogwin, 100
 return
@@ -105,13 +108,29 @@ return
 
 MenuHandler:
 ;msgbox % IniMenuobj["对话框"][A_ThisMenuItemPos]
-;msgbox % A_ThisMenu
+;msgbox % A_ThisMenuItemPos
 if (A_ThisMenu = "对话框收藏夹")
-  dpath := GetStringIndex(IniMenuobj["对话框"][A_ThisMenuItemPos], 1)
+  dpath := GetStringIndex(IniMenuobj["对话框"][A_ThisMenuItemPos-2], 1)
 else if (A_ThisMenu = "对话框收藏夹_子文件夹")
   dpath := GetStringIndex(IniMenuobj["对话框_子文件夹"][A_ThisMenuItemPos], 1)
 ;msgbox % dpath
 gosub Cando_Dialogsetpath
+return
+
+curropenedpath:
+AllOpenFolder := GetAllWindowOpenFolder()
+Menu DialogMenu, add, %A_desktop%, Windo_JumpToFolder
+for k, v in AllOpenFolder
+{
+	Menu DialogMenu, add, %v%, Windo_JumpToFolder
+}
+Menu DialogMenu, Show
+Menu, DialogMenu, DeleteAll
+return
+
+Windo_JumpToFolder:
+ControlSetText, edit1, %A_ThisMenuItem%, Ahk_ID %Windy_CurWin_id%
+ControlSend, edit1, {Enter}, Ahk_ID %Windy_CurWin_id%
 return
 
 setpath:
@@ -129,7 +148,7 @@ If WinExist("ahk_class #32770")
   if (A_OSVersion = "WIN_7")
     TVPath_Set(hTreeView, (hdialogedit?"计算机\":instr(dpath, "桌面")?"":"桌面\计算机\") dpath, outMatchPath,,,10)
   else ; 适配 Win10
-    TVPath_Set(hTreeView, (hdialogedit=0?"此电脑\":"此电脑\") dpath, outMatchPath,,,20)
+    TVPath_Set(hTreeView, (hdialogedit=0?"桌面\此电脑\":"此电脑\") dpath, outMatchPath,,,20)
 
   ;msgbox % (hdialogedit=0?"桌面\此电脑\":instr(dpath, "桌面")?"":"桌面\此电脑\") dpath
   ControlFocus, , ahk_id %hTreeView%
@@ -169,7 +188,10 @@ If WinExist("ahk_class #32770")
   if (A_OSVersion = "WIN_7")
     TVPath_Set(hTreeView, (hdialogedit?"计算机\":instr(dpath, "桌面")?"":"桌面\计算机\") dpath, outMatchPath,,,10)
   else ; 适配 Win10
-    TVPath_Set(hTreeView, (hdialogedit=0?"此电脑\":"此电脑\") dpath, outMatchPath,,,30)
+  {
+    TVPath_Set(hTreeView, (hdialogedit=0?"桌面\此电脑\":"此电脑\") dpath, outMatchPath,,,30)
+    ;msgbox % dpath
+  }
   ControlFocus, , ahk_id %hTreeView%
   if hdialogedit
     ControlSend, , {Enter}, ahk_id %hTreeView%
@@ -199,6 +221,29 @@ ProcessGetBits(vPID){   ;;获取进程位数
 		Return 86
 	Return 64
 }
+
+q::
+if Windy_CurWin_id
+{
+  ControlGet, hTreeView, Hwnd,, SysTreeView321, ahk_id %Windy_CurWin_id%
+  ControlGetText, url, Edit2, ahk_id %Windy_CurWin_id%
+  ControlGetText, url2, ToolbarWindow323, ahk_id %Windy_CurWin_id%
+}
+else
+{
+  ControlGet, hTreeView, Hwnd,, SysTreeView321, A
+  ControlGetText, url, Edit2, A
+}
+TVPath_Get(hTreeView, addTarget)
+msgbox % addTarget
+return
+
+w::
+msgbox % GetExplorerPathTree("C:\Documents and Settings\Administrator\Desktop\行动轨迹\合堡骑车") "`n" PathToPerson("C:\Documents and Settings\Administrator\Desktop\行动轨迹\合堡骑车")
+msgbox % GetExplorerPathTree("G:\ubuntu\disks") "`n" PathToPerson("G:\ubuntu\disks")
+msgbox % GetExplorerPathTree("C:\Users\lyh\Downloads") "`n" PathToPerson("C:\Users\lyh\Downloads")
+msgbox % GetExplorerPathTree("C:\Users\Administrator\Favorites\系统工具箱") "`n" PathToPerson("C:\Users\Administrator\Favorites\系统工具箱")
+return
 
 AddToFav:
 !q::
@@ -341,6 +386,17 @@ PathToPerson(fpath)
   return RTrim(OutputVar "\" tmp_p, "\")
 }
 
+;获取路径的树结构
+GetExplorerPathTree(FolderPath) {
+    Shell := ComObjCreate("Shell.Application")
+    Folder := Shell.NameSpace(FolderPath)
+    PathTree := ""
+    Loop
+        PathTree := Folder.Self.Name "\" PathTree
+    Until !(Folder := Folder.ParentFolder)
+    Return trim(PathTree, "\")
+}
+
 upDir(levels:=1, Dir:="", ByRef DirName := "") {
     SplitPath, % Dir?Dir:A_ScriptDir, DirName, ParentDir
     ;msgbox % DirName
@@ -444,6 +500,113 @@ show_obj(obj, menu_name := ""){
 	if main = 1
 		menu, % menu_name, show
 	return
+}
+
+GetAllWindowOpenFolder()
+{
+	if WinActive("ahk_class TTOTAL_CMD")
+    return TC_getTwoPath()
+
+	QtTabBarObj := QtTabBar()
+	if QtTabBarObj
+	{
+		OPenedFolder := QtTabBar_GetAllTabs()
+	}
+	else
+	{
+    ;msgbox % QtTabBarObj
+		OPenedFolder := []
+		ShellWindows := ComObjCreate("Shell.Application").Windows
+		for w in ShellWindows
+		{
+			Tmp_Fp := w.Document.Folder.Self.path
+			if (Tmp_Fp)
+				if FileExist(Tmp_Fp)
+				{
+					OPenedFolder.push(Tmp_Fp)
+				}
+		}
+	}
+  return OPenedFolder
+}
+
+TC_getTwoPath()
+{
+	DetectHiddenText, On
+	WinGetText, TCWindowText, Ahk_class TTOTAL_CMD
+	m := RegExMatchAll(TCWindowText, "m)(.*)\\\*\.\*", 1)
+	return m
+}
+
+; 32 位 AutoHotkey 无法获取 64 位系统的 QTTabBar
+QtTabBar()
+{
+	try QtTabBarObj := ComObjCreate("QTTabBarLib.Scripting")
+	if IsObject(QtTabBarObj)
+    return 1
+	else
+    return 0
+}
+
+QtTabBar_GetAllTabs()
+{
+	ScriptCode = 
+	(
+		OPenedFolder_Str := GetAllWindowOpenFolder()
+		FileAppend `% OPenedFolder_Str, *
+
+		GetAllWindowOpenFolder()
+		{
+			OPenedFolder_Str := ""
+			QtTabBarObj := ComObjCreate("QTTabBarLib.Scripting")
+			if QtTabBarObj
+			{
+				for k in QtTabBarObj.Windows
+					for w in k.Tabs
+					{
+						Tmp_Fp := w.path
+						if (Tmp_Fp)
+							if FileExist(Tmp_Fp)
+							{
+								OPenedFolder_Str .= Tmp_Fp "``n"
+							}
+					}
+			}
+		return OPenedFolder_Str
+		}
+	)
+
+	OPenedFolder_Str := RunScript(ScriptCode, 1)
+	OPenedFolder_Str := Trim(OPenedFolder_Str, " `t`n")
+	OPenedFolder := StrSplit(OPenedFolder_Str, "`n")
+  return OPenedFolder
+}
+
+RegExMatchAll(ByRef Haystack, NeedleRegEx, SubPat="")
+{
+	arr := [], startPos := 1
+	while ( pos := RegExMatch(Haystack, NeedleRegEx, match, startPos) )
+	{
+		arr.push(match%SubPat%)
+		startPos := pos + StrLen(match)
+	}
+	return arr.MaxIndex() ? arr : ""
+}
+
+RunScript(script, WaitResult:="false")
+{
+	static test_ahk := A_AhkPath,
+	shell := ComObjCreate("WScript.Shell")
+	BackUp_WorkingDir:= A_WorkingDir
+	SetWorkingDir %A_ScriptDir%
+	exec := shell.Exec(chr(34) test_ahk chr(34) " /ErrorStdOut *")
+	exec.StdIn.Write(script)
+	exec.StdIn.Close()
+	SetWorkingDir %BackUp_WorkingDir%
+	if WaitResult
+		return exec.StdOut.ReadAll()
+	else 
+return
 }
 
 ; 注册表打开时跳转到相应条目 主窗口\OpenButton.ahk
@@ -1104,18 +1267,6 @@ ReadProcessMemory(hProcess, BaseAddress, ByRef Buffer, Size, ByRef NumberOfBytes
 				 , "UInt", Size
 				 , "UInt*", NumberOfBytesRead
 				 , "Int")
-}
-
-CF_ToolTip(tipText, delay := 1000)
-{
-	ToolTip
-	ToolTip, % tipText
-	SetTimer, RemoveToolTip, % "-" delay
-return
-
-RemoveToolTip:
-	ToolTip
-return
 }
 
 GetStringIndex(String, Index := "", MaxParts := -1, SplitStr := "|")

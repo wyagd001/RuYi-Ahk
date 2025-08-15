@@ -143,15 +143,3 @@ Return
 		CF_ToolTip("文件%包_完整文件名%解压完成！", 2000)
 Return
 }
-
-CF_ToolTip(tipText, delay := 1000)
-{
-	ToolTip
-	ToolTip, % tipText
-	SetTimer, RemoveToolTip, % "-" delay
-return
-
-RemoveToolTip:
-	ToolTip
-return
-}

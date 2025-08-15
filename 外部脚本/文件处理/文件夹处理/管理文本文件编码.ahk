@@ -177,18 +177,6 @@ GuiText(Gtext, Title:="", w:=300, l:=20)
 	Return
 }
 
-CF_ToolTip(tipText, delay := 1000)
-{
-	ToolTip
-	ToolTip, % tipText
-	SetTimer, RemoveToolTip, % "-" delay
-return
-
-RemoveToolTip:
-	ToolTip
-return
-}
-
 /*!
 	函数: File_GetEncoding
 		类似 chardet Py库, 检测文件的代码页.

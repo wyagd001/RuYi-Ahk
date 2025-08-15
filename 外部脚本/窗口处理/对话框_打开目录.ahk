@@ -247,15 +247,3 @@ GetStringIndex(String, Index := "", MaxParts := -1, SplitStr := "|")
 	else
 		return arrCandy_Cmd_Str
 }
-
-CF_ToolTip(tipText, delay := 1000)
-{
-	ToolTip
-	ToolTip, % tipText
-	SetTimer, RemoveToolTip, % "-" delay
-  return
-
-  RemoveToolTip:
-    ToolTip
-  return
-}

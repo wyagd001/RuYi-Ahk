@@ -122,15 +122,6 @@ CF_Isinteger(ByRef hNumber){
 	}
 }
 
-CF_IsFolder(sfile){
-	if InStr(FileExist(sfile), "D")
-	|| (sfile = """::{20D04FE0-3AEA-1069-A2D8-08002B30309D}""")
-	;|| (SubStr(sfile, 1, 2) = "\\")   ; 局域网共享文件夹 如 \\Win11\Soft
-		return 1
-	else
-		return 0
-}
-
 ; 解析用户、系统环境变量
 ; ppath 为 不带引号的文本或百分号包围的文本
 ExpandEnvVars(ppath)

@@ -1,16 +1,7 @@
-﻿;|2.1|2023.07.26|1118
-CF_RegWrite("REG_DWORD", "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "HideFileExt", 1)
+﻿;|3.0|2025.08.11|1118
+CF_RegWrite(1, "REG_DWORD", "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "HideFileExt")
 RefreshExplorer()
 return
-
-CF_RegWrite(ValueType, KeyName, ValueName="", Value="")
-{
-	RegWrite, % ValueType, % KeyName, % ValueName, % Value
-	if ErrorLevel
-	Return %A_LastError%
-	else
-	Return 0
-}
 
 RefreshExplorer()
 { ; by teadrinker on D437 @ tiny.cc/refreshexplorer

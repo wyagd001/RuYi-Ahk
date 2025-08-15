@@ -435,18 +435,6 @@ MD5_File( sFile="", cSz=4 ) { ; www.autohotkey.com/forum/viewtopic.php?p=275910#
 Return MD5
 }
 
-CF_ToolTip(tipText, delay := 1000)
-{
-	ToolTip
-	ToolTip, % tipText
-	SetTimer, RemoveToolTip, % "-" delay
-return
-
-RemoveToolTip:
-	ToolTip
-return
-}
-
 ; ==================================================================================================================================
 ; Shows a dialog to select a folder.
 ; Depending on the OS version the function will use either the built-in FileSelectFolder command (XP and previous)

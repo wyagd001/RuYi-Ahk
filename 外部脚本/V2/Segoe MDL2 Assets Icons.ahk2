@@ -20,10 +20,11 @@ R1
 
 #Requires AutoHotkey v2.0
 #Warn All, Off
+#Include <RuYi>
 ;#NoTrayIcon
 Try CandySel := A_Args[1]
 
-A_RuYiDir := GetRuYiDir()
+A_RuYiDir := RuYi_GetRuYiDir()
 iconDataFile := A_RuYiDir "\引用程序\其它资源\Segoe MDL2 Assets Icons.csv"
 ; https://learn.microsoft.com/en-us/windows/apps/design/style/segoe-ui-symbol-font
 
@@ -163,27 +164,4 @@ SetWindowIcon(hwnd, iconFile, iconIndex := 0) {
     DllCall("User32.dll\SendMessageW", "Ptr", hwnd, "UInt", 0x80, "Ptr", 1, "Ptr", hIconBig) ; WM_SETICON (ICON_BIG)
   if hIconSmall
     DllCall("User32.dll\SendMessageW", "Ptr", hwnd, "UInt", 0x80, "Ptr", 0, "Ptr", hIconSmall) ; WM_SETICON (ICON_SMALL)
-}
-
-GetRuYiDir()
-{
-  if FileExist(A_ScriptDir "\如一.exe")
-    return A_ScriptDir
-  if FileExist(A_ScriptDir "\..\如一.exe")
-    return GetFullPathName(A_ScriptDir "\..")
-  else if FileExist(A_ScriptDir "\..\..\如一.exe")
-    return GetFullPathName(A_ScriptDir "\..\..")
-  else if FileExist(A_ScriptDir "\..\..\..\如一.exe")
-    return GetFullPathName(A_ScriptDir "\..\..\..")
-  else if FileExist(A_ScriptDir "\..\..\..\..\如一.exe")
-    return GetFullPathName(A_ScriptDir "\..\..\..\..")
-  else if FileExist(A_ScriptDir "\..\..\..\..\..\如一.exe")
-    return GetFullPathName(A_ScriptDir "\..\..\..\..\..")
-}
-
-GetFullPathName(path) {
-    cc := DllCall("GetFullPathName", "str", path, "uint", 0, "ptr", 0, "ptr", 0, "uint")
-    VarSetStrCapacity(&buf, cc*2)
-    DllCall("GetFullPathName", "str", path, "uint", cc, "str", buf, "ptr", 0, "uint")
-    return buf
 }

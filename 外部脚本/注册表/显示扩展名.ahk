@@ -3,15 +3,6 @@ CF_RegWrite("REG_DWORD", "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVe
 RefreshExplorer()
 return
 
-CF_RegWrite(ValueType, KeyName, ValueName="", Value="")
-{
-	RegWrite, % ValueType, % KeyName, % ValueName, % Value
-	if ErrorLevel
-	Return %A_LastError%
-	else
-	Return 0
-}
-
 RefreshExplorer()
 { ; by teadrinker on D437 @ tiny.cc/refreshexplorer
 	local Windows := ComObjCreate("Shell.Application").Windows

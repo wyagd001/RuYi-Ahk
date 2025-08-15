@@ -1,14 +1,4 @@
-﻿;|2.0|2023.07.01|1006
-;if !CF_RegWrite("REG_SZ", "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons", "29", "C:\WINDOWS\system32\imageres.dll,197")
-;	msgbox
-	; % CF_RegDelete("HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons", "29")
-
-;CF_RegWrite("REG_BINARY", "HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer", "Link", "00000000")
-;CF_RegWrite("REG_BINARY", "HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer", "Link", "1e000000")
-
-;if !CF_RegWrite("REG_SZ", "HKEY_CURRENT_USER\Control Panel\Desktop\WindowMetrics", "MinWidth", "-70")
-;	RestartExplorer()
-
+﻿;|3.0|2025.08.11|1006
 #SingleInstance force
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\E8AD.ico"
@@ -98,15 +88,15 @@ GuiApply:
 gui, submit, nohide
 if (vLnk_Icon != ALnk_Icon)
 {
-	CF_RegWrite("REG_SZ", "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons", "29", vLnk_Icon)
+	CF_RegWrite(vLnk_Icon, "REG_SZ", "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons", "29")
 }
 if (vlnk_text != A_iconSt["带快捷方式字样"])
 {
 	A_iconSt["带快捷方式字样"] := vlnk_text
 	if vlnk_text
-		CF_RegWrite("REG_BINARY", "HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer", "link", "00000000")
+		CF_RegWrite("00000000", "REG_BINARY", "HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer", "link")
 	else
-		CF_RegWrite("REG_BINARY", "HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer", "link", "1e000000")
+		CF_RegWrite("1e000000", "REG_BINARY", "HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer", "link")
 }
 return
 
@@ -150,41 +140,6 @@ RestartExplorer:
 gosub GuiApply
 RestartExplorer()
 return
-
-CF_RegRead(KeyName, ValueName="")
-{
-	RegRead, OutputVar, % KeyName, % ValueName
-	if ErrorLevel
-	Return %A_LastError%
-	else
-	Return OutputVar
-}
-
-CF_RegWrite(ValueType, KeyName, ValueName="", Value="")
-{
-	RegWrite, % ValueType, % KeyName, % ValueName, % Value
-	if ErrorLevel
-	Return %A_LastError%
-	else
-	Return 0
-}
-
-CF_RegDelete(KeyName, ValueName := "")
-{
-  if !ValueName or (ValueName="\")   ; 防止删除整个主键
-  {
-    KeyName := KeyName ValueName
-    if KeyName in HKEY_LOCAL_MACHINE,HKEY_LOCAL_MACHINE\,HKEY_LOCAL_MACHINE\\,HKLM,HKLM\,HKLM\\,HKEY_CLASSES_ROOT,HKEY_CLASSES_ROOT\,HKEY_CLASSES_ROOT\\,HKCR,HKCR\,HKCR\\,HKEY_CURRENT_USER,HKEY_CURRENT_USER\,HKEY_CURRENT_USER\\,HKCU,HKCU\,HKCU\\
-    {
-      return 1
-    }
-  }
-	RegDelete, % KeyName, % ValueName
-	if ErrorLevel
-    Return %A_LastError%
-	else
-    Return 0
-}
 
 RestartExplorer()
 {

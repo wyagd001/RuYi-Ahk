@@ -37,7 +37,7 @@ Windo_ChromeCopyAllURLs:
 	sleep,10
 	Tmp_Val := ""
 	URLs := []
-	;CF_ToolTip("所有标签页网址已复制到剪贴板。", 3000)
+	CF_ToolTip("所有标签页网址已复制到剪贴板。", 3000)
 return
 
 ; https://autohotkey.com/boards/viewtopic.php?f=6&t=3702

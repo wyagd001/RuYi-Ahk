@@ -672,18 +672,6 @@ CF_FileGetSize(file, type := "")
 	return OutputVar
 }
 
-CF_ToolTip(tipText, delay := 1000)
-{
-	ToolTip
-	ToolTip, % tipText
-	SetTimer, RemoveToolTip, % "-" delay
-return
-
-RemoveToolTip:
-	ToolTip
-return
-}
-
 PLdeletefile(aArray){
 	q:=""
 	for k,v in aArray

@@ -67,14 +67,24 @@ updateexe()
 
 githubdownload(sfilename)
 {
-  proxy := ["https://gh.h233.eu.org/", "https://ghproxy.1888866.xyz/", "https://gh.ddlc.top/", "https://slink.ltd/", "https://gh-proxy.com/", "https://hub.gitmirror.com/", "https://down.sciproxy.com/", "https://gh-proxy.net/", "https://github.moeyy.xyz/"]
+  RY_AsettingFile := A_ScriptDir "\配置文件\如一.ini"
+  RY_CsettingFile := A_ScriptDir "\配置文件\自定义\其他程序.ini"
+  IniRead, githubproxy, %RY_CsettingFile%, 其他程序, githubproxy
+  if githubproxy && InStr(githubproxy, "http")
+    GithubProxy_Arr := StrSplit(githubproxy, ",", " ")
+  else
+  {
+    IniRead, githubproxy, %RY_AsettingFile%, 其他程序, githubproxy
+    if githubproxy && InStr(githubproxy, "http")
+      GithubProxy_Arr := StrSplit(githubproxy, ",", " ")
+  }
 	SplitPath, sfilename, OutFileName
 	websfilename := StrReplace(sfilename, "\", "/")
 	Tmp_File := A_ScriptDir "\临时目录\" OutFileName
   return_Val := 0
 		loop, 9
 		{
-			UrlDownloadToFile, % proxy[A_index] "https://raw.githubusercontent.com/wyagd001/RuYi-Ahk/main/" websfilename, %Tmp_File%
+			UrlDownloadToFile, % GithubProxy_Arr[A_index] "https://raw.githubusercontent.com/wyagd001/RuYi-Ahk/main/" websfilename, %Tmp_File%
 			if ErrorLevel
 			{
 				continue

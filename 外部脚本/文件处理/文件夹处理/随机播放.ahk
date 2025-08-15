@@ -78,7 +78,7 @@ PlayMusic(file)
 	if ErrorLevel or h
 	{
 		;msgbox % h " - " ErrorLevel " - " A_LastError
-		FileAppend(h " - " ErrorLevel " - " A_LastError " - " file "`n")
+		CF_FileAppend(h " - " ErrorLevel " - " A_LastError " - " file "`n")
 	}
   ;msgbox % command " | " h
 	;command1 := "play """ file """ notify"  ; 无别名
@@ -89,7 +89,7 @@ PlayMusic(file)
 	if ErrorLevel
 	{
 		;msgbox % h " - " ErrorLevel " - " A_LastError
-		FileAppend(h " - " ErrorLevel " - " A_LastError "`n")
+		CF_FileAppend(h " - " ErrorLevel " - " A_LastError "`n")
 	}
 	return hSound
 }
@@ -131,7 +131,7 @@ RandomFile(hpath)  ; 文件夹随机次数平均, 对于文件夹中文件数量
 	{
 		SplitPath, hpath, name, dir
     ;msgbox % hpath
-		FileAppend(dir " " B_index "`n")
+		CF_FileAppend(dir " " B_index "`n")
 		if (dir != FirstF)
 			objFolder := objShell.NameSpace(dir)
 	}

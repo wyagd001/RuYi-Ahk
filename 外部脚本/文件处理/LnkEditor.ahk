@@ -375,7 +375,6 @@ AhkToHotkeyString(hHotkey)
 	return hHotkey
 }
 
-
 CF_GetParentPath(sfile){
 	return SubStr(sfile, 1, InStr(SubStr(sfile, 1, -1), "\", 0, 0)-1)
 }
@@ -388,16 +387,7 @@ CF_FileIsReadOnly(sfile){
 	return 0
 }
 
-CF_IsFolder(sfile){
-	if InStr(FileExist(sfile), "D")
-	|| (sfile = """::{20D04FE0-3AEA-1069-A2D8-08002B30309D}""")
-	;|| (SubStr(sfile, 1, 2) = "\\")   ; 局域网共享文件夹 如 \\Win11\Soft
-		return 1
-	else
-		return 0
-}
 ;LnkChangePath("E:\Users\Lyh\Desktop\chrome.exe.lnk","D:\", "E:\", 0)
-
 LnkChangePath(LinkFile, OldPathStr:="", NewPathStr:="", Back:=0)
 {
 if Back

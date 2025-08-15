@@ -21,7 +21,6 @@ if WinExist("AppBarWin ahk_class AutoHotkeyGUI")
 	loop 3
 	{
 		h := ExecSendToRuyi(htype0 "`n" strreplace(low0, "°C") "-"  strreplace(high0, "°C") "|red",, 1527)
-		;FileAppend("`n" A_now ": " h)
 		if h
 			break
 	}

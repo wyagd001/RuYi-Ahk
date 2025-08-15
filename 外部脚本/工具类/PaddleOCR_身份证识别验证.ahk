@@ -15,17 +15,22 @@ else
 {
 	Alltxt := PaddleOCR(CandySel)
 	sfz := RegExMatch(Alltxt, "m)(\d{18})|(\d{17}[\d|X|x])", OutputVar)
-	yzsfz := Verify(OutputVar)
+	yzsfz := Verify(OutputVar)   ; 返回零表示是身份证号
 
 	if !yzsfz
 	{
 		ControlSetText, Edit1, %OutputVar%, ahk_id %CandySel2%
-		exitapp
+    if ErrorLevel
+    {
+      GuiText(Alltxt,  "文字识别结果")
+    }
+    else
+      exitapp
 	}
 	else
 	{
 		Tooltip % yzsfz
-		GuiText( Alltxt,  "文字识别结果")
+		GuiText(Alltxt,  "文字识别结果")
 	}
 }
 return

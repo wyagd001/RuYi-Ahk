@@ -17,8 +17,3 @@ if (CandySel = "垂直最大化")
 	CF_WinMove(Windy_CurWin_id,, 0,, OutputVarBottom)
 if (CandySel = "水平最大化")
 	CF_WinMove(Windy_CurWin_id, 0,, OutputVarRight)
-
-CF_WinMove(Win, x:="", y:="", w:="", h:="")
-{
-	WinMove, ahk_id %win%,, x, y, w, h
-}

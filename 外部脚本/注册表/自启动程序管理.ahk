@@ -1,4 +1,4 @@
-﻿;|2.8|2024.09.17|1671
+﻿;|3.0|2025.08.11|1671
 ; 来源网址: http://thinkai.net/page/16   已修改
 #SingleInstance force
 Menu, Tray, UseErrorLevel

@@ -46,18 +46,6 @@ else if (CandySel2 = "List")
 sleep 3000
 return
 
-CF_ToolTip(tipText, delay := 1000)
-{
-	ToolTip
-	ToolTip, % tipText
-	SetTimer, RemoveToolTip, % "-" delay
-return
-
-RemoveToolTip:
-	ToolTip
-return
-}
-
 /* Windows Service Control Functions
 -heresy
 
@@ -136,7 +124,6 @@ Service_List(State="", Type="", delimiter="`n"){
 		addd := NumGet(ENUM_SERVICE_STATUS, (A_Index-1)*(4+4+7*4)+A_PtrSize)
 	ELSE
 		addd := NumGet(ENUM_SERVICE_STATUS, (A_Index-1)*(8+8+7*4+4)+A_PtrSize)
-	;FileAppend(addd "`n")
 	if !addd
 		break
 	if (addd != 0)

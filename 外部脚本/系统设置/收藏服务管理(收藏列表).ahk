@@ -233,7 +233,6 @@ Service_List(State="", Type="", delimiter="`n"){
 		ELSE
 			;addd := NumGet(ENUM_SERVICE_STATUS, (A_Index-1)*(8+8+7*4+4)+A_PtrSize)
 			addd := NumGet(ENUM_SERVICE_STATUS, (A_Index-1)*(8+8+7*4+4))
-		;FileAppend(addd "`n")
 		if !addd
 			break
 		if (addd != 0)
@@ -592,15 +591,3 @@ _GetName_(DisplayName)
 
     return !Output ? DisplayName : Output
 }
-
-CF_ToolTip(tipText, delay := 1000)
-{
-  ToolTip
-  ToolTip, % tipText
-  if (delay > 0)
-    SetTimer, RemoveToolTip, % "-" delay
-}
-
-RemoveToolTip:
-ToolTip
-return

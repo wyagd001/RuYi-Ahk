@@ -23,13 +23,6 @@ else if (F_Arr.Length() = 1)
 }
 return
 
-CF_FolderIsEmpty(sfolder)
-{
-  Loop, Files, %sfolder%\*.*, FD
-    return 0
-  return 1
-}
-
 show_obj(obj, menu_name := "")
 {
 	if menu_name =

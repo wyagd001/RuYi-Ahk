@@ -27,8 +27,3 @@ else
 }
 Send {Enter}
 Return
-
-CF_IniRead(ini, sec, key := "", default := ""){
-	IniRead, v, %ini%, %sec%, %key%, %default%
-  Return, v
-}

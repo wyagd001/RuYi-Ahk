@@ -876,18 +876,6 @@ RunScript(script, WaitResult:="false")
 return
 }
 
-CF_ToolTip(tipText, delay := 1000)
-{
-	ToolTip
-	ToolTip, % tipText
-	SetTimer, RemoveToolTip, % "-" delay
-return
-
-RemoveToolTip:
-	ToolTip
-return
-}
-
 Deref(String)
 {
     spo := 1

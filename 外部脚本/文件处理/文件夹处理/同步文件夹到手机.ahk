@@ -445,18 +445,6 @@ if (A_GuiControl = "filelist1")
 }
 return
 
-CF_ToolTip(tipText, delay := 1000)
-{
-	ToolTip
-	ToolTip, % tipText
-	SetTimer, RemoveToolTip, % "-" delay
-return
-
-RemoveToolTip:
-	ToolTip
-return
-}
-
 connectphone:
 Gui, 66: Default
 Gui, submit, nohide

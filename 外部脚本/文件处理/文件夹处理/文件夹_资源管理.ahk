@@ -835,18 +835,6 @@ return
 nul:
 return
 
-CF_ToolTip(tipText, delay := 1000)
-{
-	ToolTip
-	ToolTip, % tipText
-	SetTimer, RemoveToolTip, % "-" delay
-return
-
-RemoveToolTip:
-	ToolTip
-return
-}
-
 ; ==================================================================================================================================
 ; Shows a dialog to select a folder.
 ; Depending on the OS version the function will use either the built-in FileSelectFolder command (XP and previous)

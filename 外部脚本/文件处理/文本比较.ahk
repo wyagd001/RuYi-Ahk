@@ -799,18 +799,6 @@ ZTrim( N := "" )
 Return ( V0 = "-" ? "-" : ""   )  ( V1 = "" ? 0 : V1 )   ( V2 <> "" ? "." V2 : "" )
 }
 
-CF_ToolTip(tipText, delay := 1000)
-{
-	ToolTip
-	ToolTip, % tipText
-	SetTimer, RemoveToolTip, % "-" delay
-return
-
-RemoveToolTip:
-	ToolTip
-return
-}
-
 RegExMatchAll(ByRef Haystack, NeedleRegEx, SubPat="")
 {
 	arr := [], startPos := 1

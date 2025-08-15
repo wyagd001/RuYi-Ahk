@@ -45,18 +45,6 @@ if (A_GuiEvent = "DoubleClick") or (A_GuiEvent = "R")
 }
 return
 
-CF_ToolTip(tipText, delay := 1000)
-{
-	ToolTip
-	ToolTip, % tipText
-	SetTimer, RemoveToolTip, % "-" delay
-return
-
-RemoveToolTip:
-	ToolTip
-return
-}
-
 GetFullDetails(FilePath)
 {
 	Props := {}

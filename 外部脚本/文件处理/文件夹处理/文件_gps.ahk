@@ -69,18 +69,6 @@ if (A_GuiEvent = "DoubleClick") or (A_GuiEvent = "R")
 }
 return
 
-CF_ToolTip(tipText, delay := 1000)
-{
-	ToolTip
-	ToolTip, % tipText
-	SetTimer, RemoveToolTip, % "-" delay
-return
-
-RemoveToolTip:
-	ToolTip
-return
-}
-
 CopySel:
 ControlGet, aac, List, Selected, SysListView321, 图片GPS管理
 Clipboard := aac
