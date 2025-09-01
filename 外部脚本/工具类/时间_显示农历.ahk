@@ -1,4 +1,5 @@
 ﻿;|2.9|2025.6.27|1555
+#Include <Ruyi>
 ;Menu, Tray, UseErrorLevel
 ;Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\f739.ico"
 ;msgbox % Date_GetLunarDate(20250626)
@@ -71,27 +72,6 @@ if WinExist("AppBarWin ahk_class AutoHotkeyGUI")
 else
 	msgbox % "今天是" TX "`n" Date_GetLunarDate(A_Now)
 return
-
-ExecSendToRuyi(ByRef StringToSend := "", Title := "如一 ahk_class AutoHotkey", wParam := 0, Msg := 0x4a) {
-	VarSetCapacity(CopyDataStruct, 3*A_PtrSize, 0)
-	SizeInBytes := (StrLen(StringToSend) + 1) * (A_IsUnicode ? 2 : 1)
-	NumPut(SizeInBytes, CopyDataStruct, A_PtrSize)
-	NumPut(&StringToSend, CopyDataStruct, 2*A_PtrSize)
-
-	DetectHiddenWindows, On
-	if Title is integer
-	{
-		SendMessage, Msg, wParam, &CopyDataStruct,, ahk_id %Title%
-		;msgbox % ErrorLevel  "qq"
-	}
-	else if Title is not integer
-	{
-		SetTitleMatchMode 2
-		sendMessage, Msg, wParam, &CopyDataStruct,, %Title%
-	}
-	DetectHiddenWindows, Off
-	return ErrorLevel
-}
 
 qingming(Nyear)   ; 年份支持 1700-3100
 {

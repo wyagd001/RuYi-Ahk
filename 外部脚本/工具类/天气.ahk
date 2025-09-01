@@ -1,5 +1,6 @@
 ﻿;|2.9|2025.06.21|1554
-;#Include <WinHttp>
+#Include <Ruyi>
+#Include <WinHttp>
 A_iniFile = %A_ScriptDir%\..\..\配置文件\自定义\RY_程序保存_如一.ini
 B_iniFile = %A_ScriptDir%\..\..\配置文件\如一.ini
 
@@ -81,27 +82,6 @@ json(ByRef js, s, v = "")
 	}
 	Return, j == "false" ? 0 : j == "true" ? 1 : j == "null" or j == "nul"
 		? "" : SubStr(j, 1, 1) == """" ? SubStr(j, 2, -1) : j
-}
-
-ExecSendToRuyi(ByRef StringToSend := "", Title := "如一 ahk_class AutoHotkey", wParam := 0, Msg := 0x4a) {
-	VarSetCapacity(CopyDataStruct, 3*A_PtrSize, 0)
-	SizeInBytes := (StrLen(StringToSend) + 1) * (A_IsUnicode ? 2 : 1)
-	NumPut(SizeInBytes, CopyDataStruct, A_PtrSize)
-	NumPut(&StringToSend, CopyDataStruct, 2*A_PtrSize)
-
-	DetectHiddenWindows, On
-	if Title is integer
-	{
-		SendMessage, Msg, wParam, &CopyDataStruct,, ahk_id %Title%
-		;msgbox % ErrorLevel  "qq"
-	}
-	else if Title is not integer
-	{
-		SetTitleMatchMode 2
-		sendMessage, Msg, wParam, &CopyDataStruct,, %Title%
-	}
-	DetectHiddenWindows, Off
-	return ErrorLevel
 }
 
 /*

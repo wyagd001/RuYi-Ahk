@@ -1,4 +1,5 @@
 ﻿;|2.5|2024.02.11|1553
+#Include <AutoXYWH>
 CandySel := A_Args[1]
 ;Tooltip % CandySel
 GuiText( OCR(CandySel, "chi_sim"),  "文字识别结果")
@@ -27,42 +28,6 @@ GuiText(Gtext, Title:="", w:=300, l:=20)
 	AutoXYWH("wh", "myedit")
 	return
 }
-
-AutoXYWH(DimSize, cList*){   ;https://www.autohotkey.com/boards/viewtopic.php?t=1079
-  Static cInfo := {}
-
-  If (DimSize = "reset")
-    Return cInfo := {}
-
-  For i, ctrl in cList {
-    ctrlID := A_Gui ":" ctrl
-    If !cInfo.hasKey(ctrlID) {
-      ix := iy := iw := ih := 0	
-      GuiControlGet i, %A_Gui%: Pos, %ctrl%
-      MMD := InStr(DimSize, "*") ? "MoveDraw" : "Move"
-      fx := fy := fw := fh := 0
-      For i, dim in (a := StrSplit(RegExReplace(DimSize, "i)[^xywh]"))) 
-        If !RegExMatch(DimSize, "i)" . dim . "\s*\K[\d.-]+", f%dim%)
-          f%dim% := 1
-
-      If (InStr(DimSize, "t")) {
-        GuiControlGet hWnd, %A_Gui%: hWnd, %ctrl%
-        hParentWnd := DllCall("GetParent", "Ptr", hWnd, "Ptr")
-        VarSetCapacity(RECT, 16, 0)
-        DllCall("GetWindowRect", "Ptr", hParentWnd, "Ptr", &RECT)
-        DllCall("MapWindowPoints", "Ptr", 0, "Ptr", DllCall("GetParent", "Ptr", hParentWnd, "Ptr"), "Ptr", &RECT, "UInt", 1)
-        ix := ix - NumGet(RECT, 0, "Int")
-        iy := iy - NumGet(RECT, 4, "Int")
-      }
-
-      cInfo[ctrlID] := {x:ix, fx:fx, y:iy, fy:fy, w:iw, fw:fw, h:ih, fh:fh, gw:A_GuiWidth, gh:A_GuiHeight, a:a, m:MMD}
-    } Else {
-      dgx := dgw := A_GuiWidth - cInfo[ctrlID].gw, dgy := dgh := A_GuiHeight - cInfo[ctrlID].gh
-      Options := ""
-      For i, dim in cInfo[ctrlID]["a"]
-        Options .= dim (dg%dim% * cInfo[ctrlID]["f" . dim] + cInfo[ctrlID][dim]) A_Space
-      GuiControl, % A_Gui ":" cInfo[ctrlID].m, % ctrl, % Options
-} } }
 
 GetFullPathName(path) {
     cc := DllCall("GetFullPathName", "str", path, "uint", 0, "ptr", 0, "ptr", 0, "uint")

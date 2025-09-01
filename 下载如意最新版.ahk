@@ -31,7 +31,7 @@ updateexe()
 
 	githubdownload(如一exe)
   sleep 150
-	githubdownload(AnyToAhkexeFile)
+	githubdownload(AnyToAhkexe)
   sleep 150
 	githubdownload("配置文件\内置动作.ini")
   sleep 150

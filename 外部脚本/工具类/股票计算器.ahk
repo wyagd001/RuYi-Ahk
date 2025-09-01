@@ -1,4 +1,5 @@
 ﻿;|2.8|2024.10.19|1665
+#Include <Ruyi>
 #Include <WinHttp>
 Menu, Tray, UseErrorLevel
 Menu, Tray, Icon, % A_ScriptDir "\..\..\脚本图标\如意\e9d2.ico"
@@ -129,67 +130,6 @@ jsonpgz := StrReplace(jsonpgz, ");")
 	GPOBJ["涨跌"] := Value3
 
 	return GPOBJ
-}
-
-ini2obj(file)
-{
-	iniobj := {}
-	FileRead, filecontent, %file% ;加载文件到变量
-	StringReplace, filecontent, filecontent, `r, , All
-	StringSplit, line, filecontent, `n, , ;用函数分割变量为伪数组
-	Loop ;循环
-	{
-		if A_Index > %line0%
-			Break
-		content = % line%A_Index% ; 赋值当前行
-		if (instr(content, ";") = 1)  ; 每行第一个字符为 ; 为注释跳过
-			continue
-		FSection := RegExMatch(content, "\[.*\]") ;正则表达式匹配section
-		if FSection = 1 ;如果找到
-		{
-			TSection := RegExReplace(content, "\[(.*)\]", "$1") ; 正则替换并赋值临时section $为向后引用
-			iniobj[TSection] := {}
-		}
-		Else
-		{
-			FKey := RegExMatch(content, "^.*=.*")    ;正则表达式匹配key
-			if FKey
-			{
-				TKey := RegExReplace(content, "^(.*?)=.*", "$1")   ; 正则替换并赋值临时key
-				;StringReplace, TKey, TKey, ., _, All               ; 会将键中的 "." 自动替换为 "_". 快捷键中有 ., 所以注释掉了
-				TValue := RegExReplace(content, "^.*?=(.*)", "$1") ; 正则替换并赋值临时value
-				if TKey
-					iniobj[TSection][TKey] := TValue
-			}
-		}
-	}
-	Return iniobj
-}
-
-obj2ini(obj, file){
-	if (!isobject(obj) or !file)
-		Return 0
-	for k,v in obj
-	{
-		for key,value in v                                  ; 删除的键值不会保存
-		{
-			IniWrite, %value%, %file%, %k%, %key%
-			;fileappend %key%-%value%`n, %A_desktop%\123.txt
-		}
-	}
-Return 1
-}
-
-GetStringIndex(String, Index := "", MaxParts := -1, SplitStr := "|")
-{
-	arrCandy_Cmd_Str := StrSplit(String, SplitStr, " `t", MaxParts)
-	if Index
-	{
-		NewStr := arrCandy_Cmd_Str[Index]
-		return NewStr
-	}
-	else
-		return arrCandy_Cmd_Str
 }
 
 opensetfile:

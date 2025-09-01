@@ -12,6 +12,7 @@
 
   ;刷新问题其实是Common Control，即 Comctl32.dll的问题，只要是6.0以上就不会有刷新问题
 
+#Include <Ruyi>
 #SingleInstance ignore
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 Menu, Tray, UseErrorLevel
@@ -609,29 +610,4 @@ DROPEFFECT_LINK  4   拖动源应创建指向原始数据的链接。
      ; StrPut returns char count, but VarSetCapacity needs bytes.        
     ; Copy or convert the string.
     return StrPut(string, &var, encoding)
-}
-
-Deref(String)
-{
-    spo := 1
-    out := ""
-    while (fpo:=RegexMatch(String, "(%(.*?)%)|``(.)", m, spo))
-    {
-        out .= SubStr(String, spo, fpo-spo)
-        spo := fpo + StrLen(m)
-        if (m1)
-            out .= %m2%
-        else switch (m3)
-        {
-            case "a": out .= "`a"
-            case "b": out .= "`b"
-            case "f": out .= "`f"
-            case "n": out .= "`n"
-            case "r": out .= "`r"
-            case "t": out .= "`t"
-            case "v": out .= "`v"
-            default: out .= m3
-        }
-    }
-    return out SubStr(String, spo)
 }

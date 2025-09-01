@@ -1,4 +1,5 @@
 ﻿;|2.9|2025.01.07|1225
+#Include <Ruyi>
 #SingleInstance force
 #InputLevel 10   ; 优先级设置比如意中的高, 按下相同热键后先触发脚本自身的
 Menu, Tray, UseErrorLevel
@@ -122,39 +123,6 @@ GuiClose:
 ExitSub:
 	ExitApp ; Terminate the script unconditionally
 return
-
-GetSelText(returntype := 1, ByRef _isFile := "", ByRef _ClipAll := "", waittime := 0.5)
-{
-	global clipmonitor
-	clipmonitor := (returntype = 0) ? 1 : 0
-	BackUp_ClipBoard := ClipboardAll    ; 备份剪贴板
-	Clipboard =    ; 清空剪贴板
-	Send, ^c
-	sleep 100
-	ClipWait, % waittime
-	If(ErrorLevel) ; 如果粘贴板里面没有内容，则还原剪贴板
-	{
-		Clipboard := BackUp_ClipBoard
-		sleep 100
-		clipmonitor := 1
-	Return
-	}
-	If(returntype = 0)
-	Return Clipboard
-	else If(returntype=1)
-		_isFile := _ClipAll := ""
-	else
-	{
-		_isFile := DllCall("IsClipboardFormatAvailable", "UInt", 15) ; 是否是文件类型
-		_ClipAll := ClipboardAll
-	}
-	ClipSel := Clipboard
-
-	Clipboard := BackUp_ClipBoard  ; 还原粘贴板
-	sleep 100
-	clipmonitor := 1
-	return ClipSel
-}
 
 updateMlib:
 tooltip 开始更新文件库...
@@ -1951,29 +1919,4 @@ SQLiteDB_RegExp(Context, ArgC, Values) {
       Result := RegExMatch(StrGet(AddrH, "UTF-8"), StrGet(AddrN, "UTF-8"))
    }
    DllCall(This.base._SQLiteDLL "\sqlite3_result_int", "Ptr", Context, "Int", !!Result, "Cdecl") ; 0 = false, 1 = trus
-}
-
-Deref(String)
-{
-    spo := 1
-    out := ""
-    while (fpo:=RegexMatch(String, "(%(.*?)%)|``(.)", m, spo))
-    {
-        out .= SubStr(String, spo, fpo-spo)
-        spo := fpo + StrLen(m)
-        if (m1)
-            out .= %m2%
-        else switch (m3)
-        {
-            case "a": out .= "`a"
-            case "b": out .= "`b"
-            case "f": out .= "`f"
-            case "n": out .= "`n"
-            case "r": out .= "`r"
-            case "t": out .= "`t"
-            case "v": out .= "`v"
-            default: out .= m3
-        }
-    }
-    return out SubStr(String, spo)
 }

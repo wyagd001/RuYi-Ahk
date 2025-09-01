@@ -232,7 +232,6 @@ sleep, 1000
 tooltip
 return
 
-
 ip_haschanged:
 ControlGetFocus, WhichControl, A
 if WhichControl=Edit8
@@ -795,7 +794,6 @@ ScanSubnet(addresses:="") {	;pings IP ranges & returns active IP's
 
 ;转自 https://www.autohotkey.com/boards/viewtopic.php?f=9&t=18768&p=91413&hilit=GetAdaptersInfo#p91413
  
-
 GetAdaptersInfo()
 {
     ; initial call to GetAdaptersInfo to get the necessary size
@@ -850,7 +848,6 @@ DateAdd(time)
     FormatTime, OutputVar, datetime, yyyy-MM-dd HH:mm:ss
     return OutputVar
 }
- 
  
 PrintArr(Arr, Option := "w800 h200", GuiNum := 90)
 {

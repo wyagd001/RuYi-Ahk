@@ -1,4 +1,5 @@
 ﻿;|2.7|2024.06.17|1177,1178
+#Include <Ruyi>
 CandySel :=  A_Args[1]
 CandySel2 :=  A_Args[2]
 CandySel3 :=  A_Args[3]
@@ -216,29 +217,4 @@ FolderMenu_AddIcon(menuitem,submenu)
 		; Because we used ":" and not ":*", the icon will be automatically
 		; freed when the program exits or if the menu or item is deleted.
 	}
-}
-
-Deref(String)
-{
-    spo := 1
-    out := ""
-    while (fpo:=RegexMatch(String, "(%(.*?)%)|``(.)", m, spo))
-    {
-        out .= SubStr(String, spo, fpo-spo)
-        spo := fpo + StrLen(m)
-        if (m1)
-            out .= %m2%
-        else switch (m3)
-        {
-            case "a": out .= "`a"
-            case "b": out .= "`b"
-            case "f": out .= "`f"
-            case "n": out .= "`n"
-            case "r": out .= "`r"
-            case "t": out .= "`t"
-            case "v": out .= "`v"
-            default: out .= m3
-        }
-    }
-    return out SubStr(String, spo)
 }

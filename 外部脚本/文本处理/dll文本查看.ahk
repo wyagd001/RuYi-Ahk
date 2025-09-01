@@ -1,4 +1,5 @@
 ﻿;|2.3|2023.09.01|1450
+#Include <Ruyi>
 ; %SystemRoot%\system32\shell32.dll,-16769
 ; @shell32.dll,-30397
 ; @shell32.dll,-30318
@@ -87,29 +88,4 @@ TranslateMUI(resDll, resID)
 	;msgbox % StrGet(&buf, Result)
 	VarSetCapacity(buf, -1)  ; 去除多余的 00
 	Return buf
-}
-
-Deref(String)
-{
-    spo := 1
-    out := ""
-    while (fpo:=RegexMatch(String, "(%(.*?)%)|``(.)", m, spo))
-    {
-        out .= SubStr(String, spo, fpo-spo)
-        spo := fpo + StrLen(m)
-        if (m1)
-            out .= %m2%
-        else switch (m3)
-        {
-            case "a": out .= "`a"
-            case "b": out .= "`b"
-            case "f": out .= "`f"
-            case "n": out .= "`n"
-            case "r": out .= "`r"
-            case "t": out .= "`t"
-            case "v": out .= "`v"
-            default: out .= m3
-        }
-    }
-    return out SubStr(String, spo)
 }

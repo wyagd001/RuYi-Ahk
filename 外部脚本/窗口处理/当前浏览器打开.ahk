@@ -1,6 +1,7 @@
-﻿;|2.0|2023.07.01|多条目
+﻿;|3.0|2025.08.19|多条目
 ATA_settingFile := A_ScriptDir "\..\..\配置文件\如一.ini"
 ATA_filepath := A_Args[1]
+
 DetectHiddenWindows, On
 WinGetTitle, h_hwnd, 获取当前窗口信息
 Windy_CurWin_id := StrReplace(h_hwnd, "获取当前窗口信息_")
@@ -12,6 +13,13 @@ if !Windy_CurWin_Fullpath
 	WinGet, OutPID, PID, A
 }
 SplitPath, Windy_CurWin_Fullpath, Windy_CurWin_ProcName
+if !ATA_filepath
+{
+	DetectHiddenWindows, On
+	ControlGetText, ATA_filepath, Edit1, 获取当前窗口信息_ 
+	DetectHiddenWindows, Off
+}
+
 ;msgbox %Windy_CurWin_ProcName% "%ATA_filepath%"
 CurrentWebOpen:
 ; ATA_filepath 含有 "/" 字符时, 使用浏览器打开, 网址中不支持中文字符

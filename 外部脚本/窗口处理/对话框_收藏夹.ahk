@@ -1,4 +1,6 @@
-﻿;|2.9|2025.01.08|1239
+﻿;|3.0|2025.08.16|1239
+#Include <Ruyi>
+#Include <OpenedFolder> 
 ; 这里只是展示 TV 定位函数
 ; 注意 64 位主程序对 64 位程序打开的对话框有效, 对 32 位程序打开的对话框无效
 ; 资源管理器需要取消勾选 查看→导航窗格→显示所有文件夹 和 展开到打的文件夹, 因为显示太多目录导致找不到相应的节点
@@ -130,7 +132,10 @@ return
 
 Windo_JumpToFolder:
 ControlSetText, edit1, %A_ThisMenuItem%, Ahk_ID %Windy_CurWin_id%
+sleep 500
+WinActivate, ahk_class #32770
 ControlSend, edit1, {Enter}, Ahk_ID %Windy_CurWin_id%
+ControlSend, , {Enter}, Ahk_ID %Windy_CurWin_id%
 return
 
 setpath:
@@ -139,22 +144,18 @@ Gui, Submit, NoHide
 hdrive := SubStr(dpath, 1, 2)
 If WinExist("ahk_class #32770")
 {
-	DriveGet, OutputVar, Label, %hdrive%
-	dpath := StrReplace(dpath, hdrive, ((OutputVar = "")?"本地磁盘 (" hdrive ")" : OutputVar " (" hdrive ")"))
-	dpath := StrReplace(dpath, "\users\", "\用户\")
-	dpath := StrReplace(dpath, "\desktop", "\桌面")
-	dpath := StrReplace(dpath, "\Documents and Settings", "\用户")
+  if !InStr(dpath, "桌面\")
+    dpath := PathToPerson(dpath)
 
   if (A_OSVersion = "WIN_7")
     TVPath_Set(hTreeView, (hdialogedit?"计算机\":instr(dpath, "桌面")?"":"桌面\计算机\") dpath, outMatchPath,,,10)
   else ; 适配 Win10
-    TVPath_Set(hTreeView, (hdialogedit=0?"桌面\此电脑\":"此电脑\") dpath, outMatchPath,,,20)
+    TVPath_Set(hTreeView, (hdialogedit?"此电脑\":"桌面\此电脑\") dpath, outMatchPath,,,20)
 
-  ;msgbox % (hdialogedit=0?"桌面\此电脑\":instr(dpath, "桌面")?"":"桌面\此电脑\") dpath
   ControlFocus, , ahk_id %hTreeView%
   if hdialogedit
     ControlSend, , {Enter}, ahk_id %hTreeView%
-  ;ToolTip % (hdialogedit?"此电脑\":instr(dpath, "桌面")?"":"此电脑\") dpath "`n" hdialogedit
+  ;msgbox % hdialogedit "`n" (hdialogedit=0?"桌面\此电脑\":"此电脑\") dpath
 }
 If WinExist("ahk_class RegEdit_RegEdit")
 {
@@ -222,6 +223,8 @@ ProcessGetBits(vPID){   ;;获取进程位数
 	Return 64
 }
 
+/*
+; 测试用
 q::
 if Windy_CurWin_id
 {
@@ -244,6 +247,7 @@ msgbox % GetExplorerPathTree("G:\ubuntu\disks") "`n" PathToPerson("G:\ubuntu\dis
 msgbox % GetExplorerPathTree("C:\Users\lyh\Downloads") "`n" PathToPerson("C:\Users\lyh\Downloads")
 msgbox % GetExplorerPathTree("C:\Users\Administrator\Favorites\系统工具箱") "`n" PathToPerson("C:\Users\Administrator\Favorites\系统工具箱")
 return
+*/
 
 AddToFav:
 !q::
@@ -341,12 +345,7 @@ PathToPerson(fpath)
   {
     ParentDir := upDir(A_Index, fpath, DirName)
     ;msgbox % ParentDir "\" DirName
-    if (DirName = "desktop")
-    {
-      tmp_Arr[A_Index] := DirName
-      continue
-    }
-    if fileexist(ParentDir "\" DirName "\desktop.ini")
+    if (Instr(fileexist(ParentDir "\" DirName "\desktop.ini"), "R") || Instr(fileexist(ParentDir "\" DirName "\desktop.ini"), "S")) && Instr(fileexist(ParentDir "\" DirName), "R")
     {
       IniRead, LocalizedResourceName, % ParentDir "\" DirName "\desktop.ini", .ShellClassInfo, LocalizedResourceName, 0
       if !LocalizedResourceName
@@ -387,7 +386,7 @@ PathToPerson(fpath)
 }
 
 ;获取路径的树结构
-GetExplorerPathTree(FolderPath) {
+GetExplorerPathTree2(FolderPath) {
     Shell := ComObjCreate("Shell.Application")
     Folder := Shell.NameSpace(FolderPath)
     PathTree := ""
@@ -395,6 +394,33 @@ GetExplorerPathTree(FolderPath) {
         PathTree := Folder.Self.Name "\" PathTree
     Until !(Folder := Folder.ParentFolder)
     Return trim(PathTree, "\")
+}
+
+;获取路径的树结构
+GetExplorerPathTree(FolderPath) {
+    Shell := ComObjCreate("Shell.Application")
+    Folder := Shell.NameSpace(FolderPath)
+    PathTree := ""
+    last := 0
+    Loop
+    {
+        PathTree := Folder.Self.Name "\" PathTree
+        ParentFolder := upDir(A_Index, FolderPath)
+        Folder := Shell.NameSpace(ParentFolder)
+        if (ParentFolder = A_desktop) or (ParentFolder = "C:\" A_UserName "\Desktop" )
+        {
+          ;msgbox % ParentFolder "`n" A_desktop
+          PathTree := "桌面\" PathTree
+          break
+        }
+        if (StrLen(ParentFolder) = 2)
+        {
+          last++
+          if (last = 2)
+            break
+        }
+    }
+    Return Instr(PathTree, "桌面\")?trim(PathTree, "\"):"桌面\此电脑\" trim(PathTree, "\")
 }
 
 upDir(levels:=1, Dir:="", ByRef DirName := "") {
@@ -413,77 +439,6 @@ TranslateMUI(resDll, resID)
 	Return buf
 }
 
-Deref(String)
-{
-    spo := 1
-    out := ""
-    while (fpo:=RegexMatch(String, "(%(.*?)%)|``(.)", m, spo))
-    {
-        out .= SubStr(String, spo, fpo-spo)
-        spo := fpo + StrLen(m)
-        if (m1)
-            out .= %m2%
-        else switch (m3)
-        {
-            case "a": out .= "`a"
-            case "b": out .= "`b"
-            case "f": out .= "`f"
-            case "n": out .= "`n"
-            case "r": out .= "`r"
-            case "t": out .= "`t"
-            case "v": out .= "`v"
-            default: out .= m3
-        }
-    }
-    return out SubStr(String, spo)
-}
-
-ini2obj(file){
-	iniobj := {}
-	FileRead, filecontent, %file% ;加载文件到变量
-	StringReplace, filecontent, filecontent, `r,, All
-	StringSplit, line, filecontent, `n, , ;用函数分割变量为伪数组
-	Loop ;循环
-	{
-		if A_Index > %line0%
-			Break
-		content = % line%A_Index% ;赋值当前行
-		FSection := RegExMatch(content, "\[.*\]") ;正则表达式匹配section
-		if FSection = 1 ;如果找到
-		{
-			TSection := RegExReplace(content, "\[(.*)\]", "$1") ;正则替换并赋值临时section $为向后引用
-			iniobj[TSection] := {}
-		}
-		Else
-		{
-			FKey := RegExMatch(content, "^.*=.*") ;正则表达式匹配key
-			if FKey
-			{
-				TKey := RegExReplace(content, "^(.*?)=.*", "$1") ;正则替换并赋值临时key
-				StringReplace, TKey, TKey, ., _, All
-				TValue := RegExReplace(content, "^.*?=(.*)", "$1") ;正则替换并赋值临时value
-				if TKey
-					iniobj[TSection][TKey] := TValue
-			}
-		}
-	}
-Return iniobj
-}
-
-obj2ini(obj, file){
-	if (!isobject(obj) or !file)
-		Return 0
-	for k,v in obj
-	{
-		for key,value in v
-		{
-			IniWrite, %value%, %file%, %k%, %key%
-			;fileappend %key%-%value%`n, %A_desktop%\123.txt
-		}
-	}
-Return 1
-}
-
 show_obj(obj, menu_name := ""){
 	if menu_name =
 	{
@@ -500,113 +455,6 @@ show_obj(obj, menu_name := ""){
 	if main = 1
 		menu, % menu_name, show
 	return
-}
-
-GetAllWindowOpenFolder()
-{
-	if WinActive("ahk_class TTOTAL_CMD")
-    return TC_getTwoPath()
-
-	QtTabBarObj := QtTabBar()
-	if QtTabBarObj
-	{
-		OPenedFolder := QtTabBar_GetAllTabs()
-	}
-	else
-	{
-    ;msgbox % QtTabBarObj
-		OPenedFolder := []
-		ShellWindows := ComObjCreate("Shell.Application").Windows
-		for w in ShellWindows
-		{
-			Tmp_Fp := w.Document.Folder.Self.path
-			if (Tmp_Fp)
-				if FileExist(Tmp_Fp)
-				{
-					OPenedFolder.push(Tmp_Fp)
-				}
-		}
-	}
-  return OPenedFolder
-}
-
-TC_getTwoPath()
-{
-	DetectHiddenText, On
-	WinGetText, TCWindowText, Ahk_class TTOTAL_CMD
-	m := RegExMatchAll(TCWindowText, "m)(.*)\\\*\.\*", 1)
-	return m
-}
-
-; 32 位 AutoHotkey 无法获取 64 位系统的 QTTabBar
-QtTabBar()
-{
-	try QtTabBarObj := ComObjCreate("QTTabBarLib.Scripting")
-	if IsObject(QtTabBarObj)
-    return 1
-	else
-    return 0
-}
-
-QtTabBar_GetAllTabs()
-{
-	ScriptCode = 
-	(
-		OPenedFolder_Str := GetAllWindowOpenFolder()
-		FileAppend `% OPenedFolder_Str, *
-
-		GetAllWindowOpenFolder()
-		{
-			OPenedFolder_Str := ""
-			QtTabBarObj := ComObjCreate("QTTabBarLib.Scripting")
-			if QtTabBarObj
-			{
-				for k in QtTabBarObj.Windows
-					for w in k.Tabs
-					{
-						Tmp_Fp := w.path
-						if (Tmp_Fp)
-							if FileExist(Tmp_Fp)
-							{
-								OPenedFolder_Str .= Tmp_Fp "``n"
-							}
-					}
-			}
-		return OPenedFolder_Str
-		}
-	)
-
-	OPenedFolder_Str := RunScript(ScriptCode, 1)
-	OPenedFolder_Str := Trim(OPenedFolder_Str, " `t`n")
-	OPenedFolder := StrSplit(OPenedFolder_Str, "`n")
-  return OPenedFolder
-}
-
-RegExMatchAll(ByRef Haystack, NeedleRegEx, SubPat="")
-{
-	arr := [], startPos := 1
-	while ( pos := RegExMatch(Haystack, NeedleRegEx, match, startPos) )
-	{
-		arr.push(match%SubPat%)
-		startPos := pos + StrLen(match)
-	}
-	return arr.MaxIndex() ? arr : ""
-}
-
-RunScript(script, WaitResult:="false")
-{
-	static test_ahk := A_AhkPath,
-	shell := ComObjCreate("WScript.Shell")
-	BackUp_WorkingDir:= A_WorkingDir
-	SetWorkingDir %A_ScriptDir%
-	exec := shell.Exec(chr(34) test_ahk chr(34) " /ErrorStdOut *")
-	exec.StdIn.Write(script)
-	exec.StdIn.Close()
-	SetWorkingDir %BackUp_WorkingDir%
-	if WaitResult
-		return exec.StdOut.ReadAll()
-	else 
-return
 }
 
 ; 注册表打开时跳转到相应条目 主窗口\OpenButton.ahk
@@ -859,7 +707,7 @@ TVPath_Set(hTreeView, inPath, ByRef outMatchPath,  EscapeChar="", Delimiter="\",
 		;if (htext = "收藏夹") || (htext = "快速访问") ; 资源管理器 首个节点为收藏夹
 		if (htext != "此电脑") && (htext != "计算机")     ;or (htext != "桌面")
 		{
-			Loop 20
+			Loop 50
 			{
 				hSelItem:=TVPath_GetNext(hTreeView, hSelItem,"full")
 				htext:=TVPath_GetText(hTreeView, hSelItem)
@@ -1267,18 +1115,6 @@ ReadProcessMemory(hProcess, BaseAddress, ByRef Buffer, Size, ByRef NumberOfBytes
 				 , "UInt", Size
 				 , "UInt*", NumberOfBytesRead
 				 , "Int")
-}
-
-GetStringIndex(String, Index := "", MaxParts := -1, SplitStr := "|")
-{
-	arrCandy_Cmd_Str := StrSplit(String, SplitStr, " `t", MaxParts)
-	if Index
-	{
-		NewStr := arrCandy_Cmd_Str[Index]
-		return NewStr
-	}
-	else
-		return arrCandy_Cmd_Str
 }
 
 RefreshExplorer(h_hwnd)

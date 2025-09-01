@@ -1,4 +1,5 @@
 ﻿;|2.3|2023.09.01|1451
+#Include <Ruyi>
 ; %SystemRoot%\system32\shell32.dll,-16769
 ; %SystemRoot%\System32\imageres.dll,-5203
 ; %SystemRoot%\system32\wmploc.dll,-730
@@ -81,31 +82,6 @@ TranslateMUI(resDll, resID)
 	Result := DllCall("LoadString", "uint", hDll, "uint", resID, "uint", &buf, "int", 128)
 	VarSetCapacity(buf, -1)
 	Return buf
-}
-
-Deref(String)
-{
-    spo := 1
-    out := ""
-    while (fpo:=RegexMatch(String, "(%(.*?)%)|``(.)", m, spo))
-    {
-        out .= SubStr(String, spo, fpo-spo)
-        spo := fpo + StrLen(m)
-        if (m1)
-            out .= %m2%
-        else switch (m3)
-        {
-            case "a": out .= "`a"
-            case "b": out .= "`b"
-            case "f": out .= "`f"
-            case "n": out .= "`n"
-            case "r": out .= "`r"
-            case "t": out .= "`t"
-            case "v": out .= "`v"
-            default: out .= m3
-        }
-    }
-    return out SubStr(String, spo)
 }
 
 IndexOfIconResource(Filename, ID)

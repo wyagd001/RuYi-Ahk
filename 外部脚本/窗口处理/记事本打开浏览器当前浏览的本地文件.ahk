@@ -1,4 +1,5 @@
 ﻿;|2.3|2023.09.13|1439
+#Include <Ruyi>
 Windy_CurWin_Class := A_Args[1]
 IniRead, notepad2, %A_ScriptDir%\..\..\配置文件\如一.ini, 其他程序, notepad2, Notepad.exe
 if InStr(notepad2, "%A_ScriptDir%")
@@ -175,62 +176,4 @@ GetAddressBar(accObj) {
 IsURL(sURL) {
 	Return RegExMatch(sURL, "^(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+.*$")
 	;Return RegExMatch(sURL, "^(?<Protocol>https?|ftp|file):///?(?<Domain>(?:[\w-]+\.)+\w\w+)(?::(?<Port>\d+))?/?(?<Path>(?:[^:/?# ]*/?)+)(?:\?(?<Query>[^#]+)?)?(?:\#(?<Hash>.+)?)?$")
-}
-
-GetSelText(returntype := 1, ByRef _isFile := "", ByRef _ClipAll := "", waittime := 0.5)
-{
-	global clipmonitor
-	clipmonitor := (returntype = 0) ? 1 : 0
-	BackUp_ClipBoard := ClipboardAll    ; 备份剪贴板
-	Clipboard =    ; 清空剪贴板
-	Send, ^c
-	sleep 100
-	ClipWait, % waittime
-	If(ErrorLevel) ; 如果粘贴板里面没有内容，则还原剪贴板
-	{
-		Clipboard := BackUp_ClipBoard
-		sleep 100
-		clipmonitor := 1
-	Return
-	}
-	If(returntype = 0)
-	Return Clipboard
-	else If(returntype=1)
-		_isFile := _ClipAll := ""
-	else
-	{
-		_isFile := DllCall("IsClipboardFormatAvailable", "UInt", 15) ; 是否是文件类型
-		_ClipAll := ClipboardAll
-	}
-	ClipSel := Clipboard
-
-	Clipboard := BackUp_ClipBoard  ; 还原粘贴板
-	sleep 200
-	clipmonitor := 1
-	return ClipSel
-}
-
-Deref(String)
-{
-    spo := 1
-    out := ""
-    while (fpo:=RegexMatch(String, "(%(.*?)%)|``(.)", m, spo))
-    {
-        out .= SubStr(String, spo, fpo-spo)
-        spo := fpo + StrLen(m)
-        if (m1)
-            out .= %m2%
-        else switch (m3)
-        {
-            case "a": out .= "`a"
-            case "b": out .= "`b"
-            case "f": out .= "`f"
-            case "n": out .= "`n"
-            case "r": out .= "`r"
-            case "t": out .= "`t"
-            case "v": out .= "`v"
-            default: out .= m3
-        }
-    }
-    return out SubStr(String, spo)
 }

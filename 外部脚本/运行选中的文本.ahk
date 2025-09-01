@@ -1,4 +1,5 @@
 ﻿;|2.9|2024.01.08|1037
+#Include <Ruyi>
 CandySel := A_Args[1]
 if (RegExMatch(CandySel, "i)^(HKCU|HKCR|HKCC|HKU|HKLM|HKEY|计算机\\HK|\[HK)"))
 {
@@ -119,31 +120,6 @@ f_Split2(String, Seperator, ByRef LeftStr, ByRef RightStr)
 		StringTrimLeft, RightStr, String, %SplitPos%
 	}
 	return
-}
-
-Deref(String)
-{
-    spo := 1
-    out := ""
-    while (fpo:=RegexMatch(String, "(%(.*?)%)|``(.)", m, spo))
-    {
-        out .= SubStr(String, spo, fpo-spo)
-        spo := fpo + StrLen(m)
-        if (m1)
-            out .= %m2%
-        else switch (m3)
-        {
-            case "a": out .= "`a"
-            case "b": out .= "`b"
-            case "f": out .= "`f"
-            case "n": out .= "`n"
-            case "r": out .= "`r"
-            case "t": out .= "`t"
-            case "v": out .= "`v"
-            default: out .= m3
-        }
-    }
-    return out SubStr(String, spo)
 }
 
 Eval(x)

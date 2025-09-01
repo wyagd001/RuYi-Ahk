@@ -1,4 +1,5 @@
 ﻿;|2.7|2024.07.11|1528
+#Include <Ruyi>
 #Include <WinHttp>
 SetFormat, float, 10.4
 CandySel := A_Args[1]
@@ -45,25 +46,4 @@ Gupiao(Code)
 	Array := StrSplit(Wtitle1, " ")
 	GPOBJ["名称"] := Array[1]
 	return GPOBJ
-}
-
-ExecSendToRuyi(ByRef StringToSend := "", Title := "如一 ahk_class AutoHotkey", wParam := 0, Msg := 0x4a) {
-	VarSetCapacity(CopyDataStruct, 3*A_PtrSize, 0)
-	SizeInBytes := (StrLen(StringToSend) + 1) * (A_IsUnicode ? 2 : 1)
-	NumPut(SizeInBytes, CopyDataStruct, A_PtrSize)
-	NumPut(&StringToSend, CopyDataStruct, 2*A_PtrSize)
-
-	DetectHiddenWindows, On
-	if Title is integer
-	{
-		SendMessage, Msg, wParam, &CopyDataStruct,, ahk_id %Title%
-		;msgbox % ErrorLevel  "qq"
-	}
-	else if Title is not integer
-	{
-		SetTitleMatchMode 2
-		sendMessage, Msg, wParam, &CopyDataStruct,, %Title%
-	}
-	DetectHiddenWindows, Off
-	return ErrorLevel
 }

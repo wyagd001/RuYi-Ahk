@@ -1,4 +1,5 @@
 ﻿;|2.7|2024.06.20|1625
+#Include <Ruyi>
 ; Tray Audio Visualizer (by balawi28)
 ; https://github.com/balawi28
 ;
@@ -236,27 +237,6 @@ LogoPng(NewHandle := False)
     DllCall("Kernel32.dll\FreeLibrary", "Ptr", hGdip)
     DllCall(NumGet(NumGet(pStream + 0, 0, "UPtr") + (A_PtrSize * 2), 0, "UPtr"), "Ptr", pStream)
     Return hBitmap
-}
-
-ExecSendToRuyi(ByRef StringToSend := "", Title := "如一 ahk_class AutoHotkey", wParam := 0, Msg := 0x4a) {
-	VarSetCapacity(CopyDataStruct, 3*A_PtrSize, 0)
-	SizeInBytes := (StrLen(StringToSend) + 1) * (A_IsUnicode ? 2 : 1)
-	NumPut(SizeInBytes, CopyDataStruct, A_PtrSize)
-	NumPut(&StringToSend, CopyDataStruct, 2*A_PtrSize)
-
-	DetectHiddenWindows, On
-	if Title is integer
-	{
-		SendMessage, Msg, wParam, &CopyDataStruct,, ahk_id %Title%
-		;msgbox % ErrorLevel  "qq"
-	}
-	else if Title is not integer
-	{
-		SetTitleMatchMode 2
-		sendMessage, Msg, wParam, &CopyDataStruct,, %Title%
-	}
-	DetectHiddenWindows, Off
-	return ErrorLevel
 }
 
 #!q::

@@ -1,4 +1,5 @@
 ﻿;|2.9|2024.01.08|1212
+#Include <Ruyi>
 CandySel := A_Args[1]
 IniMenuInifile := A_ScriptDir "\..\配置文件\外部脚本\Ini_收藏夹.ini"
 if !fileexist(IniMenuInifile)
@@ -10,52 +11,6 @@ if !fileexist(CurrentWebBrowserOpen_IniFile)
 IniMenuobj := ini2obj(IniMenuInifile)
 show_obj(IniMenuobj)
 return
-
-ini2obj(file){
-	iniobj := {}
-	FileRead, filecontent, %file% ;加载文件到变量
-	StringReplace, filecontent, filecontent, `r,, All
-	StringSplit, line, filecontent, `n, , ;用函数分割变量为伪数组
-	Loop ;循环
-	{
-		if A_Index > %line0%
-			Break
-		content = % line%A_Index% ;赋值当前行
-		FSection := RegExMatch(content, "\[.*\]") ;正则表达式匹配section
-		if FSection = 1 ;如果找到
-		{
-			TSection := RegExReplace(content, "\[(.*)\]", "$1") ;正则替换并赋值临时section $为向后引用
-			iniobj[TSection] := {}
-		}
-		Else
-		{
-			FKey := RegExMatch(content, "^.*=.*") ;正则表达式匹配key
-			if FKey
-			{
-				TKey := RegExReplace(content, "^(.*?)=.*", "$1") ;正则替换并赋值临时key
-				StringReplace, TKey, TKey, ., _, All
-				TValue := RegExReplace(content, "^.*?=(.*)", "$1") ;正则替换并赋值临时value
-				if TKey
-					iniobj[TSection][TKey] := TValue
-			}
-		}
-	}
-Return iniobj
-}
-
-obj2ini(obj, file){
-	if (!isobject(obj) or !file)
-		Return 0
-	for k,v in obj
-	{
-		for key,value in v
-		{
-			IniWrite, %value%, %file%, %k%, %key%
-			;fileappend %key%-%value%`n, %A_desktop%\123.txt
-		}
-	}
-Return 1
-}
 
 show_obj(obj, menu_name := ""){
 	if menu_name =
@@ -251,31 +206,6 @@ f_Split2(String, Seperator, ByRef LeftStr, ByRef RightStr)
 	return
 }
 
-Deref(String)
-{
-    spo := 1
-    out := ""
-    while (fpo:=RegexMatch(String, "(%(.*?)%)|``(.)", m, spo))
-    {
-        out .= SubStr(String, spo, fpo-spo)
-        spo := fpo + StrLen(m)
-        if (m1)
-            out .= %m2%
-        else switch (m3)
-        {
-            case "a": out .= "`a"
-            case "b": out .= "`b"
-            case "f": out .= "`f"
-            case "n": out .= "`n"
-            case "r": out .= "`r"
-            case "t": out .= "`t"
-            case "v": out .= "`v"
-            default: out .= m3
-        }
-    }
-    return out SubStr(String, spo)
-}
-
 CurrentWebOpen:
 ; ATA_filepath 含有 "/" 字符时, 使用浏览器打开, 网址中不支持中文字符
 IniRead, Default_Browser, %CurrentWebBrowserOpen_IniFile%, Browser, Default_Browser, %A_Space%
@@ -398,32 +328,4 @@ GetCommandLine2(pid)
 {
 	for process in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process where ProcessId=" pid)
 		Return sCmdLine := process.CommandLine
-}
-
-GetStringIndex(String, Index := 1)
-{
-	arrCandy_Cmd_Str := StrSplit(String, "|", " `t")
-	NewStr := arrCandy_Cmd_Str[Index]
-	return NewStr
-}
-
-ExecSendToRuyi(ByRef StringToSend := "", Title := "如一 ahk_class AutoHotkey", wParam := 0, Msg := 0x4a) {
-	VarSetCapacity(CopyDataStruct, 3*A_PtrSize, 0)
-	SizeInBytes := (StrLen(StringToSend) + 1) * (A_IsUnicode ? 2 : 1)
-	NumPut(SizeInBytes, CopyDataStruct, A_PtrSize)
-	NumPut(&StringToSend, CopyDataStruct, 2*A_PtrSize)
-
-	DetectHiddenWindows, On
-	if Title is integer
-	{
-		SendMessage, Msg, wParam, &CopyDataStruct,, ahk_id %Title%
-		;msgbox % ErrorLevel  "qq"
-	}
-	else if Title is not integer
-	{
-		SetTitleMatchMode 2
-		sendMessage, Msg, wParam, &CopyDataStruct,, %Title%
-	}
-	DetectHiddenWindows, Off
-return ErrorLevel
 }

@@ -1,4 +1,4 @@
-﻿;|3.0|2025.07.25|1676
+﻿;|3.0|2025.08.25|1676
 #SingleInstance Force
 #NoEnv
 SetWorkingDir %A_ScriptDir%
@@ -33,8 +33,8 @@ Gui Add, ComboBox, x100 y180 w420 h90 r6 vdpath hwndhcbx, %A_desktop%||
 PostMessage, 0x153, -1, 49,, AHK_ID %hcbx% ; CB_SETITEMHEIGHT = 0x153
 ;PostMessage, 0x153, -1, 50,, ahk_id %hcbx%  ; Set height of selection field.
 ;PostMessage, 0x153,  0, 50,, ahk_id %hcbx%  ; Set height of list items.
-Gui Add, Button, x300 y240 w80 h30 gdownload, 下载
-Gui Add, Button, x400 y240 w80 h30 gGuiClose, 取消
+Gui Add, Button, x340 y240 w80 h30 gdownload default, 下载
+Gui Add, Button, x440 y240 w80 h30 gGuiClose, 取消
 
 Gui Show, w550 h280, Github 文件下载
 if CandySel
@@ -96,13 +96,28 @@ gui Submit, nohide
 SplitPath, rurl, OutFileName
 ;msgbox % OutFileName
 if fileexist(dpath) && CF_IsFolder(dpath)
-  UrlDownloadToFile, % durl, %dpath%\%OutFileName%
+{
+  DestPath := PathU(dpath "\" OutFileName)
+  UrlDownloadToFile, % durl, % DestPath
+}
 else
 {
   GuiControl, Text, dpath, % A_desktop
-  UrlDownloadToFile, % durl, %A_desktop%\%OutFileName%
+  DestPath := PathU(A_desktop "\" OutFileName)
+  UrlDownloadToFile, % durl, % DestPath
 }
-tooltip, 文件下载完毕!
-sleep 3000
-Tooltip
+if !ErrorLevel
+{
+  tooltip, 文件下载完毕!
+  sleep 3000
+  Tooltip
+}
 return
+
+PathU(Filename) { ;  PathU v0.91 by SKAN on D35E/D68M @ tiny.cc/pathu
+Local OutFile
+  VarSetCapacity(OutFile, 520)
+  DllCall("Kernel32\GetFullPathNameW", "WStr",Filename, "UInt",260, "Str",OutFile, "Ptr",0)
+  DllCall("Shell32\PathYetAnotherMakeUniqueName", "Str",OutFile, "Str",Outfile, "Ptr",0, "Ptr",0)
+Return A_IsUnicode ? OutFile : StrGet(&OutFile, "UTF-16")
+}

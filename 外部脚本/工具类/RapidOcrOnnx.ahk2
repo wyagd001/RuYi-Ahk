@@ -7,8 +7,9 @@ ocr := RapidOcrOnnx()
 ; ocr := RapidOcrOnnx("Precise") ; 使用更精确的模型
 result := ocr.DetectFile(CandySel)
 
+;msgbox result.ToString() "`n" CandySel2
 try
-  ControlSetText result.ToString(), "Edit1",  "ahk_id" CandySel2
+  ControlSetText(result.ToString(), "Edit1", "ahk_id" CandySel2)
 catch as e
   GuiText(result.ToString(), "OCR 文字识别", 400, 5) 
 

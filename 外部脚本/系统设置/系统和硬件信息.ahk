@@ -1,4 +1,5 @@
-﻿;|3.0|2025.07.18|1611
+﻿;|3.0|2025.08.28|1611
+#Include <AutoXYWH>
 ; A_Variables - AutoHotkey Built-in Variables v1.1.2
 #SingleInstance Force
 #NoEnv
@@ -13,6 +14,7 @@ Global A := Array()
 
 userObj := {}
 OSObj := {}
+Computerobj := {}
 YingJianObj := {}
 YingJianObj["主板"] := {}
 YingJianObj["CPU"] := {}
@@ -20,7 +22,8 @@ YingJianObj["BIOS"] := {}
 
 B_index := 0
 objWMIService := ComObjGet("winmgmts:{impersonationLevel=impersonate}!\\" . A_ComputerName . "\root\cimv2") 
-colSettings := objWMIService.ExecQuery("select * from Win32_OperatingSystem")._NewEnum 
+colSettings := objWMIService.ExecQuery("select * from Win32_OperatingSystem")._NewEnum
+ComputerSystemProperties := objWMIService.ExecQuery("Select * from Win32_ComputerSystem")._NewEnum
 UserAccountProperties := objWMIService.ExecQuery("Select * From Win32_UserAccount")._NewEnum
 BaseBoardProperties := objWMIService.ExecQuery("Select * From Win32_BaseBoard")._NewEnum
 PhysicalMemoryProperties := objWMIService.ExecQuery("Select * From Win32_PhysicalMemory")._NewEnum
@@ -39,13 +42,19 @@ LocalShare := objWMIService.ExecQuery("Select * From Win32_Share")._NewEnum
 
 While colSettings[strOSItem] 
 {
-	OSobj["版本"] := strOSItem.Version
+	;OSobj["版本"] := strOSItem.Version
 	OSobj["内存"] := Floor(strOSItem.TotalVisibleMemorySize / 1024 / 1000) "Gb"
 	OSobj["安装时间"] := substr(strOSItem.InstallDate, 1, 14)
 	OSobj["Windows序列号"] := strOSItem.SerialNumber
 	OSobj["开机时间"] := substr(strOSItem.LastBootUpTime, 1, 14)
 	OSobj["BootDevice"] := strOSItem.BootDevice
 	OSobj["时区"] := Ceil(strOSItem.CurrentTimeZone / 60)
+}
+
+While ComputerSystemProperties[objProperty]
+{
+	Computerobj["工作组"] := objProperty.Domain
+	Computerobj["系统类型"] := objProperty.SystemType
 }
 
 While UserAccountProperties[objProperty]
@@ -193,20 +202,15 @@ While LocalShare[objProperty]
 	YingJianObj["共享目录" B_Index]["路径"] := objProperty["Path"]
 }
 
-; AutoHotkey Information
-G.Push([10, "AutoHotkey信息"])
-A.Push(["A_AhkPath", A_AhkPath, 10])
-A.Push(["A_AhkVersion", A_AhkVersion, 10])
-A.Push(["A_IsUnicode", A_IsUnicode, 10])
-
 ; Operating System and User Information
 G.Push([20, "操作系统"])
-A.Push(["A_OSType", A_OSType, 20, "systeminfo"])
-A.Push(["A_OSVersion(OS 版本)", A_OSVersion, 20, "systeminfo"])
-A.Push(["A_Is64bitOS", A_Is64bitOS, 20, "systeminfo"])
-A.Push(["A_PtrSize", A_PtrSize, 20, "systeminfo"])
-A.Push(["A_Language", A_Language, 20, "systeminfo"])
 A.Push(["A_ComputerName(主机名)", A_ComputerName, 20, "systeminfo"])
+A.Push(["工作组", Computerobj["工作组"], 20, "systeminfo"])
+A.Push(["A_OSType", A_OSType, 20, "systeminfo"])
+A.Push(["SystemType", Computerobj["系统类型"], 20, "systeminfo"])
+A.Push(["A_Is64bitOS", A_Is64bitOS, 20, "systeminfo"])
+A.Push(["A_OSVersion(OS 版本)", A_OSVersion, 20, "systeminfo"])
+A.Push(["A_Language", A_Language, 20, "systeminfo"])
 for k, v in OSobj
 {
 	A.Push([k, v, 20, "msinfo32"])
@@ -225,6 +229,13 @@ G.Push([40, "屏幕分辨率"])
 A.Push(["A_ScreenWidth", A_ScreenWidth, 40])
 A.Push(["A_ScreenHeight", A_ScreenHeight, 40])
 A.Push(["A_ScreenDPI", A_ScreenDPI, 40])
+
+; AutoHotkey Information
+G.Push([10, "AutoHotkey信息"])
+A.Push(["A_AhkPath", A_AhkPath, 10])
+A.Push(["A_AhkVersion", A_AhkVersion, 10])
+A.Push(["A_IsUnicode", A_IsUnicode, 10])
+A.Push(["A_PtrSize", A_PtrSize, 10])
 
 ; Script Properties
 G.Push([50, "脚本属性"])
@@ -280,17 +291,6 @@ A.Push(["默认网关", YingJianObj["网络适配器配置"]["默认网关"], 15
 A.Push(["MAC", YingJianObj["网络适配器配置"]["MAC"], 150, "ipconfig"])
 A.Push(["DNS", YingJianObj["网络适配器配置"]["DNS"], 150, "ipconfig"])
 
-; Cursor
-G.Push([160, "光标"])
-A.Push(["A_Cursor", A_Cursor, 160])
-A.Push(["A_CaretX", A_CaretX, 160])
-A.Push(["A_CaretY", A_CaretY, 160])
-
-; Clipboard
-G.Push([170, "剪贴板"])
-A.Push(["Clipboard", Clipboard, 170])
-A.Push(["ClipboardAll", ClipboardAll, 170])
-
 G.Push([180, "硬件"])
 A.Push(["主板", YingJianObj["主板"]["制造商"] " " YingJianObj["主板"]["型号"], 180])
 B_Index := 1
@@ -345,6 +345,17 @@ while IsObject(YingJianObj["共享目录" B_Index])
 	B_Index ++
 }
 
+; Cursor
+G.Push([160, "光标"])
+A.Push(["A_Cursor", A_Cursor, 160])
+A.Push(["A_CaretX", A_CaretX, 160])
+A.Push(["A_CaretY", A_CaretY, 160])
+
+; Clipboard
+G.Push([170, "剪贴板"])
+A.Push(["Clipboard", Clipboard, 170])
+A.Push(["ClipboardAll", ClipboardAll, 170])
+
 Gui +Resize
 Gui Color, 0xFEFEFE
 
@@ -379,13 +390,12 @@ Gui Show, w688 h432, 系统和硬件信息
 
 Menu ContextMenu, Add, 复制`tCtrl+C, MenuHandler
 Menu ContextMenu, Icon, 1&, shell32.dll, 135
-Menu ContextMenu, Add, 复制变量, MenuHandler
-Menu ContextMenu, Add, 复制值, MenuHandler
+Menu ContextMenu, Add, 复制名称, MenuHandler
+Menu ContextMenu, Add, 复制信息, MenuHandler
 Menu ContextMenu, Add
 Menu ContextMenu, Add, 全选`tCtrl+A, SelectAll
 Menu ContextMenu, Add
 Menu ContextMenu, Add, 打开预设动作, RunP
-
 
 If (NT6) {
     Loop % G.Length() {
@@ -588,43 +598,6 @@ for objItem in ComObjGet("winmgmts:\\.\root\CIMV2").ExecQuery("SELECT * FROM Win
     }
 }
 return
-
-AutoXYWH(DimSize, cList*){   ;https://www.autohotkey.com/boards/viewtopic.php?t=1079
-  local a
-  Static cInfo := {}
-
-  If (DimSize = "reset")
-    Return cInfo := {}
-
-  For i, ctrl in cList {
-    ctrlID := A_Gui ":" ctrl
-    If !cInfo.hasKey(ctrlID) {
-      ix := iy := iw := ih := 0	
-      GuiControlGet i, %A_Gui%: Pos, %ctrl%
-      MMD := InStr(DimSize, "*") ? "MoveDraw" : "Move"
-      fx := fy := fw := fh := 0
-      For i, dim in (a := StrSplit(RegExReplace(DimSize, "i)[^xywh]"))) 
-        If !RegExMatch(DimSize, "i)" . dim . "\s*\K[\d.-]+", f%dim%)
-          f%dim% := 1
-
-      If (InStr(DimSize, "t")) {
-        GuiControlGet hWnd, %A_Gui%: hWnd, %ctrl%
-        hParentWnd := DllCall("GetParent", "Ptr", hWnd, "Ptr")
-        VarSetCapacity(RECT, 16, 0)
-        DllCall("GetWindowRect", "Ptr", hParentWnd, "Ptr", &RECT)
-        DllCall("MapWindowPoints", "Ptr", 0, "Ptr", DllCall("GetParent", "Ptr", hParentWnd, "Ptr"), "Ptr", &RECT, "UInt", 1)
-        ix := ix - NumGet(RECT, 0, "Int")
-        iy := iy - NumGet(RECT, 4, "Int")
-      }
-
-      cInfo[ctrlID] := {x:ix, fx:fx, y:iy, fy:fy, w:iw, fw:fw, h:ih, fh:fh, gw:A_GuiWidth, gh:A_GuiHeight, a:a, m:MMD}
-    } Else {
-      dgx := dgw := A_GuiWidth - cInfo[ctrlID].gw, dgy := dgh := A_GuiHeight - cInfo[ctrlID].gh
-      Options := ""
-      For i, dim in cInfo[ctrlID]["a"]
-        Options .= dim (dg%dim% * cInfo[ctrlID]["f" . dim] + cInfo[ctrlID][dim]) A_Space
-      GuiControl, % A_Gui ":" cInfo[ctrlID].m, % ctrl, % Options
-} } }
 
 class Computer
 {

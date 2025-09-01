@@ -1,4 +1,5 @@
 ﻿;|2.9|2025.01.30|1588
+#Include <Ruyi>
 CandySel := A_Args[1]
 Windy_CurWin_Id := A_Args[2]
 DetectHiddenWindows, On
@@ -51,38 +52,3 @@ for key, value in translist
 }
 sleep 3000
 return
-
-ini2obj(file)
-{
-	iniobj := {}
-	FileRead, filecontent, %file% ;加载文件到变量
-	StringReplace, filecontent, filecontent, `r, , All
-	StringSplit, line, filecontent, `n, , ;用函数分割变量为伪数组
-	Loop ;循环
-	{
-		if A_Index > %line0%
-			Break
-		content = % line%A_Index% ; 赋值当前行
-		if (instr(content, ";") = 1)  ; 每行第一个字符为 ; 为注释跳过
-			continue
-		FSection := RegExMatch(content, "\[.*\]") ;正则表达式匹配section
-		if FSection = 1 ;如果找到
-		{
-			TSection := RegExReplace(content, "\[(.*)\]", "$1") ; 正则替换并赋值临时section $为向后引用
-			iniobj[TSection] := {}
-		}
-		Else
-		{
-			FKey := RegExMatch(content, "^.*=.*")    ;正则表达式匹配key
-			if FKey
-			{
-				TKey := RegExReplace(content, "^(.*?)=.*", "$1")   ; 正则替换并赋值临时key
-				;StringReplace, TKey, TKey, ., _, All               ; 会将键中的 "." 自动替换为 "_". 快捷键中有 ., 所以注释掉了
-				TValue := RegExReplace(content, "^.*?=(.*)", "$1") ; 正则替换并赋值临时value
-				if TKey
-					iniobj[TSection][TKey] := TValue
-			}
-		}
-	}
-	Return iniobj
-}

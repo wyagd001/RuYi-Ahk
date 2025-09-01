@@ -1,4 +1,5 @@
 ﻿;|2.9|2025.04.06|1699
+#Include <Ruyi>
 WeChatFolder := A_MyDocuments "\WeChat Files"
 F_Arr := [], F_Ind := 1
 Loop, Files, %WeChatFolder%\*.*, D
@@ -91,18 +92,6 @@ show_obj(obj, menu_name := "")
 	if main = 1
 		menu, % menu_name, show
 	return
-}
-
-GetStringIndex(String, Index := "", MaxParts := -1, SplitStr := "|")
-{
-	arrCandy_Cmd_Str := StrSplit(String, SplitStr, " `t", MaxParts)
-	if Index
-	{
-		NewStr := arrCandy_Cmd_Str[Index]
-		return NewStr
-	}
-	else
-		return arrCandy_Cmd_Str
 }
 
 MenuHandler:
