@@ -584,7 +584,7 @@ Acc_ChildrenByRole(Acc, Role) {
 
 Acc_Get(Cmd, ChildPath="", ChildID=0, WinTitle="", WinText="", ExcludeTitle="", ExcludeText="") {
 	static properties := {Action:"DefaultAction", DoAction:"DoDefaultAction", Keyboard:"KeyboardShortcut"}
-	AccObj :=   IsObject(WinTitle)? WinTitle
+	AccObj :=   IsObject(WinTitle) ? WinTitle
 			:   Acc_ObjectFromWindow( WinExist(WinTitle, WinText, ExcludeTitle, ExcludeText), 0 )
 	if ComObjType(AccObj, "Name") != "IAccessible"
 		ErrorLevel := "Could not access an IAccessible Object"
@@ -608,7 +608,7 @@ Acc_Get(Cmd, ChildPath="", ChildID=0, WinTitle="", WinText="", ExcludeTitle="", 
 			}
 		Acc_Error(AccError)
 		StringReplace, Cmd, Cmd, %A_Space%, , All
-		properties.HasKey(Cmd)? Cmd:=properties[Cmd]:
+		properties.HasKey(Cmd)? Cmd:=properties[Cmd]:""
 		try {
 			if (Cmd = "Location")
 				AccObj.accLocation(ComObj(0x4003,&x:=0), ComObj(0x4003,&y:=0), ComObj(0x4003,&w:=0), ComObj(0x4003,&h:=0), ChildId)

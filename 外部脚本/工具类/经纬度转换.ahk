@@ -1,4 +1,4 @@
-﻿;|2.9|2025.06.18|1711
+﻿;|3.0|2025.09.05|1711
 CandySel := A_Args[1]
 SetFormat, float, 0.8
 pi := 3.14159265358979
@@ -362,7 +362,7 @@ if (jingweidu_type = "度")
 {
   if Instr(jingweidu, ",")
   {
-    Arr := StrSplit(jingweidu, ",")
+    Arr := StrSplit(jingweidu, ",", " """)
     Arr1 := Arr[1]
     Arr2 := Arr[2]
   }
@@ -393,7 +393,7 @@ else if (jingweidu_type = "度°分'秒""")
 {
   if Instr(jingweidu, ",")
   {
-    Arr := StrSplit(jingweidu, ",")
+    Arr := StrSplit(jingweidu, ",", " """)
     Arr1 := Arr[1]
     Arr2 := Arr[2]
   }

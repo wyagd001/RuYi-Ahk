@@ -680,7 +680,7 @@ description: 如意百宝箱-Ahk 内置动作列表
 |1673|E16D|复制菜单|选中文件|弹出菜单来复制选中文件的路径和名称|Cando&#124;showcopymenu|
 |1674|E713|进程监控|无条件|监控进程的打开与终止并记录到列表中|Run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\系统设置\进程监控.ahk"|
 |1675|E713|窗口监控|无条件|监控窗口的创建与关闭并记录显示到列表中|Run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\窗口处理\窗口监控.ahk"|
-|1676|E12B★EBA1☆codicon|Github下载|无条件|科学下载Github文件|Run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\github.ahk" "%CandySel%"|
+|1676|E896|Github下载|无条件|科学下载Github文件|Run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\github.ahk" "%CandySel%"|
 |1677|F4AA|Md(WV2)|选中文件|使用 WebView2(mdeditor) 打开选定 md 文件|Run&#124;"%B_Autohotkey2%" "%A_ScriptDir%\外部脚本\V2\md(WebView2).ahk2" "%CandySel%"|
 |1678|E8E7|运行选中代码|选中文本|将选中 Ahk 代码直接运行|CanFunc&#124;RunAhkCode&#124;%CandySel%|
 |1679|E121|退休日期计算|无条件|根据身份证或出生日期计算退休日期|Run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\工具类\计算退休日期.ahk" "%CandySel%"|
@@ -737,3 +737,6 @@ description: 如意百宝箱-Ahk 内置动作列表
 |1730|F577|重载额外|无条件@如意|重载额外任务栏|Cando&#124;ReloadAppBar|
 |1731|F577|关闭额外|无条件@如意|暂时关闭额外任务栏|Cando&#124;CloseAppBar|
 |1732|E8EC|转新配置|选中文件|将选中的旧版如意自定义动作配置(3.0.0.2-)转为新版(3.0.0.3+)并存放在桌面|Run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\文件处理\旧版如意自定义动作配置转新版.ahk" "%CandySel%"|
+|1733|F466|edge新|特定窗口|edge-chrome新标签页打开收藏|Run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\窗口处理\edge-chrome新标签页打开收藏.ahk"|
+|1734|F577|退出脚本|无条件@指定参数|指定ahk脚本的主窗口标题退出脚本|CanFunc&#124;CF_ScriptExit&#124;edge-chrome新标签页打开收藏.ahk|
+|1735|E8AC|结束改名|任意窗口|结束指定进程并改名|Run&#124;"%B_Autohotkey%" "%A_ScriptDir%\外部脚本\窗口处理\结束指定进程并改名.ahk" "%Windy_CurWin_Pid%"|

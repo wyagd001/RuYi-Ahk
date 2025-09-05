@@ -1,4 +1,4 @@
-﻿;|3.0|2025.08.20|1725
+﻿;|3.0|2025.08.20|1727
 ; 来源网址: https://www.autohotkey.com/boards/viewtopic.php?style=19&t=4655
 CandySel := A_Args[1]
 if !CF_IsFolder(CandySel)
