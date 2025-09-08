@@ -15,7 +15,6 @@ updateexe()
 	}
   7ZG := A_ScriptDir "\引用程序\x32\7zG.exe"
   H_File := A_ScriptDir "\临时目录\帮助页面.zip"
-  IZip_File := A_ScriptDir "\临时目录\内置动作.zip"
   如一exeFile := A_ScriptDir "\临时目录\" 如一exe
   AnyToAhkexeFile := A_ScriptDir "\临时目录\" AnyToAhkexe
   IniFile := A_ScriptDir "\临时目录\内置动作.ini"
@@ -38,22 +37,11 @@ updateexe()
   githubdownload("引用程序\其它资源\帮助页面.zip")
 	sleep 150
 
-  FileReadLine, FirstText, %IniFile%, 1
-  if InStr(FirstText, "[action]")
+  FileGetSize, OutputVar, % IniFile, K
+  if (OutputVar > 60)
   {
     FileCopy, %内置动作文件%, % A_ScriptDir "\配置文件\内置动作.ini.bak", 1
     FileMove, % IniFile, % 内置动作文件, 1
-  }
-  else
-  {
-    FileDelete, % IniFile
-    githubdownload("配置文件\内置动作.zip")
-    FileGetSize, OutputVar, % IZip_File, K
-    if (OutputVar > 20)
-    {
-      FileCopy, %内置动作文件%, % A_ScriptDir "\配置文件\内置动作.ini.bak", 1
-      Run, %7ZG% x "%IZip_File%" -aoa -o"%解包_目录%"
-    }
   }
 
   FileGetSize, OutputVar, % H_File, K

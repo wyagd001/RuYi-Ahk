@@ -25,7 +25,7 @@ if (MonitorNum = 2)
     副屏幕_上 := Monitor2Top
     副屏幕_下 := Monitor2Bottom
 	}
-	if (Monitor2_Width = A_ScreenWidth)
+	else if (Monitor2_Width = A_ScreenWidth)
 	{
 		主屏幕_宽 := Monitor2_Width
 		主屏幕_高 := Monitor2_Height

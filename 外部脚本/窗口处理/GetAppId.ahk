@@ -1,4 +1,4 @@
-﻿;|2.8|2024.08.31|1666
+﻿;|3.0|2025.09.06|1666
 #Include <AutoXYWH>
 Windy_CurWin_id := A_Args[1]
 if !Windy_CurWin_id
@@ -11,7 +11,8 @@ if !Windy_CurWin_id
 
 appidexe := GetFullPathName(A_ScriptDir "\..\..\引用程序\x32\appid.exe ")
 
-happid:=Trim(RunCmd(appidexe " " Windy_CurWin_id), " `r`n")
+happid := Trim(RunCmd("""" appidexe """ " Windy_CurWin_id), " `r`n")
+;msgbox % """" appidexe """ " Windy_CurWin_id "`n" happid
 GuiText(happid, "窗口 AppId", 500, 2)
 return
 

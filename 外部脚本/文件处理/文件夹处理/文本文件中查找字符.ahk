@@ -1,4 +1,4 @@
-﻿;|2.9|2024.12.17|1096
+﻿;|3.0|2025.09.06|1096
 #Include <Ruyi>
 #Include <File_GetEncoding>
 ; Script Information ===========================================================
@@ -239,7 +239,7 @@ GuiCreate() {
        EditTypeList := SEditType
     Gui, +LastFound -Resize +HWNDhGui1
     Gui, Margin, 8, 8
-    Gui, Add, Tab3, vTab, 查找|搜索结果
+    Gui, Add, Tab3, vTab, 查找
 
     Gui, Tab, 1
     Gui, Add, Text, w460 BackgroundTrans Section, 目录:
@@ -255,8 +255,8 @@ GuiCreate() {
     Gui, Add, CheckBox, x+10 yp h20 vRerex, 正则表达式
     Gui, Add, CheckBox, x+10 yp h20 Checked vRecurse, 递归子文件夹
 
-    Gui, Tab, 2
-    Gui, Add, ListView, w460 r10 vListView Grid +altsubmit vLV1 gLV1x, 找到次数|文件路径
+    ;Gui, Tab, 2
+    Gui, Add, ListView, w460 r10 xs yp+30 vListView Grid +altsubmit vLV1 gLV1x, 找到次数|文件路径
 
     Gui, Tab
     Gui, Add, Button, w80 h24 default vButtonSearch gControlHandler, 搜索   
